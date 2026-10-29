@@ -33,11 +33,34 @@ Frequency-division characterization is therefore a full-top task.
 
 Detailed parameter and limit analysis:
 
+- `flow/P0_A.md`
 - `flow/ADPLL_FREQ_DIV.md`
 - `flow/PERFORMANCE.md`
 - `flow/PDK_ESTIMATES.md`
 
-## 2. Implemented hard macros
+## 2. Functional verification status
+
+The first P0-A RTL batch is implemented and regression-tested:
+
+```text
+DSM saturation/width        PASS
+divider /2,/3,/4 + clamp    PASS
+LOCKED / PHASE_LOCK / LOCK_LOST FSM PASS
+frequency-lock acquisition and FCW reacquisition PASS (stub DCO)
+```
+
+Run:
+
+```sh
+cd sim
+make test_p0 PDK=ihp-sg13g2 USE_DOCKER=0
+```
+
+Details and open items are in `flow/P0_A.md`.  A real fine-phase detector,
+full CDC monitor, DCO characterization and closed-loop PLL simulation are
+still open; the physical-macro results below do not imply them.
+
+## 3. Implemented hard macros
 
 | PDK | Library | Die (µm) | Area (mm²) | Components | P&R | DRC | LVS |
 |---|---|---:|---:|---:|---|---|---|
@@ -51,7 +74,7 @@ Detailed parameter and limit analysis:
 | GF180mcuD 3.3 V 7T | `gf180mcu_as_sc_mcu7t3v3` | 416.8 × 434.7 | 0.1812 | 8945 (1598 stdcells) | **complete** | **0** (Magic + KLayout) | **PASS** (Netgen) |
 | ETRI050 12T | `ETRI050_fd_sc_12t` | 3050 × 3262 | 9.95 die / 1.521 instance | 2428 after P&R | **route/fill complete** | 636 deck markers | strict pin-map fail |
 
-### 2.1 Post-layout timing
+### 3.1 Post-layout timing
 
 The macro constraints use `REF=20 ns`, `OUT/MID_OUT=2.5 ns`,
 `INJ_EDGE=20 ns`; these are P&R planning constraints, not a 1.6 GHz signoff.
@@ -71,7 +94,7 @@ names in the assembled netlist.  The timing values are useful post-layout
 evidence, but they are **not clean signoff STA** until the SPEF/netlist naming is
 made consistent.
 
-### 2.2 DRC/LVS details
+### 3.2 DRC/LVS details
 
 - **ics55**: top-level DRC 0.  The 305 remaining KLayout items are all
   `7T-cell-internal`; `drc_waiver.json` records them and `waive_drc.py` refuses
@@ -89,7 +112,7 @@ made consistent.
   fill-stripped `PLL_ANALOG_MACRO_lvs.gds`.
 - **ETRI050**: no P&R signoff; see blockers below.
 
-## 3. Digital-control canaries
+## 4. Digital-control canaries
 
 These are `pll_logic` only, not the complete PLL.
 
@@ -132,7 +155,7 @@ report.  It is a digital-logic limit, not the analog DCO limit.
   **-16.73 ns**), KLayout DRC reports 636 NWL/NSD/PSD markers, and KLayout LVS
   fails on a strict top-level pin map.  This is a flow result, not signoff.
 
-## 4. Post-PnR SDF smoke simulation
+## 5. Post-PnR SDF smoke simulation
 
 `sim/post_pnr` runs the ics55 gate-level P&R netlist with optional SDF:
 
@@ -146,7 +169,7 @@ The stimulus toggles `REF` every 5 ps to kick-start injection lock; it is not a
 jitter measurement.  Icarus uses only the SDF file/instance arguments and
 ignores corner selection.
 
-## 5. Frequency envelope
+## 6. Frequency envelope
 
 Using the measured logic limits above:
 
@@ -172,7 +195,7 @@ For 100 MHz REF, ics55 `N=16` would require 1.6 GHz, above the current `OUT`
 domain.  The current macro P&R at 2.5 ns `OUT` (400 MHz) is the closed timing
 point, not 1.6 GHz.
 
-## 6. Current open items and blockers
+## 7. Current open items and blockers
 
 ### GF180 FD
 
@@ -246,7 +269,7 @@ The complete `pll` top has not been assembled with the hard macro and
 digital-control views.  There is no full-top lock-time, jitter, phase-noise,
 or power characterization yet.
 
-## 7. Reproduce
+## 8. Reproduce
 
 ```sh
 # Library screening / synthesis matrix
@@ -308,7 +331,7 @@ flow/canary/gf180mcu_3v3_core_a/
 flow/canary/ETRI050_fd_sc_core_a/
 ```
 
-## 8. What is not characterized
+## 9. What is not characterized
 
 - DCO measured frequency, tuning range, monotonicity
 - Injection lock range, lock time, false-lock behavior
