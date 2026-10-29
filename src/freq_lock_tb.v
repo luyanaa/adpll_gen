@@ -37,7 +37,8 @@ module pll_freq_lock_tb();
     pll_freq_lock #(
         .COARSE_NDELS(COARSE_NDELS),
         .MID_NDELS(MID_NDELS),
-        .CNT_BITS(CNT_BITS)
+        .CNT_BITS(CNT_BITS),
+        .LOCK_LIMIT(1)
     ) dut (
         .REF(CLK_REF), .MID_OUT(CLK_VCO), .OUT(CLK_VCO), .RST_N(RST_N),
         .FCW(FCW), .START(START), .LOCK(1'b0),
@@ -50,6 +51,7 @@ module pll_freq_lock_tb();
     assign FINE_MUX = 0; // Fine is not used here
 
     integer iter;
+    integer errors = 0;
     initial begin
         $dumpfile("freq_lock_tb.vcd");
         $dumpvars;
@@ -66,7 +68,14 @@ module pll_freq_lock_tb();
             #(REF_T);
         $display("after first acquisition: LOCKED=%b ERR=%b COARSE=%b MID=%b cnt_cap=%0d cnt_done=%0d FCW=%0d",
                  LOCKED, ERR, COARSE_MUX, MID_MUX, dut.cnt_cap, dut.cnt_done, FCW);
-        if (!LOCKED) $display("NOTE: first acquisition did not reach LOCKED with the stub DCO");
+        if (!LOCKED) begin
+            $display("FAIL: first acquisition did not reach LOCKED");
+            errors = errors + 1;
+        end
+        if (ERR) begin
+            $display("FAIL: unexpected ERR during first acquisition");
+            errors = errors + 1;
+        end
         
         FCW = 'd13;
         START = 1'b1;
@@ -76,6 +85,12 @@ module pll_freq_lock_tb();
             #(REF_T);
         $display("after FCW change: LOCKED=%b ERR=%b COARSE=%b MID=%b",
                  LOCKED, ERR, COARSE_MUX, MID_MUX);
+        if (!LOCKED) begin
+            $display("FAIL: FCW change did not reacquire LOCKED");
+            errors = errors + 1;
+        end
+        if (errors != 0) $fatal(1, "freq_lock_tb failed");
+        $display("freq_lock_tb: PASS");
         $finish;
     end
 endmodule

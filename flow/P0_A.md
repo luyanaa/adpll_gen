@@ -27,6 +27,7 @@ Current result:
 delta_sigma_sat_tb: PASS
 divider_tb: PASS
 lock_fsm_tb: PASS
+freq_lock_tb: PASS
 ```
 
 The focused tests are:
@@ -35,7 +36,7 @@ The focused tests are:
 src/delta_sigma_sat_tb.v
 src/divider_tb.v
 src/lock_fsm_tb.v
-src/sim_dco_lock.v (frequency-lock smoke model)
+src/freq_lock_tb.v (with src/sim_dco_lock.v)
 ```
 
 ## Still open in P0-A
