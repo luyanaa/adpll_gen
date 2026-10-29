@@ -1,30 +1,11 @@
-# LibreLane 3.0.16 config -- DIGITAL-ONLY canary top (pll_logic)
-# PDK: gf180mcuA, library: gf180mcu_fd_sc_mcu7t5v0 (3.3 V, 7-track)
+# LEGACY EXPERIMENT -- CIEL gf180mcuA (3-metal, 5 V, 7-track) -------------
+# This config records the original FD DPL/via2 investigation.  It is NOT the
+# working/signoff configuration: the CIEL gf180mcuA FD technology LEF has only
+# 2x2 Via2 defaults, so detailed routing stops at DRT-0234.
 #
-# STATUS: canary config, exercised with LibreLane v3.0.16 in this checkout.
-# The Classic flow completes 80/80 only because the driver skips the signoff
-# steps that need decks/rules this PDK does not ship.  Do not treat any timing,
-# DRC or LVS number from this config as signoff.
-#
-# Why this file is explicit about views and PDN:
-#   The GF180 "as_sc" PDK in this checkout ships only a *standard-cell*
-#   libs.tech/librelane/<scl>/config.tcl.  There is no top-level
-#   libs.tech/librelane/config.tcl, no KLayout/Magic decks, and the SCL Tcl
-#   does not set TECH_LEFS/CELL_LEFS/PDN layers.  The canary therefore:
-#     - uses a local PDK overlay with a top-level config.tcl that fills the
-#       missing PDK variables (checked in under pdk_overlay/;
-#       scripts/run_canary.sh creates the symlinks), and
-#     - supplies the missing view/PDN variables here.
-#   Neither modifies the PDK.
-#
-# Run from this directory (the Makefile/run_canary.sh does this):
-#   make librelane-digital
-# or directly:
-#   librelane --manual-pdk --pdk-root pdk_overlay --pdk gf180mcu \
-#             --scl gf180mcu_fd_sc_mcu7t5v0 config.digital.yaml
-# The driver also passes --skip for the signoff steps that need decks/rules
-# this PDK does not ship.  A raw invocation without those skips will fail at
-# GDS streamout / DRC / LVS / post-PnR STA; see README.md.
+# Use config.digital_gf180mcuD.yaml (wafer-space gf180mcuD, 5-metal) for the
+# completed P&R and DRC/LVS result.
+# -------------------------------------------------------------------------
 
 DESIGN_NAME: pll_logic
 VERILOG_DEFINES: [WITH_POWER]

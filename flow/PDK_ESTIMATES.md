@@ -16,7 +16,7 @@
 | sky130 `fd_sc_hd` | **约 0.57 GHz pre-layout**；没有 post-route 数字 canary | 未测；macro 只证明 400 MHz 口径 | **没有证据支持** |
 | IHP SG13G2 | **525 MHz TT / <400 MHz SS**（post-route） | **237–250 MHz TT**（`INJ_EDGE`） | **否** |
 | ETRI050 12T 5 V | **约 90 MHz pre-layout**；P&R route 完成，20 ns OUT 下 setup -158.85 ns | 未测；5 V/0.5 µm，估计同量级 | **否** |
-| GF180 FD `fd_sc_mcu7t5v0` | **DPL workaround PASS**；route 卡在 `DRT-0234` Via2 | 无 | 不能评估 |
+| GF180mcuD FD 5 V | **49.6 MHz TT / 40.8 MHz SS**（post-route） | 未单独测；同量级 | **否**（50 MHz SS 未闭合） |
 
 表中的“DCO/OUT”是**数字控制域**能接收的频率，不包含 DCO 模拟延迟链本身；模拟 DCO
 可能更高，但当前没有实测。
@@ -39,13 +39,23 @@
 
 **FD `gf180mcu_fd_sc_mcu7t5v0`**
 
-- 3-metal、5 V、7-track；synthesis 1588 cells / 44,167 µm²。
-- 原始 via-stack PDN：272/280 sequential cell 失败 `DPL-0036`，对应
-  OpenROAD issue 11511。
-- Rails-only PDN workaround：DPL **PASS**；route 卡在 `DRT-0234`（Via2
-  single-cut）。
-- 2026-02-17 OpenROAD 没有 issue 11511 修复；LibreLane 3.0.17 仍绑定该版本。
-- 没有 route/DRC/LVS/STA，所以**不能给可靠频率估算**。
+- 两个 FD PDK view 必须区分：
+  - CIEL `gf180mcuA`：3-metal，FD tech LEF 只有 2×2 Via2 default；
+    DRT 报 `DRT-0234 Via2 does not have single-cut via`。
+  - wafer-space `gf180mcuD`：5-metal，tech LEF 自带
+    `Via2_HH/HV/VH/VV` single-cut default；同一个 flow 可以完成 route。
+- `gf180mcuD` canary：1588 synthesis cells / 44,167 µm²；P&R 后
+  1,790 standard cells；die 483.375 × 501.295 µm，0.2423 mm²；
+  stdcell 61,410.7 µm²，利用率 28.0%。
+- route：**11,180 single-cut vias，0 multi-cut**；OpenROAD route DRC 0；
+  Magic DRC 0；KLayout DRC 0；Netgen LVS PASS；antenna PASS。
+- post-route SPEF STA @ 20 ns：setup WNS **-0.169 ns TT / -4.516 ns SS /
+  +1.719 ns FF**；hold **+0.662 / +1.071 / +0.390 ns**；setup violation
+  3 (TT) / 25 (SS) / 0 (FF)，hold 0。50 MHz 在 TT/SS 未闭合；等效约
+  **49.6 MHz TT / 40.8 MHz SS**。
+- 功耗 35.3 mW（default activity），worst IR drop 7.01 mV。
+- 结论：FD 5 V 可用于 **几十 MHz** 级数字控制；当前 50 MHz 仍需修
+  SS path 或改用约 25 ns 周期，不能把它当成 50 MHz signoff。
 
 ### sky130
 

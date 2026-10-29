@@ -186,6 +186,51 @@
       "hold_ws_ns_20ns": -16.7266,
       "klayout_drc_markers": 636,
       "klayout_lvs": "strict top-level pin map fail"
+    },
+    {
+      "pdk": "gf180mcuD",
+      "library": "gf180mcu_fd_sc_mcu7t5v0",
+      "cells": 3421,
+      "stdcells": 1790,
+      "area_um2": 61410.7,
+      "die_um": [
+        483.375,
+        501.295
+      ],
+      "die_area_mm2": 0.242313,
+      "utilization_pct": 28.02,
+      "corner": "post-route SPEF; TT/5.0V/25C, SS/4.5V/125C, FF/5.5V/-40C",
+      "fmax_mhz": {
+        "OUT_TT": 49.6,
+        "OUT_SS": 40.8
+      },
+      "setup_ws_ns": {
+        "tt": -0.1692,
+        "ss": -4.5155,
+        "ff": 1.7194
+      },
+      "hold_ws_ns": {
+        "tt": 0.6622,
+        "ss": 1.0711,
+        "ff": 0.3904
+      },
+      "setup_violations": {
+        "tt": 3,
+        "ss": 25,
+        "ff": 0
+      },
+      "hold_violations": 0,
+      "power_mw": 35.3,
+      "power_note": "OpenROAD default activity; not vector-based",
+      "ir_drop_worst_mv": 7.01,
+      "ir_drop_avg_mv": 1.08,
+      "route_drc_errors": 0,
+      "vias_singlecut": 11180,
+      "vias_multicut": 0,
+      "drc": "Magic 0 and KLayout 0 with the full gf180mcuD deck",
+      "lvs": "PASS (Netgen)",
+      "antenna": "PASS (0 violating nets/pins)",
+      "notes": "5-metal wafer-space gf180mcuD FD view; the 3-metal CIEL gf180mcuA view still hits DRT-0234. Timing is not closed at 20 ns (50 MHz) at TT/SS."
     }
   ],
   "post_pnr_sdf_smoke": {

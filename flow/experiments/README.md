@@ -43,7 +43,7 @@ python3 flow/experiments/synth_multi_lib.py
 
 ## P&R canary follow-up
 
-`flow/canary/gf180mcu_fd_core_a/` is a LibreLane canary for the OpenPDK default `gf180mcu_fd_sc_mcu7t5v0` (5 V, 7-track, 3-metal FD library). It synthesizes 1588 cells / 44,167 µm² and reaches floorplan/global placement, but detailed placement currently fails (`DPL-0036`). It is recorded as an experiment, not a passed canary. The existing `/grid` AS/OCD and ics55/IHP canaries remain the completed P&R evidence.
+`flow/canary/gf180mcu_fd_core_a/` now uses the wafer-space `gf180mcuD` PDK with `gf180mcu_fd_sc_mcu7t5v0` (5 V, 7-track, 5-metal FD library). It synthesizes 1588 cells / 44,167 µm² and completes the full P&R/DRC/LVS/antenna flow: route DRC 0 with 11,180 single-cut vias, Magic/KLayout DRC 0, Netgen LVS PASS and antenna PASS. Post-route setup is -0.169 ns TT / -4.516 ns SS at 20 ns (50 MHz); hold is positive. The older CIEL `gf180mcuA` 3-metal view is retained in `config.digital.yaml` as the DPL-0036/DRT-0234 experiment only.
 
 
 ## Parameter sweep

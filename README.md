@@ -46,7 +46,7 @@ Detailed parameter and limit analysis:
 | sky130 | `sky130_as_sc_hs` | 80.21 × 90.93 | 0.007293 | 653 (517 stdcells) | complete | **0** | cell-subcircuit LVS open |
 | sky130 | `sky130_fd_sc_hd` | 79.665 × 90.385 | 0.007200 | experimental | route/fill | **0** | cell-subcircuit LVS open |
 | IHP SG13G2 | `sg13g2_stdcell` | 160 × 105 | 0.0168 | 805 | complete | **0** (density rules) | **PASS** on fill-stripped view |
-| GF180mcu FD | `gf180mcu_fd_sc_mcu7t5v0` | — | — | 1588 synthesized | **DPL workaround PASS; route blocked at Via2** | — | — |
+| GF180mcu FD (`gf180mcuD`) | `gf180mcu_fd_sc_mcu7t5v0` | 483.4 × 501.3 | 0.2423 | 3421 (1790 stdcells) | **complete** | **0** (Magic + KLayout) | **PASS** (Netgen) |
 | ETRI050 12T | `ETRI050_fd_sc_12t` | 3050 × 3262 | 9.95 die / 1.521 instance | 2428 after P&R | **route/fill complete** | 636 deck markers | strict pin-map fail |
 
 ### 2.1 Post-layout timing
@@ -95,6 +95,7 @@ These are `pll_logic` only, not the complete PLL.
 |---|---:|---:|---|---:|---:|---:|---:|
 | ics55 H7CR | 1571 | 4321.8 | TT 1.2 V | 994.87 | **835.87** | 1002.43 | 452.09 |
 | GF180 AS 3.3 V | 1690 | 49069.3 | SS 3.0 V | 163.53 | **196.37** | 306.87 | 96.70 |
+| GF180mcuD FD 5 V | 3421 (1790 stdcells) | 61,410.7 | post-route TT/SS | — | **49.6 / 40.8** | — | — |
 | IHP SG13G2 | 1587 | 26243.2 | TT 1.2 V | 379.10 | **525.42** | 653.44 | 237.33 |
 | ETRI050 12T | 1654 | 1,206,913.6 | TT 5 V | — | **~90 MHz** pre-layout | — | — |
 
@@ -103,9 +104,16 @@ Fmax is the OpenROAD `report_clock_min_period` value from the canary clock
 report.  It is a digital-logic limit, not the analog DCO limit.
 
 - **ics55** setup/hold 0 in its digital canary.
-- **GF180** has no post-Route SPEF/STA; the SS clock report is the best
-  available digital timing.  One r2r setup violation of -0.092 ns was reported
-  at `ff/n40C/3.6 V`.
+- **GF180 AS 3.3 V** has no post-route SPEF/STA; the SS clock report is the
+  best available digital timing.  One r2r setup violation of -0.092 ns was
+  reported at `ff/n40C/3.6 V`.
+- **GF180mcuD FD** is a complete P&R/DRC/LVS/antenna run with extracted
+  post-route STA: setup WNS **-0.169 ns TT / -4.516 ns SS / +1.719 ns FF**,
+  hold **+0.662 / +1.071 / +0.390 ns**; 11,180 single-cut vias, 0 multi-cut;
+  DRC 0, LVS PASS, 35.3 mW default-activity power and 7.01 mV worst IR drop.
+  The 20 ns (50 MHz) constraint is not closed at TT/SS; about 40.8 MHz at SS.
+  The run uses the 5-metal wafer-space `gf180mcuD` view, not the 3-metal
+  `gf180mcuA` view.
 - **IHP** has TT power **5.62 mW** for the digital canary; SS setup is
   **-0.316 ns / TNS -2.534 ns** at nominal 2.5 ns `OUT`, while the 20 ns `REF`
   domain has about +11.15 ns margin.
@@ -143,7 +151,8 @@ Current evidence does **not** support a 1.6 GHz complete loop:
 
 - ics55: `OUT` 836 MHz TT / 479 MHz SS; `REF` limited to ~452/244 MHz by
   `INJ_EDGE`
-- GF180: `OUT` ~196 MHz SS / ~330 MHz TT pre-layout
+- GF180 AS: `OUT` ~196 MHz SS / ~330 MHz TT pre-layout
+- GF180mcuD FD: `OUT` ~49.6 MHz TT / ~40.8 MHz SS post-route; 50 MHz not closed at SS
 - sky130: ~570 MHz pre-layout, no post-route digital canary
 - IHP: 525 MHz TT / <400 MHz SS
 - ETRI050: ~90 MHz pre-layout
@@ -152,16 +161,21 @@ For 100 MHz REF, ics55 `N=16` would require 1.6 GHz, above the current `OUT`
 domain.  The current macro P&R at 2.5 ns `OUT` (400 MHz) is the closed timing
 point, not 1.6 GHz.
 
-## 6. Current blockers
+## 6. Current open items and blockers
 
-### GF180 FD DPL
+### GF180 FD
 
-The original FD PDN caused 272/280 sequential cells to fail `DPL-0036`.
-Rails-only PDN (`pdn_rails_only.tcl`) plus `WITH_POWER` makes DPL pass, but
-detailed routing now stops at `DRT-0234 Via2 does not have single-cut via`.
-The canary is therefore not routed, DRC/LVS-clean, or signed off.  The
-underlying DPL issue is OpenROAD #11511; LibreLane 3.0.17 still binds the
-2026-02-17 OpenROAD binary.
+The original CIEL `gf180mcuA` FD view is 3-metal and has only 2×2 Via2
+defaults.  Its DPL failure (`DPL-0036`, OpenROAD #11511) was worked around with
+a rails-only PDN, but detailed routing still stopped at
+`DRT-0234 Via2 does not have single-cut via`.
+
+Switching to the wafer-space `gf180mcuD` 5-metal FD view fixes the route:
+the technology LEF has single-cut Via2 defaults, TritonRoute uses 11,180
+single-cut vias / 0 multi-cut, and the full flow completes with Magic/KLayout
+DRC 0, Netgen LVS PASS and antenna PASS.  This is no longer a route blocker.
+The remaining FD issue is timing: 20 ns (50 MHz) setup is **-0.169 ns TT /
+-4.516 ns SS**, with hold positive at all corners.
 
 ### sky130 LVS
 
@@ -205,6 +219,15 @@ python3 flow/experiments/param_sweep.py
 STA=/usr/bin/sta
 $STA -exit flow/characterization/sta_ics55.tcl
 $STA -exit flow/characterization/sta_ihp.tcl
+
+# GF180mcuD FD digital canary (full P&R + DRC/LVS/antenna)
+cd flow/canary/gf180mcu_fd_core_a
+./fetch_gf180mcuD.sh /tmp/gf180mcu-wafer
+librelane --manual-pdk --pdk-root /tmp/gf180mcu-wafer \
+  --pdk gf180mcuD --scl gf180mcu_fd_sc_mcu7t5v0 \
+  -S Checker.SetupViolations -S Checker.HoldViolations \
+  -S Checker.MaxSlewViolations -S Checker.MaxCapViolations \
+  config.digital_gf180mcuD.yaml
 
 # ETRI050 route/fill qualification
 cd flow/canary/ETRI050_fd_sc_core_a

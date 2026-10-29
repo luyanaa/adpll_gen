@@ -1,0 +1,185 @@
+# LibreLane 3.0.17 config -- DIGITAL-ONLY canary top (pll_logic)
+# PDK: gf180mcuD, library: gf180mcu_fd_sc_mcu7t5v0 (5 V, 7-track, 5-metal)
+#
+# This is the signoff-capable FD configuration.  It uses the wafer-space
+# gf180mcuD PDK, whose FD technology LEF has 5 metals and single-cut Via2
+# defaults.  The earlier CIEL gf180mcuA 3-metal view is kept in
+# config.digital.yaml as a legacy DPL/via experiment.
+#
+# Run from this directory:
+#   librelane --manual-pdk --pdk-root /tmp/gf180mcu-wafer \
+#             --pdk gf180mcuD --scl gf180mcu_fd_sc_mcu7t5v0 \
+#             config.digital_gf180mcuD.yaml
+#
+# The PDK is not vendored.  See README.md for the pinned clone and the
+# full-flow command.  The PDK config supplies the tech LEF, cell views,
+# Liberty corners, RCX rules, KLayout/Magic decks and netgen setup.
+
+DESIGN_NAME: pll_logic
+VERILOG_DEFINES: [WITH_POWER]
+
+VERILOG_FILES:
+  - dir::../../../src/pll_logic.v
+  - dir::../../../src/digital_loop_filter.v
+  - dir::../../../src/term_decoder.v
+  - dir::../../../src/freq_lock.v
+  - dir::../../../src/delta_sigma.v
+  - dir::../../../src/fix_div.v
+  - dir::../../../src/conf_div.v
+
+# ---------------------------------------------------------------------------
+# PDK / standard-cell library
+# ---------------------------------------------------------------------------
+PDK: gf180mcuD
+STD_CELL_LIBRARY: gf180mcu_fd_sc_mcu7t5v0
+
+# Power/ground names.  The library also has VNW/VPW well pins in LEF/Liberty;
+# they are well-tie/tap concerns, not signal pins.  The PDN and the SCL
+# insertion use VDD/VSS.
+VDD_PIN: VDD
+GND_PIN: VSS
+# VNW is the n-well bias (VDD) and VPW the p-well bias (VSS).  They are
+# USE POWER/GROUND pins in the LEF and must be globally connected, or the
+# disconnected-pin checker flags every cell's well pins as critical.
+SCL_POWER_PINS: [VDD, VNW]
+SCL_GROUND_PINS: [VSS, VPW]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+# Routing layers.  gf180mcu layer names are Metal1..Metal5 (not MET1..MET5).
+GRT_LAYER_ADJUSTMENTS: [0, 0, 0, 0, 0]
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal4
+IO_PIN_H_LAYER: Metal3
+IO_PIN_V_LAYER: Metal2
+
+# ---------------------------------------------------------------------------
+# PDN: use the gf180mcuD default 5-metal PDN (Metal4 vertical, Metal5
+# horizontal, rails on Metal1).  This is the configuration exercised by the
+# wafer-space/chipathon examples with gf180mcu_fd_sc_mcu7t5v0.
+# ---------------------------------------------------------------------------
+PDN_MULTILAYER: true
+PDN_CORE_RING: false
+PDN_ENABLE_PINS: true
+
+# ---------------------------------------------------------------------------
+# Cell selection / synthesis
+# ---------------------------------------------------------------------------
+# The SCL Tcl uses space-separated strings for these; LibreLane wants lists.
+FILL_CELLS: ["gf180mcu_fd_sc_mcu7t5v0__fill_*"]
+DECAP_CELLS: ["gf180mcu_fd_sc_mcu7t5v0__fillcap_*"]
+TRISTATE_CELLS: ["gf180mcu_fd_sc_mcu7t5v0__invz*"]
+CELL_PAD_EXCLUDE:
+  - "gf180mcu_fd_sc_mcu7t5v0__endcap"
+  - "gf180mcu_fd_sc_mcu7t5v0__fill_*"
+
+WELLTAP_CELL: gf180mcu_fd_sc_mcu7t5v0__filltie
+ENDCAP_CELL: gf180mcu_fd_sc_mcu7t5v0__endcap
+FP_TAPCELL_DIST: 20
+
+SYNTH_DRIVING_CELL: gf180mcu_fd_sc_mcu7t5v0__inv_2/Y
+SYNTH_BUFFER_CELL: gf180mcu_fd_sc_mcu7t5v0__buff_2/A/Y
+SYNTH_TIEHI_CELL: gf180mcu_fd_sc_mcu7t5v0__tieh/Z
+SYNTH_TIELO_CELL: gf180mcu_fd_sc_mcu7t5v0__tiel/ZN
+OUTPUT_CAP_LOAD: 72.91
+
+# The PDK ships exclusion lists.  synth_exclude.cells removes dyn_dfxtp_2
+# (leaving dfxtp_2/dfxtp_4) and the clkbuff cells from synthesis only; the
+# pnr list is empty.  Keep both wired so this canary follows the PDK.
+
+CTS_ROOT_BUFFER: gf180mcu_fd_sc_mcu7t5v0__clkbuf_12
+CTS_CLK_BUFFERS:
+  - gf180mcu_fd_sc_mcu7t5v0__clkbuf_4
+  - gf180mcu_fd_sc_mcu7t5v0__clkbuf_8
+  - gf180mcu_fd_sc_mcu7t5v0__clkbuf_12
+
+MAX_FANOUT_CONSTRAINT: 9
+MAX_TRANSITION_CONSTRAINT: 1.5
+MAX_CAPACITANCE_CONSTRAINT: 0.2
+CLOCK_UNCERTAINTY_CONSTRAINT: 0.25
+CLOCK_TRANSITION_CONSTRAINT: 0.50
+
+# ---------------------------------------------------------------------------
+# Clocks and constraints
+# ---------------------------------------------------------------------------
+# REF is the only real input clock.  OUT, MID_OUT and INJ_EDGE are ports of
+# the digital-only top and are created as (asynchronous, nominal) clocks in
+# constraints/adpll.sdc, because CLOCK_PORT takes one port only.
+CLOCK_PORT: REF
+CLOCK_PERIOD: 20.0
+
+PNR_SDC_FILE: dir::constraints/adpll.sdc
+SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
+
+# ---------------------------------------------------------------------------
+# Floorplan / placement (canary values, not QoR targets)
+# ---------------------------------------------------------------------------
+# No DIE_AREA: let LibreLane size the core from FP_CORE_UTIL and the mapped
+# cell area.  The gf180 netlist is ~49k um^2, so a fixed small die would not
+# fit (the ics55 canary's 150x150 was for a 4.3k um^2 design).
+FP_CORE_UTIL: 20
+PL_TARGET_DENSITY_PCT: 35
+
+# ---------------------------------------------------------------------------
+# Timing corners
+# ---------------------------------------------------------------------------
+# 3 distinct Liberty files exist.  The PDK LibreLane Tcl also declares
+# min_/max_ aliases for each file (9 corner names in total), but every alias
+# resolves to the same three files.  The canary uses the three nominal PVT
+# corners; it does not claim independent min/max corners.
+#
+# To use all 9 aliases, add them to STA_CORNERS (the LIB wildcards already
+# match them) and accept that min_*/max_* have identical Liberty data.  To use
+# 6, add either the three min_* or the three max_* aliases, again with the
+# same caveat.  Do not report these as independent corners.
+DEFAULT_CORNER: nom_tt_025C_5v00
+STA_CORNERS:
+  - nom_tt_025C_5v00
+  - nom_ff_n40C_5v50
+  - nom_ss_125C_4v50
+PNR_CORNERS:
+  - nom_tt_025C_5v00
+  - nom_ff_n40C_5v50
+  - nom_ss_125C_4v50
+
+# ---------------------------------------------------------------------------
+# Timing corners
+# ---------------------------------------------------------------------------
+# 3 distinct Liberty files exist.  The PDK LibreLane Tcl also declares
+# min_/max_ aliases for each file (9 corner names in total), but every alias
+# resolves to the same three files.  The canary uses the three nominal PVT
+# corners; it does not claim independent min/max corners.
+#
+# To use all 9 aliases, add them to STA_CORNERS (the LIB wildcards already
+# match them) and accept that min_*/max_* have identical Liberty data.  To use
+# 6, add either the three min_* or the three max_* aliases, again with the
+# same caveat.  Do not report these as independent corners.
+DEFAULT_CORNER: nom_tt_025C_5v00
+STA_CORNERS:
+  - nom_tt_025C_5v00
+  - nom_ff_n40C_5v50
+  - nom_ss_125C_4v50
+PNR_CORNERS:
+  - nom_tt_025C_5v00
+  - nom_ff_n40C_5v50
+  - nom_ss_125C_4v50
+
+# ---------------------------------------------------------------------------
+# RC estimates for PnR
+# ---------------------------------------------------------------------------
+# The PDK ships no OpenRCX rules files (no libs.tech/librelane/<scl>/*.rules)
+# and no LAYERS_RC/VIAS_R Tcl.  Values below are read from the nominal tech
+# LEF: RESISTANCE RPERSQ (ohm/square) and CAPACITANCE CPERSQDIST (pF/um).
+# Via resistance is not in the LEF; 5 ohm/cut is a canary placeholder, not a
+# characterized value.  These values feed PnR RC estimates only.
+#
+# RCX_RULESETS is an empty map: there are no rules files to point at.
+# OpenROAD.RCX would warn and produce no SPEF; post-route STA would fail on the
+# missing SPEF.  The canary driver therefore skips OpenROAD.RCX,
+# OpenROAD.STAPostPNR, OpenROAD.IRDropReport and the timing checkers.  Do not
+# claim extracted-corner or post-route STA.
+# If OpenRCX rules are generated later, use this shape (paths are examples):
+# RCX_RULESETS:
+#   "nom_tt_*": /path/to/gf180mcu_fd_sc_mcu7t5v0__tt.rules
+#   "nom_ff_*": /path/to/gf180mcu_fd_sc_mcu7t5v0__ff.rules
+#   "nom_ss_*": /path/to/gf180mcu_fd_sc_mcu7t5v0__ss.rules

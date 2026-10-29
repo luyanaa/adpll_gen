@@ -16,7 +16,7 @@ characterization report。完整 top-level `pll` 还没有和硬宏一起集成�
 | 注入锁定 | 4 级 injection delay | `src/pll_analog.v` |
 | 数字环路滤波器 | 目标截止频率 1 MHz | `src/dlf_design.py` |
 | `LOCKED` 最小等待 | 64 个 REF 周期 = 0.64 µs | `LOCKED_WAIT=64` |
-| 供电 | ics55 1.2 V / GF180 3.3 V / sky130 1.8 V / IHP 1.2 V | 各 PDK 宏配置 |
+| 供电 | ics55 1.2 V / GF180 3.3 V / GF180 FD 5 V / sky130 1.8 V / IHP 1.2 V | 各 PDK 宏/数字 canary 配置 |
 
 > `OUT` 在宏 P&R 约束里被当作 2.5 ns（400 MHz）时钟处理；这和标称
 > 1.6 GHz DCO 不是同一个数。400 MHz 只是当前 P&R 的时序约束口径，不能
@@ -39,6 +39,7 @@ characterization report。完整 top-level `pll` 还没有和硬宏一起集成�
 |---|---|---|
 | ics55 H7CR | 1571 cells，4321.80 µm² | TT post-route clock report：REF 994.87 MHz、OUT 835.87 MHz、MID_OUT 1002.43 MHz、INJ_EDGE 452.09 MHz；SS 分别约 580/479/640/244 MHz。setup/hold 0 |
 | GF180mcu AS 3.3 V | 1690 cells，49,069.31 µm² | 数字 P&R 80/80（signoff skips）；无 post-PnR STA / RCX；一个 r2r setup 违例 -0.092 ns @ ff/n40C/3.6 V |
+| GF180mcuD FD 5 V | 1588 synth cells；P&R 后 1790 stdcells；61,410.7 µm² | 完整 P&R/DRC/LVS/antenna：route DRC 0（11,180 single-cut vias）；Magic/KLayout DRC 0；LVS PASS；post-route SPEF：setup **-0.169 ns TT / -4.516 ns SS / +1.719 ns FF**，hold **+0.662 / +1.071 / +0.390 ns**；35.3 mW default activity；IR 7.01 mV |
 | IHP SG13G2 1.2 V | 1587 cells，26,243.18 µm² | TT power **5.62 mW**；SS setup **-0.316 ns / TNS -2.534 ns**（10 paths）@ 名义 2.5 ns OUT；REF 20 ns 域仍有 +11.15 ns 余量 |
 
 IHP 的 5.62 mW 是 **Core A 数字控制 canary** 的 TT 功耗，不是硬宏或完整
@@ -71,15 +72,22 @@ ADPLL 的功耗。
 `flow/compare/summary.csv` 目前只有表头，没有填满 QoR sweep；上面的宏时序
 是各宏 P&R 的局部结果，不能直接横向当作同一约束下的 fmax 排名。
 
-## 6. GF180 FD DPL 阻塞
+## 6. GF180 FD route/timing 状态
 
-`flow/canary/gf180mcu_fd_core_a` 的 OpenPDK FD canary 仍未完成 DPL：
+`flow/canary/gf180mcu_fd_core_a` 的 FD canary 现在使用 wafer-space
+`gf180mcuD` 的 5-metal FD view，而不是 CIEL `gf180mcuA` 的 3-metal view：
 
-- 272/280 个 sequential cell 被 `DPL-0036` 报为 placement failure；
-- 去掉 tap 插入后仍是 272 个；
-- 手工 snap 到 0.56 × 3.92 µm site/row、设置 row orientation、降低密度、
-  甚至把所有 cell 按行打包后，仍是 272 个；
-- 7-track `mcu7t5v0` 和 9-track `mcu9t5v0` 都复现。
+- `gf180mcuA` 的 tech LEF 只有 2×2 Via2 default；DPL workaround 后仍会
+  在 detailed route 报 `DRT-0234 Via2 does not have single-cut via`。
+- `gf180mcuD` 的 FD tech LEF 自带 `Via2_HH/HV/VH/VV` single-cut default；
+  route 使用 **11,180 个 single-cut via、0 个 multi-cut**，route DRC 0。
+- Magic DRC 0；KLayout DRC 0；Netgen LVS PASS；antenna PASS。
+- die 483.375 × 501.295 µm（0.2423 mm²）；stdcell 61,410.7 µm²；
+  P&R 后 1,790 个 standard cell；35.3 mW default activity；worst IR 7.01 mV。
+- post-route SPEF STA @ 20 ns：setup WNS **-0.169 ns TT / -4.516 ns SS /
+  +1.719 ns FF**；hold **+0.662 / +1.071 / +0.390 ns**；setup violation
+  3/25/0，hold 0。50 MHz 在 TT/SS 未闭合，等效约 **49.6 MHz TT /
+  40.8 MHz SS**；hold 已闭合。
 
-因此这是当前 OpenROAD DPL 对这批 FD sequential cell 的合法化问题，不是
-PDN、DRC 或普通 routing 问题。该 canary 不作为 QoR 或 signoff 结果。
+因此 FD 已不再是 route/DRC/LVS blocker，剩余是 slow-corner setup；需要
+修 SS path 或接受约 25 ns 的周期。该 canary 仍不是完整 PLL 或 DCO 表征。
