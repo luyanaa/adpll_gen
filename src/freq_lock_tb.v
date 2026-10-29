@@ -39,8 +39,9 @@ module pll_freq_lock_tb();
         .MID_NDELS(MID_NDELS),
         .CNT_BITS(CNT_BITS)
     ) dut (
-        .REF(CLK_REF), .VCO(CLK_VCO), .RST_N(RST_N),
-        .FCW(FCW), .START(START),
+        .REF(CLK_REF), .MID_OUT(CLK_VCO), .OUT(CLK_VCO), .RST_N(RST_N),
+        .FCW(FCW), .START(START), .LOCK(1'b0),
+        .FORCE_P(1'b0), .FORCE_N(1'b0),
         .LOCKED(LOCKED), .ERR(ERR),
         .COARSE_MUX(COARSE_MUX),
         .MID_MUX(MID_MUX)
@@ -61,15 +62,20 @@ module pll_freq_lock_tb();
         START = 1'b1;
         #(REF_T) START = 1'b0;
 
-        for(iter = 0; iter < 256; iter = iter + 1)
+        for(iter = 0; iter < 1024; iter = iter + 1)
             #(REF_T);
+        $display("after first acquisition: LOCKED=%b ERR=%b COARSE=%b MID=%b cnt_cap=%0d cnt_done=%0d FCW=%0d",
+                 LOCKED, ERR, COARSE_MUX, MID_MUX, dut.cnt_cap, dut.cnt_done, FCW);
+        if (!LOCKED) $display("NOTE: first acquisition did not reach LOCKED with the stub DCO");
         
         FCW = 'd13;
         START = 1'b1;
         #(REF_T) START = 1'b0;
 
-        for(iter = 0; iter < 256; iter = iter + 1)
+        for(iter = 0; iter < 1024; iter = iter + 1)
             #(REF_T);
+        $display("after FCW change: LOCKED=%b ERR=%b COARSE=%b MID=%b",
+                 LOCKED, ERR, COARSE_MUX, MID_MUX);
         $finish;
     end
 endmodule

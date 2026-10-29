@@ -164,6 +164,17 @@ view_test_pll_rcx:
 	$(WAVEVIEW) $(SIM_OUT)/test_pll_rcx.raw
 
 # Frequency locking RTL simulation
+# The legacy target uses the generated sim_dco.v; this stub target is for CI
+# when the delay-characterization logs are not available.
+test_freq_lock_stub: $(SIM_OUT)/freq_lock_stub.vcd
+
+view_test_freq_lock_stub: $(SIM_OUT)/freq_lock_stub.vcd
+	gtkwave $(SIM_OUT)/freq_lock_stub.vcd
+
+$(SIM_OUT)/freq_lock_stub.vcd: $(SRC_DIR)/freq_lock.v $(SRC_DIR)/freq_lock_tb.v $(SRC_DIR)/sim_dco_lock.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
 test_freq_lock: $(SIM_OUT)/freq_lock_tb.vcd
 
 view_test_freq_lock: $(SIM_OUT)/freq_lock_tb.vcd
@@ -171,7 +182,7 @@ view_test_freq_lock: $(SIM_OUT)/freq_lock_tb.vcd
 
 $(SIM_OUT)/freq_lock_tb.vcd: $(SRC_DIR)/freq_lock.v $(SRC_DIR)/freq_lock_tb.v $(SIM_OUT)/sim_dco.v
 	mkdir -p $(SIM_OUT)
-	cd $(SIM_OUT) && $(IVERILOG) -ginterconnect -gspecify -T max -o a.out -D SIMULATION=1 $^ && $(VVP) a.out
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1 $^ && $(VVP) a.out
 
 # Digital loop filter RTL simulation
 test_dlf: $(SIM_OUT)/digital_loop_filter_tb.vcd
@@ -202,6 +213,36 @@ view_test_delta_sigma: $(SIM_OUT)/delta_sigma_tb.vcd
 $(SIM_OUT)/delta_sigma_tb.vcd: $(SRC_DIR)/delta_sigma_tb.v $(SRC_DIR)/delta_sigma.v
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -ginterconnect -gspecify -T max -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
+# Delta-sigma saturation/width regression
+test_delta_sigma_sat: $(SIM_OUT)/delta_sigma_sat_tb.vcd
+
+view_test_delta_sigma_sat: $(SIM_OUT)/delta_sigma_sat_tb.vcd
+	gtkwave $(SIM_OUT)/delta_sigma_sat_tb.vcd
+
+$(SIM_OUT)/delta_sigma_sat_tb.vcd: $(SRC_DIR)/delta_sigma_sat_tb.v $(SRC_DIR)/delta_sigma.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
+# Lock FSM / LOCKED semantics
+test_lock_fsm: $(SIM_OUT)/lock_fsm_tb.vcd
+
+view_test_lock_fsm: $(SIM_OUT)/lock_fsm_tb.vcd
+	gtkwave $(SIM_OUT)/lock_fsm_tb.vcd
+
+$(SIM_OUT)/lock_fsm_tb.vcd: $(SRC_DIR)/lock_fsm_tb.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
+# Divider boundary regression
+test_divider: $(SIM_OUT)/divider_tb.vcd
+
+view_test_divider: $(SIM_OUT)/divider_tb.vcd
+	gtkwave $(SIM_OUT)/divider_tb.vcd
+
+$(SIM_OUT)/divider_tb.vcd: $(SRC_DIR)/divider_tb.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/fix_div.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
 
 # PLL fine test
 test_pll_fine: $(SIM_OUT)/pll_fine_test.vcd
@@ -261,3 +302,7 @@ show_delay_overlap_digital: $(SIM_OUT)/test_mid_delay.vcd $(SIM_OUT)/test_fine_d
 	$(PYTHON) $(SRC_DIR)/delay_char.py $(SIM_OUT)/test_fine_delay.vcd.mt0 $(SIM_OUT)/test_mid_delay.vcd.mt0 $(SIM_OUT)/test_coarse_delay.vcd.mt0
 
 .SECONDARY:
+
+# P0-A correctness gate (fast RTL regressions)
+test_p0: test_delta_sigma_sat test_divider test_lock_fsm
+.PHONY: test_p0

@@ -25,7 +25,7 @@ module pll_mod_divider #(
 
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
-            div        <= 1;
+            div        <= 2;
             cnt        <= 0;
             out        <= 0;
             high_phase <= 1'b0;
@@ -34,8 +34,10 @@ module pll_mod_divider #(
         end else begin
             // update divisor synchronously on load_div
             if (load_div) begin
-                // latch new divisor but sanitize: force >=1
-                div <= (set_div == 0) ? 1 : set_div;
+                // A registered divider cannot produce a true /1 output:
+                // toggling every cycle is /2.  Reject DIV<2 and clamp to 2.
+                // Use an explicit glitchless bypass mux if /1 is required.
+                div <= (set_div < 2) ? 2 : set_div;
             end
 
             // recompute high/low counts when div changes

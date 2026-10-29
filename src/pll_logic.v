@@ -18,6 +18,7 @@ module pll_logic#(
     input VDD, VSS, // Ignored (for now)
 `endif
     input REF, OUT, MID_OUT, INJ_EDGE, RST_N,
+    input PHASE_LOCK, LOCK_LOST,
     input [1:0] SS_BBPD,
     input [FILTER_BITS-1:0] KP, KI,
     input [FCW_BITS-1:0] FCW,
@@ -109,7 +110,10 @@ module pll_logic#(
     // Freq locking stage
     wire FREQ_LOCKED, FREQ_ERR;
     reg START;
-    wire LOCK = 1'b0; // TODO: Assign this to the lock of the fine stage (when eventually exists)
+    // PHASE_LOCK is driven by the fine-stage phase detector.  It must not be
+    // inferred from LOCKED_WAIT.  LOCK_LOST is the independent loss-of-lock
+    // indication (frequency error, phase error, DCO saturation or REF loss).
+    wire LOCK = PHASE_LOCK;
     reg FORCE_P, FORCE_N;
     pll_freq_lock #(
         .COARSE_NDELS(COARSE_NDELS),
@@ -132,7 +136,7 @@ module pll_logic#(
     reg [7:0] cntf;
     always @(negedge INJ_EDGE or negedge RST_N) begin
         if(!RST_N) begin
-            state <= 2'b00;
+            state <= 3'b000;
             START <= 1'b0;
             cnt <= 'd0;
             cntf <= 'd0;
@@ -164,12 +168,20 @@ module pll_logic#(
                     end
                 end
                 3'b010: begin  // Wait for phase locking
-                    if(cnt == LOCKED_WAIT) begin
+                    FORCE_P <= 1'b0;
+                    FORCE_N <= 1'b0;
+                    if(LOCK_LOST) begin
+                        // Frequency/phase/REF/DCO failure: go back to
+                        // frequency acquisition, not to a fake locked state.
+                        state <= 3'b001;
+                        cnt <= 'd0;
+                        cntf <= 'd0;
+                        LOCKED <= 1'b0;
+                    end else if((cnt == LOCKED_WAIT) && PHASE_LOCK) begin
                         state <= 3'b011;
                         cnt <= 'd0;
+                        LOCKED <= 1'b0; // asserted only in the LOCKED state
                     end else begin  // Logic for force count up/down whenever the illegal positive/negative is triggered
-                        FORCE_P <= 1'b0;
-                        FORCE_N <= 1'b0;
                         if(ILL_P || ILL_N) begin
                             cntf <= cntf + 1;
                             cnt <= 'd0;
@@ -185,9 +197,16 @@ module pll_logic#(
                         end
                     end
                 end
-                3'b011: begin  // Locked state
-                    state <= 3'b011;
-                    LOCKED <= 1'b1;
+                3'b011: begin  // Locked state, but only while the phase detector agrees
+                    if(LOCK_LOST || !PHASE_LOCK) begin
+                        state <= 3'b010;
+                        cnt <= 'd0;
+                        cntf <= 'd0;
+                        LOCKED <= 1'b0;
+                    end else begin
+                        state <= 3'b011;
+                        LOCKED <= 1'b1;
+                    end
                 end
                 3'b100: begin  // Error state
                     state <= 3'b100;

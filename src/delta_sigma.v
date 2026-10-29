@@ -135,14 +135,24 @@ module delta_sigma #(
     // To divider
     wire [BITS_INT:0] DSM_OUT_D;
     wire DSM_CAP_P, DSM_CAP_N;
-    assign DSM_OUT_D = {{(BITS_INT+1-5){dout[4]}}, dout} + {1'b0, FCWI};  // Sign extend of dout + FCWI
+    // Sign-extend or truncate dout to BITS_INT+1 bits.  The old
+    // {(BITS_INT+1-5){...}} became a negative repeat for BITS_INT<4.
+    wire [BITS_INT:0] dout_ext;
+    generate
+        if (BITS_INT + 1 >= 5) begin : g_sign_extend
+            assign dout_ext = {{(BITS_INT + 1 - 5){dout[4]}}, dout};
+        end else begin : g_truncate
+            assign dout_ext = dout[BITS_INT:0];
+        end
+    endgenerate
+    assign DSM_OUT_D = dout_ext + {1'b0, FCWI};  // Sign-extended dout + FCWI
     assign DSM_CAP_P = DSM_OUT_D[BITS_INT] != 1'b0 && dout[4] == 1'b0;    // If +dout and suddenly negative
     assign DSM_CAP_N = DSM_OUT_D[BITS_INT] != 1'b0 && dout[4] == 1'b1;    // If -dout and suddenly negative
     always @(*) begin
         if (DSM_CAP_P)
-            DSM_OUT = {(BITS_INT-1){1'b1}};    // Cap to maximum
+            DSM_OUT = {BITS_INT{1'b1}};    // Cap to maximum (2^BITS_INT-1)
         else if (DSM_CAP_N)
-            DSM_OUT = {(BITS_INT-1){1'b0}};    // Cap to minimum
+            DSM_OUT = {BITS_INT{1'b0}};    // Cap to minimum
         else
             DSM_OUT = DSM_OUT_D[BITS_INT-1:0]; // Just output
     end

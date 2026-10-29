@@ -6,6 +6,15 @@ module pll_fix_divider #(
     input  wire             rst_n,     // active low reset
     output reg              out        // divided clock output
 );
+    // DIV=1 cannot be implemented by a registered divider: toggling on every
+    // input edge produces /2.  Require DIV>=2; use an explicit clock bypass
+    // mux if a true /1 output is needed.
+    initial begin
+        if (DIV < 2) begin
+            $display("ERROR: pll_fix_divider DIV=%0d is illegal; DIV must be >= 2", DIV);
+            $fatal(1);
+        end
+    end
     localparam W = $clog2(DIV) + 1;
 
     // counters and limits for alternating high/low when odd

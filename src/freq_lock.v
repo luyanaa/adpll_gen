@@ -26,9 +26,17 @@ module pll_freq_lock #(
     wire CLK_REF = REF; // NOTE: Negative injection
     wire CLK_OUT = MID_OUT;
 
-    // The counter that resets every reference
+    // The counter that resets every reference.
+    // cnt is a binary counter in the MID_OUT domain.  Only its Gray-coded
+    // snapshot crosses into REF, so a multi-bit binary capture can never be
+    // sampled on a metastable boundary.
     reg [CNT_BITS-1:0] cnt;
-    reg [CNT_BITS-1:0] cnt_cap;
+    wire [CNT_BITS-1:0] cnt_gray = (cnt >> 1) ^ cnt;
+    reg [CNT_BITS-1:0] cnt_cap_gray;
+    reg cap_toggle;
+    reg cap_toggle_s1, cap_toggle_s2, cap_toggle_s3;
+    reg [CNT_BITS-1:0] cnt_cap_gray_s1, cnt_cap_gray_s2;
+    reg [CNT_BITS-1:0] cnt_cap; // stable REF-domain copy
     wire rst_cnt_d;
     reg rst_cnt;
 
@@ -73,16 +81,49 @@ module pll_freq_lock #(
     endgenerate
 `endif
 
-    // Capture logic
+    // Capture a Gray snapshot in the MID_OUT domain.  The toggle handshake
+    // tells the REF domain that a new stable snapshot is available.
     always @(posedge CLK_OUT or negedge RST_N) begin
         if(!RST_N) begin
+            cnt_cap_gray <= 'd0;
+            cap_toggle <= 1'b0;
+        end else if(rst_cnt_d) begin
+            cnt_cap_gray <= cnt_gray;
+            cap_toggle <= ~cap_toggle;
+        end
+    end
+
+    // Synchronize the toggle and Gray word into REF.  The Gray word may
+    // change only one bit at a time, so the 2FF synchronizer is safe.
+    always @(posedge CLK_REF or negedge RST_N) begin
+        if(!RST_N) begin
+            cap_toggle_s1 <= 1'b0;
+            cap_toggle_s2 <= 1'b0;
+            cap_toggle_s3 <= 1'b0;
+            cnt_cap_gray_s1 <= 'd0;
+            cnt_cap_gray_s2 <= 'd0;
             cnt_cap <= 'd0;
         end else begin
-            if(rst_cnt_d) begin
-                cnt_cap <= cnt;
+            cap_toggle_s1 <= cap_toggle;
+            cap_toggle_s2 <= cap_toggle_s1;
+            cap_toggle_s3 <= cap_toggle_s2;
+            cnt_cap_gray_s1 <= cnt_cap_gray;
+            cnt_cap_gray_s2 <= cnt_cap_gray_s1;
+            if(cap_toggle_s2 != cap_toggle_s3) begin
+                cnt_cap <= gray_to_bin(cnt_cap_gray_s2);
             end
         end
     end
+
+    function [CNT_BITS-1:0] gray_to_bin;
+        input [CNT_BITS-1:0] gray;
+        integer i;
+        begin
+            gray_to_bin[CNT_BITS-1] = gray[CNT_BITS-1];
+            for(i = CNT_BITS-2; i >= 0; i = i - 1)
+                gray_to_bin[i] = gray_to_bin[i+1] ^ gray[i];
+        end
+    endfunction
 
     // The reset logic for the counter
     reg CLK_REF_Q;
