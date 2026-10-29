@@ -1,5 +1,7 @@
 # ADPLL library portfolio and LibreLane flow
 
+See the repository root `README.md` for the consolidated English characterization and post-layout report.
+
 Status: **skeleton + working catalogue**.  The catalogue and block-support
 matrix are generated from the local `/grid` PDK trees.  The QoR sweep,
 LibreLane config generation, and per-block hard macros are the next layer.
