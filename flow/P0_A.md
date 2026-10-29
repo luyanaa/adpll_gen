@@ -13,6 +13,7 @@ testbenches only; no P&R, PDK or DCO characterization is changed.
 | Locked semantics | `src/pll_logic.v`, `src/pll.v`, `src/pll_logic_bb.v` | added `PHASE_LOCK` / `LOCK_LOST`; `LOCKED` is no longer a constant wait counter |
 | Fine-stage lock detector | `src/lock_detector.v` | SS-BBPD no-symbol run detector; loss on repeated non-no-symbol / filter saturation |
 | Detector regression | `src/lock_detector_tb.v` | lock, loss, relock and saturation-loss checks |
+| Macro integration wrapper | `src/pll_macro_top.v` | binds `pll_logic` to `PLL_ANALOG_MACRO` with a single parameter set |
 | Frequency-count CDC | `src/freq_lock.v` | MID_OUT binary count is Gray-coded; toggle handshake + 2FF synchronizer + REF-domain binary conversion |
 | Stale freq-lock TB | `src/freq_lock_tb.v` | updated to `MID_OUT`/`OUT`/`LOCK`/`FORCE_*` ports |
 
@@ -51,6 +52,8 @@ src/freq_lock_tb.v (with src/sim_dco_lock.v)
   fixed in `pll_logic` (16/4).
 - The CDC test should be extended with random phase relationships and a
   snapshot-valid monitor, not just the current lock-FSM smoke.
+- `pll_macro_top.v` is a structural wrapper; it has only been elaborated
+  against a port-compatible stub, not yet against the PDK macro Liberty/LEF.
 - `pll.v` still needs a full closed-loop elaboration / simulation with the
   actual `PLL_ANALOG` model.
 - No full STA/CDC signoff or P&R rerun is claimed from this batch.
