@@ -35,6 +35,7 @@ Detailed parameter and limit analysis:
 
 - `flow/P0_A.md`
 - `flow/characterization/ics55_sim/README.md`
+- `flow/characterization/ics55_l3/README.md`
 - `flow/ADPLL_FREQ_DIV.md`
 - `flow/PERFORMANCE.md`
 - `flow/PDK_ESTIMATES.md`

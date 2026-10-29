@@ -52,7 +52,13 @@ set LIBS "${SCL_LIB} ${IO_DIR}/liberty/ICSIOA_N55_3P3_tt_1p2_3p3_25c.lib"
 set LEFS "${PDK_ROOT}/${PDK}/libs.tech/librelane/N551P6M_ecos.lef ${SCL_LEF} ${IO_DIR}/lef/ICSIOA_N55_3P3_1P6M1TM_ecos.lef"
 set GDSS "${SCL_GDS} ${IO_DIR}/gds/ICSIOA_N55_3P3_1P6M1TM.gds"
 set CDLS "${SCL_DIR}/cdl/${SCL}.cdl ${IO_DIR}/cdl/ICSIOA_N55_3P3.cdl"
-set SPICES "${SCL_DIR}/spice/${SCL}.spice"
+# The /grid ics55 install has cdl/ but no spice/ directory.  CDL is a valid
+# transistor-level master netlist for ngspice; use it when spice/ is absent.
+if {[file exists "${SCL_DIR}/spice/${SCL}.spice"]} {
+  set SPICES "${SCL_DIR}/spice/${SCL}.spice"
+} else {
+  set SPICES "${SCL_DIR}/cdl/${SCL}.cdl"
+}
 # ${IO_DIR}/spice/ICSIOA_N55_3P3.spice not available yet
 
 # TODO: Do the characterization of the lib

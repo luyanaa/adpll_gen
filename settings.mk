@@ -82,7 +82,7 @@ IO_DIR=$(PDK_ROOT)/$(PDK)/libs.ref/ICsprout_55LLULP1233_IO_251013
 ifeq ($(SCL),ics55_LLSC_H7CR)
 SYN_SRC+= $(ROOT_DIR)/src/pll_cells_ics55.v
 # Cell SPICE subcircuit and the instance line of the testbench load (PLL_CELL_BUFFX0)
-SCL_SPICE=$(SCL_DIR)/spice/$(SCL).spice
+SCL_SPICE=$(if $(wildcard $(SCL_DIR)/spice/$(SCL).spice),$(SCL_DIR)/spice/$(SCL).spice,$(SCL_DIR)/cdl/$(SCL).cdl)
 SCL_BUFFX0=Ximpl I VDD VSS Z BUFX0P5H7R
 # The _ecos cell LEF has the signal pins on MET2 (+ VIA1), which only the _M2 GDS has.
 # (The plain MET1-pin LEF/GDS leaves some pins without access points in OpenROAD)
@@ -91,7 +91,7 @@ SCL_GDS=$(SCL_DIR)/gds/$(SCL)_M2.gds
 else ifeq ($(SCL),ICsprout55_9TSVT_basic)
 SYN_SRC+= $(ROOT_DIR)/src/pll_cells_$(SCL).v
 # Every cell has the well bias pins VNW / VPW, tied to the supplies here
-SCL_SPICE=$(SCL_DIR)/spice/$(SCL).spice
+SCL_SPICE=$(if $(wildcard $(SCL_DIR)/spice/$(SCL).spice),$(SCL_DIR)/spice/$(SCL).spice,$(SCL_DIR)/cdl/$(SCL).cdl)
 SCL_BUFFX0=Ximpl I VDD VSS Z VDD VSS BUFX0P5_9TSVT
 # A single cell LEF / GDS pair, with the signal pins on MET1
 SCL_LEF=$(SCL_DIR)/lef/$(SCL).lef
@@ -102,7 +102,7 @@ endif
 
 $(SIM_OUT)/models.inc: $(ROOT_DIR)/settings.mk
 	mkdir -p $(dir $@)
-	@echo ".LIB \"$(PDK_ROOT)/$(PDK)/libs.tech/ngspice/ICsprout_55LLULP1225_V1p1_hsp.lib\" tt_mos" > $@.tmp
+	@echo ".LIB \"$(PDK_ROOT)/$(PDK)/libs.tech/spice/foundry/ngspice/ICsprout_55LLULP1225_V1p1_hsp.lib\" tt_mos" > $@.tmp
 	@echo ".INCLUDE \"$(SCL_SPICE)\"" >> $@.tmp
 	@echo ".PARAM lvdd=1.2" >> $@.tmp
 	@echo "* Load used by the testbenches (same mapping as in the pll_cells_*.v of $(SCL))" >> $@.tmp
