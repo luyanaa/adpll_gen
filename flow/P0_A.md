@@ -32,6 +32,7 @@ divider_tb: PASS
 lock_detector_tb: PASS
 lock_fsm_tb: PASS
 freq_lock_tb: PASS
+pll_macro_top smoke: runs; no LOCKED in the short behavioral window
 ```
 
 The focused tests are:
@@ -42,6 +43,7 @@ src/divider_tb.v
 src/lock_detector_tb.v
 src/lock_fsm_tb.v
 src/freq_lock_tb.v (with src/sim_dco_lock.v)
+src/pll_macro_top_tb.v (behavioral smoke only)
 ```
 
 ## Still open in P0-A
@@ -52,8 +54,10 @@ src/freq_lock_tb.v (with src/sim_dco_lock.v)
   fixed in `pll_logic` (16/4).
 - The CDC test should be extended with random phase relationships and a
   snapshot-valid monitor, not just the current lock-FSM smoke.
-- `pll_macro_top.v` is a structural wrapper; it has only been elaborated
-  against a port-compatible stub, not yet against the PDK macro Liberty/LEF.
+- `pll_macro_top.v` is a structural wrapper; it elaborates and runs against
+  the behavioral `sim_*` models, but does not reach `LOCKED` in the short
+  smoke window (`state=1`, `FREQ_LOCKED=0`).  It still needs a calibrated DCO
+  model / correct FCW operating point and a real macro model.
 - `pll.v` still needs a full closed-loop elaboration / simulation with the
   actual `PLL_ANALOG` model.
 - No full STA/CDC signoff or P&R rerun is claimed from this batch.
