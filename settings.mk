@@ -31,6 +31,7 @@ SYN_SRC?=$(ROOT_DIR)/src/pll.v \
 	
 
 SYN_DIG_SRC=$(ROOT_DIR)/src/pll_logic.v \
+	$(ROOT_DIR)/src/lock_detector.v \
 	$(ROOT_DIR)/src/digital_loop_filter.v \
 	$(ROOT_DIR)/src/term_decoder.v \
 	$(ROOT_DIR)/src/freq_lock.v \

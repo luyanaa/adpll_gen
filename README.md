@@ -48,6 +48,8 @@ divider /2,/3,/4 + clamp    PASS
 SS-BBPD lock/loss detector  PASS
 LOCKED / PHASE_LOCK / LOCK_LOST FSM PASS
 frequency-lock acquisition and FCW reacquisition PASS (stub DCO)
+frequency-count CDC (independent clocks) PASS
+pll_macro_top behavioral lock smoke PASS (LOCKED=1, FCW=16)
 ```
 
 Run:
@@ -57,9 +59,10 @@ cd sim
 make test_p0 PDK=ihp-sg13g2 USE_DOCKER=0
 ```
 
-Details and open items are in `flow/P0_A.md`.  A real fine-phase detector,
-full CDC monitor, DCO characterization and closed-loop PLL simulation are
-still open; the physical-macro results below do not imply them.
+Details and open items are in `flow/P0_A.md`.  The lock is still a behavioral
+SS-BBPD/no-symbol result, not a PEX/transistor-level or jitter signoff.  DCO
+characterization, random-phase CDC sweeps and the real macro model remain
+open; the physical-macro results below do not imply them.
 
 ## 3. Implemented hard macros
 
