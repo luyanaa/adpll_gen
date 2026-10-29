@@ -32,6 +32,7 @@ divider_tb: PASS
 lock_detector_tb: PASS
 lock_fsm_tb: PASS
 freq_lock_tb: PASS
+freq_lock_cdc_tb: PASS (100 checks, no X)
 pll_macro_top smoke: PASS, LOCKED=1 (behavioral sim_* models)
 ```
 
@@ -43,6 +44,7 @@ src/divider_tb.v
 src/lock_detector_tb.v
 src/lock_fsm_tb.v
 src/freq_lock_tb.v (with src/sim_dco_lock.v)
+src/freq_lock_cdc_tb.v
 src/pll_macro_top_tb.v (behavioral smoke only)
 ```
 
@@ -52,8 +54,9 @@ src/pll_macro_top_tb.v (behavioral smoke only)
   SS-BBPD; the detector is a no-symbol run detector, not a phase-noise or
   calibrated phase-error measurement.  Its LOCK_COUNT/LOSS_COUNT are still
   fixed in `pll_logic` (16/4).
-- The CDC test should be extended with random phase relationships and a
-  snapshot-valid monitor, not just the current lock-FSM smoke.
+- The CDC test covers an independent 1.5 GHz MID_OUT / 100 MHz REF phase
+  relationship with no-X checks, but still needs randomized phase sweeps and
+  a full snapshot-valid scoreboard.
 - `pll_macro_top.v` now reaches `LOCKED=1` in the behavioral sim_* smoke with
   `FCW=16`, `FREQ_LOCKED=1`, `PHASE_LOCK=1`.  This is a behavioral lock, not a
   PEX/transistor-level or jitter signoff.

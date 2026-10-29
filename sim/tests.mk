@@ -234,6 +234,16 @@ $(SIM_OUT)/lock_detector_tb.vcd: $(SRC_DIR)/lock_detector_tb.v $(SRC_DIR)/lock_d
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
 
+# Frequency-count CDC smoke
+test_freq_lock_cdc: $(SIM_OUT)/freq_lock_cdc_tb.vcd
+
+view_test_freq_lock_cdc: $(SIM_OUT)/freq_lock_cdc_tb.vcd
+	gtkwave $(SIM_OUT)/freq_lock_cdc_tb.vcd
+
+$(SIM_OUT)/freq_lock_cdc_tb.vcd: $(SRC_DIR)/freq_lock_cdc_tb.v $(SRC_DIR)/freq_lock.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
 # Lock FSM / LOCKED semantics
 test_lock_fsm: $(SIM_OUT)/lock_fsm_tb.vcd
 
@@ -314,7 +324,7 @@ show_delay_overlap_digital: $(SIM_OUT)/test_mid_delay.vcd $(SIM_OUT)/test_fine_d
 .SECONDARY:
 
 # P0-A correctness gate (fast RTL regressions)
-test_p0: test_delta_sigma_sat test_divider test_lock_detector test_lock_fsm test_freq_lock_stub test_pll_macro_smoke
+test_p0: test_delta_sigma_sat test_divider test_lock_detector test_lock_fsm test_freq_lock_cdc test_freq_lock_stub test_pll_macro_smoke
 .PHONY: test_p0
 
 # Closed-loop smoke with the macro wrapper and behavioral sim_* models.
