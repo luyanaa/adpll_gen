@@ -40,6 +40,8 @@ characterization report。完整 top-level `pll` 还没有和硬宏一起集成�
 | ics55 H7CR | 1571 cells，4321.80 µm² | TT post-route clock report：REF 994.87 MHz、OUT 835.87 MHz、MID_OUT 1002.43 MHz、INJ_EDGE 452.09 MHz；SS 分别约 580/479/640/244 MHz。setup/hold 0 |
 | GF180mcu AS 3.3 V | 1690 cells，49,069.31 µm² | 数字 P&R 80/80（signoff skips）；无 post-PnR STA / RCX；一个 r2r setup 违例 -0.092 ns @ ff/n40C/3.6 V |
 | GF180mcuD FD 5 V | 1588 synth cells；P&R 后 1790 stdcells；61,410.7 µm² | 完整 P&R/DRC/LVS/antenna：route DRC 0（11,180 single-cut vias）；Magic/KLayout DRC 0；LVS PASS；post-route SPEF：setup **-0.169 ns TT / -4.516 ns SS / +1.719 ns FF**，hold **+0.662 / +1.071 / +0.390 ns**；35.3 mW default activity；IR 7.01 mV |
+| GF180mcuD FD 9T 5 V | 1588 synth；P&R 后 1744 stdcells；77,381.7 µm² | 完整 P&R/DRC/LVS/antenna：11,121 single-cut vias；setup **+0.752/-2.646/+2.219 ns**，hold **+0.396/+0.732/+0.249 ns**；43.3 mW；IR 6.78 mV |
+| GF180mcuD 3.3 V 7T | 1690 synth；P&R 后 1598 stdcells；59,360.4 µm² | 完整 P&R/DRC/LVS：11,001 single-cut vias；setup **+1.478/+0.283/+2.205 ns**，hold **+0.123/+0.147/+0.103 ns**；12.9 mW；IR 2.03 mV |
 | IHP SG13G2 1.2 V | 1587 cells，26,243.18 µm² | TT power **5.62 mW**；SS setup **-0.316 ns / TNS -2.534 ns**（10 paths）@ 名义 2.5 ns OUT；REF 20 ns 域仍有 +11.15 ns 余量 |
 
 IHP 的 5.62 mW 是 **Core A 数字控制 canary** 的 TT 功耗，不是硬宏或完整

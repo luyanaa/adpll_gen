@@ -21,6 +21,7 @@ git -C "$DEST" fetch origin "$COMMIT"
 git -C "$DEST" checkout --detach "$COMMIT"
 git -C "$DEST" sparse-checkout set \
     gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0 \
+    gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu9t5v0 \
     gf180mcuD/libs.ref/gf180mcu_fd_io \
     gf180mcuD/libs.tech
 

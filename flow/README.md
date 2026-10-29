@@ -169,6 +169,7 @@ flow/
   canary/gf180mcu_as_sc_core_a/ gf180mcu 3.3V Core A canary
   canary/ihp130_sg13g2_core_a/  ihp130 1.2V Core A canary
   canary/gf180mcu_fd_core_a/ gf180mcuD FD 5-metal canary (full P&R; DRC/LVS/antenna PASS)
+  canary/gf180mcu_3v3_core_a/ gf180mcuD + /grid 3.3V 7T/9T/12T canaries (7T complete)
   canary/ETRI050_fd_sc_core_a/ ETRI050 Core A route/fill canary (route DRC 0, timing/DRC/LVS open)
   experiments/              20-library Yosys synthesis matrix + logs
 ```

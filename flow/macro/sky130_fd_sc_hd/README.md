@@ -55,3 +55,24 @@ final/PLL_ANALOG_MACRO_lvs*.lvsdb
 ```
 
 This lane is experimental; it is not claimed as signoff-complete.
+
+## Netgen follow-up (2026-10-29)
+
+A direct netgen comparison was run with:
+
+```text
+layout:  final/PLL_ANALOG_MACRO_extracted8.cir
+ref:     final/PLL_ANALOG_MACRO.vnb.spice / PLL_ANALOG_MACRO.spice
+setup:   ~/.ciel/.../sky130A/libs.tech/netgen/sky130A_setup.tcl
+```
+
+The canonical `sky130_fd_sc_hd.spice` cell definitions have the correct
+`w=...u l=...u` units.  Netgen reports every cell device class as equivalent,
+but the top-level pin list remains ambiguous (many symmetric FINE/MID/COARSE
+pins) and the `dfxtp_2` reference contains 8 `special_nfet_01v8` tap devices
+that the extracted layout does not classify; final result is still
+`Netlists do not match`.  This is a reference-cell-view / top-pin-matching
+issue, not a macro routing/PDN issue.  DRC remains 0.
+
+A clean blackbox top-level LVS or a reference cell CDL with the special tap
+devices normalized is still required before claiming LVS PASS.

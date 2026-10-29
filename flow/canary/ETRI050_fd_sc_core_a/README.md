@@ -30,15 +30,23 @@ result, not a timing-signoff result.
 
 ## Remaining blockers
 
-- Timing is far from closed at 50 MHz; this library is not suitable for a
-  high-frequency ADPLL without a much slower clock or architecture change.
-- PDN rails-only has no top-level VDD/VSS terminal; PSM reports
-  `PSM-0038/PSM-0069`. Power checker is skipped.
-- The ETRI KLayout DRC deck reports NWL/NSD/PSD spacing around abutted cells;
-  the native cell spacing/deck context is not clean.
-- KLayout LVS cannot build a strict top-level pin map from the extracted top
-  cell; the extracted `.SUBCKT pll_logic` has no pin list.
-- ETRI050 has one TT/5 V/25 °C corner and no temperature model.
+- **Timing:** 20 ns gives setup -158.85 ns / hold -16.73 ns.  The critical path
+  is about 179 ns, so ~200–250 ns closes setup only; hold does not improve with
+  a slower clock and is still about -16.7 ns.  The library has one
+  TT/5 V/25 °C corner and no temperature model.
+- **PDN:** rails-only has no top-level VDD/VSS terminal; PSM reports
+  `PSM-0038/PSM-0069`; power checker is skipped.
+- **DRC:** the 636 markers are cell-boundary context, not top-level route:
+  `1.NWL.S.2` 267, `1.NWL.S.1` 156, `5.NSD.S1` 110, `6.PSD.S1` 103.  The 12T
+  GDS has a 1.3/1.4 µm halo beyond the LEF, so abutted cells violate
+  NW/NSD/PSD spacing.  The PDK `ACCEPTANCE.md` excludes the 12T library from
+  its acceptance gate.
+- **LVS:** the DEF→GDS top pin texts are on layer 13/1, but the ETRI deck reads
+  labels from 42/44/46; the extracted `.SUBCKT pll_logic` therefore has no pin
+  list.  In addition all 26 stdcell subcircuits fail because the extracted
+  bulk/tap nodes are not merged into VDD/VSS.
+- A clean 12T GDS/LEF or a patched label/tap flow is required before claiming
+  DRC/LVS signoff.
 
 ## Reproduce
 

@@ -47,6 +47,8 @@ Detailed parameter and limit analysis:
 | sky130 | `sky130_fd_sc_hd` | 79.665 × 90.385 | 0.007200 | experimental | route/fill | **0** | cell-subcircuit LVS open |
 | IHP SG13G2 | `sg13g2_stdcell` | 160 × 105 | 0.0168 | 805 | complete | **0** (density rules) | **PASS** on fill-stripped view |
 | GF180mcu FD (`gf180mcuD`) | `gf180mcu_fd_sc_mcu7t5v0` | 483.4 × 501.3 | 0.2423 | 3421 (1790 stdcells) | **complete** | **0** (Magic + KLayout) | **PASS** (Netgen) |
+| GF180mcu FD 9T (`gf180mcuD`) | `gf180mcu_fd_sc_mcu9t5v0` | 534.4 × 561.3 | 0.3000 | 8515 (1744 stdcells) | **complete** | **0** (Magic + KLayout) | **PASS** (Netgen) |
+| GF180mcuD 3.3 V 7T | `gf180mcu_as_sc_mcu7t3v3` | 416.8 × 434.7 | 0.1812 | 8945 (1598 stdcells) | **complete** | **0** (Magic + KLayout) | **PASS** (Netgen) |
 | ETRI050 12T | `ETRI050_fd_sc_12t` | 3050 × 3262 | 9.95 die / 1.521 instance | 2428 after P&R | **route/fill complete** | 636 deck markers | strict pin-map fail |
 
 ### 2.1 Post-layout timing
@@ -96,6 +98,8 @@ These are `pll_logic` only, not the complete PLL.
 | ics55 H7CR | 1571 | 4321.8 | TT 1.2 V | 994.87 | **835.87** | 1002.43 | 452.09 |
 | GF180 AS 3.3 V | 1690 | 49069.3 | SS 3.0 V | 163.53 | **196.37** | 306.87 | 96.70 |
 | GF180mcuD FD 5 V | 3421 (1790 stdcells) | 61,410.7 | post-route TT/SS | — | **49.6 / 40.8** | — | — |
+| GF180mcuD FD 9T 5 V | 8515 (1744 stdcells) | 77,381.7 | post-route TT/SS | — | **52.0 / 44.2** | — | — |
+| GF180mcuD 3.3 V 7T | 8945 (1598 stdcells) | 59,360.4 | post-route 3 corners | — | **≥50** | — | — |
 | IHP SG13G2 | 1587 | 26243.2 | TT 1.2 V | 379.10 | **525.42** | 653.44 | 237.33 |
 | ETRI050 12T | 1654 | 1,206,913.6 | TT 5 V | — | **~90 MHz** pre-layout | — | — |
 
@@ -114,6 +118,11 @@ report.  It is a digital-logic limit, not the analog DCO limit.
   The 20 ns (50 MHz) constraint is not closed at TT/SS; about 40.8 MHz at SS.
   The run uses the 5-metal wafer-space `gf180mcuD` view, not the 3-metal
   `gf180mcuA` view.
+- **GF180mcuD FD 9T** completes the same full flow: 11,121 single-cut vias,
+  DRC 0, LVS PASS, 43.3 mW, 7.01 mV IR; setup +0.752 ns TT / -2.646 ns SS.
+- **GF180mcuD 3.3 V 7T** (`gf180mcu_as_sc_mcu7t3v3`) is the completed
+  `/grid` 3.3 V lane: 20 ns closes at all corners (SS +0.283 ns setup,
+  +0.147 ns hold), DRC 0, LVS PASS, 12.9 mW, 2.03 mV IR.
 - **IHP** has TT power **5.62 mW** for the digital canary; SS setup is
   **-0.316 ns / TNS -2.534 ns** at nominal 2.5 ns `OUT`, while the 20 ns `REF`
   domain has about +11.15 ns margin.
@@ -153,6 +162,8 @@ Current evidence does **not** support a 1.6 GHz complete loop:
   `INJ_EDGE`
 - GF180 AS: `OUT` ~196 MHz SS / ~330 MHz TT pre-layout
 - GF180mcuD FD: `OUT` ~49.6 MHz TT / ~40.8 MHz SS post-route; 50 MHz not closed at SS
+- GF180mcuD FD 9T: `OUT` ~52.0 MHz TT / ~44.2 MHz SS post-route; SS setup open
+- GF180mcuD 3.3 V 7T: 20 ns closed at all corners (>50 MHz)
 - sky130: ~570 MHz pre-layout, no post-route digital canary
 - IHP: 525 MHz TT / <400 MHz SS
 - ETRI050: ~90 MHz pre-layout
@@ -177,19 +188,48 @@ DRC 0, Netgen LVS PASS and antenna PASS.  This is no longer a route blocker.
 The remaining FD issue is timing: 20 ns (50 MHz) setup is **-0.169 ns TT /
 -4.516 ns SS**, with hold positive at all corners.
 
+### GF180 3.3 V 9T / 12T
+
+The 7T AS lane is complete.  The OSU 9T/12T lanes are **not** signoff-clean:
+
+- 9T route + Netgen LVS complete, but TritonCTS crashes in the OSU buffer
+  characterization (`dbMaster::staCell()`), fill cannot close a 162 dbu gap
+  (no `__fill_1`), and KLayout DRC has 1445 cell-boundary well/implant items
+  because the OSU library ships no tap/endcap cells.
+- 12T (OSU) stops at `DRT-0085` access-pattern errors; the OCD 12T alternative
+  fails Yosys/ABC and has no single merged Liberty.
+- These are library-view/abutment limits, not a flow knob.  See
+  `flow/canary/gf180mcu_3v3_core_a/README.md`.
+
 ### sky130 LVS
 
-Both sky130 lanes reach DRC 0, but neither has cell-subcircuit LVS closure:
+Both sky130 macros are **KLayout DRC 0**, but device-level LVS is not closed:
 
-- `as_sc_hs`: Magic-extracted cell CDLs produce finger/device mismatches.
-- `fd_sc_hd`: complete PDK CDL exists, but KLayout still reports pin/device
-  mismatches; `netgen` gets closer but top device counts differ.
+- `sky130_fd_sc_hd`: KLayout LVS fails because its reference reader treats
+  Magic `X0` devices as subcircuits and bare `w=0.15` as metres; netgen with
+  the PDK `sky130_fd_sc_hd.spice` gets all cell device classes equivalent, but
+  the top pin list and `special_nfet_01v8` tap devices still differ.  Device
+  classes are equivalent; a clean top-pin/blackbox rule is still required.
+- `as_sc_hs`: same KLayout reader/unit problem with no shipped CDL; netgen is
+  the only viable path, but the top CDL pin order does not match the extractor.
 
-A clean LVS cell view or an explicit blackbox flow is still required.
+No sky130 LVS PASS is claimed.  The `fd_sc_hd` post-route STA evidence is
+setup +2.71 ns / hold +0.143 ns at 20 ns.
 
 ### ETRI050
 
-- Core A originally lacked `nand2b`; the canary now maps `NAND2BX1`/`NOR2BX1`
+- The 636 DRC markers are cell-boundary well/implant context, not top-level
+  route errors: `1.NWL.S.2` 267, `1.NWL.S.1` 156, `5.NSD.S1` 110,
+  `6.PSD.S1` 103.  The 12T GDS has a 1.3/1.4 µm halo beyond the LEF, so
+  abutted cells violate NW/NSD/PSD spacing.  The PDK `ACCEPTANCE.md` excludes
+  this 12T library from the acceptance gate.
+- LVS top pins are absent because the DEF→GDS labels are on layer 13/1 while
+  the ETRI deck reads 42/44/46; all 26 stdcell subcircuits also fail on
+  bulk/tap extraction.  Strict pin-map LVS is not achievable without a clean
+  GDS/label + cell-view fix.
+- Timing at 20 ns is setup -158.85 ns / hold -16.73 ns; ~250 ns closes setup
+  but hold remains about -16.7 ns.  It is a flow canary, not signoff.
+- Core A originally lacked `nand2b`; the canary maps `NAND2BX1`/`NOR2BX1`
   to NAND/NOR + INV.  Core B/C remain the full-cell configurations.
 - A rails-only PDN lets route/fill finish, but it has no top-level VDD/VSS
   terminal; PSM reports `PSM-0038/0069` and the power checker is skipped.
@@ -229,6 +269,14 @@ librelane --manual-pdk --pdk-root /tmp/gf180mcu-wafer \
   -S Checker.MaxSlewViolations -S Checker.MaxCapViolations \
   config.digital_gf180mcuD.yaml
 
+# GF180mcuD 3.3 V 7T canary (completed lane)
+cd flow/canary/gf180mcu_3v3_core_a
+librelane --manual-pdk --pdk-root /tmp/pdk_gf180mcuD_3v3 \
+  --pdk gf180mcuD --scl gf180mcu_as_sc_mcu7t3v3 \
+  -S Checker.SetupViolations -S Checker.HoldViolations \
+  -S Checker.MaxSlewViolations -S Checker.MaxCapViolations \
+  config.digital_gf180mcuD_7t.yaml
+
 # ETRI050 route/fill qualification
 cd flow/canary/ETRI050_fd_sc_core_a
 librelane --manual-pdk --pdk-root /grid --pdk ETRI050 \
@@ -256,6 +304,7 @@ flow/macro/sky130_as_sc_hs/
 flow/macro/sky130_fd_sc_hd/
 flow/macro/ihp130_sg13g2/
 flow/canary/gf180mcu_fd_core_a/
+flow/canary/gf180mcu_3v3_core_a/
 flow/canary/ETRI050_fd_sc_core_a/
 ```
 

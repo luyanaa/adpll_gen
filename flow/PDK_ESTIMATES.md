@@ -17,6 +17,9 @@
 | IHP SG13G2 | **525 MHz TT / <400 MHz SS**（post-route） | **237–250 MHz TT**（`INJ_EDGE`） | **否** |
 | ETRI050 12T 5 V | **约 90 MHz pre-layout**；P&R route 完成，20 ns OUT 下 setup -158.85 ns | 未测；5 V/0.5 µm，估计同量级 | **否** |
 | GF180mcuD FD 5 V | **49.6 MHz TT / 40.8 MHz SS**（post-route） | 未单独测；同量级 | **否**（50 MHz SS 未闭合） |
+| GF180mcuD FD 9T 5 V | **52.0 MHz TT / 44.2 MHz SS**（post-route） | 未单独测；同量级 | **否**（50 MHz SS 未闭合） |
+| GF180mcuD 3.3 V 7T | **20 ns 全 corner 闭合（>50 MHz）** | 未单独测 | **否**（50 MHz 级） |
+| GF180mcuD 3.3 V 9T（OSU） | 20 ns pre-CTS setup -6.88 ns；无 CTS | 未测 | **不能评估**（DRC/tap 阻塞） |
 
 表中的“DCO/OUT”是**数字控制域**能接收的频率，不包含 DCO 模拟延迟链本身；模拟 DCO
 可能更高，但当前没有实测。

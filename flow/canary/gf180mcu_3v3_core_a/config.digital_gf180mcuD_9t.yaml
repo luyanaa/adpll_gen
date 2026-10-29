@@ -1,0 +1,57 @@
+# gf180mcuD + /grid 3.3 V AS 7-track digital canary.
+# The gf180mcuD PDK supplies the decks, Magic tech, Netgen setup and RCX rules;
+# the standard-cell library is the /grid gf180mcu_osu_sc_gp9t3v3 view.
+DESIGN_NAME: pll_logic
+VERILOG_DEFINES: [WITH_POWER]
+
+VERILOG_FILES:
+  - dir::../../../src/pll_logic.v
+  - dir::../../../src/digital_loop_filter.v
+  - dir::../../../src/term_decoder.v
+  - dir::../../../src/freq_lock.v
+  - dir::../../../src/delta_sigma.v
+  - dir::../../../src/fix_div.v
+  - dir::../../../src/conf_div.v
+
+PDK: gf180mcuD
+STD_CELL_LIBRARY: gf180mcu_osu_sc_gp9t3v3
+
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD, VNW]
+SCL_GROUND_PINS: [VSS, VPW]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal5
+IO_PIN_H_LAYER: Metal3
+IO_PIN_V_LAYER: Metal2
+PDN_MULTILAYER: true
+PDN_CORE_RING: false
+PDN_ENABLE_PINS: true
+
+CLOCK_PORT: REF
+CLOCK_PERIOD: 20.0
+PNR_SDC_FILE: dir::constraints/adpll.sdc
+SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
+
+FP_CORE_UTIL: 30
+PL_TARGET_DENSITY_PCT: 45
+TECH_LEFS:
+  "nom_*": /tmp/pdk_gf180mcuD_3v3/gf180mcuD/gf180mcuD_3v3_tech.tlef
+  "min_*": /tmp/pdk_gf180mcuD_3v3/gf180mcuD/gf180mcuD_3v3_tech.tlef
+  "max_*": /tmp/pdk_gf180mcuD_3v3/gf180mcuD/gf180mcuD_3v3_tech.tlef
+LIB:
+  "*_tt_025C_3v30":
+    - /grid/gf180mcu/gf180mcu_osu_sc_gp9t3v3/lib/gf180mcu_osu_sc_gp9t3v3_TT_25C.nldm.lib
+CELL_CDLS:
+  - /grid/gf180mcu/gf180mcu_osu_sc_gp9t3v3/spice/gf180mcu_osu_sc_gp9t3v3.spice
+
+WELLTAP_CELL: gf180mcu_osu_sc_gp9t3v3__fill_4
+ENDCAP_CELL: gf180mcu_osu_sc_gp9t3v3__fill_4
+
+CTS_ROOT_BUFFER: gf180mcu_osu_sc_gp9t3v3__clkinv_16
+CTS_CLK_BUFFERS:
+  - gf180mcu_osu_sc_gp9t3v3__clkinv_4
+  - gf180mcu_osu_sc_gp9t3v3__clkinv_8

@@ -24,6 +24,27 @@ This lane tests the wafer-space `gf180mcuD` PDK with
 The run is a complete Classic-flow P&R and DRC/LVS/antenna signoff.  Timing is
 reported below; it is **not** a complete ADPLL characterization.
 
+### 9-track FD variant
+
+`config.digital_gf180mcuD_9t.yaml` repeats the same flow with
+`gf180mcu_fd_sc_mcu9t5v0`.  It also completes 80/80:
+
+| Item | 9-track result |
+|---|---|
+| Die / area | 534.455 × 561.335 µm / 0.300008 mm² |
+| Stdcell area / utilization | 77,381.7 µm² / 28.6% |
+| Route DRC | 0; 11,121 single-cut vias, 0 multi-cut |
+| Magic / KLayout DRC | 0 / 0 |
+| Netgen LVS / antenna | PASS / PASS |
+| Setup WNS | **+0.752 ns TT / -2.646 ns SS / +2.219 ns FF** |
+| Hold WNS | +0.396 / +0.732 / +0.249 ns |
+| Power / IR | 43.3 mW default activity / 6.78 mV worst |
+| Instances | 1,744 standard cells + 1,367 tap + 206 endcap + 5,198 fill |
+
+At 20 ns the TT corner passes and SS is still -2.646 ns; the 9-track view is
+not a 50 MHz signoff either.  The 9-track run uses the same `gf180mcuD` decks
+and therefore also closes route, DRC and LVS.
+
 ## Why `gf180mcuA` failed and `gf180mcuD` works
 
 The previous canary used the CIEL `gf180mcuA` FD library.  That view is
