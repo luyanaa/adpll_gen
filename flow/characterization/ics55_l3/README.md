@@ -63,3 +63,33 @@ PEX extraction:               not started
    tuning/PVT/injection characterization.
 
 Do not treat the L1 numbers as PEX or jitter signoff.
+
+## Xyce attempt (IHP)
+
+The local IHP tree includes `libs.tech/xyce/models`, and a working Xyce 7.10
+binary was found in the system Spack installation.  Using the Xyce model path
+
+```text
+.../ihp-sg13g2/libs.tech/xyce/models/cornerMOSlv.lib
+```
+
+and the IHP standard-cell SPICE view still fails before transient analysis:
+
+```text
+Unrecognized parameter D for device YPSP103_VA!M1
+Unrecognized fields for device YPSP103_VA!M1
+1430/2790 netlist errors
+```
+
+So the Xyce/PSP path is also blocked by the local model/library combination,
+not by the DCO testbench.
+
+## ics55 flat-CDL check
+
+`flow/macro/ics55_h7cr/flatten_cdl.py` successfully flattens the generated
+`PLL_ILDCO.sp` to 776 devices and 70 top pins.  ngspice then still fails to
+resolve the foundry `nm1p2_svt_lp`/`pm1p2_svt_lp` model cards because the
+vendor model library uses relative nested `.LIB` files and additional model
+data; this is a model-deck assembly issue, not a DCO netlist issue.
+
+Thus both L3 routes are currently blocked.  No L3/PEX baseline is claimed.
