@@ -1,0 +1,12 @@
+*.osdi
+*.raw
+*.log
+*.sp
+*.inc
+.spiceinit
+test_dco_l3.sp
+test_dco_l3_tran.sp
+PLL_ILDCO.sp
+extract_raw.sp
+extract_raw.log
+test_dco_tran.dat

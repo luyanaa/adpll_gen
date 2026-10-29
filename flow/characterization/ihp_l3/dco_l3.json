@@ -1,0 +1,199 @@
+{
+  "technology": "ihp-sg13g2",
+  "model": "PSP103 OSDI via OpenVAF 23.5.0",
+  "simulator": "ngspice-44.2",
+  "characterization_level": "L3_transistor_no_pex",
+  "points": 27,
+  "note": "Transistor-level standard-cell/PSP103 DCO; not PEX/PVT/jitter signoff.",
+  "results": [
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 1.6018903624271836,
+      "freq_mhz": 624.2624485765682
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 1.6430502006340904,
+      "freq_mhz": 608.6241306650747
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 1.6989807919421636,
+      "freq_mhz": 588.5881728285259
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 1.6872247415199844,
+      "freq_mhz": 592.6892697763083
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 1.707939668674782,
+      "freq_mhz": 585.5007751977071
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 1.7113432740934456,
+      "freq_mhz": 584.3363018619
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 1.7865278741656907,
+      "freq_mhz": 559.7449748535272
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 1.7397829820944466,
+      "freq_mhz": 574.7843324666533
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 1.7683258462756155,
+      "freq_mhz": 565.5066356159211
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 3.5529638143080686,
+      "freq_mhz": 281.45516032922154
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 3.376217004573233,
+      "freq_mhz": 296.1894921580741
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 3.5183700499278694,
+      "freq_mhz": 284.2225194648019
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 3.587445273462524,
+      "freq_mhz": 278.74989686876023
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 3.4740261811335724,
+      "freq_mhz": 287.8504501292217
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 3.4607374609890416,
+      "freq_mhz": 288.95575329606504
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 3.5698412777686928,
+      "freq_mhz": 280.12449915561615
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 3.6438143994798162,
+      "freq_mhz": 274.43768819365715
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 3.6439502412099536,
+      "freq_mhz": 274.42745751323855
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 4.291742055394745,
+      "freq_mhz": 233.0056156900189
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 4.568023844529349,
+      "freq_mhz": 218.91304293378346
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 4.65724606195279,
+      "freq_mhz": 214.7191680872233
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 4.562860665057366,
+      "freq_mhz": 219.160757561162
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 4.591684323862194,
+      "freq_mhz": 217.78500643068426
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 4.55901780258324,
+      "freq_mhz": 219.34549135416358
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 4.412665487708731,
+      "freq_mhz": 226.62039594559167
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 4.66193227712947,
+      "freq_mhz": 214.50333049791496
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 4.714980767974745,
+      "freq_mhz": 212.08994250670852
+    }
+  ]
+}
