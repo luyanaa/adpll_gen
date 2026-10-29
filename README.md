@@ -34,6 +34,7 @@ Frequency-division characterization is therefore a full-top task.
 Detailed parameter and limit analysis:
 
 - `flow/P0_A.md`
+- `flow/characterization/ics55_sim/README.md`
 - `flow/ADPLL_FREQ_DIV.md`
 - `flow/PERFORMANCE.md`
 - `flow/PDK_ESTIMATES.md`
