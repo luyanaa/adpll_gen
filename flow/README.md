@@ -168,6 +168,7 @@ flow/
   canary/gf180mcu_as_sc_core_a/ gf180mcu 3.3V Core A canary
   canary/ihp130_sg13g2_core_a/  ihp130 1.2V Core A canary
   canary/gf180mcu_fd_core_a/ gf180mcu OpenPDK FD 3-metal canary (DPL 0036, experiment)
+  canary/ETRI050_fd_sc_core_a/ ETRI050 Core A route/fill canary (route DRC 0, timing/DRC/LVS open)
   experiments/              20-library Yosys synthesis matrix + logs
 ```
 

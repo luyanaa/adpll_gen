@@ -47,6 +47,7 @@ Detailed parameter and limit analysis:
 | sky130 | `sky130_fd_sc_hd` | 79.665 × 90.385 | 0.007200 | experimental | route/fill | **0** | cell-subcircuit LVS open |
 | IHP SG13G2 | `sg13g2_stdcell` | 160 × 105 | 0.0168 | 805 | complete | **0** (density rules) | **PASS** on fill-stripped view |
 | GF180mcu FD | `gf180mcu_fd_sc_mcu7t5v0` | — | — | 1588 synthesized | **DPL blocked** | — | — |
+| ETRI050 12T | `ETRI050_fd_sc_12t` | 3050 × 3262 | 9.95 die / 1.521 instance | 2428 after P&R | **route/fill complete** | 636 deck markers | strict pin-map fail |
 
 ### 2.1 Post-layout timing
 
@@ -95,7 +96,8 @@ These are `pll_logic` only, not the complete PLL.
 | ics55 H7CR | 1571 | 4321.8 | TT 1.2 V | 994.87 | **835.87** | 1002.43 | 452.09 |
 | GF180 AS 3.3 V | 1690 | 49069.3 | SS 3.0 V | 163.53 | **196.37** | 306.87 | 96.70 |
 | IHP SG13G2 | 1587 | 26243.2 | TT 1.2 V | 379.10 | **525.42** | 653.44 | 237.33 |
-| ETRI050 12T | 1654 | 1,206,913.6 | TT 5 V, pre-layout | — | **~90** | — | — |
+| ETRI050 12T | 1654 | 1,206,913.6 | TT 5 V | — | **~90 MHz** pre-layout | — | — |
+
 
 Fmax is the OpenROAD `report_clock_min_period` value from the canary clock
 report.  It is a digital-logic limit, not the analog DCO limit.
@@ -107,7 +109,11 @@ report.  It is a digital-logic limit, not the analog DCO limit.
 - **IHP** has TT power **5.62 mW** for the digital canary; SS setup is
   **-0.316 ns / TNS -2.534 ns** at nominal 2.5 ns `OUT`, while the 20 ns `REF`
   domain has about +11.15 ns margin.
-- **ETRI050** is pre-layout only; worst setup at 2.5 ns `OUT` is **-8.66 ns**.
+- **ETRI050** is now **route/fill complete**: 2428 instances, 9.95 mm² die,
+  1.521 mm² instance area, OpenROAD detailed-route DRC **0**.  Timing at
+  20 ns `OUT` is still far from closed (setup **-158.85 ns**, hold
+  **-16.73 ns**), KLayout DRC reports 636 NWL/NSD/PSD markers, and KLayout LVS
+  fails on a strict top-level pin map.  This is a flow result, not signoff.
 
 ## 4. Post-PnR SDF smoke simulation
 
@@ -167,13 +173,16 @@ A clean LVS cell view or an explicit blackbox flow is still required.
 
 ### ETRI050
 
-- Core A is missing `nand2b` (Core B/C are full); a `nand2 + inv` mapping is
-  possible but not yet added.
-- PDN/power-terminal integration is unresolved; the current smoke flow skips
-  PDN generation.
+- Core A originally lacked `nand2b`; the canary now maps `NAND2BX1`/`NOR2BX1`
+  to NAND/NOR + INV.  Core B/C remain the full-cell configurations.
+- A rails-only PDN lets route/fill finish, but it has no top-level VDD/VSS
+  terminal; PSM reports `PSM-0038/0069` and the power checker is skipped.
+- Timing at 20 ns `OUT` is not closed: setup -158.85 ns, hold -16.73 ns.
+- No clean KLayout DRC/LVS: 636 NWL/NSD/PSD markers, and the LVS deck cannot
+  build a strict top-level pin map.
 - Only one TT/5 V/25 °C corner; no SS/FF or temperature model.
-- 5 V, 0.5 µm, ~1.2 mm² digital area; not suitable for a high-frequency,
-  area-sensitive ADPLL.
+- 5 V, 0.5 µm, ~1.2 mm² synthesized digital area / 9.95 mm² die; not suitable
+  for a high-frequency, area-sensitive ADPLL.
 
 ### Full PLL
 
@@ -195,6 +204,14 @@ STA=/usr/bin/sta
 $STA -exit flow/characterization/sta_ics55.tcl
 $STA -exit flow/characterization/sta_ihp.tcl
 
+# ETRI050 route/fill qualification
+cd flow/canary/ETRI050_fd_sc_core_a
+librelane --manual-pdk --pdk-root /grid --pdk ETRI050 \
+  --scl ETRI050_fd_sc_12t \
+  -S OpenROAD.CheckAntennas -S Checker.PowerGridViolations \
+  -S Checker.DisconnectedPins -S OpenROAD.RepairDesignPostGPL \
+  --to OpenROAD.DetailedRouting config.digital.yaml
+
 # Post-PnR SDF smoke
 ROOT=/opt/adpll_gen PDK_ROOT=/grid bash sim/post_pnr/run.sh
 ```
@@ -214,6 +231,7 @@ flow/macro/sky130_as_sc_hs/
 flow/macro/sky130_fd_sc_hd/
 flow/macro/ihp130_sg13g2/
 flow/canary/gf180mcu_fd_core_a/
+flow/canary/ETRI050_fd_sc_core_a/
 ```
 
 ## 8. What is not characterized

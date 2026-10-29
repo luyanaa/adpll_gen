@@ -11,7 +11,10 @@
       "pdk": "ics55",
       "library": "ics55_LLSC_H7CR",
       "design": "PLL_ANALOG_MACRO",
-      "die_um": [160.0, 100.0],
+      "die_um": [
+        160.0,
+        100.0
+      ],
       "area_mm2": 0.016,
       "def_components": 1207,
       "timing": {
@@ -30,7 +33,10 @@
       "pdk": "gf180mcu",
       "library": "gf180mcu_as_sc_mcu7t3v3",
       "design": "PLL_ANALOG_MACRO",
-      "die_um": [85.64, 103.56],
+      "die_um": [
+        85.64,
+        103.56
+      ],
       "area_mm2": 0.008869,
       "components": 452,
       "stdcells": 304,
@@ -50,7 +56,10 @@
       "pdk": "sky130",
       "library": "sky130_as_sc_hs",
       "design": "PLL_ANALOG_MACRO",
-      "die_um": [80.21, 90.93],
+      "die_um": [
+        80.21,
+        90.93
+      ],
       "area_mm2": 0.007293,
       "components": 653,
       "stdcells": 517,
@@ -70,7 +79,10 @@
       "pdk": "sky130",
       "library": "sky130_fd_sc_hd",
       "design": "PLL_ANALOG_MACRO",
-      "die_um": [79.665, 90.385],
+      "die_um": [
+        79.665,
+        90.385
+      ],
       "area_mm2": 0.0072,
       "timing": {
         "corner": "not finalized",
@@ -87,7 +99,10 @@
       "pdk": "ihp130",
       "library": "sg13g2_stdcell",
       "design": "PLL_ANALOG_MACRO",
-      "die_um": [160.0, 105.0],
+      "die_um": [
+        160.0,
+        105.0
+      ],
       "area_mm2": 0.0168,
       "def_components": 805,
       "timing": {
@@ -110,7 +125,12 @@
       "cells": 1571,
       "area_um2": 4321.8,
       "corner": "TT/1.2V/25C",
-      "fmax_mhz": {"REF": 994.87, "OUT": 835.87, "MID_OUT": 1002.43, "INJ_EDGE": 452.09},
+      "fmax_mhz": {
+        "REF": 994.87,
+        "OUT": 835.87,
+        "MID_OUT": 1002.43,
+        "INJ_EDGE": 452.09
+      },
       "setup_violations": 0,
       "hold_violations": 0
     },
@@ -120,7 +140,12 @@
       "cells": 1690,
       "area_um2": 49069.31,
       "corner": "SS/3.0V/125C post-route clock report",
-      "fmax_mhz": {"REF": 163.53, "OUT": 196.37, "MID_OUT": 306.87, "INJ_EDGE": 96.70},
+      "fmax_mhz": {
+        "REF": 163.53,
+        "OUT": 196.37,
+        "MID_OUT": 306.87,
+        "INJ_EDGE": 96.7
+      },
       "notes": "no post-PnR SPEF/STA; one r2r setup violation -0.092 ns at ff/n40C/3.6V"
     },
     {
@@ -129,7 +154,12 @@
       "cells": 1587,
       "area_um2": 26243.18,
       "corner": "TT/1.2V/25C",
-      "fmax_mhz": {"REF": 379.10, "OUT": 525.42, "MID_OUT": 653.44, "INJ_EDGE": 237.33},
+      "fmax_mhz": {
+        "REF": 379.1,
+        "OUT": 525.42,
+        "MID_OUT": 653.44,
+        "INJ_EDGE": 237.33
+      },
       "power_mw": 5.62,
       "notes": "SS setup -0.316 ns / TNS -2.534 ns at nominal 2.5 ns OUT"
     },
@@ -139,14 +169,37 @@
       "cells": 1654,
       "area_um2": 1206913.6,
       "corner": "TT/5V/25C pre-layout",
-      "fmax_mhz": {"OUT_estimate": 90},
-      "notes": "no PnR; worst pre-layout setup -8.66 ns at 2.5 ns OUT"
+      "fmax_mhz": {
+        "OUT_estimate": 90
+      },
+      "notes": "Core A digital control; nand2b/nor2b built from NAND2/NOR2 + INV; PDN rails-only; timing not closed at 50 MHz",
+      "pnr": "route/fill complete",
+      "instances_after_pnr": 2428,
+      "die_um": [
+        3050.35,
+        3261.55
+      ],
+      "die_area_mm2": 9.94887,
+      "instance_area_mm2": 1.52099,
+      "route_drc_errors": 0,
+      "setup_ws_ns_20ns": -158.851,
+      "hold_ws_ns_20ns": -16.7266,
+      "klayout_drc_markers": 636,
+      "klayout_lvs": "strict top-level pin map fail"
     }
   ],
   "post_pnr_sdf_smoke": {
     "pdk": "ics55",
     "design": "PLL_ANALOG_MACRO",
-    "sdf": {"edges": 38, "last_period_ps": 2284, "avg_period_ps": 4926},
-    "no_sdf": {"edges": 52, "last_period_ps": 5000, "avg_period_ps": 3568}
+    "sdf": {
+      "edges": 38,
+      "last_period_ps": 2284,
+      "avg_period_ps": 4926
+    },
+    "no_sdf": {
+      "edges": 52,
+      "last_period_ps": 5000,
+      "avg_period_ps": 3568
+    }
   }
 }

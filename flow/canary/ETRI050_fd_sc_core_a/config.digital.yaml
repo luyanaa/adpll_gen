@@ -1,0 +1,49 @@
+# ETRI050 0.5 um 5 V Core A digital canary.
+# This is a flow qualification run, not a product frequency claim.
+DESIGN_NAME: pll_logic
+
+VERILOG_DEFINES: [WITH_POWER]
+
+VERILOG_FILES:
+  - dir::../../../src/pll_logic.v
+  - dir::../../../src/digital_loop_filter.v
+  - dir::../../../src/term_decoder.v
+  - dir::../../../src/freq_lock.v
+  - dir::../../../src/delta_sigma.v
+  - dir::../../../src/fix_div.v
+  - dir::../../../src/conf_div.v
+  - dir::../../../src/pll_cells_ETRI050_fd_sc_12t.v
+
+PDK: ETRI050
+STD_CELL_LIBRARY: ETRI050_fd_sc_12t
+
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD]
+SCL_GROUND_PINS: [VSS]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+# ETRI050 rails-only configuration documented by the PDK.
+PDN_CFG: /grid/ETRI050/libs.tech/librelane/pdn_rails_only.tcl
+
+RT_MIN_LAYER: MET1
+RT_MAX_LAYER: MET3
+IO_PIN_H_LAYER: MET3
+IO_PIN_V_LAYER: MET2
+
+FP_CORE_UTIL: 15
+PL_TARGET_DENSITY_PCT: 35
+
+CLOCK_PORT: REF
+CLOCK_PERIOD: 20.0
+PNR_SDC_FILE: dir::constraints/adpll.sdc
+SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
+
+MAX_FANOUT_CONSTRAINT: 10
+MAX_TRANSITION_CONSTRAINT: 1.0
+MAX_CAPACITANCE_CONSTRAINT: 1.2
+CLOCK_UNCERTAINTY_CONSTRAINT: 0.50
+CLOCK_TRANSITION_CONSTRAINT: 1.0
+
+RCX_RULESETS: {}

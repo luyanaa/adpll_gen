@@ -15,7 +15,7 @@
 | GF180 AS 3.3 V | **约 196 MHz SS post-route**；pre-layout TT 约 0.33 GHz | **约 97–176 MHz SS**；TT 未单独保存 | **否** |
 | sky130 `fd_sc_hd` | **约 0.57 GHz pre-layout**；没有 post-route 数字 canary | 未测；macro 只证明 400 MHz 口径 | **没有证据支持** |
 | IHP SG13G2 | **525 MHz TT / <400 MHz SS**（post-route） | **237–250 MHz TT**（`INJ_EDGE`） | **否** |
-| ETRI050 12T 5 V | **约 90 MHz pre-layout**（2.5 ns OUT 下 WNS -8.66 ns） | 未测；5 V/0.5 µm，估计同量级 | **否** |
+| ETRI050 12T 5 V | **约 90 MHz pre-layout**；P&R route 完成，20 ns OUT 下 setup -158.85 ns | 未测；5 V/0.5 µm，估计同量级 | **否** |
 | GF180 FD `fd_sc_mcu7t5v0` | **无结果** — DPL 未通过 | 无 | 不能评估 |
 
 表中的“DCO/OUT”是**数字控制域**能接收的频率，不包含 DCO 模拟延迟链本身；模拟 DCO
@@ -82,12 +82,12 @@
 
 ### ETRI050 PnR blockers
 
-- **Core A 缺 `nand2b`**：`core_support.core_a_il_dco = no`，所以当前
-  `pll_logic`（IL-DCO 数字控制）不能直接移植；Core B/C 才是 full。
+- **Core A 缺 `nand2b`**：原始库 `core_support.core_a_il_dco = no`；canary
+  已用 NAND2/NOR2 + INV 做等价映射，但这是 flow-level 等价，不是 vendor cell。
 - **PDN/power-terminal**：默认 rail+MET2/MET3 strap 让
-  `RepairDesignPostGPL` 对所有 instance 失败；rails-only 能让 placement/DRT
-  通过，但 PSM 看不到 VDD/VSS terminal；加 MET2/MET3 strap 又回到 placement
-  失败。当前 smoke flow 是用 `-S OpenROAD.GeneratePDN` 绕过，不是签核。
+  `RepairDesignPostGPL` 失败；rails-only 能让 placement/CTS/DRT 完成（route
+  DRC 0），但 PSM 仍看不到 VDD/VSS terminal；加 MET2/MET3 strap 又回到
+  placement 失败。当前 canary 跳过 power checker，不是 power signoff。
 - **单 corner**：只有 TT/5 V/25 °C，没有 SS/FF 或温度模型；不能做 setup/hold
   签核。
 - **5 V / 0.5 µm / 1.2 mm² 数字面积**：面积和功耗都不适合高频 ADPLL；
