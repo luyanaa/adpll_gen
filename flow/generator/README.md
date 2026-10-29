@@ -32,10 +32,19 @@ The current ics55 manifest is:
 flow/characterization/ics55_sim/dco_capability.json
 ```
 
-At 1600 MHz the gate returns `PASS_L1_EXPERIMENTAL` with the closest
+At 1600 MHz ics55 returns `PASS_L1_EXPERIMENTAL` with the closest
 coarse/mid/fine candidates, an explicit `production_eligible: false`, and the
-measured-frequency error.  IHP has no capability manifest yet, so it returns
-`FAIL_UNCHARACTERIZED`.
+measured-frequency error.  IHP now has a sparse L3 manifest:
+
+```sh
+python3 flow/generator/capability.py --pdk ihp-sg13g2 --target-mhz 300
+# PASS_L3_SPARSE, range 212..624 MHz, production_eligible=false
+```
+
+A target that is inside the range but more than the default 10 MHz tolerance
+from a measured code returns `FAIL_NO_CODE_WITHIN_TOLERANCE`; use a measured
+code or a denser scan.  Production signoff still returns
+`FAIL_UNCHARACTERIZED` because L3 sparse has no PEX/PVT.
 
 ## Why this is not a generator PASS
 

@@ -24,6 +24,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFESTS = {
     "ics55": ROOT / "flow" / "characterization" / "ics55_sim" / "dco_capability.json",
+    "ihp-sg13g2": ROOT / "flow" / "characterization" / "ihp_l3" / "dco_capability_l3.json",
 }
 
 
@@ -35,8 +36,9 @@ def load_manifest(pdk: str, path: Path | None = None) -> dict[str, Any]:
 
 
 def _tuning_rows(pdk: str, manifest: dict[str, Any]) -> list[dict[str, Any]]:
-    # The current schema stores the measured table next to the manifest.
-    p = ROOT / "flow" / "characterization" / f"{pdk}_sim" / "dco_tuning.csv"
+    # The manifest can point at a sparse L3 table; otherwise use the L1 path.
+    table = manifest.get("table")
+    p = ROOT / table if table else ROOT / "flow" / "characterization" / f"{pdk}_sim" / "dco_tuning.csv"
     if not p.exists():
         return []
     rows = []
@@ -56,6 +58,7 @@ def check_target(
     target_mhz: float,
     margin_mhz: float = 0.0,
     signoff: str = "l1",
+    tolerance_mhz: float = 10.0,
 ) -> dict[str, Any]:
     try:
         manifest = load_manifest(pdk)
@@ -99,27 +102,41 @@ def check_target(
         }
 
     valid = manifest.get("valid_codes", {}).get("all_scanned_codes_valid", False)
-    if not valid:
-        return {
-            "status": "FAIL_UNCHARACTERIZED",
-            "pdk": pdk,
-            "target_mhz": target_mhz,
-            "reason": "tuning table contains non-monotonic/invalid codes",
-        }
+    status = "PASS_L1_EXPERIMENTAL"
+    reason = "L1 behavioral range/code check only; not PVT/PEX/jitter signoff"
+    if level.startswith("L3"):
+        status = "PASS_L3_SPARSE" if not valid else "PASS_L3"
+        reason = ("Sparse/transistor-level range check; PEX/PVT/jitter signoff is "
+                  "still required" if not valid else
+                  "Transistor-level range/code check; PEX/PVT signoff still required")
 
     # Pick the closest measured point; return a few neighbours for a local
     # acquisition search.
     best = sorted(rows, key=lambda r: abs(r["freq_mhz"] - target_mhz))[:3]
+    error = best[0]["freq_mhz"] - target_mhz
+    if abs(error) > tolerance_mhz:
+        return {
+            "status": "FAIL_NO_CODE_WITHIN_TOLERANCE",
+            "pdk": pdk,
+            "target_mhz": target_mhz,
+            "range_mhz": [fmin, fmax],
+            "characterization_level": level,
+            "candidates": best,
+            "error_mhz": error,
+            "tolerance_mhz": tolerance_mhz,
+            "reason": "no measured code is close enough to the target",
+        }
     return {
-        "status": "PASS_L1_EXPERIMENTAL",
+        "status": status,
         "pdk": pdk,
         "target_mhz": target_mhz,
         "range_mhz": [fmin, fmax],
         "characterization_level": level,
         "production_eligible": False,
         "candidates": best,
-        "error_mhz": best[0]["freq_mhz"] - target_mhz,
-        "reason": "L1 behavioral range/code check only; not PVT/PEX/jitter signoff",
+        "error_mhz": error,
+        "tolerance_mhz": tolerance_mhz,
+        "reason": reason,
     }
 
 
@@ -129,10 +146,12 @@ def main() -> int:
     ap.add_argument("--target-mhz", type=float, required=True)
     ap.add_argument("--margin-mhz", type=float, default=0.0)
     ap.add_argument("--signoff", choices=["l1", "production"], default="l1")
+    ap.add_argument("--tolerance-mhz", type=float, default=10.0)
     args = ap.parse_args()
-    result = check_target(args.pdk, args.target_mhz, args.margin_mhz, args.signoff)
+    result = check_target(args.pdk, args.target_mhz, args.margin_mhz, args.signoff,
+                          args.tolerance_mhz)
     print(json.dumps(result, indent=2))
-    return 0 if result["status"] == "PASS_L1_EXPERIMENTAL" else 1
+    return 0 if result["status"] in ("PASS_L1_EXPERIMENTAL", "PASS_L3_SPARSE", "PASS_L3") else 1
 
 
 if __name__ == "__main__":

@@ -1,0 +1,43 @@
+{
+  "technology": "ihp-sg13g2",
+  "library": "sg13g2_stdcell",
+  "model": "PSP103 Verilog-A compiled with OpenVAF 23.5.0, ngspice 44.2 OSDI",
+  "characterization_level": "L3_transistor_sparse",
+  "table": "flow/characterization/ihp_l3/dco_tuning_l3.csv",
+  "points": 27,
+  "grid": {
+    "coarse": [
+      0,
+      8,
+      15
+    ],
+    "mid": [
+      0,
+      8,
+      15
+    ],
+    "fine": [
+      0,
+      8,
+      31
+    ]
+  },
+  "frequency_mhz": {
+    "min": 212.089943,
+    "max": 624.262449
+  },
+  "monotonic": {
+    "all_axes": false,
+    "fine_inversions": 5
+  },
+  "valid_codes": {
+    "all_scanned_codes_valid": false
+  },
+  "verification": {
+    "frequency_verified": "L3_sparse",
+    "pvt_verified": false,
+    "pex_verified": false,
+    "jitter_verified": false
+  },
+  "notes": "Sparse 27-point transistor-level DCO, no PEX/PVT; non-monotonic points remain."
+}
