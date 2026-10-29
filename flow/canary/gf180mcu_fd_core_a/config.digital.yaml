@@ -27,6 +27,7 @@
 # GDS streamout / DRC / LVS / post-PnR STA; see README.md.
 
 DESIGN_NAME: pll_logic
+VERILOG_DEFINES: [WITH_POWER]
 
 VERILOG_FILES:
   - dir::../../../src/pll_logic.v
@@ -90,6 +91,7 @@ IO_PIN_V_LAYER: Metal2
 # Canary values chosen from the tech LEF: Metal1 rails 0.6 um wide, Metal4
 # vertical straps at 2x minimum width, Metal5 horizontal straps at 2x minimum
 # width.  Pitches/offsets are canary values, not a QoR or IR-drop target.
+PDN_CFG: dir::pdn_rails_only.tcl
 PDN_RAIL_LAYER: Metal1
 PDN_RAIL_WIDTH: 0.6
 PDN_VERTICAL_LAYER: Metal2
@@ -131,11 +133,11 @@ OUTPUT_CAP_LOAD: 72.91
 SYNTH_EXCLUDED_CELL_FILE: /home/yanlu/.ciel/ciel/gf180mcu/versions/792ef67037d74c8c51811eab3ce23cf793491296/gf180mcuA/libs.tech/librelane/gf180mcu_fd_sc_mcu7t5v0/synth_exclude.cells
 PNR_EXCLUDED_CELL_FILE: /home/yanlu/.ciel/ciel/gf180mcu/versions/792ef67037d74c8c51811eab3ce23cf793491296/gf180mcuA/libs.tech/librelane/gf180mcu_fd_sc_mcu7t5v0/pnr_exclude.cells
 
-CTS_ROOT_BUFFER: gf180mcu_fd_sc_mcu7t5v0__clkbuff_12
+CTS_ROOT_BUFFER: gf180mcu_fd_sc_mcu7t5v0__clkbuf_12
 CTS_CLK_BUFFERS:
-  - gf180mcu_fd_sc_mcu7t5v0__clkbuff_4
-  - gf180mcu_fd_sc_mcu7t5v0__clkbuff_8
-  - gf180mcu_fd_sc_mcu7t5v0__clkbuff_12
+  - gf180mcu_fd_sc_mcu7t5v0__clkbuf_4
+  - gf180mcu_fd_sc_mcu7t5v0__clkbuf_8
+  - gf180mcu_fd_sc_mcu7t5v0__clkbuf_12
 
 MAX_FANOUT_CONSTRAINT: 9
 MAX_TRANSITION_CONSTRAINT: 1.5
@@ -161,8 +163,8 @@ SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
 # No DIE_AREA: let LibreLane size the core from FP_CORE_UTIL and the mapped
 # cell area.  The gf180 netlist is ~49k um^2, so a fixed small die would not
 # fit (the ics55 canary's 150x150 was for a 4.3k um^2 design).
-FP_CORE_UTIL: 25
-PL_TARGET_DENSITY_PCT: 40
+FP_CORE_UTIL: 15
+PL_TARGET_DENSITY_PCT: 30
 
 # ---------------------------------------------------------------------------
 # Timing corners

@@ -46,7 +46,7 @@ Detailed parameter and limit analysis:
 | sky130 | `sky130_as_sc_hs` | 80.21 × 90.93 | 0.007293 | 653 (517 stdcells) | complete | **0** | cell-subcircuit LVS open |
 | sky130 | `sky130_fd_sc_hd` | 79.665 × 90.385 | 0.007200 | experimental | route/fill | **0** | cell-subcircuit LVS open |
 | IHP SG13G2 | `sg13g2_stdcell` | 160 × 105 | 0.0168 | 805 | complete | **0** (density rules) | **PASS** on fill-stripped view |
-| GF180mcu FD | `gf180mcu_fd_sc_mcu7t5v0` | — | — | 1588 synthesized | **DPL blocked** | — | — |
+| GF180mcu FD | `gf180mcu_fd_sc_mcu7t5v0` | — | — | 1588 synthesized | **DPL workaround PASS; route blocked at Via2** | — | — |
 | ETRI050 12T | `ETRI050_fd_sc_12t` | 3050 × 3262 | 9.95 die / 1.521 instance | 2428 after P&R | **route/fill complete** | 636 deck markers | strict pin-map fail |
 
 ### 2.1 Post-layout timing
@@ -156,10 +156,12 @@ point, not 1.6 GHz.
 
 ### GF180 FD DPL
 
-`flow/canary/gf180mcu_fd_core_a` has 272/280 sequential cells failing
-`DPL-0036`.  This matches OpenROAD issue #11511: older DPL blocks sites whose
-cell pins sit on a PDN via-stack layer.  The bundled OpenROAD 2026-02-17
-predates the orientation-aware fix.  The canary is not routed or signed off.
+The original FD PDN caused 272/280 sequential cells to fail `DPL-0036`.
+Rails-only PDN (`pdn_rails_only.tcl`) plus `WITH_POWER` makes DPL pass, but
+detailed routing now stops at `DRT-0234 Via2 does not have single-cut via`.
+The canary is therefore not routed, DRC/LVS-clean, or signed off.  The
+underlying DPL issue is OpenROAD #11511; LibreLane 3.0.17 still binds the
+2026-02-17 OpenROAD binary.
 
 ### sky130 LVS
 

@@ -7,9 +7,10 @@ This lane tests the `~/.ciel` OpenPDK default `gf180mcu_fd_sc_mcu7t5v0`
 
 | Item | Result |
 |---|---|
-| Synthesis | **PASS** — 1588 cells, 44,167 µm²; die 368.7 × 386.6 µm at 25% core utilization |
-| Floorplan / PDN / global placement | reached |
-| Detailed placement | **FAIL** — `DPL-0036` in `OpenROAD.DetailedPlacement` |
+| Synthesis | **PASS** — 1588 cells, 44,167 µm² |
+| PDN workaround | **PASS for DPL** — rails-only PDN (`pdn_rails_only.tcl`) + `WITH_POWER` |
+| Detailed placement | **PASS after PDN workaround** — the previous `DPL-0036` 272/280 failure is gone |
+| Detailed routing | **FAIL** — `DRT-0234 Via2 does not have single-cut via` |
 | DRC / LVS / GDS / STA | not reached |
 
 This is a recorded experiment, not a passed P&R canary.  The completed P&R
@@ -29,12 +30,16 @@ the sky130 `as_sc_hs` macro.
 - The design uses a local `pdk_overlay/gf180mcu` with `libs.ref` and the SCL
   `libs.tech/librelane` symlinked to the CIEL `gf180mcuA` tree.  This avoids
   the CIEL top-level RCX path that does not exist.
+- **DPL workaround:** `PDN_CFG: dir::pdn_rails_only.tcl` replaces the
+  M1/M2/M3 via-stack PDN with rails only; `VERILOG_DEFINES: [WITH_POWER]`
+  exposes VDD/VSS.  This avoids the DPL blocked-via-pin failure but is not a
+  power-signoff PDN.
 
 ## Run
 
 ```sh
 cd flow/canary/gf180mcu_fd_core_a
-LIBRELANE=/nix/store/ilpnqwsl6gvk6kvavkaljbnzaz3086fd-python3.13-librelane-3.0.16/bin/librelane
+LIBRELANE=/nix/store/abmh7jj4bkf725p7rrrr98r9ax077v6d-python3.13-librelane-3.0.17/bin/librelane
 $LIBRELANE --manual-pdk --pdk-root "$PWD/pdk_overlay" \
   --pdk gf180mcu --scl gf180mcu_fd_sc_mcu7t5v0 \
   -S Magic.StreamOut -S KLayout.StreamOut -S KLayout.Render \
@@ -45,6 +50,7 @@ $LIBRELANE --manual-pdk --pdk-root "$PWD/pdk_overlay" \
   -S OpenROAD.IRDropReport -S Checker.SetupViolations \
   -S Checker.HoldViolations -S Checker.MaxSlewViolations \
   -S Checker.MaxCapViolations -S OpenROAD.RepairDesignPostGPL \
+  -S Checker.PowerGridViolations -S Checker.DisconnectedPins \
   config.digital.yaml
 ```
 
@@ -71,12 +77,21 @@ closed with an orientation-aware pin-geometry check.  Rechecked with LibreLane
 `2026-02-17` binary, and the FD run still fails with 272/280 DPL failures.
 The bundled OpenROAD therefore still does not contain the fix.
 
-Workaround: use a newer OpenROAD build containing that fix, or regenerate the
-FD PDN so via stacks are not under the DFF pin columns.  The current canary
-remains non-signoff.
+### Current PDN workaround result
+
+`pdn_rails_only.tcl` removes the M1/M2/M3 via stacks, and DPL now completes.
+The next failure is in detailed routing:
+
+```text
+[DRT-0234] Via2 does not have single-cut via
+```
+
+So the DPL blocker is worked around, but the FD canary still needs a
+via2/single-cut route rule fix or a 2-metal routing experiment.  The current
+canary remains non-signoff.
 
 ## Next
 
-1. Escalate the OpenROAD DPL issue with a single-DFF reproducer, or use a
-   different legalizer/version for this FD library.
+1. Fix the `DRT-0234` via2 route rule (or route with a technology LEF that
+   defines a single-cut via2).
 2. Do not reuse the AS 4/5-metal PDN assumptions for FD parts.

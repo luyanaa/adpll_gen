@@ -16,7 +16,7 @@
 | sky130 `fd_sc_hd` | **约 0.57 GHz pre-layout**；没有 post-route 数字 canary | 未测；macro 只证明 400 MHz 口径 | **没有证据支持** |
 | IHP SG13G2 | **525 MHz TT / <400 MHz SS**（post-route） | **237–250 MHz TT**（`INJ_EDGE`） | **否** |
 | ETRI050 12T 5 V | **约 90 MHz pre-layout**；P&R route 完成，20 ns OUT 下 setup -158.85 ns | 未测；5 V/0.5 µm，估计同量级 | **否** |
-| GF180 FD `fd_sc_mcu7t5v0` | **无结果** — DPL 未通过 | 无 | 不能评估 |
+| GF180 FD `fd_sc_mcu7t5v0` | **DPL workaround PASS**；route 卡在 `DRT-0234` Via2 | 无 | 不能评估 |
 
 表中的“DCO/OUT”是**数字控制域**能接收的频率，不包含 DCO 模拟延迟链本身；模拟 DCO
 可能更高，但当前没有实测。
@@ -40,9 +40,11 @@
 **FD `gf180mcu_fd_sc_mcu7t5v0`**
 
 - 3-metal、5 V、7-track；synthesis 1588 cells / 44,167 µm²。
-- DPL 仍失败：272/280 sequential cell，`DPL-0036`；9-track 也复现。
-  根因对应 OpenROAD issue 11511：旧 DPL 把带 via-stack 金属上 pin 的
-  cell 整行/整 site 标成 blocked；当前 2026-02-17 binary 没有该修复。
+- 原始 via-stack PDN：272/280 sequential cell 失败 `DPL-0036`，对应
+  OpenROAD issue 11511。
+- Rails-only PDN workaround：DPL **PASS**；route 卡在 `DRT-0234`（Via2
+  single-cut）。
+- 2026-02-17 OpenROAD 没有 issue 11511 修复；LibreLane 3.0.17 仍绑定该版本。
 - 没有 route/DRC/LVS/STA，所以**不能给可靠频率估算**。
 
 ### sky130

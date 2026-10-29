@@ -122,10 +122,9 @@ LibreLane config generation, and per-block hard macros are the next layer.
   (`sky130_fd_sc_hd`, `gf180mcu_fd_sc_mcu7t5v0`, `sg13g2_stdcell`).  Four
   failures are recorded with causes (async DFF mapping or ABC crash), not
   dropped.  The OpenPDK FD 3-metal P&R canary is also recorded: synthesis and
-  global placement complete, detailed placement fails `DPL-0036` on 272/280
-  sequential cells.  This matches OpenROAD issue 11511: the older DPL blocks
-  sites whose cell pins sit on a PDN via-stack layer; the bundled OpenROAD
-  2026-02-17 predates the orientation-aware fix.  See
+  with the original via-stack PDN, detailed placement failed `DPL-0036` on
+  272/280 sequential cells (OpenROAD issue 11511).  A rails-only PDN workaround
+  makes DPL pass; route now stops at `DRT-0234` (Via2 single-cut).  See
   `experiments/README.md` and `canary/gf180mcu_fd_core_a/README.md`.
 
 ## Performance snapshot
@@ -167,7 +166,7 @@ flow/
   canary/ics55_h7cr_core_a/ ics55 H7CR Core A canary
   canary/gf180mcu_as_sc_core_a/ gf180mcu 3.3V Core A canary
   canary/ihp130_sg13g2_core_a/  ihp130 1.2V Core A canary
-  canary/gf180mcu_fd_core_a/ gf180mcu OpenPDK FD 3-metal canary (DPL 0036, experiment)
+  canary/gf180mcu_fd_core_a/ gf180mcu OpenPDK FD 3-metal canary (rails-only PDN; route Via2 blocker)
   canary/ETRI050_fd_sc_core_a/ ETRI050 Core A route/fill canary (route DRC 0, timing/DRC/LVS open)
   experiments/              20-library Yosys synthesis matrix + logs
 ```
