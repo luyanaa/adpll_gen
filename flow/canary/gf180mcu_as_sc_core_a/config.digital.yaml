@@ -1,0 +1,236 @@
+# LibreLane 3.0.16 config -- DIGITAL-ONLY canary top (pll_logic)
+# PDK: gf180mcu, library: gf180mcu_as_sc_mcu7t3v3 (3.3 V, 7-track)
+#
+# STATUS: canary config, exercised with LibreLane v3.0.16 in this checkout.
+# The Classic flow completes 80/80 only because the driver skips the signoff
+# steps that need decks/rules this PDK does not ship.  Do not treat any timing,
+# DRC or LVS number from this config as signoff.
+#
+# Why this file is explicit about views and PDN:
+#   The GF180 "as_sc" PDK in this checkout ships only a *standard-cell*
+#   libs.tech/librelane/<scl>/config.tcl.  There is no top-level
+#   libs.tech/librelane/config.tcl, no KLayout/Magic decks, and the SCL Tcl
+#   does not set TECH_LEFS/CELL_LEFS/PDN layers.  The canary therefore:
+#     - uses a local PDK overlay with a top-level config.tcl that fills the
+#       missing PDK variables (checked in under pdk_overlay/;
+#       scripts/run_canary.sh creates the symlinks), and
+#     - supplies the missing view/PDN variables here.
+#   Neither modifies the PDK.
+#
+# Run from this directory (the Makefile/run_canary.sh does this):
+#   make librelane-digital
+# or directly:
+#   librelane --manual-pdk --pdk-root pdk_overlay --pdk gf180mcu \
+#             --scl gf180mcu_as_sc_mcu7t3v3 config.digital.yaml
+# The driver also passes --skip for the signoff steps that need decks/rules
+# this PDK does not ship.  A raw invocation without those skips will fail at
+# GDS streamout / DRC / LVS / post-PnR STA; see README.md.
+
+DESIGN_NAME: pll_logic
+
+VERILOG_FILES:
+  - dir::../../../src/pll_logic.v
+  - dir::../../../src/digital_loop_filter.v
+  - dir::../../../src/term_decoder.v
+  - dir::../../../src/freq_lock.v
+  - dir::../../../src/delta_sigma.v
+  - dir::../../../src/fix_div.v
+  - dir::../../../src/conf_div.v
+
+# ---------------------------------------------------------------------------
+# PDK / standard-cell library
+# ---------------------------------------------------------------------------
+PDK: gf180mcu
+STD_CELL_LIBRARY: gf180mcu_as_sc_mcu7t3v3
+
+# ---------------------------------------------------------------------------
+# Actual gf180mcu_as_sc_mcu7t3v3 views in this checkout
+# (PDK root: /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk)
+# ---------------------------------------------------------------------------
+TECH_LEFS:
+  "nom_*": /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/techlef/gf180mcu_as_sc_mcu7t3v3__nom.tlef
+  "min_*": /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/techlef/gf180mcu_as_sc_mcu7t3v3__min.tlef
+  "max_*": /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/techlef/gf180mcu_as_sc_mcu7t3v3__max.tlef
+
+CELL_LEFS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lef/gf180mcu_as_sc_mcu7t3v3.lef
+CELL_GDS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/gds/gf180mcu_as_sc_mcu7t3v3.gds
+CELL_VERILOG_MODELS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/verilog/gf180mcu_as_sc_mcu7t3v3.v
+CELL_SPICE_MODELS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/cdl/gf180mcu_as_sc_mcu7t3v3.cdl
+CELL_CDLS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/cdl/gf180mcu_as_sc_mcu7t3v3.cdl
+
+# Power/ground names.  The library also has VNW/VPW well pins in LEF/Liberty;
+# they are well-tie/tap concerns, not signal pins.  The PDN and the SCL
+# insertion use VDD/VSS.
+VDD_PIN: VDD
+GND_PIN: VSS
+# VNW is the n-well bias (VDD) and VPW the p-well bias (VSS).  They are
+# USE POWER/GROUND pins in the LEF and must be globally connected, or the
+# disconnected-pin checker flags every cell's well pins as critical.
+SCL_POWER_PINS: [VDD, VNW]
+SCL_GROUND_PINS: [VSS, VPW]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+# Routing layers.  gf180mcu layer names are Metal1..Metal5 (not MET1..MET5).
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal5
+IO_PIN_H_LAYER: Metal3
+IO_PIN_V_LAYER: Metal2
+
+# ---------------------------------------------------------------------------
+# PDN (the SCL Tcl only sets a deprecated FP_PDN_RAIL_WIDTH)
+# ---------------------------------------------------------------------------
+# Canary values chosen from the tech LEF: Metal1 rails 0.6 um wide, Metal4
+# vertical straps at 2x minimum width, Metal5 horizontal straps at 2x minimum
+# width.  Pitches/offsets are canary values, not a QoR or IR-drop target.
+PDN_RAIL_LAYER: Metal1
+PDN_RAIL_WIDTH: 0.6
+PDN_VERTICAL_LAYER: Metal4
+PDN_HORIZONTAL_LAYER: Metal5
+PDN_VWIDTH: 1.12
+PDN_HWIDTH: 0.90
+PDN_VSPACING: 0.56
+PDN_HSPACING: 0.90
+PDN_VPITCH: 20
+PDN_HPITCH: 20
+PDN_VOFFSET: 5
+PDN_HOFFSET: 5
+PDN_CORE_RING: false
+
+# ---------------------------------------------------------------------------
+# Cell selection / synthesis
+# ---------------------------------------------------------------------------
+# The SCL Tcl uses space-separated strings for these; LibreLane wants lists.
+FILL_CELLS: ["gf180mcu_as_sc_mcu7t3v3__fill_*"]
+DECAP_CELLS: ["gf180mcu_as_sc_mcu7t3v3__fillcap_*"]
+TRISTATE_CELLS: ["gf180mcu_as_sc_mcu7t3v3__invz*"]
+CELL_PAD_EXCLUDE:
+  - "gf180mcu_as_sc_mcu7t3v3__tap_2"
+  - "gf180mcu_as_sc_mcu7t3v3__fill_*"
+
+WELLTAP_CELL: gf180mcu_as_sc_mcu7t3v3__tap_2
+ENDCAP_CELL: gf180mcu_as_sc_mcu7t3v3__tap_2
+FP_TAPCELL_DIST: 20
+
+SYNTH_DRIVING_CELL: gf180mcu_as_sc_mcu7t3v3__inv_2/Y
+SYNTH_BUFFER_CELL: gf180mcu_as_sc_mcu7t3v3__buff_2/A/Y
+SYNTH_TIEHI_CELL: gf180mcu_as_sc_mcu7t3v3__tieh_4/ONE
+SYNTH_TIELO_CELL: gf180mcu_as_sc_mcu7t3v3__tiel_4/ZERO
+OUTPUT_CAP_LOAD: 72.91
+
+# The PDK ships exclusion lists.  synth_exclude.cells removes dyn_dfxtp_2
+# (leaving dfxtp_2/dfxtp_4) and the clkbuff cells from synthesis only; the
+# pnr list is empty.  Keep both wired so this canary follows the PDK.
+SYNTH_EXCLUDED_CELL_FILE: /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.tech/librelane/gf180mcu_as_sc_mcu7t3v3/synth_exclude.cells
+PNR_EXCLUDED_CELL_FILE: /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.tech/librelane/gf180mcu_as_sc_mcu7t3v3/pnr_exclude.cells
+
+CTS_ROOT_BUFFER: gf180mcu_as_sc_mcu7t3v3__clkbuff_12
+CTS_CLK_BUFFERS:
+  - gf180mcu_as_sc_mcu7t3v3__clkbuff_4
+  - gf180mcu_as_sc_mcu7t3v3__clkbuff_8
+  - gf180mcu_as_sc_mcu7t3v3__clkbuff_12
+
+MAX_FANOUT_CONSTRAINT: 9
+MAX_TRANSITION_CONSTRAINT: 1.5
+MAX_CAPACITANCE_CONSTRAINT: 0.2
+CLOCK_UNCERTAINTY_CONSTRAINT: 0.25
+CLOCK_TRANSITION_CONSTRAINT: 0.50
+
+# ---------------------------------------------------------------------------
+# Clocks and constraints
+# ---------------------------------------------------------------------------
+# REF is the only real input clock.  OUT, MID_OUT and INJ_EDGE are ports of
+# the digital-only top and are created as (asynchronous, nominal) clocks in
+# constraints/adpll.sdc, because CLOCK_PORT takes one port only.
+CLOCK_PORT: REF
+CLOCK_PERIOD: 20.0
+
+PNR_SDC_FILE: dir::constraints/adpll.sdc
+SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
+
+# ---------------------------------------------------------------------------
+# Floorplan / placement (canary values, not QoR targets)
+# ---------------------------------------------------------------------------
+# No DIE_AREA: let LibreLane size the core from FP_CORE_UTIL and the mapped
+# cell area.  The gf180 netlist is ~49k um^2, so a fixed small die would not
+# fit (the ics55 canary's 150x150 was for a 4.3k um^2 design).
+FP_CORE_UTIL: 35
+PL_TARGET_DENSITY_PCT: 50
+
+# ---------------------------------------------------------------------------
+# Timing corners
+# ---------------------------------------------------------------------------
+# 3 distinct Liberty files exist.  The PDK LibreLane Tcl also declares
+# min_/max_ aliases for each file (9 corner names in total), but every alias
+# resolves to the same three files.  The canary uses the three nominal PVT
+# corners; it does not claim independent min/max corners.
+#
+# To use all 9 aliases, add them to STA_CORNERS (the LIB wildcards already
+# match them) and accept that min_*/max_* have identical Liberty data.  To use
+# 6, add either the three min_* or the three max_* aliases, again with the
+# same caveat.  Do not report these as independent corners.
+LIB:
+  "*_tt_025C_3v30":
+    - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib
+  "*_ff_n40C_3v60":
+    - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__ff_n40C_3v60.lib
+  "*_ss_125C_3v00":
+    - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__ss_125C_3v00.lib
+
+STA_CORNERS:
+  - nom_tt_025C_3v30
+  - nom_ff_n40C_3v60
+  - nom_ss_125C_3v00
+PNR_CORNERS:
+  - nom_tt_025C_3v30
+  - nom_ff_n40C_3v60
+  - nom_ss_125C_3v00
+
+# ---------------------------------------------------------------------------
+# RC estimates for PnR
+# ---------------------------------------------------------------------------
+# The PDK ships no OpenRCX rules files (no libs.tech/librelane/<scl>/*.rules)
+# and no LAYERS_RC/VIAS_R Tcl.  Values below are read from the nominal tech
+# LEF: RESISTANCE RPERSQ (ohm/square) and CAPACITANCE CPERSQDIST (pF/um).
+# Via resistance is not in the LEF; 5 ohm/cut is a canary placeholder, not a
+# characterized value.  These values feed PnR RC estimates only.
+#
+# RCX_RULESETS is an empty map: there are no rules files to point at.
+# OpenROAD.RCX would warn and produce no SPEF; post-route STA would fail on the
+# missing SPEF.  The canary driver therefore skips OpenROAD.RCX,
+# OpenROAD.STAPostPNR, OpenROAD.IRDropReport and the timing checkers.  Do not
+# claim extracted-corner or post-route STA.
+RCX_RULESETS: {}
+LAYERS_RC:
+  "nom_*":
+    Metal1: {res: 0.090, cap: 0.0004}
+    Metal2: {res: 0.090, cap: 0.0003}
+    Metal3: {res: 0.090, cap: 0.00028}
+    Metal4: {res: 0.090, cap: 0.000277}
+    Metal5: {res: 0.060, cap: 0.0000394}
+VIAS_R:
+  "nom_*":
+    Via1: {res: 5.0}
+    Via2: {res: 5.0}
+    Via3: {res: 5.0}
+    Via4: {res: 5.0}
+
+# If OpenRCX rules are generated later, use this shape (paths are examples):
+# RCX_RULESETS:
+#   "nom_tt_*": /path/to/gf180mcu_as_sc_mcu7t3v3__tt.rules
+#   "nom_ff_*": /path/to/gf180mcu_as_sc_mcu7t3v3__ff.rules
+#   "nom_ss_*": /path/to/gf180mcu_as_sc_mcu7t3v3__ss.rules
+
+# ---------------------------------------------------------------------------
+# Signoff switches
+# ---------------------------------------------------------------------------
+# Deliberately NOT set: RUN_DRC / RUN_LVS / RUN_STA / RUN_ANTENNA and
+# KLAYOUT_*_OPTIONS are not valid in LibreLane 3.0.16.  KLayout DRC/LVS/antenna
+# steps skip themselves when KLAYOUT_DRC_RUNSET / KLAYOUT_LVS_SCRIPT /
+# KLAYOUT_ANTENNA_RUNSET are unset -- and this PDK ships no such decks.  The
+# run therefore cannot produce DRC/LVS/antenna signoff.

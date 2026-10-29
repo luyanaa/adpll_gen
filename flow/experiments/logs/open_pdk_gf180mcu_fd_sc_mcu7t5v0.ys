@@ -1,0 +1,23 @@
+read_liberty -lib /home/yanlu/.ciel/ciel/gf180mcu/versions/792ef67037d74c8c51811eab3ce23cf793491296/gf180mcuA/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib
+read_verilog /opt/adpll_gen/src/pll_logic.v
+read_verilog /opt/adpll_gen/src/digital_loop_filter.v
+read_verilog /opt/adpll_gen/src/term_decoder.v
+read_verilog /opt/adpll_gen/src/freq_lock.v
+read_verilog /opt/adpll_gen/src/delta_sigma.v
+read_verilog /opt/adpll_gen/src/fix_div.v
+read_verilog /opt/adpll_gen/src/conf_div.v
+hierarchy -check -top pll_logic
+proc
+opt
+fsm
+opt
+memory
+opt
+flatten
+synth -run coarse
+techmap
+opt
+dfflibmap -liberty /home/yanlu/.ciel/ciel/gf180mcu/versions/792ef67037d74c8c51811eab3ce23cf793491296/gf180mcuA/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib
+abc -liberty /home/yanlu/.ciel/ciel/gf180mcu/versions/792ef67037d74c8c51811eab3ce23cf793491296/gf180mcuA/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib
+opt
+stat -liberty /home/yanlu/.ciel/ciel/gf180mcu/versions/792ef67037d74c8c51811eab3ce23cf793491296/gf180mcuA/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib

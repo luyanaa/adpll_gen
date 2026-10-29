@@ -17,8 +17,23 @@ set SPICES "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/spice/sg13g2_stdcell.
 # TODO: Do the characterization of the lib
 set LIBS_BC "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p65V_m40C.lib ${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_io/lib/sg13g2_io_fast_1p65V_3p6V_m40C.lib"
 set LIBS_WC "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib ${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_io/lib/sg13g2_io_slow_1p08V_3p0V_125C.lib"
+# Macro builds have no IO cells and the assembled local PDK root may not
+# contain sg13g2_io.  Restrict the file lists to the standard-cell library.
+if {[info exists ::env(NO_IO)] && $::env(NO_IO) == "1"} {
+  set LIBS [list "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib"]
+  set LIBS_BC [list "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p65V_m40C.lib"]
+  set LIBS_WC [list "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib"]
+  set LEFS [list "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/lef/sg13g2_tech.lef" "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/lef/sg13g2_stdcell.lef"]
+  set GDSS [list "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/gds/sg13g2_stdcell.gds"]
+  set CDLS [list "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/cdl/sg13g2_stdcell.cdl"]
+  set SPICES [list "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/spice/sg13g2_stdcell.spice"]
+}
 
 set RCX_RULES "${PDK_ROOT}/ihp-sg13g2/libs.tech/librelane/openrcx/IHP_rcx_patterns.rules"
+# The assembled local PDK root may only carry the ORFS platform RCX file.
+if {![file exists $RCX_RULES] && [file exists "/opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules"]} {
+  set RCX_RULES "/opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules"
+}
 
 set techsite "CoreSite"
 set techname "ihp-sg13g2"

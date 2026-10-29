@@ -1,0 +1,8 @@
+# Cells excluded from synthesis and PnR, mirroring the ORFS ihp-sg13g2
+# definition:
+#   sg13g2_lgcp_1 sg13g2_sighold sg13g2_slgcp_1 sg13g2_dfrbp_2
+# One cell/wildcard per line (LibreLane reads the file as a list).
+sg13g2_lgcp_1
+sg13g2_sighold
+sg13g2_slgcp_1
+sg13g2_dfrbp_2

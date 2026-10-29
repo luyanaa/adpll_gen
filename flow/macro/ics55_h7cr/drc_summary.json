@@ -1,0 +1,38 @@
+{
+  "lyrdb": "signoff/reports/ics55/PLL_ANALOG_MACRO.lyrdb",
+  "top": "PLL_ANALOG_MACRO",
+  "total": 305,
+  "top_level": 0,
+  "via_level": 0,
+  "cell_internal": 305,
+  "top_categories": {},
+  "via_categories": {},
+  "cell_categories": {
+    "'implant.np.enclosed_area'": 215,
+    "M1DUM_W_1": 72,
+    "'metal.m1.area'": 16,
+    "'poly.poly.area'": 2
+  },
+  "cells": {
+    "cell:FILLTAPH7R": 219,
+    "cell:DFFNQX1H7R": 8,
+    "cell:NAND3X1H7R": 7,
+    "cell:NAND2X1H7R": 6,
+    "cell:NAND2BX1H7R": 6,
+    "cell:INVX1H7R": 5,
+    "cell:BUFX0P5H7R": 5,
+    "cell:NOR2BX1H7R": 4,
+    "cell:NOR2X1H7R": 4,
+    "cell:FILLER64H7R": 4,
+    "cell:FILLCAP8H7R": 4,
+    "cell:FILLCAP32H7R": 4,
+    "cell:FILLCAP16H7R": 4,
+    "cell:FILLER2H7R": 4,
+    "cell:FILLCAP4H7R": 4,
+    "cell:FILLER1H7R": 4,
+    "cell:NAND3X8H7R": 4,
+    "cell:NAND3X6H7R": 4,
+    "cell:INVX2H7R": 3,
+    "cell:INVX5H7R": 2
+  }
+}

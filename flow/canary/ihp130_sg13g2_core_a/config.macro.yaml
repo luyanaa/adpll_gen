@@ -1,0 +1,125 @@
+# LibreLane v3.0.16 configuration -- FULL PLL top (`pll`) with `PLL_ANALOG`
+# as a hard macro -- IHP SG13G2, 1.2 V, Core A (IL-DCO).
+#
+# STATUS: SKELETON / NOT RUNNABLE YET.
+# The PLL_ANALOG hard macro has NOT been built or characterized.
+# hardmacro/PLL_ANALOG.gds, .lef and .lib do not exist, so this config cannot
+# run.  It documents the intended integration; see hardmacro/interface.md and
+# hardmacro/manifest.yaml.
+#
+# The digital-only proof is config.digital.yaml.  This file is the next step,
+# not a substitute for it.
+#
+# Run from this directory once the views exist:
+#   make librelane-macro
+# (or with the release's --pdk/--scl flags).
+
+DESIGN_NAME: pll
+
+VERILOG_FILES:
+  - dir::../../../src/pll.v
+  - dir::../../../src/pll_logic.v
+  - dir::../../../src/digital_loop_filter.v
+  - dir::../../../src/term_decoder.v
+  - dir::../../../src/freq_lock.v
+  - dir::../../../src/delta_sigma.v
+  - dir::../../../src/fix_div.v
+  - dir::../../../src/conf_div.v
+  # Blackbox only: do NOT also read src/pll_analog.v (duplicate module).
+  - dir::hardmacro/PLL_ANALOG_blackbox.v
+
+# ---------------------------------------------------------------------------
+# PDK / standard-cell library
+# ---------------------------------------------------------------------------
+PDK: ihp-sg13g2
+STD_CELL_LIBRARY: sg13g2_stdcell
+
+# ---------------------------------------------------------------------------
+# Hard macro (views do not exist yet)
+# ---------------------------------------------------------------------------
+# Expected:
+#   hardmacro/PLL_ANALOG.gds  stream-out of the analog macro
+#   hardmacro/PLL_ANALOG.lef  abstract, pin geometry on the sg13g2 grid
+#   hardmacro/PLL_ANALOG.lib  Liberty: input caps, output timing, internal
+#                             power; corner names MUST match LIB below
+# CDL/SPICE are used by macro/top LVS, not by this MACROS key.
+#
+# Multi-corner note: this skeleton expects one macro Liberty per corner if the
+# top is run at all three corners.  A TT-only macro Liberty supports only
+# nom_tt_025C_1v20; do not claim the SS/FF corners in that case.
+MACROS:
+  PLL_ANALOG:
+    gds: dir::hardmacro/PLL_ANALOG.gds
+    lef: dir::hardmacro/PLL_ANALOG.lef
+    lib: dir::hardmacro/PLL_ANALOG.lib
+    # Optional explicit placement; without it the floorplanner places it.
+    # instances:
+    #   pll_ana:
+    #     location: [50, 50]
+    #     orientation: N
+
+# Macro power/ground connection.  Key name and argument order differ between
+# LibreLane releases; verify before enabling.
+# PDN_MACRO_CONNECTIONS:
+#   - "pll_ana VDD VSS VDD VSS"
+
+# ---------------------------------------------------------------------------
+# Clocks
+# ---------------------------------------------------------------------------
+CLOCK_PORT: REF
+CLOCK_PERIOD: 20.0
+
+PNR_SDC_FILE: dir::constraints/adpll.sdc
+SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
+
+# ---------------------------------------------------------------------------
+# Floorplan / placement
+# ---------------------------------------------------------------------------
+FP_CORE_UTIL: 25
+PL_TARGET_DENSITY_PCT: 45
+# Placeholder only; replace once the macro dimensions and pin access are
+# known, or remove to let LibreLane compute the die.  A 500x500 um die is NOT
+# a floorplan -- it is a placeholder.
+DIE_AREA: [0, 0, 500, 500]
+
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+# ---------------------------------------------------------------------------
+# Timing corners (same three as config.digital.yaml)
+# ---------------------------------------------------------------------------
+LIB:
+  nom_tt_025C_1v20:
+    - /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+  nom_ss_125C_1v08:
+    - /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_slow_1p08V_125C.lib
+  nom_ff_n40C_1v32:
+    - /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_fast_1p32V_m40C.lib
+
+STA_CORNERS:
+  - nom_tt_025C_1v20
+  - nom_ss_125C_1v08
+  - nom_ff_n40C_1v32
+
+# ---------------------------------------------------------------------------
+# RC extraction (same OpenRCX rules file as the digital canary)
+# ---------------------------------------------------------------------------
+RCX_RULESETS:
+  "nom_tt_025C_1v20": /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
+  "nom_ss_125C_1v08": /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
+  "nom_ff_n40C_1v32": /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
+
+# ---------------------------------------------------------------------------
+# Signoff switches
+# ---------------------------------------------------------------------------
+# As in config.digital.yaml: no official IHP DRC/LVS/netgen collateral is
+# installed.  These v3.0.16 flow gates keep the missing-tool steps from
+# running; do not claim DRC/LVS/antenna results from this skeleton.
+RUN_MAGIC_STREAMOUT: false
+RUN_KLAYOUT_STREAMOUT: true
+RUN_MAGIC_WRITE_LEF: false
+RUN_KLAYOUT_XOR: false
+RUN_MAGIC_DRC: false
+RUN_KLAYOUT_DRC: false
+RUN_LVS: false
+RUN_EQY: false

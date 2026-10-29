@@ -1,0 +1,206 @@
+# Machine-readable interface contract for the PLL_ANALOG hard macro.
+# Human-readable companion: interface.md
+# Status: the macro does NOT exist yet. Every view below is expected, not built.
+name: PLL_ANALOG
+version: 0.1.0-draft
+status: not_built
+kind: hard_macro
+pdk: ics55
+cell_library: ics55_LLSC_H7CR
+process: 55nm
+supply_voltage_nominal_v: 1.2
+core: core_a_il_dco
+top_instance: pll_ana
+rtl_reference: src/pll_analog.v
+top_reference: src/pll.v
+
+parameters:
+  COARSE_NDELS:
+    default: 15
+    overridden_by_top: true
+    note: 4-bit coarse control, unary/thermometer
+  MID_NDELS:
+    default: 15
+    overridden_by_top: true
+    note: 4-bit mid control, unary/thermometer
+  FINE_NDELS:
+    default: 31
+    overridden_by_top: true
+    note: 5-bit fine control, unary/thermometer
+  IL_NDELS:
+    default: 4
+    overridden_by_top: false
+    note: injection delay stages; pll.v does not override it, keep default or update pll.v
+
+ports:
+  - name: COARSE_MUX
+    direction: input
+    width: COARSE_NDELS
+    width_default: 15
+    domain: quasi_static_ref
+    description: Unary coarse delay code from pll_freq_lock.
+  - name: MID_MUX
+    direction: input
+    width: MID_NDELS
+    width_default: 15
+    domain: quasi_static_ref
+    description: Unary mid delay code from pll_freq_lock.
+  - name: FINE_MUX
+    direction: input
+    width: FINE_NDELS
+    width_default: 31
+    domain: quasi_static_dsm
+    description: Unary fine delay code from pll_term_decoder_with_zero.
+  - name: DCO_EN
+    direction: input
+    width: 1
+    domain: inj_edge_negedge
+    description: DCO enable from the startup/lock FSM.
+  - name: REF
+    direction: input
+    width: 1
+    domain: ref_clock
+    description: Reference clock, 20 ns period (50 MHz) in this canary.
+  - name: INJ_EN
+    direction: input
+    width: 1
+    domain: quasi_static
+    description: Injection enable; gates the injection pulse.
+  - name: SS_BBPD
+    direction: output
+    width: 2
+    domain: sampled_by_ref_out
+    description: Sub-sampling BBPD result; bit 0 = REF sample, bit 1 = OUT sample.
+  - name: OUT
+    direction: output
+    width: 1
+    domain: dco_clock
+    description: DCO output clock.
+  - name: MID_OUT
+    direction: output
+    width: 1
+    domain: dco_clock
+    description: Mid-delay tap, same nominal frequency as OUT.
+  - name: INJ_EDGE
+    direction: output
+    width: 1
+    domain: ref_rate_delayed
+    description: Delayed REF from the injection chain, used as a digital clock.
+  - name: VDD
+    direction: inout
+    width: 1
+    domain: supply
+    optional: true
+    present_when: WITH_POWER or LEF/PDN power pins
+    description: 1.2 V supply.
+  - name: VSS
+    direction: inout
+    width: 1
+    domain: supply
+    optional: true
+    present_when: WITH_POWER or LEF/PDN power pins
+    description: Ground.
+
+reset:
+  macro_reset_pin: null
+  note: PLL_ANALOG has no reset pin; RST_N is digital-only. Control is via DCO_EN/INJ_EN/codes.
+
+clocks:
+  REF:
+    period_ns_canary: 20.0
+    frequency_mhz_canary: 50.0
+    source: top-level input
+  OUT:
+    period_ns_nominal: 2.5
+    frequency_mhz_nominal: 400.0
+    source: macro output, set by delay codes
+    note: Nominal FCW=8; real range is a DCO characterization result.
+  MID_OUT:
+    period_ns_nominal: 2.5
+    frequency_mhz_nominal: 400.0
+    source: macro output, mid-delay tap
+  INJ_EDGE:
+    period_ns: 20.0
+    source: delayed REF via IL_NDELS buffer stages
+    note: Characterize insertion delay relative to REF.
+
+power:
+  rails:
+    - name: VDD
+      nominal_v: 1.2
+    - name: VSS
+      nominal_v: 0.0
+  domains: 1
+  level_shifters_required: false
+  note: Single 1.2 V domain assumed. A separate analog supply/bias would require interface changes.
+
+views:
+  gds:
+    path: hardmacro/PLL_ANALOG.gds
+    exists: false
+    required: true
+  lef:
+    path: hardmacro/PLL_ANALOG.lef
+    exists: false
+    required: true
+  lib:
+    path: hardmacro/PLL_ANALOG.lib
+    exists: false
+    required: true
+    note: TT at first; multi-corner requires per-corner macro Liberty.
+  cdl:
+    path: hardmacro/PLL_ANALOG.cdl
+    exists: false
+    required: true_for_lvs
+  spice:
+    path: hardmacro/PLL_ANALOG.spice
+    exists: false
+    required_for_macro_signoff: true
+  verilog_blackbox:
+    path: hardmacro/PLL_ANALOG_blackbox.v
+    exists: true
+    required: true
+    note: Synthesis/elaboration stub only.
+
+timing:
+  macro_internal_sta: not_characterized
+  required_liberty_arcs:
+    - SS_BBPD relative to INJ_EDGE sampling edge
+    - INJ_EDGE insertion delay relative to REF
+    - OUT and MID_OUT output delays relative to the delay-code inputs
+    - input capacitance for COARSE_MUX, MID_MUX, FINE_MUX, DCO_EN, REF, INJ_EN
+  quasi_static_inputs: [COARSE_MUX, MID_MUX, FINE_MUX, DCO_EN, INJ_EN]
+  critical_interface: SS_BBPD -> digital loop filter sampled on negedge INJ_EDGE
+  top_sdc: constraints/adpll.sdc
+
+corners:
+  sta_corners:
+    - nom_tt_025C_1v20
+    - nom_ss_125C_1v08
+    - nom_ff_n40C_1v32
+    - nom_ss_n40C_1v08
+    - nom_ss_n40C_1v20
+    - nom_ff_125C_1v08
+    - nom_ff_125C_1v32
+  macro_characterized_corners: []
+  minimum_for_canary: nom_tt_025C_1v20
+
+build_boundary:
+  inside:
+    - injection delay chain (PLL_INJECTION, IL_NDELS stages)
+    - IL-DCO (coarse/mid/fine delay + symmetric mux)
+    - SS-BBPD sampler
+    - output buffers for OUT, MID_OUT, INJ_EDGE, SS_BBPD
+    - macro-local power grid, decap, well taps
+  outside:
+    - pll_logic and digital dependencies
+    - startup/lock FSM, mode registers, divider control
+    - reference clock generation, test muxing, scan/DFT
+    - top-level PDN, CTS, route, STA, DRC/LVS/antenna, IR/EM
+  build_flow: ckdur hard-macro flow (pnr/) + ngspice/ISF characterization, not LibreLane
+
+blockers:
+  - PLL_ANALOG GDS/LEF/Liberty/CDL/SPICE have not been built or characterized.
+  - config.macro.yaml therefore cannot run.
+  - LibreLane is not installed in this environment (see README).
+  - Only the digital synthesis proof (config.digital.yaml / scripts/synth_digital.ys) is executable today.

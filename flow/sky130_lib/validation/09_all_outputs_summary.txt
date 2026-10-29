@@ -1,0 +1,36 @@
+=== out/sky130_fd_sc_hdll_ss_n40C_1v28.lib
+Imported 324 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_hdll_tt_025C_1v80.lib
+Imported 324 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_lp_ff_n40C_1v95.lib
+Imported 701 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_lp_ss_n40C_1v65.lib
+Imported 701 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_ls_ss_n40C_1v28.lib
+Imported 386 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_ls_tt_100C_1v80.lib
+Imported 386 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_ms_ff_100C_1v95.lib
+Imported 376 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_ms_ff_n40C_1v95_pwrlkg.lib
+Imported 376 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_ms_ss_n40C_1v28.lib
+Imported 376 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_ms_ss_n40C_1v28_yosys.lib
+Imported 376 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_ms_tt_025C_1v80_ccsnoise.lib
+Imported 376 cell types from liberty file.
+READ OK
+=== out/sky130_fd_sc_ms_tt_100C_1v80.lib
+Imported 376 cell types from liberty file.
+READ OK

@@ -279,7 +279,14 @@ set_routing_layers -signal [subst $signal_min_layer]-[subst $signal_max_layer] -
 
 # CTS must not touch the analog cells nor the analog side of the clocks
 protect_analog
-source ${PNR_DIR}/tcl/cts.tcl
+if {[info exists ::env(SKIP_CTS)] && $::env(SKIP_CTS) == 1} {
+  puts "\[INFO\] Skipping CTS (SKIP_CTS=1; macro-only top has no digital clock tree)"
+  # cts.tcl normally sources the RC setup; macro-only still needs it for
+  # global-route resizing.
+  source ${PNR_DIR}/tcl/set_rc.tcl
+} else {
+  source ${PNR_DIR}/tcl/cts.tcl
+}
 
 
 ###############################################

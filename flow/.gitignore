@@ -1,0 +1,29 @@
+__pycache__/
+**/__pycache__/
+**/build/
+**/runs/
+sky130_lib/out/
+
+# PDK deck test data copied with the flow-local GF180 LVS shim
+/macro/gf180mcu/lvs_dummy_excluded/testing/
+
+# Generated layout / signoff / extraction artifacts: reproducible, not source
+*.gds
+*.gds.gz
+*.oas
+*.lyrdb
+*.lvsdb
+*.odb
+*.spef
+*.sdf
+*.def
+*.cdl
+*.spice
+*.cir
+*.lib
+*.log
+**/final/
+
+# Machine-local PDK overlay symlinks; recreate from the PDK root
+**/pdk_overlay/**/libs.ref
+**/pdk_overlay/**/libs.tech/librelane/gf180mcu_fd_sc_mcu7t5v0

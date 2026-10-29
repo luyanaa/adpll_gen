@@ -1,0 +1,11 @@
+$ sta -no_init -exit validation/paths_seq.tcl
+Startpoint                           Endpoint                               Slack
+--------------------------------------------------------------------------------
+
+u1/Q (sky130_fd_sc_ms__dfxtp_2)      u3/D (sky130_fd_sc_ms__dfxtp_2)         1.24
+
+Startpoint                           Endpoint                               Slack
+--------------------------------------------------------------------------------
+
+u1/Q (sky130_fd_sc_ms__dfxtp_2)      u3/D (sky130_fd_sc_ms__dfxtp_2)         1.07
+

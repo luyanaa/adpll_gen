@@ -1,0 +1,32 @@
+{
+  "pdk": "ics55",
+  "design": "adpll_top",
+  "core": "core_a_il_dco",
+  "blocks": {
+    "dco": {
+      "library": "ics55_LLSC_H7CH",
+      "voltage": 1.2,
+      "kind": "hard_macro"
+    },
+    "pd": {
+      "library": "ics55_LLSC_H7CH",
+      "voltage": 1.2,
+      "kind": "hard_macro"
+    },
+    "digital": {
+      "library": "ics55_LLSC_H7CL",
+      "voltage": 1.2,
+      "kind": "soft"
+    }
+  },
+  "tier": "2-flow",
+  "corners": "all",
+  "notes": "Example only. Same-voltage mixed-library choice; validate cell mapping, hold/setup, and clock isolation before use.",
+  "features": {
+    "fractional_n": true,
+    "ssc": false,
+    "bist": true,
+    "multiphase": false,
+    "scan": true
+  }
+}

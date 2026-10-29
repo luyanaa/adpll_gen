@@ -1,0 +1,3 @@
+$ yosys -p "read_liberty out/sky130_fd_sc_ms_ss_n40C_1v28.lib; stat"
+1. Executing Liberty frontend: out/sky130_fd_sc_ms_ss_n40C_1v28.lib
+ERROR: Missing function on output GCLK of cell sky130_fd_sc_ms__dlclkp_1.

@@ -122,7 +122,10 @@ CELLS_SRC=$(SCL_DIR)/verilog/$(SCL).v $(IO_DIR)/verilog/icsIOA_N55_3P3.v
 #PDK_FILE ?= $(PDK_ROOT)/$(PDK)/libs.tech/magic/$(PDK).magicrc
 PDK_FILE?=none
 PDK_KLAYOUT_TECHFILE?=$(PDK_ROOT)/$(PDK)/libs.tech/klayout/tech/ics55.lyt
-PDK_KLAYOUT_MAPFILE?=$(PDK_ROOT)/$(PDK)/libs.tech/klayout/tech/ics55.map
+# KLayout LEF/DEF map (layer/purpose -> GDS layer).  The PDK ics55.map is a
+# GDS-import map, not a LEF/DEF map; using it dropped all DEF routing/SPNET
+# shapes onto auto layers.
+PDK_KLAYOUT_MAPFILE?=$(ROOT_DIR)/flow/maps/ics55_lefdef.map
 LEFS?=$(PDK_ROOT)/$(PDK)/libs.tech/librelane/N551P6M_ecos.lef $(SCL_LEF) $(IO_DIR)/lef/ICSIOA_N55_3P3_1P6M1TM_ecos.lef
 GDSS?=$(SCL_GDS) $(IO_DIR)/gds/ICSIOA_N55_3P3_1P6M1TM.gds
 # Cell netlists for the LVS schematic (pnr writes only the top subcircuit)

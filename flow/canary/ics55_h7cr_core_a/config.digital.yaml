@@ -1,0 +1,157 @@
+# LibreLane skeleton -- DIGITAL-ONLY canary top (pll_logic)
+#
+# STATUS: SKELETON.  LibreLane is not installed in this environment, so this
+# file has never been read by LibreLane.  It encodes the intended views and
+# variables; it is not a guaranteed-runnable config.
+#
+# Adapt to the installed LibreLane release and to
+#   <PDK_ROOT>/ics55/libs.tech/librelane/config.tcl
+#   <PDK_ROOT>/ics55/libs.tech/librelane/ics55_LLSC_H7CR/config.tcl
+# The PDK config.tcl already supplies the tech LEF, cell LEF/GDS/CDL/Verilog,
+# PDN, tap/fill/decap, CTS buffers and the 3 default timing corners.  Only the
+# design-specific keys are repeated here.
+#
+# Run from this directory:
+#   librelane config.digital.yaml
+# (or: librelane --pdk ics55 --scl ics55_LLSC_H7CR config.digital.yaml,
+#  depending on the release's CLI).
+
+DESIGN_NAME: pll_logic
+
+VERILOG_FILES:
+  - dir::../../../src/pll_logic.v
+  - dir::../../../src/digital_loop_filter.v
+  - dir::../../../src/term_decoder.v
+  - dir::../../../src/freq_lock.v
+  - dir::../../../src/delta_sigma.v
+  - dir::../../../src/fix_div.v
+  - dir::../../../src/conf_div.v
+
+# ---------------------------------------------------------------------------
+# PDK / standard-cell library
+# ---------------------------------------------------------------------------
+# ADAPT: some releases take PDK/STD_CELL_LIBRARY only from --pdk/--scl or only
+# from a pdk::<pattern> block.  Keep whichever form the installed version
+# accepts; do not assume all three at once.
+PDK: ics55
+
+# The PDK ics55.map is a GDS-import map, not a LEF/DEF map.  Without this
+# override KLayout streams DEF routing/SPNET onto auto layers.
+KLAYOUT_DEF_LAYER_MAP: /opt/adpll_gen/flow/maps/ics55_lefdef.map
+STD_CELL_LIBRARY: ics55_LLSC_H7CR
+
+# The validated PDK example uses a PDK-scoped block for the same settings.
+# Keep it for the pad library variable; the top-level keys above are the
+# portable form.  If the installed release rejects duplicate/unknown scoped
+# keys, delete this block (the design uses no pads).
+pdk::ics55*:
+  PAD_CELL_LIBRARY: ICsprout_55LLULP1233_IO_251013
+
+# Actual H7CR views used by the PDK's LibreLane config.tcl (reference only;
+# these are wired by the PDK config, not by this file):
+#   LEF:     /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/lef/ics55_LLSC_H7CR_ecos.lef
+#   GDS:     /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/gds/ics55_LLSC_H7CR.gds
+#   Verilog: /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/verilog/ics55_LLSC_H7CR.v
+#   CDL:     /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/cdl/ics55_LLSC_H7CR.cdl
+#   Liberty: /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/
+#
+# ADAPT: only if the installed PDK config does not wire the cell views, set
+# them explicitly (the PDK config remains authoritative otherwise):
+# CELL_LEFS:
+#   - /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/lef/ics55_LLSC_H7CR_ecos.lef
+# CELL_GDS:
+#   - /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/gds/ics55_LLSC_H7CR.gds
+# CELL_VERILOG_MODELS:
+#   - /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/verilog/ics55_LLSC_H7CR.v
+# CELL_SPICE_MODELS:
+#   - /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/cdl/ics55_LLSC_H7CR.cdl
+# NOTE: this checkout is flat (…/icsprout55-pdk/libs.ref/…, no …/ics55/
+# level).  LibreLane's PDK config assumes $PDK_ROOT/$PDK/libs.ref, so a
+# LibreLane run needs $PDK_ROOT/$PDK to resolve to this tree (PDK_ROOT=/grid
+# plus an /grid/ics55 symlink, or an equivalent layout).
+
+# ---------------------------------------------------------------------------
+# Clocks
+# ---------------------------------------------------------------------------
+# REF is the only real input clock.  OUT, MID_OUT and INJ_EDGE are ports of
+# the digital-only top and are created as (asynchronous, nominal) clocks in
+# constraints/adpll.sdc, because CLOCK_PORT takes one port only.
+CLOCK_PORT: REF
+CLOCK_PERIOD: 20.0
+
+# ADAPT: older releases use BASE_SDC_FILE; newer ones split PNR/SIGNOFF.
+PNR_SDC_FILE: dir::constraints/adpll.sdc
+SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
+
+# ---------------------------------------------------------------------------
+# Floorplan / placement (canary values, not QoR targets)
+# ---------------------------------------------------------------------------
+FP_CORE_UTIL: 35
+PL_TARGET_DENSITY_PCT: 50
+# ADAPT: placeholder only; remove to let LibreLane size the die from
+# FP_CORE_UTIL, or adjust once the real cell count/placement is known.
+DIE_AREA: [0, 0, 150, 150]
+
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+# ---------------------------------------------------------------------------
+# Signoff switches (names/availability depend on the LibreLane release)
+# ---------------------------------------------------------------------------
+# ADAPT: not every release has these four keys (some use --skip / SKIP_*).
+
+# PDK-specific DRC/LVS switches used by the validated ics55 example.
+
+# ---------------------------------------------------------------------------
+# RC extraction constants
+# From the PDK's validated example
+# (libs.tech/librelane/examples/counter/config.yaml); verify against the
+# installed PDK revision.  The PDK's config.tcl still marks LAYERS_RC/VIAS_R
+# as TODO, so these must be present for RCX.
+# ---------------------------------------------------------------------------
+RCX_RULESETS:
+  "nom_tt_*": /grid/icsprout55-pdk/libs.tech/librelane/ics55_LLSC_H7CR/rcx_typ.rules
+  "nom_ss_*": /grid/icsprout55-pdk/libs.tech/librelane/ics55_LLSC_H7CR/rcx_nom_ss_125C_1v08.rules
+  "nom_ff_*": /grid/icsprout55-pdk/libs.tech/librelane/ics55_LLSC_H7CR/rcx_nom_ff_n40C_1v32.rules
+
+LAYERS_RC:
+  "nom_*":
+    MET1: {res: 0.1122, cap: 0.0007630}
+    MET2: {res: 0.0914, cap: 0.0011069}
+    MET3: {res: 0.0914, cap: 0.0011069}
+    MET4: {res: 0.0914, cap: 0.0011069}
+    MET5: {res: 0.0914, cap: 0.0006259}
+    T4M2: {res: 0.0239, cap: 0.0001299}
+VIAS_R:
+  "nom_*":
+    VIA1: {res: 2.5}
+    VIA2: {res: 2.5}
+    VIA3: {res: 2.5}
+    VIA4: {res: 2.5}
+    T4V2: {res: 2.5}
+
+# ---------------------------------------------------------------------------
+# Timing corners
+# ---------------------------------------------------------------------------
+# ADAPT: STA_CORNERS names and the LIB map format must match the installed
+# LibreLane.  The library ships SEVEN Liberty views, but they are not
+# cell-identical: ss_cworst_1p08_m40 lacks ICGNX3H7R, which the TT-synthesized
+# netlist uses.  The canary therefore uses the three PDK-wired corners (TT,
+# SS 1.08 V/125 C, FF 1.32 V/-40 C), which all contain the cell.  See README
+# "Corner cell-set finding".  To enable the extra four, first exclude/remap
+# ICGNX3H7R or obtain a corrected Liberty set.
+#
+# RCX caveat: dedicated RCX rules exist only for the three PDK-wired corners
+# (rcx_typ.rules, rcx_nom_ss_125C_1v08.rules, rcx_nom_ff_n40C_1v32.rules).
+LIB:
+  nom_tt_025C_1v20:
+    - /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib
+  nom_ss_125C_1v08:
+    - /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_ss_rcworst_1p08_125_nldm.lib
+  nom_ff_n40C_1v32:
+    - /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_ff_rcbest_1p32_m40_nldm.lib
+
+STA_CORNERS:
+  - nom_tt_025C_1v20
+  - nom_ss_125C_1v08
+  - nom_ff_n40C_1v32

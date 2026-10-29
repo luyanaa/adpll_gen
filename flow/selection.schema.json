@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/adpll/selection.schema.json",
+  "title": "ADPLL per-block library selection",
+  "type": "object",
+  "required": ["pdk", "design", "core", "blocks", "tier", "corners"],
+  "properties": {
+    "pdk": {
+      "type": "string",
+      "description": "PDK key from flow/pdks.json"
+    },
+    "design": {
+      "type": "string",
+      "description": "Top-level design name"
+    },
+    "core": {
+      "type": "string",
+      "enum": ["core_a_il_dco", "core_b_ring_dco", "core_c_counter"]
+    },
+    "blocks": {
+      "type": "object",
+      "required": ["dco", "pd", "digital"],
+      "properties": {
+        "dco": {"$ref": "#/$defs/block"},
+        "pd": {"$ref": "#/$defs/block"},
+        "digital": {"$ref": "#/$defs/block"},
+        "tdc": {"$ref": "#/$defs/block"},
+        "divider": {"$ref": "#/$defs/block"},
+        "dsm": {"$ref": "#/$defs/block"},
+        "io": {"$ref": "#/$defs/block"},
+        "level_shifters": {"$ref": "#/$defs/block"}
+      },
+      "additionalProperties": false
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["2-flow", "2-flow*", "1+", "1"]
+    },
+    "corners": {
+      "oneOf": [
+        {"type": "string", "enum": ["all", "tt"]},
+        {"type": "array", "items": {"type": "string"}, "minItems": 1}
+      ]
+    },
+    "notes": {"type": "string"},
+    "features": {
+      "type": "object",
+      "properties": {
+        "fractional_n": {"type": "boolean"},
+        "ssc": {"type": "boolean"},
+        "bist": {"type": "boolean"},
+        "multiphase": {"type": "boolean"},
+        "scan": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "block": {
+      "type": "object",
+      "required": ["library", "voltage", "kind"],
+      "properties": {
+        "library": {"type": "string"},
+        "voltage": {"type": "number"},
+        "kind": {"type": "string", "enum": ["hard_macro", "soft"]},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

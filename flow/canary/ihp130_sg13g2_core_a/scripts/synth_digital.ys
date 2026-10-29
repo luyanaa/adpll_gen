@@ -1,0 +1,58 @@
+# Yosys synthesis of the ADPLL digital control (pll_logic) for IHP SG13G2.
+#
+# This is the ihp130 + Core A canary: it proves that the digital control
+# elaborates and maps 100% to the ORFS `sg13g2_stdcell` 1.2 V library.  It is
+# NOT a timing / DRC / LVS run.
+#
+# Run from flow/canary/ihp130_sg13g2_core_a (the Makefile and run_canary.sh do
+# this for you):
+#     yosys -s scripts/synth_digital.ys
+#
+# Paths below are the actual paths in this checkout.  run_canary.sh rewrites
+# the Liberty and RTL paths when SRC_DIR / SG13G2_LIB are overridden.
+
+# ---------------------------------------------------------------------------
+# RTL (same list as the ics55 canary; the digital is PDK-independent)
+# ---------------------------------------------------------------------------
+read_verilog -sv /opt/adpll_gen/src/pll_logic.v
+read_verilog -sv /opt/adpll_gen/src/digital_loop_filter.v
+read_verilog -sv /opt/adpll_gen/src/term_decoder.v
+read_verilog -sv /opt/adpll_gen/src/freq_lock.v
+read_verilog -sv /opt/adpll_gen/src/delta_sigma.v
+read_verilog -sv /opt/adpll_gen/src/fix_div.v
+read_verilog -sv /opt/adpll_gen/src/conf_div.v
+
+# ---------------------------------------------------------------------------
+# Elaboration + generic synthesis
+# ---------------------------------------------------------------------------
+hierarchy -check -top pll_logic
+synth -top pll_logic
+flatten
+
+# Structural sanity before mapping.  (Do not run "check" after abc: Yosys
+# reports every top-level output as undriven because the Liberty cells are
+# blackboxes, even though the mapped netlist is correctly driven.)
+check -assert
+
+# ---------------------------------------------------------------------------
+# Technology mapping (TT / 1.2 V / 25 C)
+#
+# `sg13g2_stdcell` is the 1.2 V core library from
+# /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2.  Do NOT substitute the
+# 3.3 V `sg13g2_stdcell_hv` row from /grid/ihp130 in this run: the canary is
+# single-voltage and mixing HV would need level shifters.
+# ---------------------------------------------------------------------------
+dfflibmap -liberty /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+abc -liberty /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+
+# Tie constants to real library cells (no $false/$true net sources in the
+# hand-off netlist).  Pin names per the ORFS ihp-sg13g2 config.mk.
+hilomap -hicell sg13g2_tiehi L_HI -locell sg13g2_tielo L_LO
+opt_clean -purge
+
+# ---------------------------------------------------------------------------
+# Reports + gate-level netlist
+# ---------------------------------------------------------------------------
+tee -o build/yosys/stat.rpt stat -liberty /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+write_verilog -noattr -noexpr -nohex build/yosys/pll_logic_net.v
+write_json build/yosys/pll_logic_net.json

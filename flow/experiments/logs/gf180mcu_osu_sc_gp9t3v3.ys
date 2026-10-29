@@ -1,0 +1,23 @@
+read_liberty -lib /grid/gf180mcu/gf180mcu_osu_sc_gp9t3v3/lib/gf180mcu_osu_sc_gp9t3v3_TT_25C.nldm.lib
+read_verilog /opt/adpll_gen/src/pll_logic.v
+read_verilog /opt/adpll_gen/src/digital_loop_filter.v
+read_verilog /opt/adpll_gen/src/term_decoder.v
+read_verilog /opt/adpll_gen/src/freq_lock.v
+read_verilog /opt/adpll_gen/src/delta_sigma.v
+read_verilog /opt/adpll_gen/src/fix_div.v
+read_verilog /opt/adpll_gen/src/conf_div.v
+hierarchy -check -top pll_logic
+proc
+opt
+fsm
+opt
+memory
+opt
+flatten
+synth -run coarse
+techmap
+opt
+dfflibmap -liberty /grid/gf180mcu/gf180mcu_osu_sc_gp9t3v3/lib/gf180mcu_osu_sc_gp9t3v3_TT_25C.nldm.lib
+abc -liberty /grid/gf180mcu/gf180mcu_osu_sc_gp9t3v3/lib/gf180mcu_osu_sc_gp9t3v3_TT_25C.nldm.lib
+opt
+stat -liberty /grid/gf180mcu/gf180mcu_osu_sc_gp9t3v3/lib/gf180mcu_osu_sc_gp9t3v3_TT_25C.nldm.lib

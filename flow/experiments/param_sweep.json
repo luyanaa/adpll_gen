@@ -1,0 +1,54 @@
+[
+  {
+    "name": "default_8b",
+    "params": {},
+    "status": "PASS",
+    "cells": 1402,
+    "area_um2": 13809.4944,
+    "log": "/opt/adpll_gen/flow/experiments/param_sweep_logs/default_8b.log"
+  },
+  {
+    "name": "fcw_div_10b",
+    "params": {
+      "FCW_BITS": 10,
+      "DIV_BITS": 10
+    },
+    "status": "PASS",
+    "cells": 1436,
+    "area_um2": 14523.9296,
+    "log": "/opt/adpll_gen/flow/experiments/param_sweep_logs/fcw_div_10b.log"
+  },
+  {
+    "name": "fcw_div_12b",
+    "params": {
+      "FCW_BITS": 12,
+      "DIV_BITS": 12
+    },
+    "status": "PASS",
+    "cells": 1468,
+    "area_um2": 15066.9504,
+    "log": "/opt/adpll_gen/flow/experiments/param_sweep_logs/fcw_div_12b.log"
+  },
+  {
+    "name": "fine63_filter20",
+    "params": {
+      "FINE_NDELS": 63,
+      "FILTER_BITS": 20
+    },
+    "status": "PASS",
+    "cells": 1651,
+    "area_um2": 16339.4208,
+    "log": "/opt/adpll_gen/flow/experiments/param_sweep_logs/fine63_filter20.log"
+  },
+  {
+    "name": "coarse_mid31",
+    "params": {
+      "COARSE_NDELS": 31,
+      "MID_NDELS": 31
+    },
+    "status": "PASS",
+    "cells": 1528,
+    "area_um2": 15911.5104,
+    "log": "/opt/adpll_gen/flow/experiments/param_sweep_logs/coarse_mid31.log"
+  }
+]

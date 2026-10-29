@@ -1,0 +1,35 @@
+{
+  "note": "CI canaries are smoke tests, not product defaults. They exist to detect flow breakage when the generator or LibreLane version changes.",
+  "canaries": [
+    {
+      "pdk": "ics55",
+      "core": "core_a_il_dco",
+      "library": "ics55_LLSC_H7CR",
+      "purpose": "IL-DCO + SS-BBPD + 7T digital integration smoke"
+    },
+    {
+      "pdk": "sky130",
+      "core": "core_b_ring_dco",
+      "library": "sky130_as_sc_hs",
+      "purpose": "ring DCO + BBPD + open-PDK integration smoke"
+    },
+    {
+      "pdk": "gf180mcu",
+      "core": "core_a_il_dco",
+      "library": "gf180mcu_as_sc_mcu7t3v3",
+      "purpose": "IL-DCO digital control + gf180mcu_as_sc PnR canary (80/80 with signoff skips)"
+    },
+    {
+      "pdk": "ihp130",
+      "core": "core_a_il_dco",
+      "library": "sg13g2_stdcell",
+      "purpose": "IL-DCO digital control + ihp130 sg13g2 1.2V PnR canary (layout/GDS complete; SS setup not closed)"
+    },
+    {
+      "pdk": "ETRI050",
+      "core": "core_c_counter",
+      "library": "ETRI050_fd_sc_12t",
+      "purpose": "counter DCO + SR TDC + 5V/Tier-1 smoke"
+    }
+  ]
+}

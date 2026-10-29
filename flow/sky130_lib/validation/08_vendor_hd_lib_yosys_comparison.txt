@@ -1,0 +1,11 @@
+$ yosys -p "read_liberty /opt/OpenROAD-flow-scripts/flow/platforms/sky130hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib"
+1. Executing Liberty frontend: /opt/OpenROAD-flow-scripts/flow/platforms/sky130hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+ERROR: Missing function on output GCLK of cell sky130_fd_sc_hd__dlclkp_1.
+
+$ yosys -p "read_liberty -lib /opt/.../sky130_fd_sc_hd__tt_025C_1v80.lib; ls"
+1. Executing Liberty frontend: /opt/OpenROAD-flow-scripts/flow/platforms/sky130hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+Imported 428 cell types from liberty file.
+
+End of script. Logfile hash: 05e43fbdf3, CPU: user 0.11s system 0.02s, MEM: 35.77 MB peak
+Yosys 0.52 (git sha1 fee39a3284c90249e1d9684cf6944ffbbcbb8f90)
+Time spent: 100% 2x read_liberty (0 sec)

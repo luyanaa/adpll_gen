@@ -1,0 +1,75 @@
+[
+  {
+    "pdk": "ihp130",
+    "node": "130nm",
+    "library": "sg13g2_stdcell",
+    "path": "/opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2",
+    "usable": true,
+    "sta_usable": true,
+    "pnr_ready": true,
+    "liberty_source": "orfs_platform",
+    "official_pdk": false,
+    "tier": "2-flow*",
+    "tier2_candidate": true,
+    "drc_lvs": "declared",
+    "corners": 3,
+    "corner_consistent": true,
+    "common_cells": 84,
+    "corner_missing": {},
+    "voltage": [
+      1.2
+    ],
+    "liberty_files": 3,
+    "lef_files": 2,
+    "lef_macros": 0,
+    "gds_files": 1,
+    "cdl_files": 1,
+    "verilog_files": 1,
+    "cells": 84,
+    "librelane": true,
+    "pdk_librelane": true,
+    "core_support": {
+      "core_a_il_dco": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "clkbuf"
+        ]
+      },
+      "core_b_ring_dco": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "clkbuf"
+        ]
+      },
+      "core_c_counter": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "clkbuf"
+        ]
+      },
+      "digital": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "clkbuf"
+        ]
+      },
+      "pd_ssbbpd": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "clkinv"
+        ]
+      },
+      "tdc_sr": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      }
+    },
+    "notes": "ORFS ihp-sg13g2 sg13g2_stdcell 1.2V; 3 cell-identical corners; official IHP PDK root and DRC/LVS decks absent; PnR canary ran with a locally authored minimal PDK config; not signoff"
+  }
+]

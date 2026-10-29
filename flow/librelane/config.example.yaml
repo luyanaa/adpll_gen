@@ -1,0 +1,44 @@
+# Skeleton only. Adapt keys to the installed LibreLane version and the PDK's
+# libs.tech/librelane config. This is not a guaranteed runnable config.
+meta:
+  version: 3
+  flow: Classic
+
+DESIGN_NAME: adpll_top
+
+VERILOG_FILES:
+  - dir::rtl/adpll_top.sv
+  - dir::rtl/adpll_digital.sv
+  - dir::rtl/adpll_macro_models.sv
+
+PDK: ics55
+STD_CELL_LIBRARY: ics55_LLSC_H7CL
+# The PDK's ics55.map is a GDS-import map, not a LEF/DEF map.  Point KLayout
+# at the repo's LEF/DEF map or routing/SPNET lands on auto layers.
+KLAYOUT_DEF_LAYER_MAP: dir::../maps/ics55_lefdef.map
+
+CLOCK_PORT: ref_clk
+CLOCK_PERIOD: 20.0
+
+FP_CORE_UTIL: 40
+PL_TARGET_DENSITY_PCT: 55
+
+RUN_DRC: true
+RUN_LVS: true
+RUN_ANTENNA: true
+RUN_STA: true
+
+# All corners supported by the selected library for Tier 2 flow.
+# STA_CORNERS: all
+
+# Per-block mixing: the digital library is STD_CELL_LIBRARY above; the DCO/PD
+# macros may come from another library of the same PDK and voltage.
+# EXTRA_LIBS:
+#   - dir::lib/ics55_LLSC_H7CH/lib/ics55_LLSC_H7CH_typ_tt_1p2_25_nldm.lib
+
+# Hard macros from the DCO/PD build:
+# MACROS:
+#   adpll_ildco:
+#     gds: dir::macro/adpll_ildco.gds
+#     lef: dir::macro/adpll_ildco.lef
+#     lib: dir::macro/adpll_ildco.lib

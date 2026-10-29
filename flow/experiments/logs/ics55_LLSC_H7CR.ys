@@ -1,0 +1,23 @@
+read_liberty -lib /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib
+read_verilog /opt/adpll_gen/src/pll_logic.v
+read_verilog /opt/adpll_gen/src/digital_loop_filter.v
+read_verilog /opt/adpll_gen/src/term_decoder.v
+read_verilog /opt/adpll_gen/src/freq_lock.v
+read_verilog /opt/adpll_gen/src/delta_sigma.v
+read_verilog /opt/adpll_gen/src/fix_div.v
+read_verilog /opt/adpll_gen/src/conf_div.v
+hierarchy -check -top pll_logic
+proc
+opt
+fsm
+opt
+memory
+opt
+flatten
+synth -run coarse
+techmap
+opt
+dfflibmap -liberty /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib
+abc -liberty /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib
+opt
+stat -liberty /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib

@@ -1,0 +1,125 @@
+# PDK 侧 ADPLL 可行性估算
+
+本文只给**基于现有实现的估算**，并明确区分：
+
+- **pre-layout**：Yosys 映射后、无走线延时、2.5 ns `OUT` / 10 ns `REF`；
+- **post-route**：已有 canary 的 OpenROAD 时钟报告；
+- **macro**：`PLL_ANALOG_MACRO` 的 P&R 局部时序；
+- **unknown**：没有 DCO 模拟表征，不能从数字 STA 反推。
+
+## 1. 快速结论
+
+| PDK / 库 | 当前可支撑的 DCO/OUT 数字上限 | REF 侧上限 | 1.6 GHz 可行性 |
+|---|---:|---:|---|
+| ics55 H7CR | **836 MHz TT / 479 MHz SS**（post-route） | **452 MHz TT / 244 MHz SS**（`INJ_EDGE`） | **否** |
+| GF180 AS 3.3 V | **约 196 MHz SS post-route**；pre-layout TT 约 0.33 GHz | **约 97–176 MHz SS**；TT 未单独保存 | **否** |
+| sky130 `fd_sc_hd` | **约 0.57 GHz pre-layout**；没有 post-route 数字 canary | 未测；macro 只证明 400 MHz 口径 | **没有证据支持** |
+| IHP SG13G2 | **525 MHz TT / <400 MHz SS**（post-route） | **237–250 MHz TT**（`INJ_EDGE`） | **否** |
+| ETRI050 12T 5 V | **约 90 MHz pre-layout**（2.5 ns OUT 下 WNS -8.66 ns） | 未测；5 V/0.5 µm，估计同量级 | **否** |
+| GF180 FD `fd_sc_mcu7t5v0` | **无结果** — DPL 未通过 | 无 | 不能评估 |
+
+表中的“DCO/OUT”是**数字控制域**能接收的频率，不包含 DCO 模拟延迟链本身；模拟 DCO
+可能更高，但当前没有实测。
+
+## 2. 按 PDK 的细节
+
+### GF180mcu
+
+**AS 3.3 V**
+
+- 宏：85.64 × 103.56 µm，0.00887 mm²；macro setup **+0.487 ns** / hold **+0.306 ns**
+  @ REF 20 ns / OUT 2.5 ns；DRC 0；LVS PASS（fill-marker shim）。
+- 数字 canary 的 SS 3.0 V post-route clock report：
+  - `REF` 163.53 MHz，`OUT` **196.37 MHz**，`MID_OUT` **306.87 MHz**，
+    `INJ_EDGE` **96.70 MHz**。
+- 另一个 pre-layout TT 3.3 V 结果（同一 `pll_logic`，无走线延时）：
+  - 2.5 ns `OUT` 下 worst setup **-0.50 ns**，即约 **0.33 GHz** 量级。
+- 结论：GF180 3.3 V 数字控制适合 **100–300 MHz**，不是 1.6 GHz；高速宏需要
+  流水/重定时或更快的库。
+
+**FD `gf180mcu_fd_sc_mcu7t5v0`**
+
+- 3-metal、5 V、7-track；synthesis 1588 cells / 44,167 µm²。
+- DPL 仍失败：272/280 sequential cell，`DPL-0036`；9-track 也复现。
+  根因对应 OpenROAD issue 11511：旧 DPL 把带 via-stack 金属上 pin 的
+  cell 整行/整 site 标成 blocked；当前 2026-02-17 binary 没有该修复。
+- 没有 route/DRC/LVS/STA，所以**不能给可靠频率估算**。
+
+### sky130
+
+**`sky130_fd_sc_hd`**
+
+- pre-layout TT 1.8 V，同一 `pll_logic`、2.5 ns `OUT`：
+  - worst setup **+0.75 ns**（约 **0.57 GHz** 等效）
+  - worst hold **+0.05 ns**
+- 没有 post-route 数字 canary；不能把这个值当成 P&R 后 Fmax。
+- 现有 sky130 宏有两套：`sky130_as_sc_hs` 80.21 × 90.93 µm，LVS 卡在
+  Magic cell-CDL/device；新 `sky130_fd_sc_hd` 实验 79.665 × 90.385 µm，
+  **KLayout DRC 0**，PDN 已修，但 LVS 仍在 cell-subcircuit 比较。
+- 结论：sky130 数字控制**可能**在 0.4–0.6 GHz 量级，需 P&R canary 确认；
+  不支持 1.6 GHz。
+
+### IHP SG13G2
+
+- 宏：160 × 105 µm，0.0168 mm²；minimal-deck DRC 0（含 density）；
+  LVS PASS（fill-stripped view）。
+- 数字 canary TT 1.2 V post-route：
+  - `REF` 379.10 MHz，`OUT` **525.42 MHz**，`MID_OUT` **653.44 MHz**，
+    `INJ_EDGE` **237.33 MHz**。
+- SS 1.08 V 在名义 2.5 ns `OUT` 下 setup **-0.316 ns**（10 paths，TNS -2.534 ns），
+  所以 SS 不能按 400 MHz 签核。
+- 结论：IHP 1.2 V 数字控制约 **0.5 GHz TT / 0.35–0.4 GHz SS** 量级；
+  不支持 1.6 GHz。
+
+### ETRI050
+
+- `ETRI050_fd_sc_12t`：5 V、0.5 µm、单 TT corner、无温度模型；synthesis 1654 cells，
+  1,206,913 µm²（数字控制本身约 1.2 mm²）。
+- pre-layout TT 5 V、2.5 ns `OUT`：worst setup **-8.66 ns**，等效约 **90 MHz**。
+- 没有 P&R canary，也没有 macro；5 V 大单元 + 长走线会进一步降低。
+- 结论：ETRI050 只适合 **tens of MHz 到约 100 MHz** 的慢速/研究用途，
+  不适合当前 ADPLL 的 1.6 GHz 目标，也不适合面积敏感设计。
+
+### ETRI050 PnR blockers
+
+- **Core A 缺 `nand2b`**：`core_support.core_a_il_dco = no`，所以当前
+  `pll_logic`（IL-DCO 数字控制）不能直接移植；Core B/C 才是 full。
+- **PDN/power-terminal**：默认 rail+MET2/MET3 strap 让
+  `RepairDesignPostGPL` 对所有 instance 失败；rails-only 能让 placement/DRT
+  通过，但 PSM 看不到 VDD/VSS terminal；加 MET2/MET3 strap 又回到 placement
+  失败。当前 smoke flow 是用 `-S OpenROAD.GeneratePDN` 绕过，不是签核。
+- **单 corner**：只有 TT/5 V/25 °C，没有 SS/FF 或温度模型；不能做 setup/hold
+  签核。
+- **5 V / 0.5 µm / 1.2 mm² 数字面积**：面积和功耗都不适合高频 ADPLL；
+  与 1.2 V/1.8 V 数字混合还需要 level shifter。
+- **Liberty 质量**：12T vendor Liberty 没有 setup/hold/RCX 签核；9T 是
+  research-only。
+- **库端**：`ETRI050_fd_sc_12t` 的 38 cells 可综合，但 Core A 的 missing
+  `nand2b` 是硬 blocker；不能靠改 flow 参数解决。
+
+## 3. 对 1.6 GHz 目标的判断
+
+所有 PDK 的现有数字控制都达不到 1.6 GHz：
+
+```text
+ics55  OUT 836 MHz TT / 479 MHz SS
+GF180  OUT ~196 MHz SS / ~330 MHz TT pre-layout
+sky130 OUT ~570 MHz pre-layout (no P&R)
+IHP    OUT 525 MHz TT / <400 MHz SS
+ETRI   OUT ~90 MHz pre-layout
+```
+
+1.6 GHz 需要的是**数字控制架构改造**（流水、重定时、拆高频计数器），不是简单
+调大 `FCW=16`。模拟 DCO 可以在硬宏里单独跑更高频率，但完整 PLL 的反馈计数器、
+DLF 和 SS-BBPD 采样也必须跟上。
+
+## 4. 估算的可信度
+
+| 数据 | 可信度 |
+|---|---|
+| ics55 post-route clock report | 较高，同一数字 canary，有 SDF/布线 |
+| IHP post-route TT clock report | 较高，同一数字 canary；SS 另见 setup 违例 |
+| GF180 AS SS post-route clock report | 较高，但只有 SS；TT 另用 pre-layout |
+| sky130 pre-layout | 只作筛选，不是 P&R 后 Fmax |
+| ETRI pre-layout | 只作量级估计 |
+| DCO 模拟上限、jitter、lock range | **未测，不能给数字** |

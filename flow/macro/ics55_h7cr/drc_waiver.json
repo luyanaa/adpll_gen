@@ -1,0 +1,12 @@
+{
+  "description": "Cell-internal DRC waiver for ics55 H7CR 7T library cells. Top-level macro DRC is separately required to be zero.",
+  "waivers": [
+    {
+      "id": "ics55_h7cr_7t_cell_internal",
+      "scope": "cell_internal",
+      "cells": ["FILLTAPH7R", "DFFNQX1H7R", "NAND3X1H7R", "NAND2X1H7R", "NAND2BX1H7R", "INVX1H7R", "BUFX0P5H7R", "NOR2BX1H7R", "NOR2X1H7R", "FILLER64H7R", "FILLCAP8H7R", "FILLCAP32H7R", "FILLCAP16H7R", "FILLER2H7R", "FILLCAP4H7R", "FILLER1H7R", "NAND3X8H7R", "NAND3X6H7R", "INVX2H7R", "INVX5H7R"],
+      "categories": ["implant.np.enclosed_area", "M1DUM_W_1", "metal.m1.area", "poly.poly.area"],
+      "justification": "7T H7CR standard-cell-as-drawn violations inside placed cells; not macro routing/PDN. Requires a library fix or foundry-approved library waiver."
+    }
+  ]
+}

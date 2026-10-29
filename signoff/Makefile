@@ -66,6 +66,10 @@ drc: $(DRC_OK)
 lvs: $(LVS_OK)
 
 ifeq ($(PDK),ics55)
+# The flat-PDK checkout keeps the decks under libs.tech/drc and libs.tech/lvs,
+# not libs.tech/klayout/tech.
+ICS55_DRC_DECK?=$(PDK_ROOT)/$(PDK)/libs.tech/drc/ics55_drc.drc
+ICS55_LVS_DECK?=$(PDK_ROOT)/$(PDK)/libs.tech/lvs/ics55.lvs
 DRC_DB=$(SIGN_REP)/$(TOP).lyrdb
 LVS_DB=$(SIGN_REP)/$(TOP).lvsdb
 
@@ -73,7 +77,7 @@ LVS_DB=$(SIGN_REP)/$(TOP).lvsdb
 $(DRC_OK): $(GDS)
 	mkdir -p $(SIGN_REP)
 	rm -f $@
-	$(KLAYOUT) -b -r $(PDK_ROOT)/$(PDK)/libs.tech/klayout/tech/ics55.drc \
+	$(KLAYOUT) -b -r $(ICS55_DRC_DECK) \
 	        -rd input=$(GDS) -rd topcell=$(TOP) -rd report=$(DRC_DB) \
 	        -rd log=$(SIGN_REP)/drc_runset.log -rd run_mode=deep -rd threads=$(SIGN_THREADS) | tee $(DRC_LOG)
 	$(PYTHON) $(SIGN_DIR)/tcl/drc_summary.py $(DRC_DB) | tee $(SIGN_REP)/$(TOP)_drc.summary
@@ -82,7 +86,7 @@ $(DRC_OK): $(GDS)
 $(LVS_OK): $(GDS) $(SPICE)
 	mkdir -p $(SIGN_REP)
 	rm -f $@
-	$(KLAYOUT) -b -r $(PDK_ROOT)/$(PDK)/libs.tech/klayout/tech/ics55.lvs \
+	$(KLAYOUT) -b -r $(ICS55_LVS_DECK) \
 	        -rd input=$(GDS) -rd schematic=$(SPICE) -rd topcell=$(TOP) -rd report=$(LVS_DB) \
 	        -rd target_netlist=$(SIGN_REP)/$(TOP)_extracted.cir \
 	        -rd log=$(SIGN_REP)/lvs_runset.log -rd run_mode=deep -rd threads=$(SIGN_THREADS) | tee $(LVS_LOG)

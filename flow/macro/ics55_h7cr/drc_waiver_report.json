@@ -1,0 +1,12 @@
+{
+  "lyrdb": "/opt/adpll_gen/signoff/reports/ics55/PLL_ANALOG_MACRO.lyrdb",
+  "waiver": "/opt/adpll_gen/flow/macro/ics55_h7cr/drc_waiver.json",
+  "top": "PLL_ANALOG_MACRO",
+  "total": 305,
+  "waived": 305,
+  "remaining": 0,
+  "waived_by_rule": {
+    "ics55_h7cr_7t_cell_internal": 305
+  },
+  "remaining_by_cell_category": {}
+}

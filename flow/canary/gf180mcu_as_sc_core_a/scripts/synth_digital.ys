@@ -1,0 +1,62 @@
+# Yosys synthesis of the ADPLL digital control (pll_logic) for gf180mcu.
+#
+# This is the canary: it proves that the digital control elaborates and maps
+# 100% to gf180mcu_as_sc_mcu7t3v3 standard cells.  It is NOT a timing, DRC or
+# LVS run.
+#
+# Run from flow/canary/gf180mcu_as_sc_core_a (the Makefile and run_canary.sh
+# do this for you):
+#     yosys -s scripts/synth_digital.ys
+#
+# Paths below are the actual paths in this checkout.  run_canary.sh rewrites
+# the Liberty and RTL paths when SRC_DIR / GF180_LIB are overridden.
+
+# ---------------------------------------------------------------------------
+# RTL (same list as the ics55 canary)
+# ---------------------------------------------------------------------------
+read_verilog -sv /opt/adpll_gen/src/pll_logic.v
+read_verilog -sv /opt/adpll_gen/src/digital_loop_filter.v
+read_verilog -sv /opt/adpll_gen/src/term_decoder.v
+read_verilog -sv /opt/adpll_gen/src/freq_lock.v
+read_verilog -sv /opt/adpll_gen/src/delta_sigma.v
+read_verilog -sv /opt/adpll_gen/src/fix_div.v
+read_verilog -sv /opt/adpll_gen/src/conf_div.v
+
+# ---------------------------------------------------------------------------
+# Elaboration + generic synthesis
+# ---------------------------------------------------------------------------
+hierarchy -check -top pll_logic
+synth -top pll_logic
+flatten
+
+# Structural sanity before mapping.  (Do not run "check" after abc: Yosys 0.52
+# reports every top-level output as undriven because the Liberty cells are
+# blackboxes, even though the mapped netlist is correctly driven.)
+check -assert
+
+# ---------------------------------------------------------------------------
+# Technology mapping (TT / 3.3 V / 25 C)
+#
+# The gf180 PDK's synth_exclude.cells excludes dyn_dfxtp_2 (plus clkbuff_*,
+# latches, diode and hcf).  This standalone flow has no cell-filtering helper,
+# so apply the one exclusion that matters for a DFF-mapped netlist directly:
+# do not map positive-edge flops to dyn_dfxtp_2.  dfxtp_2/dfxtp_4 remain.
+#
+# The library has only one async set/reset flop (dfsrtp_2, with both RN and
+# SN).  dfflibmap maps every async-reset flop to it and ties the unused SN
+# high; that tie is inserted by hilomap below.
+# ---------------------------------------------------------------------------
+dfflibmap -liberty /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib -dont_use gf180mcu_as_sc_mcu7t3v3__dyn_dfxtp_2
+abc -liberty /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib
+
+# Tie constants to real library cells (no $false/$true net sources in the
+# hand-off netlist).
+hilomap -hicell gf180mcu_as_sc_mcu7t3v3__tieh_4 ONE -locell gf180mcu_as_sc_mcu7t3v3__tiel_4 ZERO
+opt_clean -purge
+
+# ---------------------------------------------------------------------------
+# Reports + gate-level netlist
+# ---------------------------------------------------------------------------
+tee -o build/yosys/stat.rpt stat -liberty /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib
+write_verilog -noattr -noexpr -nohex build/yosys/pll_logic_net.v
+write_json build/yosys/pll_logic_net.json

@@ -1,0 +1,290 @@
+[
+  {
+    "pdk": "sky130",
+    "node": "130nm",
+    "library": "sky130_fd_sc_ms",
+    "path": "/grid/sky130/sky130_fd_sc_ms",
+    "usable": true,
+    "sta_usable": true,
+    "pnr_ready": false,
+    "liberty_source": "reconstructed_libjson",
+    "generated_liberty": [
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_ms_ff_100C_1v95.lib",
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_ms_ff_n40C_1v95_pwrlkg.lib",
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_ms_ss_n40C_1v28.lib",
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_ms_tt_025C_1v80_ccsnoise.lib",
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_ms_tt_100C_1v80.lib"
+    ],
+    "tier": "2-flow*",
+    "tier2_candidate": true,
+    "drc_lvs": "declared",
+    "corners": 5,
+    "corner_consistent": true,
+    "common_cells": 376,
+    "corner_missing": {},
+    "voltage": [
+      1.28,
+      1.8,
+      1.95
+    ],
+    "liberty_files": 5,
+    "lef_files": 0,
+    "lef_macros": 0,
+    "gds_files": 0,
+    "cdl_files": 0,
+    "verilog_files": 0,
+    "cells": 376,
+    "librelane": false,
+    "pdk_librelane": false,
+    "core_support": {
+      "core_a_il_dco": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "core_b_ring_dco": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "core_c_counter": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "tie"
+        ]
+      },
+      "digital": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "tie"
+        ]
+      },
+      "pd_ssbbpd": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "tdc_sr": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      }
+    },
+    "notes": "reconstructed Liberty from .lib.json (STA-usable); pnr_ready=false until fill/tap/decap/diode (diode, fill, fill_diode, latchupcell, tap, tapmet1, tapvgnd, tapvgnd2, tapvpwrvgnd) are supplied"
+  },
+  {
+    "pdk": "sky130",
+    "node": "130nm",
+    "library": "sky130_fd_sc_lp",
+    "path": "/grid/sky130/sky130_fd_sc_lp",
+    "usable": true,
+    "sta_usable": true,
+    "pnr_ready": false,
+    "liberty_source": "reconstructed_libjson",
+    "generated_liberty": [
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_lp_ff_n40C_1v95.lib",
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_lp_ss_n40C_1v65.lib"
+    ],
+    "tier": "2-flow*",
+    "tier2_candidate": true,
+    "drc_lvs": "declared",
+    "corners": 2,
+    "corner_consistent": true,
+    "common_cells": 701,
+    "corner_missing": {},
+    "voltage": [
+      1.65,
+      1.95
+    ],
+    "liberty_files": 2,
+    "lef_files": 0,
+    "lef_macros": 0,
+    "gds_files": 0,
+    "cdl_files": 0,
+    "verilog_files": 0,
+    "cells": 701,
+    "librelane": false,
+    "pdk_librelane": false,
+    "core_support": {
+      "core_a_il_dco": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "core_b_ring_dco": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "core_c_counter": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "tie"
+        ]
+      },
+      "digital": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "tie"
+        ]
+      },
+      "pd_ssbbpd": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "tdc_sr": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      }
+    },
+    "notes": "reconstructed Liberty from .lib.json (STA-usable); pnr_ready=false until fill/tap/decap/diode (busdriver, busdriver2, busdrivernovlp, busdrivernovlp2, busdrivernovlpsleep, bushold, bushold0, busreceiver, decap, decapkapwr, diode, fill, sleep_pargate_plv, sleep_sergate_plv, tap, tapvgnd, tapvgnd2, tapvpwrvgnd) are supplied"
+  },
+  {
+    "pdk": "sky130",
+    "node": "130nm",
+    "library": "sky130_fd_sc_ls",
+    "path": "/grid/sky130/sky130_fd_sc_ls",
+    "usable": true,
+    "sta_usable": true,
+    "pnr_ready": false,
+    "liberty_source": "reconstructed_libjson",
+    "generated_liberty": [
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_ls_ss_n40C_1v28.lib",
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_ls_tt_100C_1v80.lib"
+    ],
+    "tier": "2-flow*",
+    "tier2_candidate": true,
+    "drc_lvs": "declared",
+    "corners": 2,
+    "corner_consistent": true,
+    "common_cells": 386,
+    "corner_missing": {},
+    "voltage": [
+      1.28,
+      1.8
+    ],
+    "liberty_files": 2,
+    "lef_files": 0,
+    "lef_macros": 0,
+    "gds_files": 0,
+    "cdl_files": 0,
+    "verilog_files": 0,
+    "cells": 386,
+    "librelane": false,
+    "pdk_librelane": false,
+    "core_support": {
+      "core_a_il_dco": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "core_b_ring_dco": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "core_c_counter": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "tie"
+        ]
+      },
+      "digital": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "tie"
+        ]
+      },
+      "pd_ssbbpd": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "tdc_sr": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      }
+    },
+    "notes": "reconstructed Liberty from .lib.json (STA-usable); pnr_ready=false until fill/tap/decap/diode (decaphetap, fill, latchupcell, tap, tapmet1, tapvgnd, tapvgnd2, tapvgndnovpb, tapvpwrvgnd) are supplied"
+  },
+  {
+    "pdk": "sky130",
+    "node": "130nm",
+    "library": "sky130_fd_sc_hdll",
+    "path": "/grid/sky130/sky130_fd_sc_hdll",
+    "usable": true,
+    "sta_usable": true,
+    "pnr_ready": false,
+    "liberty_source": "reconstructed_libjson",
+    "generated_liberty": [
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_hdll_ss_n40C_1v28.lib",
+      "/opt/adpll_gen/flow/sky130_lib/out/sky130_fd_sc_hdll_tt_025C_1v80.lib"
+    ],
+    "tier": "2-flow*",
+    "tier2_candidate": true,
+    "drc_lvs": "declared",
+    "corners": 2,
+    "corner_consistent": true,
+    "common_cells": 324,
+    "corner_missing": {},
+    "voltage": [
+      1.28,
+      1.8
+    ],
+    "liberty_files": 2,
+    "lef_files": 0,
+    "lef_macros": 0,
+    "gds_files": 0,
+    "cdl_files": 0,
+    "verilog_files": 0,
+    "cells": 324,
+    "librelane": false,
+    "pdk_librelane": false,
+    "core_support": {
+      "core_a_il_dco": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "core_b_ring_dco": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "core_c_counter": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "tie"
+        ]
+      },
+      "digital": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "tie"
+        ]
+      },
+      "pd_ssbbpd": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      },
+      "tdc_sr": {
+        "status": "full",
+        "missing": [],
+        "optional_missing": []
+      }
+    },
+    "notes": "reconstructed Liberty from .lib.json (STA-usable); pnr_ready=false until fill/tap/decap/diode (fill, muxb, tap, tapvgnd, tapvgnd2, tapvpwrvgnd) are supplied"
+  }
+]

@@ -1,0 +1,50 @@
+# LibreLane build of PLL_ANALOG_MACRO on sky130_as_sc_hs.
+# First-pass standard-cell placement; no analog symmetric floorplan yet.
+DESIGN_NAME: PLL_ANALOG_MACRO
+
+VERILOG_FILES:
+  - dir::pll_analog_macro.v
+  - dir::../../../src/pll_analog.v
+  - dir::../../../src/injection.v
+  - dir::../../../src/il_dco.v
+  - dir::../../../src/coarse_delay.v
+  - dir::../../../src/mid_delay.v
+  - dir::../../../src/fine_delay.v
+  - dir::../../../src/sym.v
+  - dir::../../../src/sym_mux.v
+  - dir::../../../src/ssbbpd.v
+  - dir::../../../src/pll_cells_sky130_fd_sc_hd.v
+
+PDK: sky130_fd_sc_hd
+STD_CELL_LIBRARY: sky130_fd_sc_hd
+
+VDD_PIN: VPWR
+GND_PIN: VGND
+SCL_POWER_PINS: [VPWR, VPB]
+SCL_GROUND_PINS: [VGND, VNB]
+VDD_NETS: [VPWR]
+GND_NETS: [VGND]
+
+RT_MIN_LAYER: met1
+RT_MAX_LAYER: met5
+IO_PIN_H_LAYER: met3
+IO_PIN_V_LAYER: met2
+
+DIE_AREA: [0, 0, 220, 180]
+FP_CORE_UTIL: 25
+PL_TARGET_DENSITY_PCT: 45
+
+CLOCK_PORT: REF
+CLOCK_PERIOD: 20.0
+PNR_SDC_FILE: dir::macro.sdc.tcl
+SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
+
+LIB:
+  "*_tt_025C_1v80":
+    - /home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+STA_CORNERS:
+  - nom_tt_025C_1v80
+PNR_CORNERS:
+  - nom_tt_025C_1v80
+
+RCX_RULESETS: {}

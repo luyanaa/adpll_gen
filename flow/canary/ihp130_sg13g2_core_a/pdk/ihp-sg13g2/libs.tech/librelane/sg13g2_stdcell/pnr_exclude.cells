@@ -1,0 +1,6 @@
+# Cells excluded from PnR, mirroring the ORFS ihp-sg13g2 DONT_USE list.
+# One cell/wildcard per line (LibreLane reads the file as a list).
+sg13g2_lgcp_1
+sg13g2_sighold
+sg13g2_slgcp_1
+sg13g2_dfrbp_2

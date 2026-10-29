@@ -1,0 +1,74 @@
+# Local library manifest for the ihp130 + Core A canary.
+#
+# `sg13g2_stdcell` (the ORFS 1.2 V standard-cell library) is NOT a row in
+# flow/libraries.json.  The catalogue only sees the /grid/ihp130 trees:
+#   - sg13g2_stdcell_hv  (3.3 V HV cells)   -- usable, NOT used here
+#   - ez130_8t_v1p1      (1.2 V)            -- usable, NOT used here
+#   - glow_sg13g2        (not usable)
+# This file records the exact row the canary actually uses, so the run is
+# reproducible without editing the shared catalogue.
+pdk: ihp-sg13g2
+node: 130nm
+process: BiCMOS
+library: sg13g2_stdcell
+library_kind: standard_cell
+voltage_nominal_v: 1.2
+voltage_domain: core
+in_flow_libraries_json: false
+catalogue_gap_reason: >
+  flow/libraries.json only enumerates libraries under /grid/<pdk>; the
+  ORFS platform copy is outside that root and has not been added as a row.
+
+source:
+  root: /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2
+  origin: OpenROAD-flow-scripts ihp-sg13g2 platform
+  note: >
+    This is the 1.2 V core library used by the ckdur IHP target.  It is not
+    the same library as /grid/ihp130/sg13g2_stdcell_hv (3.3 V).
+
+views:
+  liberty:
+    nom_tt_025C_1v20: lib/sg13g2_stdcell_typ_1p20V_25C.lib
+    nom_ss_125C_1v08: lib/sg13g2_stdcell_slow_1p08V_125C.lib
+    nom_ff_n40C_1v32: lib/sg13g2_stdcell_fast_1p32V_m40C.lib
+  tech_lef: lef/sg13g2_tech.lef
+  cell_lef: lef/sg13g2_stdcell.lef
+  gds: gds/sg13g2_stdcell.gds
+  cdl: cdl/sg13g2_stdcell.cdl
+  verilog: verilog/sg13g2_stdcell.v
+  rcx_rules: rcx_patterns.rules
+  tracks: pdk/ihp-sg13g2/libs.tech/librelane/sg13g2_stdcell/tracks.info
+  pdn_template: /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/pdn.tcl
+  tapcell_template: /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/tapcell.tcl
+
+corners:
+  count: 3
+  names:
+    - nom_tt_025C_1v20
+    - nom_ss_125C_1v08
+    - nom_ff_n40C_1v32
+  pvt:
+    nom_tt_025C_1v20: {process: typical, voltage_v: 1.20, temperature_c: 25}
+    nom_ss_125C_1v08: {process: slow, voltage_v: 1.08, temperature_c: 125}
+    nom_ff_n40C_1v32: {process: fast, voltage_v: 1.32, temperature_c: -40}
+  cell_set:
+    cells_per_corner: 84
+    names_identical_across_corners: true
+    checked: 2026-10-29
+    note: >
+      Unlike the ics55 H7CR set, all three SG13G2 Liberty files contain the
+      same 84 cell names.  No corner-specific cell-set mismatch was found.
+
+placement:
+  site: CoreSite
+  site_size_um: [0.48, 3.78]
+  routing_layers: [Metal2, Metal5]
+  pdn_layers: [Metal1, TopMetal1, TopMetal2]
+  has_welltap_cells: false
+  has_endcap_cells: false
+
+notes:
+  - 1.2 V core only; do not mix sg13g2_stdcell_hv (3.3 V) into the same run.
+  - The digital canary has not been through DRC/LVS; no signoff claim.
+  - flow/libraries.json should gain this row when the catalogue is next
+    regenerated, including a core_a_il_dco support check.

@@ -1,0 +1,56 @@
+# Yosys synthesis of the ADPLL digital control (pll_logic) for ics55 H7CR.
+#
+# This is the canary: it proves that the digital control elaborates and maps
+# 100% to ics55_LLSC_H7CR standard cells.  It is NOT a timing/DRC/LVS run.
+#
+# Run from flow/canary/ics55_h7cr_core_a (the Makefile and run_canary.sh do
+# this for you):
+#     yosys -s scripts/synth_digital.ys
+#
+# Paths below are the actual paths in this checkout.  run_canary.sh rewrites
+# the Liberty and RTL paths when SRC_DIR / H7CR_LIB are overridden.
+
+# ---------------------------------------------------------------------------
+# RTL
+# ---------------------------------------------------------------------------
+read_verilog -sv /opt/adpll_gen/src/pll_logic.v
+read_verilog -sv /opt/adpll_gen/src/digital_loop_filter.v
+read_verilog -sv /opt/adpll_gen/src/term_decoder.v
+read_verilog -sv /opt/adpll_gen/src/freq_lock.v
+read_verilog -sv /opt/adpll_gen/src/delta_sigma.v
+read_verilog -sv /opt/adpll_gen/src/fix_div.v
+read_verilog -sv /opt/adpll_gen/src/conf_div.v
+
+# ---------------------------------------------------------------------------
+# Elaboration + generic synthesis
+# ---------------------------------------------------------------------------
+hierarchy -check -top pll_logic
+synth -top pll_logic
+flatten
+
+# Structural sanity before mapping.  (Do not run "check" after abc: Yosys 0.52
+# reports every top-level output as undriven because the Liberty cells are
+# blackboxes, even though the mapped netlist is correctly driven.)
+check -assert
+
+# ---------------------------------------------------------------------------
+# Technology mapping (TT / 1.2 V / 25 C)
+#
+# The ics55 PDK's synth_exclude.cells currently contains sg13g2 cell names, so
+# there is nothing matching H7CR to exclude.  If a real H7CR exclusion list is
+# added, pass "-dont_use <cell>" to dfflibmap and abc here.
+# ---------------------------------------------------------------------------
+dfflibmap -liberty /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib
+abc -liberty /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib
+
+# Tie constants to real library cells (no $false/$true net sources in the
+# hand-off netlist).
+hilomap -hicell TIEHIH7R Z -locell TIELOH7R Z
+opt_clean -purge
+
+# ---------------------------------------------------------------------------
+# Reports + gate-level netlist
+# ---------------------------------------------------------------------------
+tee -o build/yosys/stat.rpt stat -liberty /grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7CR/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib
+write_verilog -noattr -noexpr -nohex build/yosys/pll_logic_net.v
+write_json build/yosys/pll_logic_net.json

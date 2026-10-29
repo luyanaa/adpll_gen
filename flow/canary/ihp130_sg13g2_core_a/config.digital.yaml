@@ -1,0 +1,142 @@
+# LibreLane v3.0.16 configuration -- DIGITAL-ONLY canary top (`pll_logic`)
+#
+# STATUS: BRING-UP.  The flow runs end-to-end (floorplan -> route -> RCX ->
+# 3-corner STA -> IR drop -> KLayout GDS) with the locally assembled PDK root,
+# but exits 2 at Checker.SetupViolations: 10 SS paths fail under the nominal
+# 2.5 ns OUT/MID_OUT assumption.  DRC/LVS/antenna are disabled.  See README
+# "Status (exact)" and "Not proven / blockers".
+#
+# The IHP SG13G2 views here come from the OpenROAD-flow-scripts platform, not
+# from a full IHP PDK root.  There is no official `libs.tech/librelane` for
+# ihp-sg13g2 in this environment; the local `pdk/ihp-sg13g2/libs.tech/librelane`
+# config is authored in this repository and assembled into `build/pdk_root` by
+# scripts/assemble_pdk_root.sh.
+#
+# Run from this directory:
+#   make librelane-digital
+# or directly (the three skips replace missing Magic/signoff collateral):
+#   librelane --manual-pdk --pdk-root build/pdk_root \
+#             --pdk ihp-sg13g2 --scl sg13g2_stdcell \
+#             --skip Odb.CheckDesignAntennaProperties \
+#             --skip Magic.SpiceExtraction \
+#             --skip Checker.IllegalOverlap \
+#             config.digital.yaml
+#
+# Library: `sg13g2_stdcell` (1.2 V core, 130 nm BiCMOS).
+# NOT the 3.3 V `sg13g2_stdcell_hv` row under /grid/ihp130: the canary is
+# single-voltage; HV would require level shifters and a different library.
+# `sg13g2_stdcell` is NOT yet a row in flow/libraries.json (see
+# library_manifest.yaml); the ORFS platform copy is the source used here.
+
+DESIGN_NAME: pll_logic
+
+VERILOG_FILES:
+  - dir::../../../src/pll_logic.v
+  - dir::../../../src/digital_loop_filter.v
+  - dir::../../../src/term_decoder.v
+  - dir::../../../src/freq_lock.v
+  - dir::../../../src/delta_sigma.v
+  - dir::../../../src/fix_div.v
+  - dir::../../../src/conf_div.v
+
+# ---------------------------------------------------------------------------
+# PDK / standard-cell library
+# ---------------------------------------------------------------------------
+PDK: ihp-sg13g2
+STD_CELL_LIBRARY: sg13g2_stdcell
+
+# ---------------------------------------------------------------------------
+# Clocks
+# ---------------------------------------------------------------------------
+# REF is the only real input clock.  OUT, MID_OUT and INJ_EDGE are ports of
+# the digital-only top and are created in constraints/adpll.sdc; CLOCK_PORT
+# takes one port only.
+CLOCK_PORT: REF
+CLOCK_PERIOD: 20.0
+
+PNR_SDC_FILE: dir::constraints/adpll.sdc
+SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
+
+# ---------------------------------------------------------------------------
+# Floorplan / placement (canary values, not QoR targets)
+# ---------------------------------------------------------------------------
+# DIE_AREA is intentionally left unset: the synthesized digital is ~26 kum^2,
+# so LibreLane sizes the core from FP_CORE_UTIL.  A fixed 150x150 die (the
+# ics55 canary value) would be smaller than the cell area at 35% utilisation.
+FP_CORE_UTIL: 35
+PL_TARGET_DENSITY_PCT: 50
+
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+# ---------------------------------------------------------------------------
+# Actual views used (also wired by the local PDK config; repeated here so the
+# config is self-describing).  These are the ORFS platform files.
+# ---------------------------------------------------------------------------
+# TECH_LEFS: /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lef/sg13g2_tech.lef
+# CELL_LEFS: /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lef/sg13g2_stdcell.lef
+# CELL_GDS:  /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/gds/sg13g2_stdcell.gds
+# CELL_CDL:  /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/cdl/sg13g2_stdcell.cdl
+# CELL_V:    /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/verilog/sg13g2_stdcell.v
+
+# ---------------------------------------------------------------------------
+# Timing corners (the three corners the ORFS ihp-sg13g2 platform ships)
+# ---------------------------------------------------------------------------
+LIB:
+  nom_tt_025C_1v20:
+    - /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+  nom_ss_125C_1v08:
+    - /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_slow_1p08V_125C.lib
+  nom_ff_n40C_1v32:
+    - /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_fast_1p32V_m40C.lib
+
+STA_CORNERS:
+  - nom_tt_025C_1v20
+  - nom_ss_125C_1v08
+  - nom_ff_n40C_1v32
+
+# ---------------------------------------------------------------------------
+# RC extraction
+# ---------------------------------------------------------------------------
+# ORFS ships a single OpenRCX pattern file, used for all three corners.
+RCX_RULESETS:
+  "nom_tt_025C_1v20": /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
+  "nom_ss_125C_1v08": /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
+  "nom_ff_n40C_1v32": /opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
+
+# LAYERS_RC / VIAS_R are NOT set: IHP's official LibreLane config is not
+# installed, and inventing per-layer RC numbers would be worse than using the
+# OpenRCX rules above.  If the official PDK config becomes available, take its
+# LAYERS_RC/VIAS_R values.
+
+# ---------------------------------------------------------------------------
+# Signoff switches
+# ---------------------------------------------------------------------------
+# No official IHP KLayout DRC/LVS runsets or netgen setup are installed, so
+# the Magic/KLayout DRC and Netgen LVS steps MUST be disabled and no DRC/LVS/
+# antenna result may be claimed from this canary.
+#
+# These are the LibreLane **v3.0.16** flow gates (verified in the installed
+# release's flows/classic.py).  They are not the removed/renamed generic
+# RUN_DRC/RUN_STA/RUN_ANTENNA keys from older example configs; do not add
+# those.  KLayout stream-out is kept because the ORFS tech file/map are
+# available and it does not need the missing signoff decks.
+RUN_MAGIC_STREAMOUT: false
+RUN_KLAYOUT_STREAMOUT: true
+RUN_MAGIC_WRITE_LEF: false
+RUN_KLAYOUT_XOR: false
+RUN_MAGIC_DRC: false
+RUN_KLAYOUT_DRC: false
+RUN_LVS: false
+RUN_EQY: false
+
+# The pure-digital PnR steps stay enabled:
+# RUN_CTS, RUN_DRT, RUN_FILL_INSERTION, RUN_SPEF_EXTRACTION, RUN_MCSTA,
+# RUN_IRDROP_REPORT all keep their defaults (true).
+#
+# `make librelane-digital` additionally skips three steps that require the
+# missing Magic/signoff collateral:
+#   Odb.CheckDesignAntennaProperties  (needs the design LEF Magic would write)
+#   Magic.SpiceExtraction             (needs the Magic tech)
+#   Checker.IllegalOverlap            (consumes Magic.SpiceExtraction output)
+# The KLayout stream-out GDS is still produced.

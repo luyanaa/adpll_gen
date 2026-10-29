@@ -1,0 +1,1145 @@
+{
+  "filters": {
+    "pdk": null,
+    "core": null
+  },
+  "by_pdk": {
+    "ETRI050": [
+      {
+        "library": "ETRI050_fd_sc_12t",
+        "node": "0.5um",
+        "voltage": [
+          5.0
+        ],
+        "corners": 1,
+        "tier": "1",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "nand2b"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "full",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "single corner; drc_lvs=declared"
+      },
+      {
+        "library": "ETRI050_gen_sc_9t",
+        "node": "0.5um",
+        "voltage": [
+          5.0
+        ],
+        "corners": 1,
+        "tier": "1",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "nand2b"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "single corner; drc_lvs=declared"
+      }
+    ],
+    "gf180mcu": [
+      {
+        "library": "gf180mcu_ocd_sc_rt12t3v3",
+        "node": "180nm",
+        "voltage": [
+          3.3,
+          3.6
+        ],
+        "corners": 21,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "full",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared; corner cell-set mismatch in 21 corner(s)"
+      },
+      {
+        "library": "gf180mcu_as_sc_mcu7t3v3",
+        "node": "180nm",
+        "voltage": [
+          3.0,
+          3.3,
+          3.6
+        ],
+        "corners": 6,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "full",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared; corner cell-set mismatch in 3 corner(s)"
+      },
+      {
+        "library": "gf180mcu_osu_sc_gp12t3v3",
+        "node": "180nm",
+        "voltage": [
+          3.0,
+          3.3,
+          3.6
+        ],
+        "corners": 6,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "nand2b",
+              "nand3"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "full",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "full",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared; corner cell-set mismatch in 6 corner(s)"
+      },
+      {
+        "library": "gf180mcu_osu_sc_gp9t3v3",
+        "node": "180nm",
+        "voltage": [
+          3.0,
+          3.3,
+          3.6
+        ],
+        "corners": 4,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "nand2b",
+              "nand3"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "full",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "full",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared; corner cell-set mismatch in 1 corner(s)"
+      },
+      {
+        "library": "gf180mcu_as_ex_mcu7t5v0",
+        "node": "180nm",
+        "voltage": [
+          4.5,
+          5.0,
+          5.5
+        ],
+        "corners": 3,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "inv",
+              "nand2",
+              "nand2b",
+              "nand3",
+              "nor2",
+              "buf"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "no",
+            "missing": [
+              "inv",
+              "nand2",
+              "buf",
+              "mux2"
+            ]
+          },
+          "core_c_counter": {
+            "status": "no",
+            "missing": [
+              "inv",
+              "nand2",
+              "nor2",
+              "buf"
+            ]
+          },
+          "digital": {
+            "status": "no",
+            "missing": [
+              "inv",
+              "nand2",
+              "nor2",
+              "buf"
+            ]
+          },
+          "pd_ssbbpd": {
+            "status": "no",
+            "missing": [
+              "nand2",
+              "nor2",
+              "buf"
+            ]
+          },
+          "tdc_sr": {
+            "status": "no",
+            "missing": [
+              "inv",
+              "buf"
+            ]
+          }
+        },
+        "notes": "drc_lvs=declared"
+      }
+    ],
+    "ics55": [
+      {
+        "library": "ics55_LLSC_H7CH",
+        "node": "55nm",
+        "voltage": [
+          1.08,
+          1.2,
+          1.32
+        ],
+        "corners": 7,
+        "tier": "2-flow",
+        "drc_lvs": "pass",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "corner cell-set mismatch in 6 corner(s)"
+      },
+      {
+        "library": "ics55_LLSC_H7CL",
+        "node": "55nm",
+        "voltage": [
+          1.08,
+          1.2,
+          1.32
+        ],
+        "corners": 7,
+        "tier": "2-flow",
+        "drc_lvs": "pass",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": ""
+      },
+      {
+        "library": "ics55_LLSC_H7CR",
+        "node": "55nm",
+        "voltage": [
+          1.08,
+          1.2,
+          1.32
+        ],
+        "corners": 7,
+        "tier": "2-flow",
+        "drc_lvs": "pass",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "corner cell-set mismatch in 6 corner(s)"
+      }
+    ],
+    "ihp130": [
+      {
+        "library": "ez130_8t_v1p1",
+        "node": "130nm",
+        "voltage": [
+          1.08,
+          1.2,
+          1.32
+        ],
+        "corners": 3,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared"
+      },
+      {
+        "library": "sg13g2_stdcell",
+        "node": "130nm",
+        "voltage": [
+          1.2
+        ],
+        "corners": 3,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": true,
+        "liberty_source": "orfs_platform",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "ORFS ihp-sg13g2 sg13g2_stdcell 1.2V; 3 cell-identical corners; official IHP PDK root and DRC/LVS decks absent; PnR canary ran with a locally authored minimal PDK config; not signoff"
+      },
+      {
+        "library": "sg13g2_stdcell_hv",
+        "node": "130nm",
+        "voltage": [
+          3.0,
+          3.3,
+          3.6
+        ],
+        "corners": 3,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared"
+      }
+    ],
+    "sky130": [
+      {
+        "library": "sky130_osu_sc_t15",
+        "node": "130nm",
+        "voltage": [
+          1.2,
+          1.28,
+          1.35,
+          1.44,
+          1.5,
+          1.56,
+          1.6,
+          1.62,
+          1.68,
+          1.76,
+          1.8,
+          1.89,
+          1.95,
+          2.1
+        ],
+        "corners": 72,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "nand2b",
+              "nand3"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared; corner cell-set mismatch in 72 corner(s)"
+      },
+      {
+        "library": "sky130_osu_sc_t18",
+        "node": "130nm",
+        "voltage": [
+          1.2,
+          1.28,
+          1.35,
+          1.44,
+          1.5,
+          1.56,
+          1.6,
+          1.62,
+          1.68,
+          1.76,
+          1.8,
+          1.89,
+          1.95,
+          2.1
+        ],
+        "corners": 66,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "nand2b",
+              "nand3"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared; corner cell-set mismatch in 66 corner(s)"
+      },
+      {
+        "library": "sky130_osu_sc_t12",
+        "node": "130nm",
+        "voltage": [
+          1.2,
+          1.28,
+          1.35,
+          1.44,
+          1.5,
+          1.56,
+          1.6,
+          1.62,
+          1.68,
+          1.76,
+          1.8,
+          1.89,
+          1.95,
+          2.1
+        ],
+        "corners": 64,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "nand2b",
+              "nand3"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared; corner cell-set mismatch in 64 corner(s)"
+      },
+      {
+        "library": "sky130_fd_sc_ms",
+        "node": "130nm",
+        "voltage": [
+          1.28,
+          1.8,
+          1.95
+        ],
+        "corners": 5,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": false,
+        "liberty_source": "reconstructed_libjson",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "full",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "reconstructed Liberty from .lib.json (STA-usable); pnr_ready=false until fill/tap/decap/diode (diode, fill, fill_diode, latchupcell, tap, tapmet1, tapvgnd, tapvgnd2, tapvpwrvgnd) are supplied"
+      },
+      {
+        "library": "sky130_as_sc_hs",
+        "node": "130nm",
+        "voltage": [
+          1.7,
+          1.8,
+          1.9
+        ],
+        "corners": 3,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "full",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "drc_lvs=declared"
+      },
+      {
+        "library": "sky130_fd_sc_hdll",
+        "node": "130nm",
+        "voltage": [
+          1.28,
+          1.8
+        ],
+        "corners": 2,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": false,
+        "liberty_source": "reconstructed_libjson",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "full",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "reconstructed Liberty from .lib.json (STA-usable); pnr_ready=false until fill/tap/decap/diode (fill, muxb, tap, tapvgnd, tapvgnd2, tapvpwrvgnd) are supplied"
+      },
+      {
+        "library": "sky130_fd_sc_lp",
+        "node": "130nm",
+        "voltage": [
+          1.65,
+          1.95
+        ],
+        "corners": 2,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": false,
+        "liberty_source": "reconstructed_libjson",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "full",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "reconstructed Liberty from .lib.json (STA-usable); pnr_ready=false until fill/tap/decap/diode (busdriver, busdriver2, busdrivernovlp, busdrivernovlp2, busdrivernovlpsleep, bushold, bushold0, busreceiver, decap, decapkapwr, diode, fill, sleep_pargate_plv, sleep_sergate_plv, tap, tapvgnd, tapvgnd2, tapvpwrvgnd) are supplied"
+      },
+      {
+        "library": "sky130_fd_sc_ls",
+        "node": "130nm",
+        "voltage": [
+          1.28,
+          1.8
+        ],
+        "corners": 2,
+        "tier": "2-flow*",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": false,
+        "liberty_source": "reconstructed_libjson",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_b_ring_dco": {
+            "status": "full",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "full",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "reconstructed Liberty from .lib.json (STA-usable); pnr_ready=false until fill/tap/decap/diode (decaphetap, fill, latchupcell, tap, tapmet1, tapvgnd, tapvgnd2, tapvgndnovpb, tapvpwrvgnd) are supplied"
+      },
+      {
+        "library": "sky130_rhbd",
+        "node": "130nm",
+        "voltage": [
+          1.8
+        ],
+        "corners": 1,
+        "tier": "1",
+        "drc_lvs": "declared",
+        "sta_usable": true,
+        "pnr_ready": null,
+        "liberty_source": "pdk",
+        "core_support": {
+          "core_a_il_dco": {
+            "status": "no",
+            "missing": [
+              "nand2b"
+            ]
+          },
+          "core_b_ring_dco": {
+            "status": "partial",
+            "missing": []
+          },
+          "core_c_counter": {
+            "status": "partial",
+            "missing": []
+          },
+          "digital": {
+            "status": "partial",
+            "missing": []
+          },
+          "pd_ssbbpd": {
+            "status": "partial",
+            "missing": []
+          },
+          "tdc_sr": {
+            "status": "full",
+            "missing": []
+          }
+        },
+        "notes": "single corner; drc_lvs=declared"
+      }
+    ]
+  },
+  "by_core": {
+    "core_a_il_dco": [
+      "ics55/ics55_LLSC_H7CH (partial)",
+      "ics55/ics55_LLSC_H7CL (partial)",
+      "ics55/ics55_LLSC_H7CR (partial)",
+      "gf180mcu/gf180mcu_ocd_sc_rt12t3v3",
+      "gf180mcu/gf180mcu_as_sc_mcu7t3v3",
+      "sky130/sky130_fd_sc_ms",
+      "ihp130/ez130_8t_v1p1 (partial)",
+      "ihp130/sg13g2_stdcell (partial)",
+      "ihp130/sg13g2_stdcell_hv (partial)",
+      "sky130/sky130_as_sc_hs",
+      "sky130/sky130_fd_sc_hdll",
+      "sky130/sky130_fd_sc_lp",
+      "sky130/sky130_fd_sc_ls"
+    ],
+    "core_b_ring_dco": [
+      "ics55/ics55_LLSC_H7CH (partial)",
+      "ics55/ics55_LLSC_H7CL (partial)",
+      "ics55/ics55_LLSC_H7CR (partial)",
+      "sky130/sky130_osu_sc_t15 (partial)",
+      "sky130/sky130_osu_sc_t18 (partial)",
+      "sky130/sky130_osu_sc_t12 (partial)",
+      "gf180mcu/gf180mcu_ocd_sc_rt12t3v3",
+      "gf180mcu/gf180mcu_as_sc_mcu7t3v3",
+      "gf180mcu/gf180mcu_osu_sc_gp12t3v3",
+      "sky130/sky130_fd_sc_ms",
+      "gf180mcu/gf180mcu_osu_sc_gp9t3v3",
+      "ihp130/ez130_8t_v1p1 (partial)",
+      "ihp130/sg13g2_stdcell (partial)",
+      "ihp130/sg13g2_stdcell_hv (partial)",
+      "sky130/sky130_as_sc_hs",
+      "sky130/sky130_fd_sc_hdll",
+      "sky130/sky130_fd_sc_lp",
+      "sky130/sky130_fd_sc_ls",
+      "ETRI050/ETRI050_fd_sc_12t",
+      "ETRI050/ETRI050_gen_sc_9t",
+      "sky130/sky130_rhbd (partial)"
+    ],
+    "core_c_counter": [
+      "ics55/ics55_LLSC_H7CH (partial)",
+      "ics55/ics55_LLSC_H7CL (partial)",
+      "ics55/ics55_LLSC_H7CR (partial)",
+      "sky130/sky130_osu_sc_t15 (partial)",
+      "sky130/sky130_osu_sc_t18 (partial)",
+      "sky130/sky130_osu_sc_t12 (partial)",
+      "gf180mcu/gf180mcu_ocd_sc_rt12t3v3",
+      "gf180mcu/gf180mcu_as_sc_mcu7t3v3",
+      "gf180mcu/gf180mcu_osu_sc_gp12t3v3",
+      "sky130/sky130_fd_sc_ms (partial)",
+      "gf180mcu/gf180mcu_osu_sc_gp9t3v3",
+      "ihp130/ez130_8t_v1p1 (partial)",
+      "ihp130/sg13g2_stdcell (partial)",
+      "ihp130/sg13g2_stdcell_hv (partial)",
+      "sky130/sky130_as_sc_hs",
+      "sky130/sky130_fd_sc_hdll (partial)",
+      "sky130/sky130_fd_sc_lp (partial)",
+      "sky130/sky130_fd_sc_ls (partial)",
+      "ETRI050/ETRI050_fd_sc_12t",
+      "ETRI050/ETRI050_gen_sc_9t (partial)",
+      "sky130/sky130_rhbd (partial)"
+    ],
+    "digital": [
+      "ics55/ics55_LLSC_H7CH (partial)",
+      "ics55/ics55_LLSC_H7CL (partial)",
+      "ics55/ics55_LLSC_H7CR (partial)",
+      "sky130/sky130_osu_sc_t15 (partial)",
+      "sky130/sky130_osu_sc_t18 (partial)",
+      "sky130/sky130_osu_sc_t12 (partial)",
+      "gf180mcu/gf180mcu_ocd_sc_rt12t3v3 (partial)",
+      "gf180mcu/gf180mcu_as_sc_mcu7t3v3 (partial)",
+      "gf180mcu/gf180mcu_osu_sc_gp12t3v3 (partial)",
+      "sky130/sky130_fd_sc_ms (partial)",
+      "gf180mcu/gf180mcu_osu_sc_gp9t3v3 (partial)",
+      "ihp130/ez130_8t_v1p1 (partial)",
+      "ihp130/sg13g2_stdcell (partial)",
+      "ihp130/sg13g2_stdcell_hv (partial)",
+      "sky130/sky130_as_sc_hs (partial)",
+      "sky130/sky130_fd_sc_hdll (partial)",
+      "sky130/sky130_fd_sc_lp (partial)",
+      "sky130/sky130_fd_sc_ls (partial)",
+      "ETRI050/ETRI050_fd_sc_12t (partial)",
+      "ETRI050/ETRI050_gen_sc_9t (partial)",
+      "sky130/sky130_rhbd (partial)"
+    ],
+    "pd_ssbbpd": [
+      "ics55/ics55_LLSC_H7CH (partial)",
+      "ics55/ics55_LLSC_H7CL (partial)",
+      "ics55/ics55_LLSC_H7CR (partial)",
+      "sky130/sky130_osu_sc_t15 (partial)",
+      "sky130/sky130_osu_sc_t18 (partial)",
+      "sky130/sky130_osu_sc_t12 (partial)",
+      "gf180mcu/gf180mcu_ocd_sc_rt12t3v3 (partial)",
+      "gf180mcu/gf180mcu_as_sc_mcu7t3v3 (partial)",
+      "gf180mcu/gf180mcu_osu_sc_gp12t3v3",
+      "sky130/sky130_fd_sc_ms",
+      "gf180mcu/gf180mcu_osu_sc_gp9t3v3",
+      "ihp130/ez130_8t_v1p1 (partial)",
+      "ihp130/sg13g2_stdcell (partial)",
+      "ihp130/sg13g2_stdcell_hv (partial)",
+      "sky130/sky130_as_sc_hs (partial)",
+      "sky130/sky130_fd_sc_hdll",
+      "sky130/sky130_fd_sc_lp",
+      "sky130/sky130_fd_sc_ls",
+      "ETRI050/ETRI050_fd_sc_12t (partial)",
+      "ETRI050/ETRI050_gen_sc_9t (partial)",
+      "sky130/sky130_rhbd (partial)"
+    ],
+    "tdc_sr": [
+      "ics55/ics55_LLSC_H7CH",
+      "ics55/ics55_LLSC_H7CL",
+      "ics55/ics55_LLSC_H7CR",
+      "sky130/sky130_osu_sc_t15",
+      "sky130/sky130_osu_sc_t18",
+      "sky130/sky130_osu_sc_t12",
+      "gf180mcu/gf180mcu_ocd_sc_rt12t3v3",
+      "gf180mcu/gf180mcu_as_sc_mcu7t3v3",
+      "gf180mcu/gf180mcu_osu_sc_gp12t3v3",
+      "sky130/sky130_fd_sc_ms",
+      "gf180mcu/gf180mcu_osu_sc_gp9t3v3",
+      "ihp130/ez130_8t_v1p1",
+      "ihp130/sg13g2_stdcell",
+      "ihp130/sg13g2_stdcell_hv",
+      "sky130/sky130_as_sc_hs",
+      "sky130/sky130_fd_sc_hdll",
+      "sky130/sky130_fd_sc_lp",
+      "sky130/sky130_fd_sc_ls",
+      "ETRI050/ETRI050_fd_sc_12t",
+      "ETRI050/ETRI050_gen_sc_9t",
+      "sky130/sky130_rhbd"
+    ]
+  }
+}

@@ -1,0 +1,220 @@
+# Machine-readable interface contract for the PLL_ANALOG hard macro.
+# Human-readable companion: interface.md
+# Status: the macro does NOT exist yet. Every view below is expected, not built.
+#
+# Target: IHP SG13G2 (130 nm BiCMOS open PDK), 1.2 V core CMOS, Core A
+# (IL-DCO).  The digital canary uses the ORFS `sg13g2_stdcell` 1.2 V library;
+# this macro's interface cells must be in the same 1.2 V domain.  Do NOT mix
+# the 3.3 V `sg13g2_stdcell_hv` library into this design.
+name: PLL_ANALOG
+version: 0.1.0-draft
+status: not_built
+kind: hard_macro
+pdk: ihp-sg13g2
+cell_library: sg13g2_stdcell
+process: 130nm
+supply_voltage_nominal_v: 1.2
+core: core_a_il_dco
+top_instance: pll_ana
+rtl_reference: src/pll_analog.v
+cell_mapping_reference: src/pll_cells_ihp-sg13g2.v
+top_reference: src/pll.v
+
+parameters:
+  COARSE_NDELS:
+    default: 15
+    overridden_by_top: true
+    note: 4-bit coarse control, unary/thermometer
+  MID_NDELS:
+    default: 15
+    overridden_by_top: true
+    note: 4-bit mid control, unary/thermometer
+  FINE_NDELS:
+    default: 31
+    overridden_by_top: true
+    note: 5-bit fine control, unary/thermometer
+  IL_NDELS:
+    default: 4
+    overridden_by_top: false
+    note: injection delay stages; pll.v does not override it, keep default or update pll.v
+
+ports:
+  - name: COARSE_MUX
+    direction: input
+    width: COARSE_NDELS
+    width_default: 15
+    domain: quasi_static_ref
+    description: Unary coarse delay code from pll_freq_lock.
+  - name: MID_MUX
+    direction: input
+    width: MID_NDELS
+    width_default: 15
+    domain: quasi_static_ref
+    description: Unary mid delay code from pll_freq_lock.
+  - name: FINE_MUX
+    direction: input
+    width: FINE_NDELS
+    width_default: 31
+    domain: quasi_static_dsm
+    description: Unary fine delay code from pll_term_decoder_with_zero.
+  - name: DCO_EN
+    direction: input
+    width: 1
+    domain: inj_edge_negedge
+    description: DCO enable from the startup/lock FSM.
+  - name: REF
+    direction: input
+    width: 1
+    domain: ref_clock
+    description: Reference clock, 20 ns period (50 MHz) in this canary.
+  - name: INJ_EN
+    direction: input
+    width: 1
+    domain: quasi_static
+    description: Injection enable; gates the injection pulse.
+  - name: SS_BBPD
+    direction: output
+    width: 2
+    domain: sampled_by_ref_out
+    description: Sub-sampling BBPD result; bit 0 = REF sample, bit 1 = OUT sample.
+  - name: OUT
+    direction: output
+    width: 1
+    domain: dco_clock
+    description: DCO output clock.
+  - name: MID_OUT
+    direction: output
+    width: 1
+    domain: dco_clock
+    description: Mid-delay tap, same nominal frequency as OUT.
+  - name: INJ_EDGE
+    direction: output
+    width: 1
+    domain: ref_rate_delayed
+    description: Delayed REF from the injection chain, used as a digital clock.
+  - name: VDD
+    direction: inout
+    width: 1
+    domain: supply
+    optional: true
+    present_when: WITH_POWER or LEF/PDN power pins
+    description: 1.2 V core supply.
+  - name: VSS
+    direction: inout
+    width: 1
+    domain: supply
+    optional: true
+    present_when: WITH_POWER or LEF/PDN power pins
+    description: Ground.
+
+reset:
+  macro_reset_pin: null
+  note: PLL_ANALOG has no reset pin; RST_N is digital-only. Control is via DCO_EN/INJ_EN/codes.
+
+clocks:
+  REF:
+    period_ns_canary: 20.0
+    frequency_mhz_canary: 50.0
+    source: top-level input
+  OUT:
+    period_ns_nominal: 2.5
+    frequency_mhz_nominal: 400.0
+    source: macro output, set by delay codes
+    note: Nominal FCW=8; real range is a DCO characterization result.
+  MID_OUT:
+    period_ns_nominal: 2.5
+    frequency_mhz_nominal: 400.0
+    source: macro output, mid-delay tap
+  INJ_EDGE:
+    period_ns: 20.0
+    source: delayed REF via IL_NDELS buffer stages
+    note: Characterize insertion delay relative to REF.
+
+power:
+  rails:
+    - name: VDD
+      nominal_v: 1.2
+    - name: VSS
+      nominal_v: 0.0
+  domains: 1
+  level_shifters_required: false
+  note: Single 1.2 V core domain. 3.3 V IO/HV devices are outside this interface.
+
+views:
+  gds:
+    path: hardmacro/PLL_ANALOG.gds
+    exists: false
+    required: true
+  lef:
+    path: hardmacro/PLL_ANALOG.lef
+    exists: false
+    required: true
+    note: Pin geometry must follow sg13g2_tech.lef.  Stdcell pins are Metal1;
+      signal routing is Metal2-Metal5; TopMetal1/TopMetal2 are PDN layers.
+  lib:
+    path: hardmacro/PLL_ANALOG.lib
+    exists: false
+    required: true
+    note: TT at first; multi-corner requires per-corner macro Liberty.
+  cdl:
+    path: hardmacro/PLL_ANALOG.cdl
+    exists: false
+    required: true_for_lvs
+  spice:
+    path: hardmacro/PLL_ANALOG.spice
+    exists: false
+    required_for_macro_signoff: true
+  verilog_blackbox:
+    path: hardmacro/PLL_ANALOG_blackbox.v
+    exists: true
+    required: true
+    note: Synthesis/elaboration stub only.
+
+timing:
+  macro_internal_sta: not_characterized
+  required_liberty_arcs:
+    - SS_BBPD relative to INJ_EDGE sampling edge
+    - INJ_EDGE insertion delay relative to REF
+    - OUT and MID_OUT output delays relative to the delay-code inputs
+    - input capacitance for COARSE_MUX, MID_MUX, FINE_MUX, DCO_EN, REF, INJ_EN
+  quasi_static_inputs: [COARSE_MUX, MID_MUX, FINE_MUX, DCO_EN, INJ_EN]
+  critical_interface: SS_BBPD -> digital loop filter sampled on negedge INJ_EDGE
+  top_sdc: constraints/adpll.sdc
+
+corners:
+  sta_corners:
+    - nom_tt_025C_1v20
+    - nom_ss_125C_1v08
+    - nom_ff_n40C_1v32
+  macro_characterized_corners: []
+  minimum_for_canary: nom_tt_025C_1v20
+  note: These are the three corners the ORFS ihp-sg13g2 platform ships.
+    All three Liberty files contain the same 84 cells (checked 2026-10-29),
+    so the cell-set mismatch that affected the ics55 canary does not apply
+    here as far as cell names go.
+
+build_boundary:
+  inside:
+    - injection delay chain (PLL_INJECTION, IL_NDELS stages)
+    - IL-DCO (coarse/mid/fine delay + symmetric mux)
+    - SS-BBPD sampler
+    - output buffers for OUT, MID_OUT, INJ_EDGE, SS_BBPD
+    - macro-local power grid, decap, well taps
+  outside:
+    - pll_logic and digital dependencies
+    - startup/lock FSM, mode registers, divider control
+    - reference clock generation, test muxing, scan/DFT
+    - top-level PDN, CTS, route, STA, DRC/LVS/antenna, IR/EM
+  build_flow: ckdur hard-macro flow (pnr/) + ngspice/ISF characterization, not LibreLane
+
+blockers:
+  - PLL_ANALOG GDS/LEF/Liberty/CDL/SPICE have not been built or characterized.
+  - config.macro.yaml therefore cannot run.
+  - The full IHP PDK root with libs.tech/librelane is not installed; the
+    digital canary uses a locally assembled minimal PDK root from ORFS views.
+  - No official IHP KLayout DRC/LVS runsets or netgen setup are installed.
+  - Digital synthesis passes, and the LibreLane digital layout completes with
+    route DRC 0, but the flow exits on 10 SS setup violations at the nominal
+    2.5 ns OUT/MID_OUT period.  No timing/DRC/LVS signoff is claimed.
+  - The digital-only LibreLane run is the executable proof today; it is not a
+    substitute for the macro or for signoff.

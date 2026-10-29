@@ -1,0 +1,58 @@
+{
+  "ics55": {
+    "root": "/grid/icsprout55-pdk",
+    "node": "55nm",
+    "voltage": [1.2],
+    "enabled": true,
+    "drc_lvs": "pass",
+    "lib_globs": ["/grid/icsprout55-pdk/libs.ref/ics55_LLSC_H7*"]
+  },
+  "sky130": {
+    "root": "/grid/sky130",
+    "node": "130nm",
+    "voltage": [1.8, 3.3, 5.0],
+    "enabled": true,
+    "drc_lvs": "declared",
+    "lib_globs": ["/grid/sky130/sky130_*", "/grid/sky130/sky130RHBDlib/sky130_rhbd"]
+  },
+  "gf180mcu": {
+    "root": "/grid/gf180mcu",
+    "node": "180nm",
+    "voltage": [3.3, 5.0, 6.0],
+    "enabled": true,
+    "drc_lvs": "declared",
+    "lib_globs": ["/grid/gf180mcu/gf180mcu_*"]
+  },
+  "ihp130": {
+    "root": "/grid/ihp130",
+    "node": "130nm",
+    "voltage": [1.2, 3.3],
+    "enabled": true,
+    "drc_lvs": "declared",
+    "lib_globs": ["/grid/ihp130/sg13g2_stdcell*", "/grid/ihp130/ez130_*", "/grid/ihp130/glow_sg13g2"]
+  },
+  "ETRI050": {
+    "root": "/grid/ETRI050",
+    "node": "0.5um",
+    "voltage": [5.0],
+    "enabled": true,
+    "drc_lvs": "declared",
+    "lib_globs": ["/grid/ETRI050/libs.ref/ETRI050_fd_sc_*", "/grid/ETRI050/libs.ref/ETRI050_gen_sc_*"]
+  },
+  "OpenRule1um": {
+    "root": "/grid/OpenRule1um",
+    "node": "1um",
+    "voltage": [5.0],
+    "enabled": false,
+    "drc_lvs": "unknown",
+    "lib_globs": ["/grid/OpenRule1um/OpenRule1um_StdCell"]
+  },
+  "TR1um": {
+    "root": "/grid/TR-1um",
+    "node": "1um",
+    "voltage": [5.0],
+    "enabled": false,
+    "drc_lvs": "unknown",
+    "lib_globs": ["/grid/TR-1um_stdcell"]
+  }
+}

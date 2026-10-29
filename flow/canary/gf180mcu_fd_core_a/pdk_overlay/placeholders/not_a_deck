@@ -1,0 +1,14 @@
+This file is a canary-local placeholder for PDK collateral that the
+gf180mcu_as_sc_mcu7t3v3 checkout does not ship:
+
+  - Magic RC/tech/setup (MAGICRC, MAGIC_TECH, MAGIC_PDK_SETUP)
+  - KLayout tech/properties/layer map (KLAYOUT_TECH, KLAYOUT_PROPERTIES,
+    KLAYOUT_DEF_LAYER_MAP)
+  - Netgen setup (NETGEN_SETUP)
+
+It exists only so LibreLane 3.0.16's PDK-config validation sees a real path.
+It is not a deck.  The canary driver skips every step that would consume it,
+and this canary makes no DRC, LVS, streamout or antenna signoff claim.
+
+Do not replace this with a fake deck.  Provide the real gf180mcu collateral
+if signoff is required.

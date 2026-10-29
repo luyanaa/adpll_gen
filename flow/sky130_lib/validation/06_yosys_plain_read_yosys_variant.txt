@@ -1,0 +1,13 @@
+$ yosys -p "read_liberty out/sky130_fd_sc_ms_ss_n40C_1v28_yosys.lib; stat"
+1. Executing Liberty frontend: out/sky130_fd_sc_ms_ss_n40C_1v28_yosys.lib
+Imported 376 cell types from liberty file.
+
+2. Printing statistics.
+
+=== sky130_fd_sc_ms__xor3_4 ===
+
+...
+
+End of script. Logfile hash: 697bd2ea45, CPU: user 0.27s system 0.06s, MEM: 70.29 MB peak
+Yosys 0.52 (git sha1 fee39a3284c90249e1d9684cf6944ffbbcbb8f90)
+Time spent: 89% 2x read_liberty (0 sec), 10% 1x stat (0 sec)
