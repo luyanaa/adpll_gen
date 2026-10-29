@@ -71,12 +71,15 @@ DCO characterization status:
 - ics55: full L1 behavioral grid (8192 points) and capability manifest.
 - IHP SG13G2: sparse 27-point L3 transistor scan using PSP103 via OpenVAF
   OSDI and ngspice; not PEX/PVT/jitter signoff.
-- ics55 L3: generated/flattened netlist exists, but ngspice transient did not
-  complete; IHP Xyce PSP model assembly is also blocked.
+- ics55 L3: sparse 18-point transistor scan after flattening the CDL and
+  converting to BSIM4 foundry subcircuits; range 919..1899 MHz.
+- IHP Xyce PSP model assembly remains unsuitable for this install; the working
+  IHP L3 path is PSP103 Verilog-A -> OpenVAF OSDI -> ngspice.
 
-The generator capability gate consumes these manifests and returns
-`FAIL_UNCHARACTERIZED` for production/PVT requests.  The physical-macro results
-below do not imply a DCO/noise signoff.
+Both sparse L3 baselines are registered in the generator (`ics55-l3` and
+`ihp-sg13g2`), but neither is PEX/PVT/jitter signoff.  Production requests
+return `FAIL_UNCHARACTERIZED`.  The physical-macro results below do not imply a
+DCO/noise signoff.
 
 ## 3. Implemented hard macros
 
