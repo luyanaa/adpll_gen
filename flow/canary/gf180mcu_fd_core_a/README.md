@@ -66,8 +66,10 @@ This matches OpenROAD issue 11511 (`dpl: check pin shapes against power via
 metal geometrically`): the older DPL marks a full site/row blocked when a cell
 has a pin on a via-stack metal layer.  FD DFFs have wide M2 pin shapes under
 the PDN via stack, so all 280 sequential cells are rejected.  The issue is
-closed with an orientation-aware pin-geometry check; the bundled OpenROAD
-2026-02-17 in this environment does not contain that fix.
+closed with an orientation-aware pin-geometry check.  Rechecked with LibreLane
+3.0.17: its `nix-store` references still resolve to the same OpenROAD
+`2026-02-17` binary, and the FD run still fails with 272/280 DPL failures.
+The bundled OpenROAD therefore still does not contain the fix.
 
 Workaround: use a newer OpenROAD build containing that fix, or regenerate the
 FD PDN so via stacks are not under the DFF pin columns.  The current canary
