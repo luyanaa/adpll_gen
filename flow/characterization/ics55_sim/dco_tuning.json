@@ -3,14 +3,38 @@
   "source": "src/sim_dco.v",
   "coarse_codes": [
     0,
+    1,
+    2,
+    3,
+    4,
     5,
+    6,
+    7,
+    8,
+    9,
     10,
+    11,
+    12,
+    13,
+    14,
     15
   ],
   "mid_codes": [
     0,
+    1,
+    2,
+    3,
+    4,
     5,
+    6,
+    7,
+    8,
+    9,
     10,
+    11,
+    12,
+    13,
+    14,
     15
   ],
   "fine_codes": [
@@ -47,7 +71,7 @@
     30,
     31
   ],
-  "points": 512,
+  "points": 8192,
   "freq_min_mhz": 779.392853,
   "freq_max_mhz": 4186.377528,
   "note": "Behavioral delay model derived from existing ics55 delay data; not PEX/PVT/jitter signoff."

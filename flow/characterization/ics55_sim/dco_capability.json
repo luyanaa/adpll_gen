@@ -1,0 +1,73 @@
+{
+  "technology": "ics55",
+  "library": "ics55_LLSC_H7CR",
+  "model": "L1 behavioral sim_dco",
+  "source": "src/sim_dco.v",
+  "characterization_level": "L1_behavioral",
+  "points": 8192,
+  "grid": {
+    "coarse": [
+      0,
+      15
+    ],
+    "mid": [
+      0,
+      15
+    ],
+    "fine": [
+      0,
+      31
+    ]
+  },
+  "frequency_mhz": {
+    "min": 779.392853,
+    "max": 4186.377528
+  },
+  "monotonic": {
+    "fine_non_increasing": true,
+    "mid_non_increasing": true,
+    "coarse_non_increasing": true,
+    "fine_inversions": [],
+    "mid_inversions": [],
+    "coarse_inversions": []
+  },
+  "kdco": {
+    "fine": {
+      "min_mhz_per_code": 0.061133999999924526,
+      "max_mhz_per_code": 3.3900869999997667,
+      "median_mhz_per_code": 0.23982599999987997
+    },
+    "mid": {
+      "min_mhz_per_code": 1.0065250000000106,
+      "max_mhz_per_code": 38.265218000000004,
+      "median_mhz_per_code": 3.49978950000002
+    },
+    "coarse": {
+      "min_mhz_per_code": 30.684509000000048,
+      "max_mhz_per_code": 938.0423000000001,
+      "median_mhz_per_code": 115.33442450000007
+    }
+  },
+  "valid_codes": {
+    "all_scanned_codes_valid": true,
+    "coarse": [
+      0,
+      15
+    ],
+    "mid": [
+      0,
+      15
+    ],
+    "fine": [
+      0,
+      31
+    ]
+  },
+  "verification": {
+    "frequency_verified": "L1_behavioral_only",
+    "pvt_verified": false,
+    "pex_verified": false,
+    "jitter_verified": false
+  },
+  "notes": "Full 16x16x32 behavioral grid. Codes are thermometer-coded; increasing code increases delay and lowers frequency. Not a PVT/PEX/jitter signoff."
+}
