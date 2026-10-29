@@ -93,3 +93,12 @@ vendor model library uses relative nested `.LIB` files and additional model
 data; this is a model-deck assembly issue, not a DCO netlist issue.
 
 Thus both L3 routes are currently blocked.  No L3/PEX baseline is claimed.
+
+## Flat-cell retry
+
+`flatten_cdl.py` was corrected to give every flattened device a unique name
+(the previous output repeated `MMN0`/`MMP0` across cells).  The resulting
+776-device, 70-port flat netlist is accepted by ngspice at the model level,
+but a 20 ns transient with the full DCO still did not finish within the
+available 180 s batch window.  This remains an L3 runtime/convergence issue;
+no tuning point was extracted.

@@ -104,12 +104,16 @@ def parse_x(
 
 
 def parse_m(
-    line: str, map_node: Any, params: dict[str, Any]
+    line: str, map_node: Any, params: dict[str, Any], prefix: str = ""
 ) -> str:
     toks = line.split()
     if len(toks) < 6:
         raise ValueError(f"short M device: {line}")
     name, nd, ng, ns, nb, model = toks[:6]
+    # Flattened cells repeat device names (MMN0, MMP0, ...); make them unique.
+    global dev_counter
+    dev_counter += 1
+    name = f"M{dev_counter}_{name[1:]}"
     out = [name, map_node(nd), map_node(ng), map_node(ns), map_node(nb), model]
     for tok in toks[6:]:
         if "=" not in tok:
@@ -137,6 +141,8 @@ def main() -> int:
 
     devices: list[str] = []
     node_id = 0
+    global dev_counter
+    dev_counter = 0
 
     def new_node() -> str:
         nonlocal node_id
