@@ -9,6 +9,10 @@ module sim_SSBBPD(
 
     reg SS_BBPD_REF;
     reg SS_BBPD_VCO;
+    initial begin
+        SS_BBPD_REF = 1'b1;
+        SS_BBPD_VCO = 1'b1;
+    end
 
     always @(CLK_VCO or CLK_REF) begin
         if(!CLK_VCO && !CLK_REF) begin

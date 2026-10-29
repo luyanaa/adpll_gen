@@ -40,6 +40,19 @@ module pll_freq_lock #(
     wire rst_cnt_d;
     reg rst_cnt;
 
+    // Simulation initialization for the case where RST_N starts low at time 0
+    // and therefore does not create a negedge event.
+    initial begin
+        cnt_cap_gray = 'd0;
+        cap_toggle = 1'b0;
+        cap_toggle_s1 = 1'b0;
+        cap_toggle_s2 = 1'b0;
+        cap_toggle_s3 = 1'b0;
+        cnt_cap_gray_s1 = 'd0;
+        cnt_cap_gray_s2 = 'd0;
+        cnt_cap = 'd0;
+    end
+
     // Counter logic
 `ifndef PLL_NEGFLOP_COUNTER
     // Leave the synthesizer to do the counter

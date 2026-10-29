@@ -8,6 +8,11 @@ module sim_SYM (
     output reg [1:0] SS_BBPD,
     output reg OUT
 );
+    initial begin
+        OUT = 1'b0;
+        SS_BBPD = 2'b00;
+    end
+
     // Symmetric balancer (Nothing)
     wire OSC_BALANCED, INJ_EDGE_BALANCED;
     assign OSC_BALANCED = !FINE_OUT;

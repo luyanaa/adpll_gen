@@ -1,8 +1,9 @@
 // Fine-stage lock detector for the SS-BBPD-based ADPLL.
 //
 // The SS-BBPD is a bang-bang detector, not a linear phase-error source.  The
-// loop filter treats 2'b00 as "no phase-error symbol"; 2'b11 is the negative
-// symbol and 2'b10 is the positive symbol in the default polarity.  This
+// loop filter treats 2'b01 as "no phase-error symbol" in the default
+// polarity; 2'b10 is the positive symbol and 2'b11 is the negative symbol.
+// (The alternate WITH_REF_TRIG_OUT polarity changes this mapping.)  This
 // detector therefore requires a run of no-symbol samples before declaring
 // phase lock, and deasserts lock after a run of non-no-symbol samples or
 // filter saturation.
@@ -13,7 +14,8 @@
 
 module pll_lock_detector #(
     parameter integer LOCK_COUNT = 16,
-    parameter integer LOSS_COUNT = 4
+    parameter integer LOSS_COUNT = 4,
+    parameter [1:0] NO_SYMBOL_CODE = 2'b01
 ) (
     input  wire       CLK,        // INJ_EDGE domain
     input  wire       RST_N,
@@ -29,7 +31,7 @@ module pll_lock_detector #(
 
     reg [LOCK_W-1:0] good_count;
     reg [LOSS_W-1:0] bad_count;
-    wire no_symbol = (SS_BBPD == 2'b00) && !ILL_P && !ILL_N;
+    wire no_symbol = (SS_BBPD == NO_SYMBOL_CODE) && !ILL_P && !ILL_N;
 
     always @(posedge CLK or negedge RST_N) begin
         if (!RST_N) begin

@@ -11,6 +11,11 @@ module sim_pll_injection # (
     output INJ_WIN
 );
     reg DEL_REF, DEL_EDGE;
+    initial begin
+        INJ_EDGE = 1'b0;
+        DEL_REF = 1'b0;
+        DEL_EDGE = 1'b0;
+    end
 
     // Extracted from test_pll_injection.sp
     always @(REF) INJ_EDGE = #(74267) REF; // tedge_start = 7.4267e-11

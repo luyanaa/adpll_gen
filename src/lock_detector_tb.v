@@ -6,7 +6,7 @@ module lock_detector_tb;
     always #5 CLK = ~CLK;
     reg RST_N = 1'b0;
     reg ENABLE = 1'b0;
-    reg [1:0] SS_BBPD = 2'b00;
+    reg [1:0] SS_BBPD = 2'b01;
     reg ILL_P = 1'b0, ILL_N = 1'b0;
     wire PHASE_LOCK, LOCK_LOST;
 
@@ -46,7 +46,7 @@ module lock_detector_tb;
         #30;
         check_lock(1'b0, 1'b1, "loss after 2 symbols");
 
-        SS_BBPD = 2'b00;
+        SS_BBPD = 2'b01;
         #60;
         check_lock(1'b1, 1'b0, "relock");
 

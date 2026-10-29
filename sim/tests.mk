@@ -314,7 +314,7 @@ show_delay_overlap_digital: $(SIM_OUT)/test_mid_delay.vcd $(SIM_OUT)/test_fine_d
 .SECONDARY:
 
 # P0-A correctness gate (fast RTL regressions)
-test_p0: test_delta_sigma_sat test_divider test_lock_detector test_lock_fsm test_freq_lock_stub
+test_p0: test_delta_sigma_sat test_divider test_lock_detector test_lock_fsm test_freq_lock_stub test_pll_macro_smoke
 .PHONY: test_p0
 
 # Closed-loop smoke with the macro wrapper and behavioral sim_* models.

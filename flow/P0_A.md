@@ -32,7 +32,7 @@ divider_tb: PASS
 lock_detector_tb: PASS
 lock_fsm_tb: PASS
 freq_lock_tb: PASS
-pll_macro_top smoke: runs; no LOCKED in the short behavioral window
+pll_macro_top smoke: PASS, LOCKED=1 (behavioral sim_* models)
 ```
 
 The focused tests are:
@@ -54,10 +54,11 @@ src/pll_macro_top_tb.v (behavioral smoke only)
   fixed in `pll_logic` (16/4).
 - The CDC test should be extended with random phase relationships and a
   snapshot-valid monitor, not just the current lock-FSM smoke.
-- `pll_macro_top.v` is a structural wrapper; it elaborates and runs against
-  the behavioral `sim_*` models, but does not reach `LOCKED` in the short
-  smoke window (`state=1`, `FREQ_LOCKED=0`).  It still needs a calibrated DCO
-  model / correct FCW operating point and a real macro model.
+- `pll_macro_top.v` now reaches `LOCKED=1` in the behavioral sim_* smoke with
+  `FCW=16`, `FREQ_LOCKED=1`, `PHASE_LOCK=1`.  This is a behavioral lock, not a
+  PEX/transistor-level or jitter signoff.
+- The SS-BBPD lock code is `2'b01` for the default polarity; the alternate
+  `WITH_REF_TRIG_OUT` polarity needs its own `NO_SYMBOL_CODE` setting.
 - `pll.v` still needs a full closed-loop elaboration / simulation with the
   actual `PLL_ANALOG` model.
 - No full STA/CDC signoff or P&R rerun is claimed from this batch.
