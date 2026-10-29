@@ -35,6 +35,7 @@ Detailed parameter and limit analysis:
 
 - `flow/P0_A.md`
 - `flow/characterization/ics55_sim/README.md`
+- `flow/characterization/ihp_l3/README.md`
 - `flow/characterization/ics55_l3/README.md`
 - `flow/generator/README.md`
 - `flow/ADPLL_FREQ_DIV.md`
@@ -63,9 +64,19 @@ make test_p0 PDK=ihp-sg13g2 USE_DOCKER=0
 ```
 
 Details and open items are in `flow/P0_A.md`.  The lock is still a behavioral
-SS-BBPD/no-symbol result, not a PEX/transistor-level or jitter signoff.  DCO
-characterization, random-phase CDC sweeps and the real macro model remain
-open; the physical-macro results below do not imply them.
+SS-BBPD/no-symbol result, not a PEX/transistor-level or jitter signoff.
+
+DCO characterization status:
+
+- ics55: full L1 behavioral grid (8192 points) and capability manifest.
+- IHP SG13G2: sparse 27-point L3 transistor scan using PSP103 via OpenVAF
+  OSDI and ngspice; not PEX/PVT/jitter signoff.
+- ics55 L3: generated/flattened netlist exists, but ngspice transient did not
+  complete; IHP Xyce PSP model assembly is also blocked.
+
+The generator capability gate consumes these manifests and returns
+`FAIL_UNCHARACTERIZED` for production/PVT requests.  The physical-macro results
+below do not imply a DCO/noise signoff.
 
 ## 3. Implemented hard macros
 
