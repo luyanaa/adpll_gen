@@ -15,7 +15,6 @@ module pll_logic #(
 ) (
     input VDD, VSS, // Ignored (for now)
     input REF, OUT, MID_OUT, INJ_EDGE, RST_N,
-    input PHASE_LOCK, LOCK_LOST,
     input [1:0] SS_BBPD,
     input [FILTER_BITS-1:0] KP, KI,
     input [FCW_BITS-1:0] FCW,

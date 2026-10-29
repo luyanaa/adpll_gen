@@ -45,6 +45,7 @@ The first P0-A RTL batch is implemented and regression-tested:
 ```text
 DSM saturation/width        PASS
 divider /2,/3,/4 + clamp    PASS
+SS-BBPD lock/loss detector  PASS
 LOCKED / PHASE_LOCK / LOCK_LOST FSM PASS
 frequency-lock acquisition and FCW reacquisition PASS (stub DCO)
 ```

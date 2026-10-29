@@ -19,7 +19,6 @@ module pll #(
     inout VDD, VSS,
 `endif
     input REF, RST_N, INJ_EN,
-    input PHASE_LOCK, LOCK_LOST,
     input [FILTER_BITS-1:0] KP, KI,
     input [FCW_BITS-1:0] FCW,
     input DSM_EN_DT,
@@ -61,7 +60,6 @@ module pll #(
         .VDD(VDD), .VSS(VSS),
 `endif
         .REF(REF), .OUT(OUT), .MID_OUT(MID_OUT), .INJ_EDGE(INJ_EDGE), .RST_N(RST_N),
-        .PHASE_LOCK(PHASE_LOCK), .LOCK_LOST(LOCK_LOST),
         .SS_BBPD(SS_BBPD),
         .KP(KP), .KI(KI),
         .FCW(FCW),

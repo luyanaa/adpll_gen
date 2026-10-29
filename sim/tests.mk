@@ -224,13 +224,23 @@ $(SIM_OUT)/delta_sigma_sat_tb.vcd: $(SRC_DIR)/delta_sigma_sat_tb.v $(SRC_DIR)/de
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
 
+# SS-BBPD fine-stage lock detector
+test_lock_detector: $(SIM_OUT)/lock_detector_tb.vcd
+
+view_test_lock_detector: $(SIM_OUT)/lock_detector_tb.vcd
+	gtkwave $(SIM_OUT)/lock_detector_tb.vcd
+
+$(SIM_OUT)/lock_detector_tb.vcd: $(SRC_DIR)/lock_detector_tb.v $(SRC_DIR)/lock_detector.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
 # Lock FSM / LOCKED semantics
 test_lock_fsm: $(SIM_OUT)/lock_fsm_tb.vcd
 
 view_test_lock_fsm: $(SIM_OUT)/lock_fsm_tb.vcd
 	gtkwave $(SIM_OUT)/lock_fsm_tb.vcd
 
-$(SIM_OUT)/lock_fsm_tb.vcd: $(SRC_DIR)/lock_fsm_tb.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v
+$(SIM_OUT)/lock_fsm_tb.vcd: $(SRC_DIR)/lock_fsm_tb.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
 
@@ -304,5 +314,5 @@ show_delay_overlap_digital: $(SIM_OUT)/test_mid_delay.vcd $(SIM_OUT)/test_fine_d
 .SECONDARY:
 
 # P0-A correctness gate (fast RTL regressions)
-test_p0: test_delta_sigma_sat test_divider test_lock_fsm test_freq_lock_stub
+test_p0: test_delta_sigma_sat test_divider test_lock_detector test_lock_fsm test_freq_lock_stub
 .PHONY: test_p0

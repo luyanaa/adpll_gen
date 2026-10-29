@@ -18,7 +18,6 @@ module pll_logic#(
     input VDD, VSS, // Ignored (for now)
 `endif
     input REF, OUT, MID_OUT, INJ_EDGE, RST_N,
-    input PHASE_LOCK, LOCK_LOST,
     input [1:0] SS_BBPD,
     input [FILTER_BITS-1:0] KP, KI,
     input [FCW_BITS-1:0] FCW,
@@ -115,6 +114,15 @@ module pll_logic#(
     // indication (frequency error, phase error, DCO saturation or REF loss).
     wire LOCK = PHASE_LOCK;
     reg FORCE_P, FORCE_N;
+
+    pll_lock_detector #(
+        .LOCK_COUNT(16),
+        .LOSS_COUNT(4)
+    ) lock_detector (
+        .CLK(INJ_EDGE), .RST_N(RST_N), .ENABLE(ENABLE),
+        .SS_BBPD(SS_BBPD), .ILL_P(ILL_P), .ILL_N(ILL_N),
+        .PHASE_LOCK(PHASE_LOCK), .LOCK_LOST(LOCK_LOST)
+    );
     pll_freq_lock #(
         .COARSE_NDELS(COARSE_NDELS),
         .MID_NDELS(MID_NDELS),

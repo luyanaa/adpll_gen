@@ -20,8 +20,6 @@ module lock_fsm_tb;
     always #0.5 OUT = ~OUT;
 
     reg RST_N = 1'b0;
-    reg PHASE_LOCK = 1'b0;
-    reg LOCK_LOST = 1'b0;
     reg [1:0] SS_BBPD = 2'b00;
     reg [FILTER_BITS-1:0] KP = 0, KI = 0;
     reg [FCW_BITS-1:0] FCW = 4'd8;
@@ -48,7 +46,6 @@ module lock_fsm_tb;
         .FCW_BITS(FCW_BITS)
     ) dut (
         .REF(REF), .OUT(OUT), .MID_OUT(MID_OUT), .INJ_EDGE(INJ_EDGE), .RST_N(RST_N),
-        .PHASE_LOCK(PHASE_LOCK), .LOCK_LOST(LOCK_LOST),
         .SS_BBPD(SS_BBPD),
         .KP(KP), .KI(KI), .FCW(FCW),
         .DSM_EN_DT(DSM_EN_DT), .DSM_EN_SHDT(DSM_EN_SHDT), .DSM_ORDER(DSM_ORDER),
@@ -79,15 +76,19 @@ module lock_fsm_tb;
         // wait for PHASE_LOCK before asserting LOCKED.
         force dut.FREQ_LOCKED = 1'b1;
         force dut.FREQ_ERR = 1'b0;
+        // The detector is exercised separately; here we force its outputs so
+        // the FSM transition logic is tested in isolation.
+        force dut.PHASE_LOCK = 1'b0;
+        force dut.LOCK_LOST = 1'b0;
         #30 RST_N = 1'b1;
         #100;
 
         expect_locked(1'b0, "no phase lock");
-        PHASE_LOCK = 1'b1;
+        force dut.PHASE_LOCK = 1'b1;
         #100;
         expect_locked(1'b1, "phase lock");
 
-        LOCK_LOST = 1'b1;
+        force dut.LOCK_LOST = 1'b1;
         #20;
         expect_locked(1'b0, "lock lost");
         if (dut.state !== 3'b001) begin
@@ -95,15 +96,17 @@ module lock_fsm_tb;
             errors = errors + 1;
         end
 
-        LOCK_LOST = 1'b0;
+        force dut.LOCK_LOST = 1'b0;
         #100;
         expect_locked(1'b1, "reacquire");
 
         // PHASE_LOCK deassertion alone must also clear LOCKED.
-        PHASE_LOCK = 1'b0;
+        force dut.PHASE_LOCK = 1'b0;
         #20;
         expect_locked(1'b0, "phase lock drop");
 
+        release dut.PHASE_LOCK;
+        release dut.LOCK_LOST;
         release dut.FREQ_LOCKED;
         release dut.FREQ_ERR;
         if (errors != 0) $fatal(1, "lock_fsm_tb failed");

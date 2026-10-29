@@ -24,7 +24,6 @@ module pll_test();
     wire VSS = 1'b0;
     wire OUT, LOCKED, ERR;
     reg RST_N;
-    reg PHASE_LOCK, LOCK_LOST;
     reg [FILTER_BITS-1:0] KP, KI;
     reg [FCW_BITS-1:0] FCW;
     reg INJ_EN;
@@ -56,7 +55,6 @@ module pll_test();
     dut (
         .VDD(VDD), .VSS(VSS),
         .REF(CLK_REF), .RST_N(RST_N), .INJ_EN(INJ_EN),
-        .PHASE_LOCK(PHASE_LOCK), .LOCK_LOST(LOCK_LOST),
         .KP(KP), .KI(KI),
         .FCW(FCW),
         .DSM_EN_DT(DSM_EN_DT),
@@ -79,8 +77,6 @@ module pll_test();
 `endif
         $dumpvars;
         RST_N = 1'b0;
-        PHASE_LOCK = 1'b0; // no phase detector in the RTL testbench yet
-        LOCK_LOST = 1'b0;
         KI = 'd257;  // Use the noise_shape.ipynb for this (dlf_design.py is deprecated)
         KP = 'd3967;
         FCW = 'd8; // x10 times
