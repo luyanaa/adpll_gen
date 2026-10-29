@@ -90,6 +90,20 @@ So the DPL blocker is worked around, but the FD canary still needs a
 via2/single-cut route rule fix or a 2-metal routing experiment.  The current
 canary remains non-signoff.
 
+### Route attempts
+
+- `RT_MAX_LAYER=Metal2` removes Via2 but global routing is congested even at
+  10% core utilization / 20% placement density.
+- Adding local single-cut Via2 variants to a copy of the FD tech LEF did not
+  produce a usable route; DRT either kept the via2 rule failure or produced
+  thousands of minimum-cut/short violations.
+- The M3 route with the vendor tech LEF stops immediately at
+  `DRT-0234 Via2 does not have single-cut via`.
+
+A proper fix needs a 5 V-compatible single-cut Via2 definition with correct
+Metal2/Metal3 enclosures and DRC-clean route rules, not just a duplicate of the
+AS 3.3 V via geometry.
+
 ## Next
 
 1. Fix the `DRT-0234` via2 route rule (or route with a technology LEF that
