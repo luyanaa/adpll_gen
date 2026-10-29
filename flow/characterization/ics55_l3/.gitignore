@@ -1,0 +1,15 @@
+*.sp
+*.inc
+*.log
+*.raw
+*.dat
+*.lib
+*.mdl
+*.out
+mos
+bjt
+dio
+res
+var
+mom
+pdk_overlay

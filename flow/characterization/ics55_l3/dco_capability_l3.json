@@ -1,0 +1,14 @@
+{
+  "technology": "ics55",
+  "library": "ics55_LLSC_H7CR",
+  "model": "BSIM4.5 flattened CDL, ngspice 44.2",
+  "characterization_level": "L3_transistor_sparse",
+  "table": "flow/characterization/ics55_l3/dco_tuning_l3.csv",
+  "points": 18,
+  "grid": {"coarse": [0, 8], "mid": [0, 8, 15], "fine": [0, 8, 31]},
+  "frequency_mhz": {"min": 919.118, "max": 1899.078},
+  "monotonic": {"all_axes": true, "fine_inversions": 0},
+  "valid_codes": {"all_scanned_codes_valid": true},
+  "verification": {"frequency_verified": "L3_sparse", "pvt_verified": false, "pex_verified": false, "jitter_verified": false},
+  "notes": "Sparse 18-point transistor-level DCO; no PEX/PVT. coarse=15 not converged in the batch window."
+}

@@ -39,6 +39,9 @@ measured-frequency error.  IHP now has a sparse L3 manifest:
 ```sh
 python3 flow/generator/capability.py --pdk ihp-sg13g2 --target-mhz 300
 # PASS_L3_SPARSE, range 212..624 MHz, production_eligible=false
+
+python3 flow/generator/capability.py --pdk ics55-l3 --target-mhz 1000
+# PASS_L3_SPARSE, range 919..1899 MHz, candidate 999 MHz
 ```
 
 A target that is inside the range but more than the default 10 MHz tolerance

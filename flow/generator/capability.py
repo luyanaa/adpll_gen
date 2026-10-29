@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFESTS = {
     "ics55": ROOT / "flow" / "characterization" / "ics55_sim" / "dco_capability.json",
     "ihp-sg13g2": ROOT / "flow" / "characterization" / "ihp_l3" / "dco_capability_l3.json",
+    "ics55-l3": ROOT / "flow" / "characterization" / "ics55_l3" / "dco_capability_l3.json",
 }
 
 
@@ -105,7 +106,7 @@ def check_target(
     status = "PASS_L1_EXPERIMENTAL"
     reason = "L1 behavioral range/code check only; not PVT/PEX/jitter signoff"
     if level.startswith("L3"):
-        status = "PASS_L3_SPARSE" if not valid else "PASS_L3"
+        status = "PASS_L3_SPARSE" if ("sparse" in level or not valid) else "PASS_L3"
         reason = ("Sparse/transistor-level range check; PEX/PVT/jitter signoff is "
                   "still required" if not valid else
                   "Transistor-level range/code check; PEX/PVT signoff still required")

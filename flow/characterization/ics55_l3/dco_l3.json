@@ -1,0 +1,137 @@
+{
+  "technology": "ics55",
+  "library": "ics55_LLSC_H7CR",
+  "model": "BSIM4.5 from ICsprout foundry CDL/model deck",
+  "simulator": "ngspice-44.2",
+  "characterization_level": "L3_transistor_sparse",
+  "points": 18,
+  "note": "Flattened CDL transistor DCO; no PEX/PVT/jitter signoff.",
+  "results": [
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 0.5265714285714548,
+      "freq_mhz": 1899.077590884333
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 0.5312857142857437,
+      "freq_mhz": 1882.2264049474622
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 0.5440000000000206,
+      "freq_mhz": 1838.2352941175773
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 0.5478571428571781,
+      "freq_mhz": 1825.2933507169616
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 0.5528571428571771,
+      "freq_mhz": 1808.78552971565
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 0.5663333333333623,
+      "freq_mhz": 1765.744555620863
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 0.5646666666666856,
+      "freq_mhz": 1770.9563164108022
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 0.569666666666697,
+      "freq_mhz": 1755.412521942563
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 0.5835000000000258,
+      "freq_mhz": 1713.79605826899
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 0.9973333333333342,
+      "freq_mhz": 1002.6737967914429
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 1.000999999999991,
+      "freq_mhz": 999.0009990010079
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 1.0096666666667025,
+      "freq_mhz": 990.4258831297105
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 1.040666666666715,
+      "freq_mhz": 960.9224855861179
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 1.0443333333333817,
+      "freq_mhz": 957.5486753909546
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 1.053666666666682,
+      "freq_mhz": 949.0667510281417
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 1.0746666666667264,
+      "freq_mhz": 930.5210918113626
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 1.0782500000000697,
+      "freq_mhz": 927.4287039183263
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 1.088000000000027,
+      "freq_mhz": 919.1176470588007
+    }
+  ]
+}
