@@ -4,134 +4,197 @@
   "model": "BSIM4.5 from ICsprout foundry CDL/model deck",
   "simulator": "ngspice-44.2",
   "characterization_level": "L3_transistor_sparse",
-  "points": 18,
+  "points": 27,
   "note": "Flattened CDL transistor DCO; no PEX/PVT/jitter signoff.",
   "results": [
     {
       "coarse": 0,
       "mid": 0,
       "fine": 0,
-      "period_ns": 0.5265714285714548,
-      "freq_mhz": 1899.077590884333
+      "period_ns": 0.5271666666666845,
+      "freq_mhz": 1896.9332911791957
     },
     {
       "coarse": 0,
       "mid": 0,
       "fine": 8,
-      "period_ns": 0.5312857142857437,
-      "freq_mhz": 1882.2264049474622
+      "period_ns": 0.531833333333353,
+      "freq_mhz": 1880.2883108742642
     },
     {
       "coarse": 0,
       "mid": 0,
       "fine": 31,
-      "period_ns": 0.5440000000000206,
-      "freq_mhz": 1838.2352941175773
+      "period_ns": 0.5446666666666913,
+      "freq_mhz": 1835.9853121174197
     },
     {
       "coarse": 0,
       "mid": 8,
       "fine": 0,
-      "period_ns": 0.5478571428571781,
-      "freq_mhz": 1825.2933507169616
+      "period_ns": 0.5481666666666933,
+      "freq_mhz": 1824.2626938278222
     },
     {
       "coarse": 0,
       "mid": 8,
       "fine": 8,
-      "period_ns": 0.5528571428571771,
-      "freq_mhz": 1808.78552971565
+      "period_ns": 0.5530000000000285,
+      "freq_mhz": 1808.3182640143732
     },
     {
       "coarse": 0,
       "mid": 8,
       "fine": 31,
-      "period_ns": 0.5663333333333623,
-      "freq_mhz": 1765.744555620863
+      "period_ns": 0.5665000000000336,
+      "freq_mhz": 1765.225066195835
     },
     {
       "coarse": 0,
       "mid": 15,
       "fine": 0,
-      "period_ns": 0.5646666666666856,
-      "freq_mhz": 1770.9563164108022
+      "period_ns": 0.5646666666667002,
+      "freq_mhz": 1770.9563164107567
     },
     {
       "coarse": 0,
       "mid": 15,
       "fine": 8,
-      "period_ns": 0.569666666666697,
-      "freq_mhz": 1755.412521942563
+      "period_ns": 0.5696666666667021,
+      "freq_mhz": 1755.412521942547
     },
     {
       "coarse": 0,
       "mid": 15,
       "fine": 31,
-      "period_ns": 0.5835000000000258,
-      "freq_mhz": 1713.79605826899
+      "period_ns": 0.5836000000000132,
+      "freq_mhz": 1713.5023989033195
     },
     {
       "coarse": 8,
       "mid": 0,
       "fine": 0,
-      "period_ns": 0.9973333333333342,
-      "freq_mhz": 1002.6737967914429
+      "period_ns": 0.997333333333361,
+      "freq_mhz": 1002.6737967914158
     },
     {
       "coarse": 8,
       "mid": 0,
       "fine": 8,
-      "period_ns": 1.000999999999991,
-      "freq_mhz": 999.0009990010079
+      "period_ns": 1.0006666666666957,
+      "freq_mhz": 999.3337774816499
     },
     {
       "coarse": 8,
       "mid": 0,
       "fine": 31,
-      "period_ns": 1.0096666666667025,
-      "freq_mhz": 990.4258831297105
+      "period_ns": 1.0096666666666991,
+      "freq_mhz": 990.4258831297137
     },
     {
       "coarse": 8,
       "mid": 8,
       "fine": 0,
-      "period_ns": 1.040666666666715,
-      "freq_mhz": 960.9224855861179
+      "period_ns": 1.0406666666667121,
+      "freq_mhz": 960.9224855861205
     },
     {
       "coarse": 8,
       "mid": 8,
       "fine": 8,
-      "period_ns": 1.0443333333333817,
-      "freq_mhz": 957.5486753909546
+      "period_ns": 1.0443333333333804,
+      "freq_mhz": 957.5486753909557
     },
     {
       "coarse": 8,
       "mid": 8,
       "fine": 31,
-      "period_ns": 1.053666666666682,
-      "freq_mhz": 949.0667510281417
+      "period_ns": 1.0536666666667174,
+      "freq_mhz": 949.0667510281098
     },
     {
       "coarse": 8,
       "mid": 15,
       "fine": 0,
-      "period_ns": 1.0746666666667264,
-      "freq_mhz": 930.5210918113626
+      "period_ns": 1.0743333333333929,
+      "freq_mhz": 930.8098045298893
     },
     {
       "coarse": 8,
       "mid": 15,
       "fine": 8,
-      "period_ns": 1.0782500000000697,
-      "freq_mhz": 927.4287039183263
+      "period_ns": 1.0780000000000611,
+      "freq_mhz": 927.6437847865892
     },
     {
       "coarse": 8,
       "mid": 15,
       "fine": 31,
-      "period_ns": 1.088000000000027,
-      "freq_mhz": 919.1176470588007
+      "period_ns": 1.0880000000000651,
+      "freq_mhz": 919.1176470587685
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 1.317000000000053,
+      "freq_mhz": 759.3014426727104
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 1.3200000000000547,
+      "freq_mhz": 757.5757575757261
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 1.32900000000006,
+      "freq_mhz": 752.4454477050074
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 1.3680000000000838,
+      "freq_mhz": 730.9941520467387
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 1.371000000000086,
+      "freq_mhz": 729.3946024798959
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 1.3800000000000912,
+      "freq_mhz": 724.6376811593724
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 1.4095000000001097,
+      "freq_mhz": 709.4714437743328
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 1.4130000000001115,
+      "freq_mhz": 707.7140835102059
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 1.421999999999848,
+      "freq_mhz": 703.2348804501454
     }
   ]
 }

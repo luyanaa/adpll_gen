@@ -24,17 +24,16 @@ The script:
 ## Data
 
 ```text
-points = 18
-coarse = {0, 8}
+points = 27
+coarse = {0, 8, 15}
 mid    = {0, 8, 15}
 fine   = {0, 8, 31}
-range  = 919.12 .. 1899.08 MHz
+range  = 703.24 .. 1896.93 MHz
 ```
 
-The 18 measured points are monotonic in both coarse and fine directions
-within this sparse grid.  `coarse=15` was not included because the 5 ns
-transient did not converge within the batch timeout; that is a runtime/settling
-limitation, not a claim that the code is invalid.
+The 27 measured points are monotonic in both coarse and fine directions
+within this sparse grid.  A `.ic V(OUT)=0.6 V(MID_OUT)=0.6` startup is used
+to make the low-frequency `coarse=15` points converge.
 
 ## Status
 
@@ -42,7 +41,7 @@ limitation, not a claim that the code is invalid.
 L3 transistor netlist:   working in ngspice
 L3 PEX:                  not started
 L3 PVT:                  not started
-dense code grid:         not started
+dense code grid:         sparse 27 points only
 ```
 
 This is a sparse, pre-PEX L3 baseline.  It is not a jitter, PVT or production

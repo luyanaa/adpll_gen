@@ -114,6 +114,7 @@ def main() -> int:
     (out / "test_dco_l3_tran.sp").write_text(
         "* L3 ics55 DCO transient\n"
         ".inc test_dco_l3.sp\n"
+        ".ic V(OUT)=0.6 V(MID_OUT)=0.6\n"
         f".tran 1p {args.stopsim}\n"
         ".SAVE V(OUT) V(MID_OUT)\n"
         ".control\nrun\nwrite test_dco_l3.raw\nquit\n.endc\n"
