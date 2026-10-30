@@ -9,13 +9,16 @@ ref_cdl=${4:-}
 pdk_root=${PDK_ROOT:-/grid}
 pdk=${PDK:-ETRI050}
 tech_lef="$pdk_root/$pdk/libs.ref/ETRI050_fd_sc_12t/lef/ETRI050_fd_sc_12t_tech_librelane.lef"
+# Prefer the project-local tech LEF (vendor via enclosure + no-stack rules).
+script_dir=$(cd "$(dirname "$0")" && pwd)
+[[ -f "$script_dir/tech/ETRI050_fd_sc_12t_tech_librelane.lef" ]] && \
+  tech_lef="$script_dir/tech/ETRI050_fd_sc_12t_tech_librelane.lef"
 cell_lef="$pdk_root/$pdk/libs.ref/ETRI050_fd_sc_12t/lef/ETRI050_fd_sc_12t.lef"
 cell_gds="$pdk_root/$pdk/libs.ref/ETRI050_fd_sc_12t/gds/ETRI050_fd_sc_12t.gds"
 cell_cdl="$pdk_root/$pdk/libs.ref/ETRI050_fd_sc_12t/cdl/ETRI050_fd_sc_12t.cdl"
 drc_deck="$pdk_root/$pdk/libs.tech/klayout/etri_05um_converted_final.drc"
 # Versioned copy of the KLayout LVS deck with the ETRI/Calibre semantics fixes.
 # Fall back to the PDK copy only if the local deck is absent.
-script_dir=$(cd "$(dirname "$0")" && pwd)
 lvs_deck="$script_dir/etri_05um.lvs"
 [[ -f "$lvs_deck" ]] || lvs_deck="$pdk_root/$pdk/libs.tech/klayout/etri_05um.lvs"
 mkdir -p "$outdir"

@@ -15,7 +15,7 @@ result, not a timing-signoff result.
 | Instance area | 1.521 mm² |
 | OpenROAD detailed-route DRC | **0** |
 | Timing @ 20 ns `OUT` | setup **-158.85 ns**, hold **-16.73 ns**; not closed |
-| KLayout DRC (PDK deck) | **not clean**: 2 well/implant markers plus VIA1/VIA2 enclosure and via-stack errors (see below) |
+| KLayout DRC (PDK deck) | **not clean**: via macro corrected, but archived route still has MET spacing and VIA2 stack errors (see below) |
 | KLayout LVS | **PASS** — 2428 cell instances, 127 top pins (KLayout 0.30.0) |
 
 ## What worked
@@ -68,14 +68,26 @@ failure.
   `PSM-0038/PSM-0069`; power checker is skipped.
 - **DRC:** before fill, the 636 markers were cell-boundary context, not
   top-level route: `1.NWL.S.2` 267, `1.NWL.S.1` 156, `5.NSD.S1` 110,
-  `6.PSD.S1` 103.  After `FILLX1..4`, 2 remain (1 NSD, 1 PSD).  In addition,
-  restoring the real top-level MET1/2/3 routing exposes the via macros:
-  `9.VIA1.E1/E3` (8047/8831), `11.VIA2.E1/E3` (4177/4927),
-  `11.VIA2.S` (302) and `11.VIA2.S_Stack` (1171).  The fixed LEF
-  `VIA V12/V23` macros put 1.2 µm metal around a 0.8 µm cut (0.2 µm
-  enclosure), while the vendor deck requires 0.6 µm; the stack errors are
-  stacked VIA2-on-VIA1 placements.  These are real P&R/via-macro issues, not
-  label remap issues.
+  `6.PSD.S1` 103.  After `FILLX1..4`, 2 remain (1 NSD, 1 PSD).
+  The archived route used the old 1.2 µm `VIA V12/V23` macros; the vendor
+  enclosure requirement is 0.6 µm around the 0.8 µm cut, so those macros
+  are invalid.  A corrected local tech LEF is in `tech/` (2.0 µm metal,
+  0.8 µm cut) and KLayout LVS passes with it.  Re-streaming the archived
+  DEF with the corrected vias removes all `VIA1/VIA2.E1/E3` errors, but
+  exposes the fact that the route was generated with 1.2 µm pads:
+  `8.MET1.S1` 978, `10.MET2.S1` 1314, `12.MET3.S1` 15,
+  `11.VIA2.S_Stack` 1171 and `11.VIA2.S` 302.  These are not label-remap
+  artifacts; the route must be regenerated with the 2.0 µm via model.
+  A reroute with the 2.0 µm model removes the MET spacing errors but still
+  leaves `11.VIA2.S_Stack` 1750 and `11.VIA2.S` 6.
+- **PnR via rule:** `tech/ETRI050_fd_sc_12t_tech_librelane.lef` also adds
+  same-net `VIA2`-to-`VIA1` and `VIA1`-to-`CONT` 0.6 µm spacing rules (without
+  the LEF `STACK` permission).  OpenROAD DRT still reports `DRT-0073` for
+  many standard-cell inputs with the 2.0 µm via, because the 0.8 µm cut
+  cannot be placed on the 2.0 µm-high pins under the pin/track geometry.
+  Relaxing the LEF VIA spacing makes DRT converge, but the resulting DEF
+  still contains 1750 stacked VIA2-on-VIA1 sites, so this is **not** a
+  DRC-clean PnR rule yet.  Do not claim ETRI DRC signoff.
 - **LVS:** KLayout LVS passes; Calibre LVS remains unrun.  The old Netgen
   “551 vs 2428” observation was from the period when top MET2/MET3 routing
   was accidentally deleted; it is not the current state.
@@ -93,7 +105,8 @@ DEF→GDS streamout had several Calibre-semantics mismatches:
    to `32/34/36`; pin abstracts `9/2`, `11/2`, `13/2` map to the same metal.
 3. The LEF VIA macros use layer ordinals `9→MET1`, `10→VIA1`, `11→MET2` and
    `11→MET2`, `12→VIA2`, `13→MET3`.  The previous V12 map was shifted and
-   produced widespread MET2/MET3 DRC errors.
+   produced widespread MET2/MET3 DRC errors.  The local corrected tech LEF
+   keeps the same layer ordinals while using the vendor 2.0 µm via metal.
 4. `etri_05um.lvs` wrote numeric pin names.  It now uses
    `spice_writer.use_net_names = true`.
 5. The routed top CDL only instantiates standard cells.  The runner appends
