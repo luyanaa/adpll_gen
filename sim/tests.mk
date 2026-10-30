@@ -335,3 +335,10 @@ $(SIM_OUT)/pll_macro_top.out: $(SRC_DIR)/pll_macro_top_tb.v $(SRC_DIR)/pll_macro
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o pll_macro_top.out -D SIMULATION  $^
 	cd $(SIM_OUT) && timeout 180s $(VVP) pll_macro_top.out
+
+# Behavioral Core B/C architecture models
+test_arch_models: $(SIM_OUT)/arch_models.out
+
+$(SIM_OUT)/arch_models.out: $(SRC_DIR)/arch_models_tb.v $(SRC_DIR)/pll_ring_dco.v $(SRC_DIR)/pll_counter_dco.v $(SRC_DIR)/sim_SSBBPD.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o arch_models.out -D SIMULATION=1 $^ && $(VVP) arch_models.out

@@ -119,7 +119,9 @@ def selection_template(result: dict[str, Any], design: str = "adpll_top") -> dic
         return None
     voltages = lib.get("voltage") or [0.0]
     voltage = float(voltages[0])
-    hard = sel["core"] in ("core_a_il_dco", "core_b_ring_dco")
+    hard = (sel["core"] == "core_a_il_dco"
+            and sel.get("implementation") in ("rtl", "rtl_partial")
+            and sel.get("hardmacro_ready", False))
     return {
         "pdk": lib["pdk"],
         "design": design,
@@ -141,6 +143,13 @@ def selection_template(result: dict[str, Any], design: str = "adpll_top") -> dic
     }
 
 
+def implementation_ready(a: dict[str, Any]) -> bool:
+    refs = a.get("implementation_refs", [])
+    if a.get("implementation") in ("missing", "roadmap"):
+        return False
+    return bool(refs) and all((ROOT / ref).exists() for ref in refs)
+
+
 def _candidate_reasons(a: dict, target: float, pdk_class: str) -> list[str]:
     reasons = []
     lo, hi = a["freq_mhz"]
@@ -156,7 +165,8 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
            wide_range: bool = False, fractional: bool = False,
            low_jitter: bool = False, fast_lock: bool = False,
            allow_low_res: bool = False,
-           require_signoff: bool = False) -> dict[str, Any]:
+           require_signoff: bool = False,
+           allow_unimplemented: bool = False) -> dict[str, Any]:
     prof = profile_for(pdk)
     if prof is None:
         return {"status": "FAIL_UNKNOWN_PDK", "pdk": pdk,
@@ -205,6 +215,8 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         # TDC/bang-bang variant is a cost fallback, not a default choice.
         if a["id"] == "low_res_tdc_bangbang" and not allow_low_res:
             continue
+        if not allow_unimplemented and not implementation_ready(a):
+            continue
         center = sum(a["freq_mhz"]) / 2.0
         freq_score = 1.0 - min(1.0, abs(target_mhz - center) / max(center, 1.0))
         area_penalty = AREA_RANK[a["area"]] * AREA_WEIGHT[area]
@@ -235,8 +247,10 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         return {
             **{k: a[k] for k in ("id", "name", "core", "freq_mhz", "area",
                                   "area_rank", "complexity", "features", "risk",
-                                  "benefit")},
+                                  "benefit", "implementation", "implementation_refs",
+                                  "hardmacro_ready")},
             "score": round(score, 4),
+            "implementation_ready": implementation_ready(a),
             "reasons": _candidate_reasons(a, target_mhz, prof["class"]),
         }
 
@@ -256,6 +270,14 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         warnings.append(f"library {lib['library']} is not PnR-ready")
     if area == "high" and selected["area_rank"] > 2:
         warnings.append("area-tight request still selected a medium/large DCO")
+    if selected["implementation"] == "simulation":
+        warnings.append("selected DCO has a behavioral simulation model, not a hardened macro")
+    elif selected["implementation"] == "rtl_partial":
+        warnings.append("selected architecture has partial RTL; signoff features may be missing")
+    if allow_unimplemented and selected["implementation"] in ("missing", "roadmap"):
+        warnings.append("selected architecture is roadmap-only (--allow-unimplemented)")
+    if not selected["implementation_ready"]:
+        warnings.append("selected architecture implementation references are incomplete")
 
     cap_pdk = {
         "ics55": "ics55",
@@ -314,13 +336,14 @@ def main() -> int:
     ap.add_argument("--fast-lock", action="store_true")
     ap.add_argument("--allow-low-res", action="store_true")
     ap.add_argument("--require-signoff", action="store_true")
+    ap.add_argument("--allow-unimplemented", action="store_true")
     ap.add_argument("--json-out", type=Path)
     ap.add_argument("--emit-selection", type=Path)
     args = ap.parse_args()
     result = select(args.pdk, args.target_mhz, args.area, args.ref_mhz,
                     args.fcw, args.wide_range, args.fractional,
                     args.low_jitter, args.fast_lock, args.allow_low_res,
-                    args.require_signoff)
+                    args.require_signoff, args.allow_unimplemented)
     text = json.dumps(result, indent=2)
     if args.json_out:
         args.json_out.write_text(text + "\n")

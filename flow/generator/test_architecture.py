@@ -29,10 +29,15 @@ def main():
     # digital signoff ceiling is only 479 MHz, so this is experimental.
     r = select("ics55", 800, area="medium", ref_mhz=100)
     assert r["selected"]["id"] in ("segmented_il_dco", "core_a_il_dco"), r["selected"]
+    assert r["selected"]["implementation"] != "missing", r["selected"]
     assert any("signoff ceiling" in w for w in r["warnings"]), r["warnings"]
     assert r["production_eligible"] is False
     r = select("ics55", 800, area="medium", ref_mhz=100, require_signoff=True)
     assert r["status"] == "FAIL_SIGNOFF_FMAX", r
+    r = select("ics55", 800, area="medium", ref_mhz=100,
+               allow_unimplemented=True)
+    assert r["selected"]["id"] == "segmented_il_dco", r["selected"]
+    assert r["selected"]["implementation"] == "missing", r["selected"]
 
     # IHP mid/high target is a valid architecture candidate.
     r = select("ihp-sg13g2", 300, area="medium", ref_mhz=100)

@@ -74,9 +74,15 @@ failure.
   12T GDS has a 1.3/1.4 µm halo beyond the LEF; the PDK `ACCEPTANCE.md`
   excludes the 12T library from its acceptance gate.
 - **LVS:** the DEF→GDS top pin texts are on layer 13/1, but the ETRI deck reads
-  labels from 42/44/46.  The local streamout now remaps pin labels and drops
-  the LEF pin abstracts; the remaining failure is hierarchical stdcell pin
-  naming, not the top-level labels alone.
+  labels from 42/44/46.  The local streamout remaps pin labels and drops the
+  LEF pin abstracts.  Even then, KLayout exposes only VDD/VSS as named top
+  nets, and Netgen reports 551 layout top devices versus 2428 reference
+  devices.  This is not a label-only problem: hierarchical extraction is
+  losing top-level signal nets/cell pins.  Use the vendor Calibre deck next:
+
+```sh
+CALIBRE=/path/to/calibre ./run_calibre_lvs.sh
+```
 - A clean 12T GDS/LEF or a patched label/tap flow is required before claiming
   DRC/LVS signoff.
 

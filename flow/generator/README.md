@@ -140,3 +140,32 @@ Selection rules:
 `pdk_profiles.json` holds the measured architecture/signoff ceilings and
 maturity.  `architecture_catalog.json` holds the structure ranges, area ranks,
 PDK classes, complexity, and features.
+
+## Implementation gate
+
+The selector does not select a structure whose implementation is only a
+roadmap item.  Each catalog entry carries:
+
+```text
+implementation       rtl / rtl_partial / simulation / missing / roadmap
+implementation_refs  source paths that must exist
+implementation_ready all refs exist and implementation is not missing
+```
+
+By default only `rtl`, `rtl_partial`, and `simulation` entries with existing
+refs are selectable.  Use `--allow-unimplemented` only for a planning/roadmap
+selection; the result is marked as a warning and is not production-eligible.
+
+Current implementation status:
+
+| Architecture | Status | Artifact |
+|---|---|---|
+| Core A IL-DCO | RTL/macro | `src/il_dco.v`, `src/pll_analog.v`, `src/pll_macro_top.v` |
+| Core B ring DCO | simulation model | `src/pll_ring_dco.v`, `src/arch_models_tb.v` |
+| Core C counter DCO | simulation model | `src/pll_counter_dco.v`, `src/arch_models_tb.v` |
+| Core A dual loop | partial RTL | `src/freq_lock.v`, `src/digital_loop_filter.v` |
+| Fractional / DSM | partial RTL | `src/delta_sigma.v`, `src/pll_logic.v` |
+| Segmented / hybrid / low-res TDC / multi-phase | roadmap | not selectable by default |
+
+Core B/C models are behavioral RTL, not hardened macros and not DCO/PVT
+signoff.  The generated selection template marks their `dco`/`pd` as soft.

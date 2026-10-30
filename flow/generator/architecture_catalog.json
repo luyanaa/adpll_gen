@@ -4,127 +4,282 @@
       "id": "core_a_il_dco",
       "name": "Core A + IL-DCO",
       "core": "core_a_il_dco",
-      "freq_mhz": [300, 1000],
-      "bands": ["mid", "high"],
+      "freq_mhz": [
+        300,
+        1000
+      ],
+      "bands": [
+        "mid",
+        "high"
+      ],
       "area": "medium-large",
       "area_rank": 3,
-      "pdk_classes": ["high"],
+      "pdk_classes": [
+        "high"
+      ],
       "complexity": 4,
-      "features": ["integer_n", "injection_locked"],
+      "features": [
+        "integer_n",
+        "injection_locked"
+      ],
       "risk": "DCO/PEX/PVT, phase noise, complex digital control",
-      "benefit": "highest frequency ceiling and tuning range"
+      "benefit": "highest frequency ceiling and tuning range",
+      "implementation": "rtl",
+      "implementation_refs": [
+        "src/il_dco.v",
+        "src/pll_analog.v",
+        "src/pll_macro_top.v"
+      ],
+      "hardmacro_ready": true
     },
     {
       "id": "segmented_il_dco",
       "name": "Segmented IL-DCO (multi-bank)",
       "core": "core_a_il_dco",
-      "freq_mhz": [300, 1500],
-      "bands": ["mid", "high"],
+      "freq_mhz": [
+        300,
+        1500
+      ],
+      "bands": [
+        "mid",
+        "high"
+      ],
       "area": "medium-large",
       "area_rank": 4,
-      "pdk_classes": ["high"],
+      "pdk_classes": [
+        "high"
+      ],
       "complexity": 5,
-      "features": ["integer_n", "injection_locked", "wide_range", "segmented"],
+      "features": [
+        "integer_n",
+        "injection_locked",
+        "wide_range",
+        "segmented"
+      ],
       "risk": "bank calibration, larger area, stronger DCO characterization",
-      "benefit": "wider range and lower quantization step"
+      "benefit": "wider range and lower quantization step",
+      "implementation": "missing",
+      "implementation_refs": [],
+      "hardmacro_ready": false
     },
     {
       "id": "core_b_ring_dco",
       "name": "Core B + ring DCO",
       "core": "core_b_ring_dco",
-      "freq_mhz": [20, 300],
-      "bands": ["low", "mid"],
+      "freq_mhz": [
+        20,
+        300
+      ],
+      "bands": [
+        "low",
+        "mid"
+      ],
       "area": "small-medium",
       "area_rank": 2,
-      "pdk_classes": ["high", "mid"],
+      "pdk_classes": [
+        "high",
+        "mid"
+      ],
       "complexity": 2,
-      "features": ["integer_n", "ring"],
+      "features": [
+        "integer_n",
+        "ring"
+      ],
       "risk": "jitter/phase noise, limited range",
-      "benefit": "low area, simple layout, easy integration"
+      "benefit": "low area, simple layout, easy integration",
+      "implementation": "simulation",
+      "implementation_refs": [
+        "src/pll_ring_dco.v",
+        "src/arch_models_tb.v"
+      ],
+      "hardmacro_ready": false
     },
     {
       "id": "core_c_counter",
       "name": "Core C + counter DCO",
       "core": "core_c_counter",
-      "freq_mhz": [5, 100],
-      "bands": ["low"],
+      "freq_mhz": [
+        5,
+        100
+      ],
+      "bands": [
+        "low"
+      ],
       "area": "small",
       "area_rank": 1,
-      "pdk_classes": ["mid", "low"],
+      "pdk_classes": [
+        "mid",
+        "low"
+      ],
       "complexity": 1,
-      "features": ["integer_n", "counter"],
+      "features": [
+        "integer_n",
+        "counter"
+      ],
       "risk": "low frequency ceiling, coarse resolution",
-      "benefit": "smallest area and simplest DRC/LVS path"
+      "benefit": "smallest area and simplest DRC/LVS path",
+      "implementation": "simulation",
+      "implementation_refs": [
+        "src/pll_counter_dco.v",
+        "src/arch_models_tb.v"
+      ],
+      "hardmacro_ready": false
     },
     {
       "id": "hybrid_dco",
       "name": "Hybrid DCO (ring coarse + injection fine)",
       "core": "core_b_ring_dco",
-      "freq_mhz": [50, 500],
-      "bands": ["mid", "high"],
+      "freq_mhz": [
+        50,
+        500
+      ],
+      "bands": [
+        "mid",
+        "high"
+      ],
       "area": "medium",
       "area_rank": 3,
-      "pdk_classes": ["high", "mid"],
+      "pdk_classes": [
+        "high",
+        "mid"
+      ],
       "complexity": 4,
-      "features": ["integer_n", "ring", "injection_locked", "hybrid"],
+      "features": [
+        "integer_n",
+        "ring",
+        "injection_locked",
+        "hybrid"
+      ],
       "risk": "calibration complexity, mixed analog/digital integration",
-      "benefit": "range plus finer resolution without full IL-DCO"
+      "benefit": "range plus finer resolution without full IL-DCO",
+      "implementation": "missing",
+      "implementation_refs": [],
+      "hardmacro_ready": false
     },
     {
       "id": "dual_loop_fll_pll",
       "name": "Coarse FLL + fine PLL (dual loop)",
       "core": "core_a_il_dco",
-      "freq_mhz": [50, 1000],
-      "bands": ["mid", "high"],
+      "freq_mhz": [
+        50,
+        1000
+      ],
+      "bands": [
+        "mid",
+        "high"
+      ],
       "area": "medium-large",
       "area_rank": 4,
-      "pdk_classes": ["high", "mid"],
+      "pdk_classes": [
+        "high",
+        "mid"
+      ],
       "complexity": 4,
-      "features": ["integer_n", "dual_loop", "fast_lock"],
+      "features": [
+        "integer_n",
+        "dual_loop",
+        "fast_lock"
+      ],
       "risk": "two loop filters, acquisition/loop interaction",
-      "benefit": "fast lock and wider coarse/fine separation"
+      "benefit": "fast lock and wider coarse/fine separation",
+      "implementation": "rtl_partial",
+      "implementation_refs": [
+        "src/freq_lock.v",
+        "src/digital_loop_filter.v",
+        "src/lock_detector.v"
+      ],
+      "hardmacro_ready": true
     },
     {
       "id": "fractional_n_dsm",
       "name": "Fractional-N / DSM ADPLL",
       "core": "core_a_il_dco",
-      "freq_mhz": [50, 1000],
-      "bands": ["mid", "high"],
+      "freq_mhz": [
+        50,
+        1000
+      ],
+      "bands": [
+        "mid",
+        "high"
+      ],
       "area": "medium-large",
       "area_rank": 4,
-      "pdk_classes": ["high"],
+      "pdk_classes": [
+        "high"
+      ],
       "complexity": 5,
-      "features": ["fractional_n", "dsm", "integer_n"],
+      "features": [
+        "fractional_n",
+        "dsm",
+        "integer_n"
+      ],
       "risk": "noise shaping, quantization, larger digital area",
-      "benefit": "fine frequency resolution and fractional outputs"
+      "benefit": "fine frequency resolution and fractional outputs",
+      "implementation": "rtl_partial",
+      "implementation_refs": [
+        "src/delta_sigma.v",
+        "src/pll_logic.v"
+      ],
+      "hardmacro_ready": true
     },
     {
       "id": "low_res_tdc_bangbang",
       "name": "Low-res TDC + bang-bang / small digital loop",
       "core": "core_c_counter",
-      "freq_mhz": [10, 200],
-      "bands": ["low", "mid"],
+      "freq_mhz": [
+        10,
+        200
+      ],
+      "bands": [
+        "low",
+        "mid"
+      ],
       "area": "small-medium",
       "area_rank": 2,
-      "pdk_classes": ["mid", "low"],
+      "pdk_classes": [
+        "mid",
+        "low"
+      ],
       "complexity": 2,
-      "features": ["integer_n", "bang_bang", "low_res_tdc"],
+      "features": [
+        "integer_n",
+        "bang_bang",
+        "low_res_tdc"
+      ],
       "risk": "limited resolution and lock behavior",
-      "benefit": "small digital area, low-cost implementation"
+      "benefit": "small digital area, low-cost implementation",
+      "implementation": "missing",
+      "implementation_refs": [],
+      "hardmacro_ready": false
     },
     {
       "id": "multiphase_dco",
       "name": "Multi-phase / time-interleaved DCO",
       "core": "core_a_il_dco",
-      "freq_mhz": [100, 1000],
-      "bands": ["mid", "high"],
+      "freq_mhz": [
+        100,
+        1000
+      ],
+      "bands": [
+        "mid",
+        "high"
+      ],
       "area": "medium-large",
       "area_rank": 4,
-      "pdk_classes": ["high"],
+      "pdk_classes": [
+        "high"
+      ],
       "complexity": 5,
-      "features": ["integer_n", "multiphase", "low_jitter"],
+      "features": [
+        "integer_n",
+        "multiphase",
+        "low_jitter"
+      ],
       "risk": "layout/phase calibration, high complexity",
-      "benefit": "lower jitter and finer phase resolution"
+      "benefit": "lower jitter and finer phase resolution",
+      "implementation": "missing",
+      "implementation_refs": [],
+      "hardmacro_ready": false
     }
   ]
 }
