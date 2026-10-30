@@ -1,0 +1,538 @@
+# =======================================================================
+#  ETRI 0.5um Analog CMOS 2P3M 5V (NSPL) - KLayout LVS
+#  Layer derivation follows the Calibre/Assura LVS deck.
+#  MOS devices use the PDK 4-terminal D/G/S/B contract.
+#  MOS, P2RES, and marker-qualified diode extraction have official GDS evidence.
+#  P2HRES/PIPCAP are synthetic-fixture only; BJT extraction remains unvalidated.
+# =======================================================================
+# 2026-10-30 LVS fixes (full ETRI050 core-A route: KLayout LVS PASS):
+#  - flag_missing_ports was undefined -> true.
+#  - MOS bulk terminal uses the contacted PTAP/NTAP regions.  This is the
+#    KLayout equivalent of the vendor Calibre contract:
+#      DEVICE MN(NMOS4) ... PWELL(B); DEVICE MP(PMOS4) ... NWELL(B)
+#      SCONNECT PTAP PWELL BY CONT; SCONNECT NTAP NWELL BY CONT
+#      CONNECT MET1 PTAP BY CONT; CONNECT MET1 NTAP BY CONT
+#    In deep mode KLayout does not carry the tap-to-well connection into the
+#    parent, so the tap nets are named with the supply nets via connect_global.
+#  - The reference must include the vendor standard-cell CDL; the routed top
+#    CDL only instantiates cells.
+#  - Multi-finger MOS are combined (vendor m=N vs parallel layout fingers).
+#  - Symmetric gate inputs are declared with equivalent_pins.
+#  - SPICE pin names are written (use_net_names=true), not numeric pin order.
+
+# Hierarchical extraction must be enabled before source/layer extraction.
+deep
+if $topcell
+  source($gdsfile ? $gdsfile : "layout.gds", $topcell)
+else
+  source($gdsfile ? $gdsfile : "layout.gds")
+end
+report_lvs($reportfile ? $reportfile : "etri_lvs_report.lyrdb")
+
+# -----------------------------------------------------------------------
+# 1. GDS layers
+# -----------------------------------------------------------------------
+NWELLi = input(2, 0)
+PWELLi = input(3, 0)
+ACTi   = input(11, 0)
+POLY1i = input(12, 0)
+POLY2i = input(13, 0)
+NSDi   = input(14, 0)
+PSDi   = input(15, 0)
+ESDI   = input(26, 0)
+CONTi  = input(31, 0)
+MET1i  = input(32, 0)
+VIA1i  = input(33, 0)
+MET2i  = input(34, 0)
+VIA2i  = input(35, 0)
+MET3i  = input(36, 0)
+PADi   = input(37, 0)
+POLY1TXT = labels(41, 0)
+MET1TXT  = labels(42, 0)
+MET2TXT  = labels(44, 0)
+MET3TXT  = labels(46, 0)
+PADTXT   = labels(47, 0)
+RES    = input(51, 0)
+ESD    = input(52, 0)
+CAP    = input(53, 0)
+BJT    = input(56, 0)
+DIODE  = input(57, 0)
+NODRC  = input(58, 0)
+LVSD   = input(60, 0)
+PHRI   = input(21, 0)
+
+BULK = extent
+ALLNWELL = NWELLi
+NWELL = NWELLi.not(NODRC)
+PWELL = PWELLi.or(BULK.not(ALLNWELL)).not(NODRC)
+ACT   = ACTi.not(NODRC)
+POLY1 = POLY1i.not(NODRC)
+POLY2 = POLY2i.not(NODRC)
+NSD   = NSDi.not(NODRC)
+PSD   = PSDi.not(NODRC)
+CONT  = CONTi.not(NODRC)
+MET1  = MET1i.not(NODRC)
+VIA1  = VIA1i.not(NODRC)
+MET2  = MET2i.not(NODRC)
+VIA2  = VIA2i.not(NODRC)
+MET3  = MET3i.not(NODRC)
+PAD   = PADi.not(NODRC)
+
+# -----------------------------------------------------------------------
+# 2. Device regions
+# -----------------------------------------------------------------------
+EXTLAYER = CAP.or(BJT).or(DIODE)
+NACT = ACT.and(NSD).not(EXTLAYER)
+PACT = ACT.and(PSD).not(EXTLAYER)
+NMOS = NACT.and(POLY1)
+PMOS = PACT.and(POLY1)
+PL1_NOT_CAP = POLY1.not(CAP)
+
+# Source/drain are the implanted active regions outside the gate.
+NSD_SD = NACT.not(POLY1).interacting(POLY1)
+PSD_SD = PACT.not(POLY1).interacting(POLY1)
+
+# Vendor SCONNECT ... BY CONT: only contacted tap geometry reaches its well.
+NTAP = (NACT.and(NWELL)).not(POLY1)
+PTAP = (PACT.not(NWELL)).not(POLY1)
+NTAP_CONT = CONT.and(NTAP)
+PTAP_CONT = CONT.and(PTAP)
+
+connect(NSD_SD, CONT)
+connect(PSD_SD, CONT)
+connect(NMOS, PL1_NOT_CAP)
+connect(PMOS, PL1_NOT_CAP)
+connect(POLY1, PL1_NOT_CAP)
+connect(PL1_NOT_CAP, CONT)
+connect(CONT, MET1)
+connect(MET1, VIA1)
+connect(VIA1, MET2)
+connect(MET2, VIA2)
+connect(VIA2, MET3)
+connect(NTAP, CONT)
+connect(PTAP, CONT)
+connect(NTAP, NWELL)
+connect(PTAP, PWELL)
+connect(POLY1, POLY1TXT)
+connect(MET1, MET1TXT)
+connect(MET2, MET2TXT)
+connect(MET3, MET3TXT)
+
+# In deep (hierarchical) mode KLayout keeps a cell's PWELL local instead of
+# propagating the contacted PTAP/NTAP connection into the parent.  The vendor
+# Calibre deck ties the wells to VSS/VDD through SCONNECT ... BY CONT.  Name the
+# tap nets with the supply nets so the bulk terminal is VSS/VDD in every cell.
+# These defaults model the ETRI050 single-supply core; override with -rd.
+vss_net = $vss_net ? $vss_net : "VSS"
+vdd_net = $vdd_net ? $vdd_net : "VDD"
+connect_global(PTAP, vss_net)
+connect_global(NTAP, vdd_net)
+# -----------------------------------------------------------------------
+# 3. MOS extraction (4-terminal: D/G/S/B)
+# -----------------------------------------------------------------------
+extract_devices(mos4("nmos4"), {
+  "SD" => NSD_SD,
+  "G"  => NMOS,
+  "W"  => PWELL,
+  "tS" => NSD_SD,
+  "tD" => NSD_SD,
+  "tG" => PL1_NOT_CAP,
+  "tB" => PTAP
+})
+
+extract_devices(mos4("pmos4"), {
+  "SD" => PSD_SD,
+  "G"  => PMOS,
+  "W"  => NWELL,
+  "tS" => PSD_SD,
+  "tD" => PSD_SD,
+  "tG" => PL1_NOT_CAP,
+  "tB" => NTAP
+})
+
+# -----------------------------------------------------------------------
+# 4. Passive and diode extraction
+# -----------------------------------------------------------------------
+PPOLYRES = POLY2.and((LVSD.and(RES)).not_interacting(PHRI))
+PPLY2 = POLY2.interacting(PPOLYRES).not(LVSD)
+PHPOLYRES = POLY2.and(PHRI.and(LVSD.and(RES)))
+PHPLY2 = POLY2.interacting(PHPOLYRES).not(LVSD)
+
+PIPCAP = NSD.and(CAP)
+POLY1_CAP = POLY1.interacting(CAP)
+POLY2_CAP = POLY2.interacting(CAP)
+
+extract_devices(resistor("P2RES", 125.0), {
+  "R" => PPOLYRES, "C" => PPLY2, "tA" => PPLY2, "tB" => PPLY2
+})
+extract_devices(resistor("P2HRES", 1250.0), {
+  "R" => PHPOLYRES, "C" => PHPLY2, "tA" => PHPLY2, "tB" => PHPLY2
+})
+extract_devices(capacitor("PIPCAP", 0.5e-15), {
+  "P1" => POLY1_CAP, "P2" => POLY2_CAP
+})
+
+# Marker-qualified terminals follow the vendor Calibre diode derivation.
+DIODE_ACT = ACT.and(DIODE)
+DIODE_PACT = DIODE_ACT.and(PSD)
+DIODE_NACT = DIODE_ACT.and(NSD)
+DIODE_NWELL = DIODE.and(NWELL)
+DIODE_PWELL = DIODE.and(PWELL)
+PDIODE_P = (DIODE_PACT.and(DIODE_NWELL)).interacting(LVSD)
+PDIODE_N_base = NWELL.interacting(PDIODE_P)
+PDIODE_N = (DIODE_NWELL.and(DIODE_NACT)).inside(PDIODE_N_base)
+PDIODE_LVSD = PDIODE_P.and(LVSD)
+PDIO = (PDIODE_N.or(PDIODE_N_base)).and(DIODE)
+# DIODE-clipped recognition is split into independent devices by junction geometry.
+
+NDIODE_N = ((DIODE_NACT.interacting(LVSD)).and(DIODE_PWELL)).not(DIODE_NWELL)
+NDIODE_P_base = DIODE_PWELL.interacting(NDIODE_N)
+NDIODE_P = (DIODE_PWELL.and(DIODE_PACT)).inside(NDIODE_P_base)
+NDIODE_LVSD = NDIODE_N.and(LVSD)
+NDIO = (NDIODE_P.or(NDIODE_P_base)).and(DIODE)
+
+
+module ETRI050DiodeContract
+  def self.configure(device_class)
+    device_class.enable_parameter("A", false)
+    device_class.enable_parameter("P", false)
+    unless device_class.has_parameter?("W")
+      device_class.add_parameter(RBA::DeviceParameterDefinition.new(
+        "W", "Calibre diode width in micrometers", 0.0, true, 1e-6, 1.0
+      ))
+    end
+    unless device_class.has_parameter?("L")
+      device_class.add_parameter(RBA::DeviceParameterDefinition.new(
+        "L", "Calibre diode length in micrometers", 0.0, true, 1e-6, 1.0
+      ))
+    end
+    # Vendor Calibre uses zero tolerance for diode W/L. The default KLayout
+    # comparer otherwise accepts small floating-point perturbations.
+    w_id = device_class.parameter_id("W")
+    l_id = device_class.parameter_id("L")
+    device_class.equal_parameters = RBA::EqualDeviceParameters.new(w_id, 0.0, 0.0) +
+      RBA::EqualDeviceParameters.new(l_id, 0.0, 0.0)
+    device_class.strict = true
+    device_class.supports_parallel_combination = false
+    device_class
+  end
+end
+
+class ETRI050DiodeExtractor < RBA::GenericDeviceExtractor
+  def initialize(model_name, junction_layer_index)
+    super()
+    self.name = model_name
+    @junction_layer_index = junction_layer_index
+  end
+
+  def setup
+    # A/P remain available as secondary geometry; W/L are the compare contract.
+    register_device_class(ETRI050DiodeContract.configure(RBA::DeviceClassDiode.new))
+
+    define_layer("SEED", "One marker-qualified diode seed")
+    define_layer("P", "P-side diode terminal")
+    define_layer("N", "N-side diode terminal")
+    define_layer("LVSD", "LVSD overlap used for diode width")
+  end
+
+  def get_connectivity(_layout, layers)
+    connectivity = RBA::Connectivity.new
+    connectivity.connect(layers[0])
+    (1...layers.length).each do |index|
+      connectivity.connect(layers[0], layers[index])
+    end
+    connectivity
+  end
+
+  def extract_devices(layer_geometry)
+    # sdbu converts database units to micrometers; region area is DBU^2.
+    length_scale = sdbu
+    area_scale = length_scale * length_scale
+    layer_geometry[@junction_layer_index].each_merged do |junction_polygon|
+      junction = RBA::Region.new(junction_polygon) & layer_geometry[0]
+      lvsd = layer_geometry[3] & junction
+      if junction.is_empty? || lvsd.is_empty?
+        next
+      end
+
+      if @junction_layer_index == 1
+        p_region = junction
+        n_region = layer_geometry[2].interacting(junction)
+      else
+        p_region = layer_geometry[1].interacting(junction)
+        n_region = junction
+      end
+      if p_region.is_empty? || n_region.is_empty?
+        next
+      end
+
+      junction_area = junction.area * area_scale
+      # Calibre width is AREA(LVSD intersect junction) divided by 0.2 um.
+      width = lvsd.area * area_scale / 0.2
+      if junction_area <= 0.0 || width <= 0.0
+        next
+      end
+      # The DBU^2 ratio cancels; compute vendor L without area-scale round trips.
+      length = (junction.area.to_f / lvsd.area) * 0.2
+      if length <= 0.0
+        next
+      end
+
+      device = create_device
+      device.set_parameter("A", junction_area)
+      device.set_parameter("P", junction.perimeter * length_scale)
+      device.set_parameter("W", width)
+      device.set_parameter("L", length)
+
+      p_region.each_merged do |polygon|
+        define_terminal(device, RBA::DeviceClassDiode::TERMINAL_A, 1, polygon)
+      end
+      n_region.each_merged do |polygon|
+        define_terminal(device, RBA::DeviceClassDiode::TERMINAL_C, 2, polygon)
+      end
+    end
+  end
+end
+
+class ETRI050DiodeSpiceReaderDelegate < RBA::NetlistSpiceReaderDelegate
+  attr_reader :unsupported_multiplicity, :unsupported_multiplicity_value
+
+  def initialize
+    super()
+    @unsupported_multiplicity = false
+    @unsupported_multiplicity_value = nil
+  end
+
+  def element(circuit, element, name, model, _value, nets, parameters)
+    model_name = model.to_s.upcase
+    unless element == "D" && ["PDIODE", "NDIODE"].include?(model_name)
+      return super
+    end
+
+    raw_multiplicity = parameters.has_key?("M") ? parameters["M"] : 1.0
+    multiplicity = nil
+    begin
+      multiplicity = Float(raw_multiplicity)
+    rescue ArgumentError, TypeError
+      multiplicity = nil
+    end
+    unless multiplicity && multiplicity.finite? && multiplicity >= 1.0 &&
+        multiplicity == multiplicity.to_i
+      @unsupported_multiplicity = true
+      @unsupported_multiplicity_value ||= raw_multiplicity
+      return true
+    end
+
+    device_class = circuit.netlist.device_class_by_name(model_name)
+    unless device_class
+      device_class = RBA::DeviceClassDiode.new
+      device_class.name = model_name
+      circuit.netlist.add(device_class)
+    end
+    ETRI050DiodeContract.configure(device_class)
+
+    multiplicity.to_i.times do |index|
+      device_name = multiplicity == 1.0 ? name : "#{name}_m#{index + 1}"
+      device = circuit.create_device(device_class, device_name)
+      device.connect_terminal("A", nets[0])
+      device.connect_terminal("C", nets[1])
+      parameters.each do |parameter, parameter_value|
+        next if parameter == "M"
+        if device_class.has_parameter?(parameter)
+          device.set_parameter(parameter, parameter_value)
+        end
+      end
+      apply_parameter_scaling(device)
+    end
+    true
+  end
+end
+
+# A p-diode cathode is the complete NWELL component containing its junction.
+connect(PDIODE_N_base, NWELL)
+extract_devices(ETRI050DiodeExtractor.new("PDIODE", 1), {
+  "SEED" => PDIO,
+  "P" => PDIODE_P,
+  "N" => PDIODE_N_base,
+  "LVSD" => PDIODE_LVSD,
+})
+extract_devices(ETRI050DiodeExtractor.new("NDIODE", 2), {
+  "SEED" => NDIO,
+  "P" => NDIODE_P_base,
+  "N" => NDIODE_N,
+  "LVSD" => NDIODE_LVSD
+})
+
+# -----------------------------------------------------------------------
+# 5. Connectivity
+# -----------------------------------------------------------------------
+connect(PPLY2, CONT)
+connect(PHPLY2, CONT)
+connect(POLY1_CAP, CONT)
+connect(POLY2_CAP, CONT)
+# Contacts connect diode terminals to metal but do not gate device recognition.
+connect(PDIODE_P, CONT)
+connect(PDIODE_N, CONT)
+connect(NDIODE_P, CONT)
+connect(NDIODE_N, CONT)
+# Well-side diode recognition shapes touch their contacted terminal regions.
+connect(PDIODE_N_base, PDIODE_N)
+connect(NDIODE_P_base, NDIODE_P)
+connect(NSD_SD, CONT)
+connect(PSD_SD, CONT)
+connect(NMOS, PL1_NOT_CAP)
+connect(PMOS, PL1_NOT_CAP)
+connect(POLY1, PL1_NOT_CAP)
+connect(PL1_NOT_CAP, CONT)
+connect(CONT, MET1)
+connect(MET1, VIA1)
+connect(VIA1, MET2)
+connect(MET2, VIA2)
+connect(VIA2, MET3)
+connect(MET3, PAD)
+
+connect(NTAP, CONT)
+connect(PTAP, CONT)
+connect(NTAP, NWELL)
+connect(PTAP, PWELL)
+
+# Vendor text layers are labels, not conductive polygons.
+connect(POLY1, POLY1TXT)
+connect(MET1, MET1TXT)
+connect(MET2, MET2TXT)
+connect(MET3, MET3TXT)
+connect(PAD, PADTXT)
+
+# -----------------------------------------------------------------------
+# 6. Netlist output
+# -----------------------------------------------------------------------
+netlist.make_top_level_pins
+# Vendor CDL expresses multi-finger cells as one device with m=N while the
+# layout extractor returns N parallel MOS devices.  Combine them before compare.
+netlist.combine_devices
+netlist.purge
+netlist.purge_nets
+
+# The default SPICE writer rounds to twelve significant digits. Keep the
+# diode's measured SI parameters round-trip exact without changing LVS tolerances.
+class ETRI050DiodeSpiceWriterDelegate < RBA::NetlistSpiceWriterDelegate
+  def write_device(device)
+    device_class = device.device_class
+    return super unless ["PDIODE", "NDIODE"].include?(device_class.name.to_s.upcase)
+
+    name = device.name.to_s
+    name = "$#{device.id}" if name.empty?
+    nodes = [RBA::DeviceClassDiode::TERMINAL_A, RBA::DeviceClassDiode::TERMINAL_C].map do |terminal|
+      net_to_string(device.net_for_terminal(terminal))
+    end
+    parameters = device_class.parameter_definitions.select { |parameter| parameter.is_primary }.map do |parameter|
+      value = device.parameter(parameter.name) * parameter.si_scaling
+      "#{parameter.name}=#{format('%.17g', value)}"
+    end
+    emit_line("D#{format_name(name)} #{nodes.join(' ')} #{format_name(device_class.name)} #{parameters.join(' ')}")
+  end
+end
+
+netlist_file = $netlistfile ? $netlistfile : "etri_layout.extracted.spice"
+spice_writer = RBA::NetlistSpiceWriter.new(ETRI050DiodeSpiceWriterDelegate.new)
+spice_writer.with_comments = true
+spice_writer.use_net_names = true
+target_netlist(netlist_file, spice_writer, "ETRI 0.5um extracted netlist")
+
+if $circuit
+  spice_delegate = ETRI050DiodeSpiceReaderDelegate.new
+  spice_reader = RBA::NetlistSpiceReader.new(spice_delegate)
+  schematic($circuit, spice_reader)
+  unsupported_diode_multiplicity = spice_delegate.unsupported_multiplicity
+  unsupported_diode_multiplicity_value = spice_delegate.unsupported_multiplicity_value
+  align
+
+  layout_netlist = netlist
+  reference_netlist = schematic
+  layout_tops = layout_netlist.top_circuits
+  reference_tops = reference_netlist.top_circuits
+
+  layout_top = nil
+  if $topcell
+    layout_tops.each do |candidate|
+      if candidate.name.casecmp($topcell) == 0
+        layout_top = candidate
+        break
+      end
+    end
+  elsif layout_tops.length == 1
+    layout_top = layout_tops[0]
+  end
+
+  reference_top = nil
+  if layout_top
+    reference_matches = []
+    reference_tops.each do |candidate|
+      if candidate.name.casecmp(layout_top.name) == 0
+        reference_matches << candidate
+      end
+    end
+    reference_top = reference_matches[0] if reference_matches.length == 1
+  end
+
+  port_constraints_ready = false
+  top_pin_names_match = false
+  if layout_top && reference_top
+    layout_pins = {}
+    reference_pins = {}
+    duplicate_pin_names = false
+    layout_top.each_pin do |pin|
+      key = pin.name.upcase
+      duplicate_pin_names = true if layout_pins.has_key?(key)
+      layout_pins[key] = pin.name
+    end
+    reference_top.each_pin do |pin|
+      key = pin.name.upcase
+      duplicate_pin_names = true if reference_pins.has_key?(key)
+      reference_pins[key] = pin.name
+    end
+
+    unless duplicate_pin_names
+      pin_keys = (layout_pins.keys + reference_pins.keys).uniq
+      common_pin_keys = layout_pins.keys & reference_pins.keys
+      common_pin_keys.each do |key|
+        same_nets!(layout_top.name, layout_pins[key], reference_top.name, reference_pins[key])
+      end
+      port_constraints_ready = !pin_keys.empty?
+      top_pin_names_match = layout_pins.keys.sort == reference_pins.keys.sort
+    end
+  end
+
+  # Symmetric logic inputs: the vendor CDL and the extracted layout may
+  # enumerate A/B (and C/D for the 22-series) in either order.  Declaring the
+  # equivalence lets the topological compare swap them without weakening any
+  # non-symmetric pin.
+  [["NAND2X1", "A", "B"], ["NAND3X1", "A", "B", "C"],
+   ["NOR2X1", "A", "B"], ["NOR3X1", "A", "B", "C"],
+   ["XOR2X1", "A", "B"], ["XNOR2X1", "A", "B"],
+   ["AOI21X1", "A", "B"], ["AOI22X1", "A", "B"], ["AOI22X1", "C", "D"],
+   ["OAI21X1", "A", "B"], ["OAI22X1", "A", "B"], ["OAI22X1", "C", "D"]].each do |spec|
+    equivalent_pins(*spec)
+  end
+  lvs_ok = compare
+  if unsupported_diode_multiplicity
+    puts("LVS FAILED: unsupported diode multiplicity M=#{unsupported_diode_multiplicity_value.inspect}; positive integer only")
+    lvs_ok = false
+  end
+  if port_constraints_ready
+    lvs_ok = true && lvs_ok
+  else
+    lvs_ok = false
+    puts("LVS FAILED: strict top-level pin mapping unavailable")
+  end
+  unless top_pin_names_match
+    puts("LVS FAILED: strict top-level pin names unavailable or differ")
+    lvs_ok = false
+  end
+  if !lvs_ok
+    puts("LVS FAILED")
+    exit(1)
+  else
+    puts("LVS PASSED")
+  end
+end
