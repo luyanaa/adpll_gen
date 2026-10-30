@@ -1,64 +1,58 @@
 # IHP SG13G2 L3 dense fine-bank check
 
-This is a 31-point fine-bank scan at `coarse=8, mid=0` (fine `0..31`, one point
-missing).  It was added to test whether the non-monotonic sparse points were
-real or caused by the 100 ns startup/measurement window.
+This is the **100 ns** fine-bank scan at `coarse=8, mid=0` (fine `0..31`).
+It replaces the earlier 30 ns exploratory sweep, whose 376/369 MHz points were
+startup transients.
 
 ## Data
 
 ```text
-points:  31
-range:   274.37 .. 301.89 MHz
-fine 0:  301.89 MHz
-fine 8:  278.67 MHz
-fine 31: 274.37 MHz
+points:  32
+range:   275.64 .. 354.08 MHz
+fine 0:  281.46 MHz
+fine 8:  296.19 MHz
+fine 31: 284.22 MHz
 ```
 
-The 30 ns sweep produced two obvious startup truncations:
+The 100 ns values at fine 0/8/31 match the sparse 100 ns table exactly:
 
 ```text
-fine=9   3 edges, apparent 376.3 MHz
-fine=19  3 edges, apparent 368.7 MHz
+sparse f0  281.455160
+sparse f8  296.189492
+sparse f31 284.222519
 ```
 
-Longer rechecks:
+## Residual non-monotonicity
+
+The fine bank is still not monotonic at 100 ns:
 
 ```text
-fine=9   100 ns -> 286.26 MHz
-fine=19  200 ns -> 290.91 MHz
+fine 16  287.56 MHz
+fine 17  322.73 MHz
+fine 18  281.28 MHz
+fine 19  354.08 MHz
+fine 23  306.98 MHz
 ```
 
-These rechecks are used in `dco_tuning_l3.csv`.  The apparent 376/369 MHz
-points were not physical oscillation frequencies.
-
-## What remains
-
-The fine bank is still **not monotonic**:
-
-```text
-fine 0  301.89 MHz
-fine 1  294.04 MHz
-fine 2  281.72 MHz
-fine 3  297.41 MHz
-```
-
-The sparse 100 ns scan at the same codes also differs:
-
-```text
-fine 0:  dense 301.89 vs sparse 281.46 MHz
-fine 8:  dense 278.67 vs sparse 296.19 MHz
-fine 31: dense 274.37 vs sparse 284.22 MHz
-```
-
-So the startup/measurement window is not fully resolved.  The sparse and dense
-tables are both retained; neither is a production/PVT/jitter signoff.
+There are 15 rising steps in the fine sweep.  This is no longer a simple
+30 ns startup artifact: the sparse and dense 100 ns points agree at the
+overlap, while the interior fine codes have large local outliers.  The likely
+causes are the fine-bank mux mapping/loading or a stable but different
+oscillation mode; this needs circuit-level debug, not more averaging.
 
 ## Reproduce
 
 ```sh
 python3 flow/characterization/ihp_l3_dense.py \
-  --out /tmp/ihp_l3_dense_run --coarse 8 --mid 0 \
-  --fine "$(seq -s, 0 31)" --jobs 2
+  --out /tmp/ihp_dense_100 --coarse 8 --mid 0 \
+  --fine "$(seq -s, 0 31)" --jobs 4 --stopsim-ns 100
 ```
 
-The 100/200 ns rechecks are recorded in `dco_capability_l3.json`.
+## Status
+
+```text
+L3 transistor frequency:  measured, 100 ns
+monotonic fine bank:      FAIL (15 rising steps)
+PEX/PVT:                  c8/m8/f8 only, ../pex_ihp
+jitter/phase noise:       not run
+```

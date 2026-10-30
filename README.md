@@ -75,9 +75,9 @@ DCO characterization status:
 
 - ics55: full L1 behavioral grid (8192 points) and capability manifest.
 - IHP SG13G2: sparse 27-point L3 transistor scan using PSP103 via OpenVAF
-  OSDI and ngspice, plus a 31-point dense fine-bank check at `c8/m0`.
-  Startup-window outliers were rechecked at 100/200 ns, but residual
-  non-monotonicity remains; not PEX/PVT/jitter signoff.
+  OSDI and ngspice, plus a 32-point 100 ns fine-bank check at `c8/m0`.
+  The 30 ns startup outliers disappear at 100 ns, but 15 rising steps remain
+  in the fine bank; not PEX/PVT/jitter signoff.
 - ics55 L3: a 27-point sparse scan and a 110-point dense-axis scan after
   flattening the CDL and converting to BSIM4 foundry subcircuits; range
   703..1896 MHz.  A `.ic` startup makes the low-frequency `coarse=15` points
@@ -95,15 +95,15 @@ Routed parasitics are now extracted from both macro final databases with
 OpenROAD RCX.  The DCO-net capacitance is back-annotated into one code:
 
 ```text
-ics55     958.12 MHz -> 554.79 MHz  (121 DCO nets, 0.188 pF)
-IHP       330.88 MHz -> 250.28 MHz  (125 DCO nets, 0.845 pF)
+ics55     958.12 MHz -> 362.84 MHz  (121 DCO nets, 0.188 pF)
+IHP       287.85 MHz -> 178.97 MHz  (125 DCO nets, 0.845 pF)
 ```
 
 PVT frequency at that code (TT/SS/FF):
 
 ```text
-ics55     555.0 / 288.2 / 870.3 MHz
-IHP       251.0 / 158.8 / 369.5 MHz
+ics55     362.9 / 184.4 / 582.0 MHz
+IHP       179.0 / 115.4 / 274.1 MHz
 ```
 
 These are **L3_PEX_CAP** results: total net capacitance grounded, with series

@@ -145,10 +145,10 @@
     "mid": 8,
     "fine": 8
   },
-  "baseline_mhz": 330.876665,
-  "pex_mhz": 250.284862,
-  "delta_mhz": -80.591803,
-  "delta_percent": -24.357,
-  "stopsim_ns": 30.0,
+  "baseline_mhz": 287.85045,
+  "pex_mhz": 178.970242,
+  "delta_mhz": -108.880208,
+  "delta_percent": -37.825,
+  "stopsim_ns": 100.0,
   "status": "L3_PEX_CAP"
 }

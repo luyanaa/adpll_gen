@@ -68,6 +68,17 @@ def write_code(path: Path, coarse: int, mid: int, fine: int):
     path.write_text(s)
 
 
+
+
+def add_pex_include(src: Path, dst: Path, inc: str = "dco_pex_caps.inc") -> None:
+    """Insert the PEX include inside the DCO subcircuit, not at top level."""
+    lines = src.read_text().splitlines()
+    for i in range(len(lines) - 1, -1, -1):
+        if lines[i].strip().upper().startswith(".ENDS"):
+            lines.insert(i, f".inc {inc}")
+            break
+    dst.write_text("\n".join(lines) + "\n")
+
 def setup_ics55(out: Path, code: tuple[int, int, int]) -> str:
     out.mkdir(parents=True, exist_ok=True)
     model_dir = MODEL_LIB.parent
@@ -96,6 +107,7 @@ def setup_ics55(out: Path, code: tuple[int, int, int]) -> str:
             line = " ".join(toks)
         lines.append(line)
     (out / "PLL_ILDCO_flat_x.sp").write_text("\n".join(lines) + "\n")
+    add_pex_include(out / "PLL_ILDCO_flat_x.sp", out / "PLL_ILDCO_flat_pex.sp")
     (out / "models_flat.inc").write_text(
         f'.LIB "{MODEL_LIB}" tt_mos\n'
         ".PARAM lvdd=1.2\n"
@@ -119,6 +131,7 @@ def setup_ihp(out: Path, code: tuple[int, int, int]) -> str:
     osdi = src / "psp103.osdi"
     if not osdi.exists():
         raise SystemExit(f"missing {osdi}; run ihp_l3_scan.py to compile it")
+    add_pex_include(out / "PLL_ILDCO.sp", out / "PLL_ILDCO_pex.sp")
     (out / ".spiceinit").write_text(f"set num_threads=8\nosdi '{osdi.resolve()}'\n")
     base = (ROOT / "src" / "test_dco.sp").read_text()
     base = base.replace(".inc models.inc", ".inc models_l3.inc")
@@ -131,11 +144,14 @@ def run_case(out: Path, base: str, mode: str, pdk: str, code: tuple[int, int, in
     c, m, f = code
     stem = f"{mode}_c{c}_m{m}_f{f}"
     code_file = out / f"test_dco_{stem}.sp"
+    if mode == "pex":
+        if pdk == "ics55":
+            base = base.replace(".inc PLL_ILDCO_flat_x.sp", ".inc PLL_ILDCO_flat_pex.sp")
+        else:
+            base = base.replace(".inc PLL_ILDCO.sp", ".inc PLL_ILDCO_pex.sp")
     code_file.write_text(base)
     write_code(code_file, c, m, f)
     inc = f'.inc test_dco_{stem}.sp\n'
-    if mode == "pex":
-        inc += ".inc dco_pex_caps.inc\n"
     if pdk == "ics55":
         tran = (
             f".ic V(OUT)=0.6 V(MID_OUT)=0.6\n"

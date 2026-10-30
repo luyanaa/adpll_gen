@@ -16,8 +16,8 @@
       "coarse": 8,
       "mid": 8,
       "fine": 8,
-      "period_ns": 1.8018750000002015,
-      "freq_mhz": 554.9774540408675
+      "period_ns": 2.75560000000012,
+      "freq_mhz": 362.89737262300633
     },
     {
       "pdk": "ics55",
@@ -28,8 +28,8 @@
       "coarse": 8,
       "mid": 8,
       "fine": 8,
-      "period_ns": 3.46975000000041,
-      "freq_mhz": 288.20520210386394
+      "period_ns": 5.423000000000708,
+      "freq_mhz": 184.39977872024144
     },
     {
       "pdk": "ics55",
@@ -40,8 +40,8 @@
       "coarse": 8,
       "mid": 8,
       "fine": 8,
-      "period_ns": 1.1490000000001583,
-      "freq_mhz": 870.3220191469645
+      "period_ns": 1.7182500000001701,
+      "freq_mhz": 581.9874872689661
     }
   ],
   "note": "MOS corner frequency only; no jitter/phase-noise/PEX-R signoff."

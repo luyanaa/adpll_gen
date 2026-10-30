@@ -5,7 +5,7 @@
     "mid": 8,
     "fine": 8
   },
-  "stopsim_ns": 40.0,
+  "stopsim_ns": 100.0,
   "rows": [
     {
       "pdk": "ihp-sg13g2",
@@ -16,8 +16,8 @@
       "coarse": 8,
       "mid": 8,
       "fine": 8,
-      "period_ns": 3.984287664434506,
-      "freq_mhz": 250.985893645792
+      "period_ns": 5.587521081840287,
+      "freq_mhz": 178.97024196473245
     },
     {
       "pdk": "ihp-sg13g2",
@@ -28,8 +28,8 @@
       "coarse": 8,
       "mid": 8,
       "fine": 8,
-      "period_ns": 6.298908356677391,
-      "freq_mhz": 158.75766773776175
+      "period_ns": 8.664729941979271,
+      "freq_mhz": 115.41040594412011
     },
     {
       "pdk": "ihp-sg13g2",
@@ -40,8 +40,8 @@
       "coarse": 8,
       "mid": 8,
       "fine": 8,
-      "period_ns": 2.7067255035098396,
-      "freq_mhz": 369.4500970649921
+      "period_ns": 3.6476833055389544,
+      "freq_mhz": 274.1466065547726
     }
   ],
   "note": "MOS corner frequency only; no jitter/phase-noise/PEX-R signoff."

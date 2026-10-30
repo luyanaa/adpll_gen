@@ -1,229 +1,232 @@
 {
   "technology": "ihp-sg13g2",
   "characterization_level": "L3_transistor_dense_axes",
-  "points": 31,
+  "points": 32,
   "results": [
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "0",
-      "period_ns": "3.312487",
-      "freq_mhz": "301.887990"
+      "period_ns": "3.552964",
+      "freq_mhz": "281.455160"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "1",
-      "period_ns": "3.400919",
-      "freq_mhz": "294.038194"
+      "period_ns": "3.449607",
+      "freq_mhz": "289.888086"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "2",
-      "period_ns": "3.549643",
-      "freq_mhz": "281.718487"
+      "period_ns": "3.589557",
+      "freq_mhz": "278.585877"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "3",
-      "period_ns": "3.362319",
-      "freq_mhz": "297.413789"
+      "period_ns": "3.525921",
+      "freq_mhz": "283.613849"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "4",
-      "period_ns": "3.406160",
-      "freq_mhz": "293.585776"
+      "period_ns": "3.482622",
+      "freq_mhz": "287.139960"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "5",
-      "period_ns": "3.453223",
-      "freq_mhz": "289.584566"
+      "period_ns": "3.410930",
+      "freq_mhz": "293.175171"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "6",
-      "period_ns": "3.565813",
-      "freq_mhz": "280.440923"
+      "period_ns": "3.486233",
+      "freq_mhz": "286.842572"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "7",
+      "period_ns": "3.627922",
+      "freq_mhz": "275.639921"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "8",
-      "period_ns": "3.588420",
-      "freq_mhz": "278.674155"
+      "period_ns": "3.376217",
+      "freq_mhz": "296.189492"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "9",
-      "period_ns": "3.493275",
-      "freq_mhz": "286.264303"
+      "period_ns": "3.475430",
+      "freq_mhz": "287.734195"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "10",
-      "period_ns": "3.557066",
-      "freq_mhz": "281.130555"
+      "period_ns": "3.510043",
+      "freq_mhz": "284.896802"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "11",
-      "period_ns": "3.524900",
-      "freq_mhz": "283.696008"
+      "period_ns": "3.486034",
+      "freq_mhz": "286.858966"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "12",
-      "period_ns": "3.464854",
-      "freq_mhz": "288.612469"
+      "period_ns": "3.490309",
+      "freq_mhz": "286.507606"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "13",
-      "period_ns": "3.386446",
-      "freq_mhz": "295.294835"
+      "period_ns": "3.559065",
+      "freq_mhz": "280.972646"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "14",
-      "period_ns": "3.521387",
-      "freq_mhz": "283.979030"
+      "period_ns": "3.438302",
+      "freq_mhz": "290.841202"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "15",
-      "period_ns": "3.426788",
-      "freq_mhz": "291.818490"
+      "period_ns": "3.491160",
+      "freq_mhz": "286.437713"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "16",
-      "period_ns": "3.582016",
-      "freq_mhz": "279.172411"
+      "period_ns": "3.477503",
+      "freq_mhz": "287.562620"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "17",
-      "period_ns": "3.497510",
-      "freq_mhz": "285.917732"
+      "period_ns": "3.098521",
+      "freq_mhz": "322.734632"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "18",
-      "period_ns": "3.519616",
-      "freq_mhz": "284.121868"
+      "period_ns": "3.555181",
+      "freq_mhz": "281.279598"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "19",
-      "period_ns": "3.437431",
-      "freq_mhz": "290.914912"
+      "period_ns": "2.824215",
+      "freq_mhz": "354.080711"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "20",
-      "period_ns": "3.519279",
-      "freq_mhz": "284.149090"
+      "period_ns": "3.560759",
+      "freq_mhz": "280.839001"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "21",
-      "period_ns": "3.466653",
-      "freq_mhz": "288.462635"
+      "period_ns": "3.389508",
+      "freq_mhz": "295.028041"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "22",
-      "period_ns": "3.504180",
-      "freq_mhz": "285.373508"
+      "period_ns": "3.395797",
+      "freq_mhz": "294.481683"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "23",
-      "period_ns": "3.375933",
-      "freq_mhz": "296.214404"
+      "period_ns": "3.257543",
+      "freq_mhz": "306.979824"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "24",
-      "period_ns": "3.440822",
-      "freq_mhz": "290.628263"
+      "period_ns": "3.490720",
+      "freq_mhz": "286.473833"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "25",
-      "period_ns": "3.393338",
-      "freq_mhz": "294.695103"
+      "period_ns": "3.514423",
+      "freq_mhz": "284.541744"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "26",
-      "period_ns": "3.451414",
-      "freq_mhz": "289.736359"
+      "period_ns": "3.445424",
+      "freq_mhz": "290.240045"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "27",
-      "period_ns": "3.407109",
-      "freq_mhz": "293.504008"
+      "period_ns": "3.526219",
+      "freq_mhz": "283.589912"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "28",
-      "period_ns": "3.479262",
-      "freq_mhz": "287.417257"
+      "period_ns": "3.419956",
+      "freq_mhz": "292.401426"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "29",
-      "period_ns": "3.461808",
-      "freq_mhz": "288.866424"
+      "period_ns": "3.376032",
+      "freq_mhz": "296.205694"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "30",
-      "period_ns": "3.434758",
-      "freq_mhz": "291.141294"
+      "period_ns": "3.438387",
+      "freq_mhz": "290.834053"
     },
     {
       "coarse_code": "8",
       "mid_code": "0",
       "fine_code": "31",
-      "period_ns": "3.644681",
-      "freq_mhz": "274.372410"
+      "period_ns": "3.518370",
+      "freq_mhz": "284.222519"
     }
   ],
-  "rechecks": {
-    "fine9": "100 ns, 286.264 MHz",
-    "fine19": "200 ns, 290.915 MHz"
-  },
-  "note": "Fine bank at c8/m0. 30 ns outliers fine9/fine19 were truncated startup cycles and are replaced by 100/200 ns rechecks. Residual non-monotonicity and sparse-vs-dense differences show the startup/measurement window is still not fully controlled."
+  "note": "100 ns fine bank at c8/m0. The 30 ns table was a startup transient; its 376/369 MHz outliers disappear. Sparse f0/f8/f31 match exactly. Residual non-monotonicity remains and is treated as a real fine-bank/startup issue."
 }

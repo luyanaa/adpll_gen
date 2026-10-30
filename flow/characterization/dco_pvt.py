@@ -61,6 +61,7 @@ def main() -> int:
             )
             inc = f".inc models_{label}.inc"
             sol_inc = base.replace(".inc models_flat.inc", inc)
+            sol_inc = sol_inc.replace(".inc PLL_ILDCO_flat_x.sp", ".inc PLL_ILDCO_flat_pex.sp")
             tran = f".tran 1p {stop_ns}n\n.ic V(OUT)=0.6 V(MID_OUT)=0.6\n"
         else:
             src = (out / "models_l3.inc").read_text()
@@ -71,6 +72,7 @@ def main() -> int:
             model = src
             inc = f".inc models_{label}.inc"
             sol_inc = base.replace(".inc models_l3.inc", inc)
+            sol_inc = sol_inc.replace(".inc PLL_ILDCO.sp", ".inc PLL_ILDCO_pex.sp")
             tran = f".tran 10n {stop_ns}n uic\n"
         (out / f"models_{label}.inc").write_text(model)
         sol_inc = sol_inc.replace(".TEMP 25", f".TEMP {temp}")
@@ -81,7 +83,6 @@ def main() -> int:
         net.write_text(
             f"* {args.pdk} {label} PEX-cap DCO\n"
             f".inc test_dco_{stem}.sp\n"
-            ".inc dco_pex_caps.inc\n"
             f"{tran}"
             ".SAVE V(OUT) V(MID_OUT)\n"
             ".control\nrun\n"

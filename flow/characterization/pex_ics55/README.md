@@ -35,15 +35,17 @@ python3 flow/characterization/dco_pex_cap.py \
   --coarse 8 --mid 8 --fine 8 --stopsim-ns 10
 ```
 
-Each SPEF net capacitance is grounded and given a 1 Gohm DC path.  This is a
-first-order capacitance back-annotation; **series wire resistance and lateral
-coupling are not included**.
+Each SPEF net capacitance is grounded and given a 1 Gohm DC path.  The include
+is placed **inside** the `PLL_ILDCO` subcircuit; a top-level include would not
+load the DCO internal nodes.  This is a first-order capacitance
+back-annotation; **series wire resistance and lateral coupling are not
+included**.
 
 | case | frequency |
 |---|---:|
 | transistor baseline | 958.12 MHz |
-| PEX capacitance | 554.79 MHz |
-| delta | -403.33 MHz (-42.10 %) |
+| PEX capacitance | 362.84 MHz |
+| delta | -595.27 MHz (-62.13 %) |
 
 ## PVT frequency
 
@@ -55,9 +57,9 @@ python3 flow/characterization/dco_pvt.py \
 
 | corner | supply | temp | frequency |
 |---|---:|---:|---:|
-| TT | 1.20 V | 25 C | 554.98 MHz |
-| SS | 1.08 V | 125 C | 288.21 MHz |
-| FF | 1.32 V | -40 C | 870.32 MHz |
+| TT | 1.20 V | 25 C | 362.90 MHz |
+| SS | 1.08 V | 125 C | 184.40 MHz |
+| FF | 1.32 V | -40 C | 581.99 MHz |
 
 ## Status
 

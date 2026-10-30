@@ -1,3 +1,3 @@
 pdk,mode,coarse,mid,fine,period_ns,freq_mhz,log
-ihp-sg13g2,baseline,8,8,8,3.0222741776612647,330.87666479479793,test_dco_baseline_c8_m8_f8.log
-ihp-sg13g2,pex,8,8,8,3.995447399205896,250.284861765106,test_dco_pex_c8_m8_f8.log
+ihp-sg13g2,baseline,8,8,8,3.4740261811335724,287.8504501292217,test_dco_baseline_c8_m8_f8.log
+ihp-sg13g2,pex,8,8,8,5.587521081840287,178.97024196473245,test_dco_pex_c8_m8_f8.log

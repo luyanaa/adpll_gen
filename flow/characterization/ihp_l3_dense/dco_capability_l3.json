@@ -45,118 +45,112 @@
       31
     ]
   },
-  "points": 31,
-  "missing": [
-    {
-      "coarse": 8,
-      "mid": 0,
-      "fine": 7,
-      "reason": "no output edges in 30 ns window"
-    }
-  ],
+  "points": 32,
   "frequency_mhz": {
-    "min": 274.37241,
-    "max": 301.88799
+    "min": 275.639921,
+    "max": 354.080711
   },
   "monotonic": {
     "all_axes": false,
-    "fine_inversions": 14,
+    "fine_inversions": 15,
     "inversions": [
       [
-        "2",
-        "3",
-        281.718487,
-        297.413789
+        0,
+        1,
+        281.45516,
+        289.888086
       ],
       [
-        "8",
-        "9",
-        278.674155,
-        286.264303
+        2,
+        3,
+        278.585877,
+        283.613849
       ],
       [
-        "10",
-        "11",
-        281.130555,
-        283.696008
+        3,
+        4,
+        283.613849,
+        287.13996
       ],
       [
-        "11",
-        "12",
-        283.696008,
-        288.612469
+        4,
+        5,
+        287.13996,
+        293.175171
       ],
       [
-        "12",
-        "13",
-        288.612469,
-        295.294835
+        7,
+        8,
+        275.639921,
+        296.189492
       ],
       [
-        "14",
-        "15",
-        283.97903,
-        291.81849
+        10,
+        11,
+        284.896802,
+        286.858966
       ],
       [
-        "16",
-        "17",
-        279.172411,
-        285.917732
+        13,
+        14,
+        280.972646,
+        290.841202
       ],
       [
-        "18",
-        "19",
-        284.121868,
-        290.914912
+        15,
+        16,
+        286.437713,
+        287.56262
       ],
       [
-        "20",
-        "21",
-        284.14909,
-        288.462635
+        16,
+        17,
+        287.56262,
+        322.734632
       ],
       [
-        "22",
-        "23",
-        285.373508,
-        296.214404
+        18,
+        19,
+        281.279598,
+        354.080711
       ],
       [
-        "24",
-        "25",
-        290.628263,
-        294.695103
+        20,
+        21,
+        280.839001,
+        295.028041
       ],
       [
-        "26",
-        "27",
-        289.736359,
-        293.504008
+        22,
+        23,
+        294.481683,
+        306.979824
       ],
       [
-        "28",
-        "29",
-        287.417257,
-        288.866424
+        25,
+        26,
+        284.541744,
+        290.240045
       ],
       [
-        "29",
-        "30",
-        288.866424,
-        291.141294
+        27,
+        28,
+        283.589912,
+        292.401426
+      ],
+      [
+        28,
+        29,
+        292.401426,
+        296.205694
       ]
     ]
   },
-  "rechecks": {
-    "fine9": "100 ns, 286.264 MHz",
-    "fine19": "200 ns, 290.915 MHz"
-  },
   "verification": {
-    "frequency_verified": "L3_dense_axes",
+    "frequency_verified": "L3_dense_100ns",
     "pvt_verified": false,
     "pex_verified": false,
     "jitter_verified": false
   },
-  "notes": "Fine bank at c8/m0. 30 ns outliers fine9/fine19 were truncated startup cycles and are replaced by 100/200 ns rechecks. Residual non-monotonicity and sparse-vs-dense differences show the startup/measurement window is still not fully controlled."
+  "notes": "100 ns fine bank at c8/m0. The 30 ns table was a startup transient; its 376/369 MHz outliers disappear. Sparse f0/f8/f31 match exactly. Residual non-monotonicity remains and is treated as a real fine-bank/startup issue."
 }

@@ -3,7 +3,8 @@
 This is the IHP counterpart of `flow/characterization/pex_ics55`.  The routed
 `PLL_ANALOG_MACRO` database contains the complete DCO hierarchy; the OpenRCX
 nominal rules extract its nets, and the DCO-net capacitance is applied to the
-PSP103 transient.
+PSP103 transient.  The include is inserted **inside** `PLL_ILDCO`, and the
+100 ns window is required for a settled measurement.
 
 ## Extraction
 
@@ -36,9 +37,9 @@ python3 flow/characterization/dco_pex_cap.py \
 
 | case | frequency |
 |---|---:|
-| transistor baseline | 330.88 MHz |
-| PEX capacitance | 250.28 MHz |
-| delta | -80.59 MHz (-24.36 %) |
+| transistor baseline | 287.85 MHz |
+| PEX capacitance | 178.97 MHz |
+| delta | -108.88 MHz (-37.83 %) |
 
 ## PVT frequency
 
@@ -50,9 +51,9 @@ python3 flow/characterization/dco_pvt.py \
 
 | corner | supply | temp | frequency |
 |---|---:|---:|---:|
-| TT | 1.20 V | 25 C | 250.99 MHz |
-| SS | 1.08 V | 125 C | 158.76 MHz |
-| FF | 1.32 V | -40 C | 369.45 MHz |
+| TT | 1.20 V | 25 C | 178.97 MHz |
+| SS | 1.08 V | 125 C | 115.41 MHz |
+| FF | 1.32 V | -40 C | 274.15 MHz |
 
 ## Status
 
