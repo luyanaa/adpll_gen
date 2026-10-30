@@ -10,8 +10,9 @@ Jitter and phase noise are **not** signoff results yet.
 
 ## Why
 
-`ngspice-44.2` provides `.noise` (small-signal input-referred noise) but not a
-PSS/Pnoise analysis for an autonomous oscillator.  A DC operating-point noise
+`ngspice-44.2` exposes a `.pss` analysis, but it has no matching `.pnoise`
+command in this build.  A PSS attempt on the IHP DCO exited the stabilization
+phase and then failed to converge within 700 s.  A DC operating-point `.noise`
 analysis of a ring oscillator is not a phase-noise result.
 
 The alternative engines do not yet run the models cleanly:
