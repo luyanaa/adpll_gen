@@ -11,8 +11,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
+
+
+def digital_sources():
+    text = (ROOT / "src" / "digital_sources.mk").read_text()
+    return [p.split("/src/", 1)[1] for p in re.findall(r"\$\(ROOT_DIR\)/src/\S+\.v", text)]
 LIB = str(Path.home() / ".ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib")
-SOURCES = ["pll_logic.v","digital_loop_filter.v","term_decoder.v","freq_lock.v","delta_sigma.v","fix_div.v","conf_div.v"]
+SOURCES = digital_sources()
 CONFIGS = {
   "default_8b": {},
   "fcw_div_10b": {"FCW_BITS":10, "DIV_BITS":10},

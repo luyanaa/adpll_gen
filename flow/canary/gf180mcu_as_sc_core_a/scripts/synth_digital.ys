@@ -15,6 +15,7 @@
 # RTL (same list as the ics55 canary)
 # ---------------------------------------------------------------------------
 read_verilog -sv /opt/adpll_gen/src/pll_logic.v
+read_verilog -sv /opt/adpll_gen/src/lock_detector.v
 read_verilog -sv /opt/adpll_gen/src/digital_loop_filter.v
 read_verilog -sv /opt/adpll_gen/src/term_decoder.v
 read_verilog -sv /opt/adpll_gen/src/freq_lock.v

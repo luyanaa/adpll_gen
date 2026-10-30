@@ -26,104 +26,70 @@ module pll_freq_lock #(
     wire CLK_REF = REF; // NOTE: Negative injection
     wire CLK_OUT = MID_OUT;
 
-    // The counter that resets every reference.
-    // cnt is a binary counter in the MID_OUT domain.  Only its Gray-coded
-    // snapshot crosses into REF, so a multi-bit binary capture can never be
-    // sampled on a metastable boundary.
+    // Frequency-count CDC: constrained asynchronous Gray snapshot.
+    //
+    // The counter free-runs in MID_OUT and is not reset by REF.  Every MID_OUT
+    // edge changes exactly one Gray bit, so a 2FF sample taken in REF is always
+    // a valid Gray word (it may be the old or new word if the sample lands on
+    // an edge, but never a multi-bit mixture).  REF converts the sampled word
+    // to binary and subtracts the previous sample; the difference is the count
+    // over one REF period.  The Gray word is intentionally NOT used as a
+    // one-bit snapshot-to-snapshot edge detector: many MID_OUT counts can pass
+    // between two REF samples.
     reg [CNT_BITS-1:0] cnt;
     wire [CNT_BITS-1:0] cnt_gray = (cnt >> 1) ^ cnt;
-    reg [CNT_BITS-1:0] cnt_cap_gray;
-    reg cap_toggle;
-    reg cap_toggle_s1, cap_toggle_s2, cap_toggle_s3;
-    reg [CNT_BITS-1:0] cnt_cap_gray_s1, cnt_cap_gray_s2;
-    reg [CNT_BITS-1:0] cnt_cap; // stable REF-domain copy
-    wire rst_cnt_d;
-    reg rst_cnt;
+    (* ASYNC_REG = "TRUE" *) reg [CNT_BITS-1:0] cnt_gray_s1;
+    (* ASYNC_REG = "TRUE" *) reg [CNT_BITS-1:0] cnt_gray_s2;
+    reg [CNT_BITS-1:0] cnt_bin;
+    reg [CNT_BITS-1:0] sample_bin;
+    reg [CNT_BITS-1:0] cnt_cap; // count over the last REF period
+    reg [CNT_BITS-1:0] cnt_filt; // 1/4 IIR filter for lock/tuning decisions
+    reg cap_valid;
 
-    // Simulation initialization for the case where RST_N starts low at time 0
-    // and therefore does not create a negedge event.
     initial begin
-        cnt_cap_gray = 'd0;
-        cap_toggle = 1'b0;
-        cap_toggle_s1 = 1'b0;
-        cap_toggle_s2 = 1'b0;
-        cap_toggle_s3 = 1'b0;
-        cnt_cap_gray_s1 = 'd0;
-        cnt_cap_gray_s2 = 'd0;
+        cnt = 'd0;
+        cnt_gray_s1 = 'd0;
+        cnt_gray_s2 = 'd0;
+        cnt_bin = 'd0;
+        sample_bin = 'd0;
         cnt_cap = 'd0;
+        cnt_filt = 'd0;
+        cap_valid = 1'b0;
     end
 
-    // Counter logic
-`ifndef PLL_NEGFLOP_COUNTER
-    // Leave the synthesizer to do the counter
+    // Free-running MID_OUT counter.  No REF-derived reset crosses domains.
     always @(posedge CLK_OUT or negedge RST_N) begin
-        if(!RST_N) begin
+        if(!RST_N)
             cnt <= 'd0;
-        end else begin
-            if(rst_cnt) begin
-                cnt <= 'd0;
-            end else begin
-                cnt <= cnt + 1;
-            end
-        end
-    end
-`else
-    // Use negate flops (if the synthesizer allows it)
-    // NOTE: It doesn't allow it. Is disabled for now
-    wire rst_cnt_beg_async;
-    assign rst_cnt_beg_async = (!rst_cnt) && RST_N;
-    genvar i;
-    generate
-        // For zero
-        always @(posedge CLK_OUT or negedge rst_cnt_beg_async) begin
-            if(!rst_cnt_beg_async) begin
-                cnt[0] <= 1'b0;
-            end else begin
-                cnt[0] <= !cnt[0];
-            end
-        end
-        for(i = 1; i < CNT_BITS; i=i+1) begin : jk_counter
-        always @(negedge cnt[i-1] or negedge rst_cnt_beg_async) begin
-            if(!rst_cnt_beg_async) begin
-                cnt[i] <= 1'b0;
-            end else begin
-                cnt[i] <= !cnt[i];
-            end
-        end
-        end
-    endgenerate
-`endif
-
-    // Capture a Gray snapshot in the MID_OUT domain.  The toggle handshake
-    // tells the REF domain that a new stable snapshot is available.
-    always @(posedge CLK_OUT or negedge RST_N) begin
-        if(!RST_N) begin
-            cnt_cap_gray <= 'd0;
-            cap_toggle <= 1'b0;
-        end else if(rst_cnt_d) begin
-            cnt_cap_gray <= cnt_gray;
-            cap_toggle <= ~cap_toggle;
-        end
+        else
+            cnt <= cnt + 1'b1;
     end
 
-    // Synchronize the toggle and Gray word into REF.  The Gray word may
-    // change only one bit at a time, so the 2FF synchronizer is safe.
+    // REF-domain Gray sampling and per-REF delta.
     always @(posedge CLK_REF or negedge RST_N) begin
         if(!RST_N) begin
-            cap_toggle_s1 <= 1'b0;
-            cap_toggle_s2 <= 1'b0;
-            cap_toggle_s3 <= 1'b0;
-            cnt_cap_gray_s1 <= 'd0;
-            cnt_cap_gray_s2 <= 'd0;
+            cnt_gray_s1 <= 'd0;
+            cnt_gray_s2 <= 'd0;
+            cnt_bin <= 'd0;
+            sample_bin <= 'd0;
             cnt_cap <= 'd0;
+            cnt_filt <= 'd0;
+            cap_valid <= 1'b0;
         end else begin
-            cap_toggle_s1 <= cap_toggle;
-            cap_toggle_s2 <= cap_toggle_s1;
-            cap_toggle_s3 <= cap_toggle_s2;
-            cnt_cap_gray_s1 <= cnt_cap_gray;
-            cnt_cap_gray_s2 <= cnt_cap_gray_s1;
-            if(cap_toggle_s2 != cap_toggle_s3) begin
-                cnt_cap <= gray_to_bin(cnt_cap_gray_s2);
+            cnt_gray_s1 <= cnt_gray;
+            cnt_gray_s2 <= cnt_gray_s1;
+            // Blocking temporary: the delta and the history must use the same
+            // newly synchronized sample.
+            sample_bin = gray_to_bin(cnt_gray_s2);
+            if(!cap_valid) begin
+                cnt_bin <= sample_bin;
+                cnt_cap <= 'd0;
+                cnt_filt <= 'd0;
+                cap_valid <= 1'b1;
+            end else begin
+                cnt_cap <= sample_bin - cnt_bin;
+                cnt_filt <= (cnt_filt * 3 + (sample_bin - cnt_bin)) >> 2;
+                cnt_bin <= sample_bin;
             end
         end
     end
@@ -137,19 +103,6 @@ module pll_freq_lock #(
                 gray_to_bin[i] = gray_to_bin[i+1] ^ gray[i];
         end
     endfunction
-
-    // The reset logic for the counter
-    reg CLK_REF_Q;
-    assign rst_cnt_d = !CLK_REF_Q && CLK_REF;
-    always @(posedge CLK_OUT or negedge RST_N) begin
-        if(!RST_N) begin
-            CLK_REF_Q <= 1'b0;
-            rst_cnt <= 1'b0;
-        end else begin
-            CLK_REF_Q <= CLK_REF;
-            rst_cnt <= rst_cnt_d;
-        end
-    end
 
     // Register the tolerances... 
     reg [CNT_BITS-1:0] FCW_PA; // FCW + TOL
@@ -204,8 +157,10 @@ module pll_freq_lock #(
 
                 // Increase the locking counter when the frequency counter is
                 // within the range. Reset the counter when counters are different
-                if(FCW_NA <= cnt_cap && cnt_cap <= FCW_PA) cnt_done <= cnt_done + 1;
-                else cnt_done <= 'd0;
+                if(FCW_NA <= cnt_cap && cnt_cap <= FCW_PA)
+                    cnt_done <= cnt_done + 1;
+                else if(cnt_done != 0)
+                    cnt_done <= cnt_done - 1; // leaky: one bad sample must not restart acquisition
             end
 
             // Coarse and mid delay tuning

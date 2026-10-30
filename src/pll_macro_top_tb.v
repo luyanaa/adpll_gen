@@ -59,9 +59,9 @@ module pll_macro_top_tb;
         $display("pll_macro_top_tb: cycles=%0d LOCKED=%b ERR=%b OUT=%b state=%0d FREQ_LOCKED=%b PHASE_LOCK=%b LOCK_LOST=%b SS_BBPD=%b",
                  cycles, LOCKED, ERR, OUT, dut.pll_dig.state, dut.pll_dig.FREQ_LOCKED,
                  dut.pll_dig.PHASE_LOCK, dut.pll_dig.LOCK_LOST, dut.pll_dig.SS_BBPD);
-        $display("pll_macro_top_tb: refq=%b rst_cnt=%b rst_d=%b cnt=%0d cap_tog=%b out_edges=%0d mid_edges=%0d FCW=%0d cnt_cap=%0d COARSE=%b MID=%b FINE=%b",
-                 dut.pll_dig.flock.CLK_REF_Q, dut.pll_dig.flock.rst_cnt, dut.pll_dig.flock.rst_cnt_d,
-                 dut.pll_dig.flock.cnt, dut.pll_dig.flock.cap_toggle, out_edges, mid_edges,
+        $display("pll_macro_top_tb: cap_valid=%b cnt_bin=%0d cnt=%0d out_edges=%0d mid_edges=%0d FCW=%0d cnt_cap=%0d COARSE=%b MID=%b FINE=%b",
+                 dut.pll_dig.flock.cap_valid, dut.pll_dig.flock.cnt_bin,
+                 dut.pll_dig.flock.cnt, out_edges, mid_edges,
                  FCW, dut.pll_dig.flock.cnt_cap,
                  dut.pll_dig.flock.COARSE_MUX, dut.pll_dig.flock.MID_MUX,
                  dut.pll_dig.FINE_MUX);

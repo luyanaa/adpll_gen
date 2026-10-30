@@ -30,14 +30,8 @@ SYN_SRC?=$(ROOT_DIR)/src/pll.v \
 	$(ROOT_DIR)/src/pll_logic_bb.v
 	
 
-SYN_DIG_SRC=$(ROOT_DIR)/src/pll_logic.v \
-	$(ROOT_DIR)/src/lock_detector.v \
-	$(ROOT_DIR)/src/digital_loop_filter.v \
-	$(ROOT_DIR)/src/term_decoder.v \
-	$(ROOT_DIR)/src/freq_lock.v \
-	$(ROOT_DIR)/src/delta_sigma.v \
-	$(ROOT_DIR)/src/fix_div.v \
-	$(ROOT_DIR)/src/conf_div.v
+include $(ROOT_DIR)/src/digital_sources.mk
+SYN_DIG_SRC=$(DIGITAL_RTL_SRCS)
 
 #######################################################
 # Log file

@@ -1,3 +1,4 @@
+`default_nettype none
 // The digital synthesizable part of the PLL
 
 module pll_logic#(
@@ -9,6 +10,9 @@ module pll_logic#(
     parameter integer DSM_DIV = 2,
     parameter integer LOCKED_WAIT = 64,
     parameter integer FILTER_ILL = 16,
+    parameter integer LOCK_TOL = 6,
+    parameter integer LOCK_COUNT = 16,
+    parameter integer LOSS_COUNT = 4,
 `ifndef PLL_WITHOUT_DIVIDER
     parameter integer DIV_BITS = 8,
 `endif
@@ -34,6 +38,13 @@ module pll_logic#(
     output reg [FINE_NDELS-1:0] FINE_MUX,
     output reg DCO_EN, LOCKED, ERR
 );
+    localparam integer FINE_CODE_BITS = $clog2(FINE_NDELS + 1);
+
+    // Explicit single-bit status nets: with `default_nettype none these must
+    // not be implicit wires.
+    wire PHASE_LOCK;
+    wire LOCK_LOST;
+
     wire [COARSE_NDELS-1:0] COARSE_MUX_D;
     wire [MID_NDELS-1:0] MID_MUX_D;
     wire [FINE_NDELS-1:0] FINE_MUX_D;
@@ -61,26 +72,26 @@ module pll_logic#(
         .ILL_N(ILL_N)
     );
 
-    wire [$clog2(FINE_NDELS)-1:0] FILTER_DEC;
+    wire [FINE_CODE_BITS-1:0] FILTER_DEC;
     generate
         if(IS_DSM) begin : dsm_impl
             wire DSM_CK;
             pll_fix_divider #(.DIV(DSM_DIV)) dsm_div (.clk(MID_OUT), .rst_n(RST_N), .out(DSM_CK));
-            reg [$clog2(FINE_NDELS)-1:0] FCWI;
-            reg [FILTER_BITS-$clog2(FINE_NDELS):0] FCWF;
+            reg [FINE_CODE_BITS-1:0] FCWI;
+            reg [FILTER_BITS-FINE_CODE_BITS:0] FCWF;
             always @(posedge DSM_CK or negedge RST_N) begin
                 if(!RST_N) begin
                     FCWI <= 0;
                     FCWF <= 0;
                 end else begin
                     // Skip 1 bit. The LSB will do the fractional part
-                    FCWI <= {FILTER_OUT[FILTER_BITS-1:FILTER_BITS-$clog2(FINE_NDELS)+1], 1'b0};
-                    FCWF <= FILTER_OUT[FILTER_BITS-$clog2(FINE_NDELS):0];
+                    FCWI <= {FILTER_OUT[FILTER_BITS-1:FILTER_BITS-FINE_CODE_BITS+1], 1'b0};
+                    FCWF <= FILTER_OUT[FILTER_BITS-FINE_CODE_BITS:0];
                 end     
             end
             delta_sigma #(
-                .BITS_INT($clog2(FINE_NDELS)),
-                .BITS_DSM(FILTER_BITS-$clog2(FINE_NDELS)+1)
+                .BITS_INT(FINE_CODE_BITS),
+                .BITS_DSM(FILTER_BITS-FINE_CODE_BITS+1)
             ) dsm (
                 .CK(DSM_CK),
                 .RST(!RST_N),
@@ -94,7 +105,7 @@ module pll_logic#(
             );
             always @(posedge DSM_CK or negedge RST_N) if(!RST_N) FINE_MUX <= 'd0; else FINE_MUX <= FINE_MUX_D; // For better in-time resolution
         end else begin
-            assign FILTER_DEC = FILTER_OUT[FILTER_BITS-1:FILTER_BITS-$clog2(FINE_NDELS)];
+            assign FILTER_DEC = FILTER_OUT[FILTER_BITS-1:FILTER_BITS-FINE_CODE_BITS];
             always @(posedge CKR or negedge RST_N) if(!RST_N) FINE_MUX <= 'd0; else FINE_MUX <= FINE_MUX_D; // Just save energy
         end
     endgenerate
@@ -116,8 +127,8 @@ module pll_logic#(
     reg FORCE_P, FORCE_N;
 
     pll_lock_detector #(
-        .LOCK_COUNT(16),
-        .LOSS_COUNT(4)
+        .LOCK_COUNT(LOCK_COUNT),
+        .LOSS_COUNT(LOSS_COUNT)
     ) lock_detector (
         .CLK(INJ_EDGE), .RST_N(RST_N), .ENABLE(ENABLE),
         .SS_BBPD(SS_BBPD), .ILL_P(ILL_P), .ILL_N(ILL_N),
@@ -126,7 +137,8 @@ module pll_logic#(
     pll_freq_lock #(
         .COARSE_NDELS(COARSE_NDELS),
         .MID_NDELS(MID_NDELS),
-        .CNT_BITS(FCW_BITS)
+        .CNT_BITS(FCW_BITS),
+        .LOCK_TOL(LOCK_TOL)
     ) flock (
         .REF(REF), .MID_OUT(MID_OUT), .OUT(OUT),
         .RST_N(RST_N),
@@ -237,3 +249,4 @@ module pll_logic#(
 `endif
 
 endmodule
+`default_nettype wire

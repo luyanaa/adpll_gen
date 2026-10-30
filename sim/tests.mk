@@ -280,7 +280,7 @@ test_pll_digital: $(SIM_OUT)/test_pll.vcd
 view_test_pll_digital: $(SIM_OUT)/test_pll.vcd
 	gtkwave $(SIM_OUT)/test_pll.vcd
 
-$(SIM_OUT)/test_pll.vcd: $(SRC_DIR)/pll_test.v $(SRC_DIR)/pll.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/pll_analog.v $(SIM_OUT)/sim_injection.v $(SRC_DIR)/il_dco.v $(SIM_OUT)/sim_dco.v $(SIM_OUT)/sim_sym.v $(SRC_DIR)/sim_SSBBPD.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/delta_sigma.v
+$(SIM_OUT)/test_pll.vcd: $(SRC_DIR)/pll_test.v $(SRC_DIR)/pll.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/pll_analog.v $(SIM_OUT)/sim_injection.v $(SRC_DIR)/il_dco.v $(SIM_OUT)/sim_dco.v $(SIM_OUT)/sim_sym.v $(SRC_DIR)/sim_SSBBPD.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/delta_sigma.v
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -ginterconnect -gspecify -T max -o a.out -D SIMULATION=1 -D WITH_POWER=1 $^ && $(VVP) a.out
 
