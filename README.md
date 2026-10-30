@@ -106,8 +106,9 @@ ics55     362.9 / 184.4 / 582.0 MHz
 IHP       179.0 / 115.4 / 274.1 MHz
 ```
 
-These are **L3_PEX_CAP** results: total net capacitance grounded, with series
-wire resistance, coupling and phase noise still open.  Details:
+These are **L3_PEX_CAP** results: total net capacitance grounded.  An ics55
+lumped series-R extension (`L3_PEX_RC_LUMPED`) gives 335.23 MHz at the same
+code; coupling and phase noise are still open.  Details:
 `flow/characterization/pex_ics55/README.md` and
 `flow/characterization/pex_ihp/README.md`.
 
