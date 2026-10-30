@@ -18,6 +18,14 @@ ALIASES = {
     "gf180mcu_as_sc_mcu7t3v3": "gf180mcu_as_sc_mcu7t3v3",
     "gf180mcu_fd_sc_mcu7t5v0": "gf180mcu_fd_sc_mcu7t5v0",
     "gf180mcu_fd_sc_mcu9t5v0": "gf180mcu_fd_sc_mcu9t5v0",
+    "gf180mcu_ocd_sc_rt12t3v3": "gf180mcu_as_sc_mcu7t3v3",
+    "gf180mcu_osu_sc_gp12t3v3": "gf180mcu_as_sc_mcu7t3v3",
+    "gf180mcu_osu_sc_gp9t3v3": "gf180mcu_as_sc_mcu7t3v3",
+    "gf180mcu_as_ex_mcu7t5v0": "gf180mcu_fd_sc_mcu7t5v0",
+    "sg13g2_stdcell": "ihp-sg13g2",
+    "ics55_LLSC_H7CH": "ics55",
+    "ics55_LLSC_H7CL": "ics55",
+    "ics55_LLSC_H7CR": "ics55",
 }
 
 

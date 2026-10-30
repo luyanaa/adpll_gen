@@ -28,6 +28,17 @@ FAIL_UNCHARACTERIZED   No manifest for the PDK, no tuning table, non-monotonic
 FAIL_SYSTEM_FMAX       Target/REF/FCW exceeds the PDK planning ceiling in
                        `system_limits.json`.  This is checked before the DCO
                        manifest and is not a substitute for DCO evidence.
+
+PASS_ARCH_SELECTED_EXPERIMENTAL
+                       An architecture/library/plan was selected, but no DCO
+                       manifest or signoff evidence exists.
+
+PASS_ARCH_SELECTED_WITH_DCO
+                       Architecture selected and the DCO manifest accepts the
+                       target; still not production/PVT/jitter signoff.
+
+FAIL_SIGNOFF_FMAX      --require-signoff was used and the target exceeds
+                       the conservative PDK signoff ceiling.
 ```
 
 The current ics55 manifest is:
@@ -80,3 +91,52 @@ A real generator should only emit a production design after:
 
 The gate is deliberately conservative.  Add `FAIL_UNCHARACTERIZED` rather
 than a guessed frequency when the evidence is missing.
+
+## Architecture selection
+
+`architecture.py` implements the structure-selection matrix.  It selects a
+primary architecture from target frequency, PDK class, area sensitivity, and
+optional features, then returns fallbacks, the best library for the selected
+core, the DCO capability result, and the remaining signoff evidence.
+
+```sh
+# ETRI: low frequency + area sensitive -> Core C counter
+python3 flow/generator/architecture.py --pdk ETRI050_fd_sc_12t \
+  --target-mhz 5 --area high
+
+# GF180 AS: 100 MHz -> Core B ring
+python3 flow/generator/architecture.py --pdk gf180mcu_as_sc_mcu7t3v3 \
+  --target-mhz 100 --area medium --ref-mhz 50
+
+# ics55: high-frequency segmented IL-DCO (experimental above the 479 MHz
+# conservative SS ceiling)
+python3 flow/generator/architecture.py --pdk ics55 \
+  --target-mhz 800 --area medium --ref-mhz 100
+
+# Emit a per-block selection template for validate_selection.py
+python3 flow/generator/architecture.py --pdk gf180mcu_as_sc_mcu7t3v3 \
+  --target-mhz 100 --area medium --ref-mhz 50 \
+  --emit-selection /tmp/selection.json
+python3 flow/validate_selection.py --selection /tmp/selection.json
+```
+
+Selection rules:
+
+- `<150 MHz`: Core C counter / ring path; `--allow-low-res` enables the
+  low-res TDC/bang-bang cost fallback.
+- `150–500 MHz`: Core B ring / hybrid.
+- `>=500 MHz`: Core A IL-DCO / segmented IL-DCO, then dual-loop or
+  fractional variants when requested.
+- `--area high`: limits the DCO area rank and forces Core C for `<150 MHz`.
+- `--fractional`, `--low-jitter`, `--fast-lock`, `--wide-range`: hard feature
+  filters, not suggestions.
+- A target above the conservative PDK signoff ceiling but below the measured
+  architecture ceiling is returned as experimental with an explicit warning.
+- `--require-signoff` rejects targets above the conservative PDK signoff
+  ceiling instead of returning an experimental architecture.
+- `production_eligible` is always `false` in this layer.  It requires a DCO
+  L3/PEX/PVT manifest, closed-loop lock/jitter, and DRC/LVS evidence.
+
+`pdk_profiles.json` holds the measured architecture/signoff ceilings and
+maturity.  `architecture_catalog.json` holds the structure ranges, area ranks,
+PDK classes, complexity, and features.
