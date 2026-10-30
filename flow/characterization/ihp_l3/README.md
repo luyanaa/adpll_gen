@@ -46,3 +46,9 @@ L3 dense grid:           not done
 
 The generated `*.osdi`, netlists, rawfiles and logs are intentionally ignored;
 only the CSV, JSON and this README are tracked.
+
+## PEX / PVT
+
+See `../pex_ihp/README.md` for routed RCX extraction, DCO-net
+capacitance back-annotation and TT/SS/FF frequency.  The dense fine-bank
+extension is `../ihp_l3_dense/`.

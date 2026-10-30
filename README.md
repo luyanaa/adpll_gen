@@ -40,6 +40,7 @@ Detailed parameter and limit analysis:
 - `flow/characterization/ics55_l3_dense/README.md`
 - `flow/characterization/pex_ics55/README.md`
 - `flow/characterization/pex_ihp/README.md`
+- `flow/characterization/JITTER_PHASE_NOISE.md`
 - `flow/generator/README.md`
 - `flow/ADPLL_FREQ_DIV.md`
 - `flow/PERFORMANCE.md`

@@ -45,7 +45,7 @@ dense code grid:         sparse 27 points only
 ```
 
 This is a sparse, pre-PEX L3 baseline.  It is not a jitter, PVT or production
-signoff.
+signoff.  The dense-axis extension is in `../ics55_l3_dense/`.
 
 Generated netlists, model symlinks, rawfiles and logs are ignored; only the
 README, CSV and JSON are tracked.
