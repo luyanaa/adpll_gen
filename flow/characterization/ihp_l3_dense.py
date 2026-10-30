@@ -110,7 +110,8 @@ def main() -> int:
     ap.add_argument("--mid", type=int, default=0)
     ap.add_argument("--fine", default=",".join(str(i) for i in range(32)))
     ap.add_argument("--jobs", type=int, default=2)
-    ap.add_argument("--timeout", type=int, default=300)
+    ap.add_argument("--timeout", type=int, default=600)
+    ap.add_argument("--stopsim-ns", type=float, default=30.0)
     ap.add_argument("--append", action="store_true")
     args = ap.parse_args()
     out = Path(args.out)
@@ -131,7 +132,7 @@ def main() -> int:
         net.write_text(
             "* IHP dense DCO transient\n"
             f".inc test_dco_code_{stem}.sp\n"
-            ".tran 10n 30n uic\n"
+            f".tran 10n {args.stopsim_ns}n uic\n"
             ".SAVE V(OUT) V(MID_OUT)\n"
             ".control\nrun\n"
             f"write test_dco_{stem}.raw\n"

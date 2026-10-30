@@ -113,6 +113,8 @@ def main() -> int:
     ap.add_argument("--coarse", default="0,8,15")
     ap.add_argument("--mid", default="0,8,15")
     ap.add_argument("--fine", default=",".join(str(i) for i in range(32)))
+    ap.add_argument("--all-grid", action="store_true")
+    ap.add_argument("--tstep", default="1p")
     ap.add_argument("--jobs", type=int, default=2)
     ap.add_argument("--timeout", type=int, default=180)
     ap.add_argument("--append", action="store_true")
@@ -121,10 +123,16 @@ def main() -> int:
     out = Path(args.out)
     base = prepare(out)
     fine = [int(x) for x in args.fine.split(",")]
-    pairs = parse_pairs(args.pairs, args.coarse, args.mid)
+    if args.all_grid:
+        pairs = [(c, m) for c in range(16) for m in range(16)]
+    else:
+        pairs = parse_pairs(args.pairs, args.coarse, args.mid)
     tasks = [(c, m, f) for c, m in pairs for f in fine]
     existing_path = out / "dco_tuning_l3.csv"
-    rows = load_existing(existing_path) if args.append else {}
+    rows = {}
+    if args.append:
+        rows.update(load_existing(out / "dco_tuning_l3_partial.csv"))
+        rows.update(load_existing(existing_path))
     tasks = [t for t in tasks if t not in rows]
 
     lock = threading.Lock()
@@ -142,7 +150,7 @@ def main() -> int:
             "* L3 ics55 DCO transient\n"
             f".inc test_dco_code_{stem}.sp\n"
             ".ic V(OUT)=0.6 V(MID_OUT)=0.6\n"
-            f".tran 1p {stop_for_coarse(c)}\n"
+            f".tran {args.tstep} {stop_for_coarse(c)}\n"
             ".SAVE V(OUT) V(MID_OUT)\n"
             ".control\nrun\n"
             f"write {raw.name}\n"
