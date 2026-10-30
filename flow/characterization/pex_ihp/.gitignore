@@ -12,3 +12,5 @@ dio
 res
 var
 mom
+*.out
+extract.tcl

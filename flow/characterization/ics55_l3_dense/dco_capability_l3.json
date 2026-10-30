@@ -1,0 +1,174 @@
+{
+  "technology": "ics55",
+  "library": "ics55_LLSC_H7CR",
+  "model": "BSIM4.5 flattened CDL, ngspice 44.2",
+  "characterization_level": "L3_transistor_dense_axes",
+  "table": "flow/characterization/ics55_l3_dense/dco_tuning_l3.csv",
+  "points": 110,
+  "grid": {
+    "coarse": [
+      0,
+      8,
+      15
+    ],
+    "mid": [
+      0,
+      8,
+      15
+    ],
+    "fine": [
+      0,
+      8,
+      31
+    ]
+  },
+  "coverage": {
+    "c0_m0": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "c0_m8": [
+      0,
+      8,
+      31
+    ],
+    "c0_m15": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "c8_m0": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      31
+    ],
+    "c8_m8": [
+      0,
+      8,
+      31
+    ],
+    "c8_m15": [
+      0,
+      8,
+      31
+    ],
+    "c15_m0": [
+      0,
+      8,
+      31
+    ],
+    "c15_m8": [
+      0,
+      8,
+      31
+    ],
+    "c15_m15": [
+      0,
+      8,
+      31
+    ]
+  },
+  "frequency_mhz": {
+    "min": 703.23488,
+    "max": 1895.734597
+  },
+  "monotonic": {
+    "all_scanned_axes": true,
+    "fine_inversions": 0,
+    "inversions": []
+  },
+  "valid_codes": {
+    "all_scanned_codes_valid": true
+  },
+  "verification": {
+    "frequency_verified": "L3_dense_axes",
+    "pvt_verified": false,
+    "pex_verified": false,
+    "jitter_verified": false
+  },
+  "notes": "Dense fine sweep at c0/m0, c0/m15, c8/m0 merged with the 27-point sparse corners; c8 fine 27-30 timed out; c15 remains sparse."
+}

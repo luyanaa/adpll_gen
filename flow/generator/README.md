@@ -41,7 +41,10 @@ python3 flow/generator/capability.py --pdk ihp-sg13g2 --target-mhz 300
 # PASS_L3_SPARSE, range 212..624 MHz, production_eligible=false
 
 python3 flow/generator/capability.py --pdk ics55-l3 --target-mhz 1000
-# PASS_L3_SPARSE, range 919..1899 MHz, candidate 999 MHz
+# PASS_L3_SPARSE, range 703..1897 MHz, dense table candidate 1000 MHz
+
+python3 flow/generator/capability.py --pdk ics55-l3-dense --target-mhz 1000
+# PASS_L3_SPARSE, 110-point dense-axis table, exact 1000 MHz candidate
 ```
 
 A target that is inside the range but more than the default 10 MHz tolerance

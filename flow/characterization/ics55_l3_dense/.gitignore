@@ -1,0 +1,16 @@
+*.sp
+*.inc
+*.raw
+*.log
+*.out
+PLL_ILDCO_flat*.sp
+models_flat.inc
+mos
+bjt
+dio
+res
+var
+mom
+bsim4v5.out
+model_wrapper*.lib
+dco_tuning_l3_partial.csv

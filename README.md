@@ -37,6 +37,7 @@ Detailed parameter and limit analysis:
 - `flow/characterization/ics55_sim/README.md`
 - `flow/characterization/ihp_l3/README.md`
 - `flow/characterization/ics55_l3/README.md`
+- `flow/characterization/ics55_l3_dense/README.md`
 - `flow/characterization/pex_ics55/README.md`
 - `flow/characterization/pex_ihp/README.md`
 - `flow/generator/README.md`
@@ -73,14 +74,16 @@ DCO characterization status:
 - ics55: full L1 behavioral grid (8192 points) and capability manifest.
 - IHP SG13G2: sparse 27-point L3 transistor scan using PSP103 via OpenVAF
   OSDI and ngspice; not PEX/PVT/jitter signoff.
-- ics55 L3: 27-point transistor scan after flattening the CDL and converting
-  to BSIM4 foundry subcircuits; range 703..1897 MHz.  A `.ic` startup makes the
-  low-frequency `coarse=15` points converge.
+- ics55 L3: a 27-point sparse scan and a 110-point dense-axis scan after
+  flattening the CDL and converting to BSIM4 foundry subcircuits; range
+  703..1896 MHz.  A `.ic` startup makes the low-frequency `coarse=15` points
+  converge; the dense scan covers full fine banks at `c0/m0`, `c0/m15` and
+  `c8/m0`.
 - IHP Xyce PSP model assembly remains unsuitable for this install; the working
   IHP L3 path is PSP103 Verilog-A -> OpenVAF OSDI -> ngspice.
 
-Both sparse L3 baselines are registered in the generator (`ics55-l3` and
-`ihp-sg13g2`), but neither is PEX/PVT/jitter signoff.  Production requests
+Both L3 baselines are registered in the generator (`ics55-l3`,
+`ics55-l3-dense` and `ihp-sg13g2`), but none is PEX/PVT/jitter signoff.  Production requests
 return `FAIL_UNCHARACTERIZED`.  The physical-macro results below do not imply a
 DCO/noise signoff.
 

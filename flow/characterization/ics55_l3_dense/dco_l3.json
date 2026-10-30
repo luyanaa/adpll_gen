@@ -1,0 +1,778 @@
+{
+  "technology": "ics55",
+  "characterization_level": "L3_transistor_dense_axes",
+  "points": 110,
+  "results": [
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 0.5275,
+      "freq_mhz": 1895.734597
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 1,
+      "period_ns": 0.528,
+      "freq_mhz": 1893.939394
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 2,
+      "period_ns": 0.528667,
+      "freq_mhz": 1891.551072
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 3,
+      "period_ns": 0.529333,
+      "freq_mhz": 1889.168766
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 4,
+      "period_ns": 0.529667,
+      "freq_mhz": 1887.979862
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 5,
+      "period_ns": 0.530333,
+      "freq_mhz": 1885.606537
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 6,
+      "period_ns": 0.530667,
+      "freq_mhz": 1884.422111
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 7,
+      "period_ns": 0.531667,
+      "freq_mhz": 1880.877743
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 0.532,
+      "freq_mhz": 1879.699248
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 9,
+      "period_ns": 0.532667,
+      "freq_mhz": 1877.346683
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 10,
+      "period_ns": 0.533333,
+      "freq_mhz": 1875.0
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 11,
+      "period_ns": 0.533667,
+      "freq_mhz": 1873.828857
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 12,
+      "period_ns": 0.534333,
+      "freq_mhz": 1871.490954
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 13,
+      "period_ns": 0.534667,
+      "freq_mhz": 1870.32419
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 14,
+      "period_ns": 0.535667,
+      "freq_mhz": 1866.832607
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 15,
+      "period_ns": 0.536,
+      "freq_mhz": 1865.671642
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 16,
+      "period_ns": 0.536333,
+      "freq_mhz": 1864.512119
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 17,
+      "period_ns": 0.537333,
+      "freq_mhz": 1861.042184
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 18,
+      "period_ns": 0.537667,
+      "freq_mhz": 1859.888407
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 19,
+      "period_ns": 0.538333,
+      "freq_mhz": 1857.585139
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 20,
+      "period_ns": 0.538667,
+      "freq_mhz": 1856.435644
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 21,
+      "period_ns": 0.539333,
+      "freq_mhz": 1854.140915
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 22,
+      "period_ns": 0.54,
+      "freq_mhz": 1851.851852
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 23,
+      "period_ns": 0.540333,
+      "freq_mhz": 1850.709439
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 24,
+      "period_ns": 0.541,
+      "freq_mhz": 1848.428835
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 25,
+      "period_ns": 0.541667,
+      "freq_mhz": 1846.153846
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 26,
+      "period_ns": 0.542,
+      "freq_mhz": 1845.01845
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 27,
+      "period_ns": 0.542667,
+      "freq_mhz": 1842.751843
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 28,
+      "period_ns": 0.543333,
+      "freq_mhz": 1840.490798
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 29,
+      "period_ns": 0.543667,
+      "freq_mhz": 1839.362354
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 30,
+      "period_ns": 0.544,
+      "freq_mhz": 1838.235294
+    },
+    {
+      "coarse": 0,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 0.545,
+      "freq_mhz": 1834.862385
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 0.548167,
+      "freq_mhz": 1824.262694
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 0.553,
+      "freq_mhz": 1808.318264
+    },
+    {
+      "coarse": 0,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 0.5665,
+      "freq_mhz": 1765.225066
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 0.564667,
+      "freq_mhz": 1770.956316
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 1,
+      "period_ns": 0.565333,
+      "freq_mhz": 1768.867925
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 2,
+      "period_ns": 0.566,
+      "freq_mhz": 1766.784452
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 3,
+      "period_ns": 0.566667,
+      "freq_mhz": 1764.705882
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 4,
+      "period_ns": 0.567333,
+      "freq_mhz": 1762.632197
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 5,
+      "period_ns": 0.567667,
+      "freq_mhz": 1761.597181
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 6,
+      "period_ns": 0.568667,
+      "freq_mhz": 1758.499414
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 7,
+      "period_ns": 0.569333,
+      "freq_mhz": 1756.440281
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 0.569667,
+      "freq_mhz": 1755.412522
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 9,
+      "period_ns": 0.570333,
+      "freq_mhz": 1753.360608
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 10,
+      "period_ns": 0.571,
+      "freq_mhz": 1751.313485
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 11,
+      "period_ns": 0.571667,
+      "freq_mhz": 1749.271137
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 12,
+      "period_ns": 0.572333,
+      "freq_mhz": 1747.233547
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 13,
+      "period_ns": 0.572667,
+      "freq_mhz": 1746.216531
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 14,
+      "period_ns": 0.573333,
+      "freq_mhz": 1744.186047
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 15,
+      "period_ns": 0.574,
+      "freq_mhz": 1742.160279
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 16,
+      "period_ns": 0.574667,
+      "freq_mhz": 1740.139211
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 17,
+      "period_ns": 0.575333,
+      "freq_mhz": 1738.122827
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 18,
+      "period_ns": 0.575667,
+      "freq_mhz": 1737.116387
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 19,
+      "period_ns": 0.576667,
+      "freq_mhz": 1734.104046
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 20,
+      "period_ns": 0.577,
+      "freq_mhz": 1733.102253
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 21,
+      "period_ns": 0.577667,
+      "freq_mhz": 1731.102135
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 22,
+      "period_ns": 0.578,
+      "freq_mhz": 1730.103806
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 23,
+      "period_ns": 0.579,
+      "freq_mhz": 1727.115717
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 24,
+      "period_ns": 0.579333,
+      "freq_mhz": 1726.121979
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 25,
+      "period_ns": 0.58,
+      "freq_mhz": 1724.137931
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 26,
+      "period_ns": 0.580667,
+      "freq_mhz": 1722.158439
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 27,
+      "period_ns": 0.581333,
+      "freq_mhz": 1720.183486
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 28,
+      "period_ns": 0.581667,
+      "freq_mhz": 1719.197708
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 29,
+      "period_ns": 0.582333,
+      "freq_mhz": 1717.229536
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 30,
+      "period_ns": 0.583,
+      "freq_mhz": 1715.265866
+    },
+    {
+      "coarse": 0,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 0.583667,
+      "freq_mhz": 1713.306682
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 0.9975,
+      "freq_mhz": 1002.506266
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 1,
+      "period_ns": 0.9975,
+      "freq_mhz": 1002.506266
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 2,
+      "period_ns": 0.9985,
+      "freq_mhz": 1001.502253
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 3,
+      "period_ns": 0.9985,
+      "freq_mhz": 1001.502253
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 4,
+      "period_ns": 0.9995,
+      "freq_mhz": 1000.50025
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 5,
+      "period_ns": 0.9995,
+      "freq_mhz": 1000.50025
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 6,
+      "period_ns": 1.0,
+      "freq_mhz": 1000.0
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 7,
+      "period_ns": 1.0005,
+      "freq_mhz": 999.50025
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 1.001,
+      "freq_mhz": 999.000999
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 9,
+      "period_ns": 1.001,
+      "freq_mhz": 999.000999
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 10,
+      "period_ns": 1.0015,
+      "freq_mhz": 998.502247
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 11,
+      "period_ns": 1.002,
+      "freq_mhz": 998.003992
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 12,
+      "period_ns": 1.002,
+      "freq_mhz": 998.003992
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 13,
+      "period_ns": 1.003,
+      "freq_mhz": 997.008973
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 14,
+      "period_ns": 1.003,
+      "freq_mhz": 997.008973
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 15,
+      "period_ns": 1.0035,
+      "freq_mhz": 996.512207
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 16,
+      "period_ns": 1.004,
+      "freq_mhz": 996.015936
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 17,
+      "period_ns": 1.0045,
+      "freq_mhz": 995.520159
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 18,
+      "period_ns": 1.0045,
+      "freq_mhz": 995.520159
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 19,
+      "period_ns": 1.0055,
+      "freq_mhz": 994.530085
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 20,
+      "period_ns": 1.0055,
+      "freq_mhz": 994.530085
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 21,
+      "period_ns": 1.0055,
+      "freq_mhz": 994.530085
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 22,
+      "period_ns": 1.0065,
+      "freq_mhz": 993.541977
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 23,
+      "period_ns": 1.0065,
+      "freq_mhz": 993.541977
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 24,
+      "period_ns": 1.007,
+      "freq_mhz": 993.048659
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 25,
+      "period_ns": 1.0075,
+      "freq_mhz": 992.555831
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 26,
+      "period_ns": 1.008,
+      "freq_mhz": 992.063492
+    },
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 1.009667,
+      "freq_mhz": 990.425883
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 1.040667,
+      "freq_mhz": 960.922486
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 1.044333,
+      "freq_mhz": 957.548675
+    },
+    {
+      "coarse": 8,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 1.053667,
+      "freq_mhz": 949.066751
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 1.074333,
+      "freq_mhz": 930.809805
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 1.078,
+      "freq_mhz": 927.643785
+    },
+    {
+      "coarse": 8,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 1.088,
+      "freq_mhz": 919.117647
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 0,
+      "period_ns": 1.317,
+      "freq_mhz": 759.301443
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 8,
+      "period_ns": 1.32,
+      "freq_mhz": 757.575758
+    },
+    {
+      "coarse": 15,
+      "mid": 0,
+      "fine": 31,
+      "period_ns": 1.329,
+      "freq_mhz": 752.445448
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 0,
+      "period_ns": 1.368,
+      "freq_mhz": 730.994152
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 1.371,
+      "freq_mhz": 729.394602
+    },
+    {
+      "coarse": 15,
+      "mid": 8,
+      "fine": 31,
+      "period_ns": 1.38,
+      "freq_mhz": 724.637681
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 0,
+      "period_ns": 1.4095,
+      "freq_mhz": 709.471444
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 8,
+      "period_ns": 1.413,
+      "freq_mhz": 707.714084
+    },
+    {
+      "coarse": 15,
+      "mid": 15,
+      "fine": 31,
+      "period_ns": 1.422,
+      "freq_mhz": 703.23488
+    }
+  ],
+  "note": "Dense fine sweep at c0/m0, c0/m15, c8/m0 merged with the 27-point sparse corners; c8 fine 27-30 timed out; c15 remains sparse."
+}
