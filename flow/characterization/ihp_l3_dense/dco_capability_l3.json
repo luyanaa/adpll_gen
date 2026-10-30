@@ -1,0 +1,162 @@
+{
+  "technology": "ihp-sg13g2",
+  "library": "sg13g2_stdcell",
+  "model": "PSP103 OSDI via OpenVAF, ngspice 44.2",
+  "characterization_level": "L3_transistor_dense_axes",
+  "grid": {
+    "coarse": [
+      8
+    ],
+    "mid": [
+      0
+    ],
+    "fine": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ]
+  },
+  "points": 31,
+  "missing": [
+    {
+      "coarse": 8,
+      "mid": 0,
+      "fine": 7,
+      "reason": "no output edges in 30 ns window"
+    }
+  ],
+  "frequency_mhz": {
+    "min": 274.37241,
+    "max": 301.88799
+  },
+  "monotonic": {
+    "all_axes": false,
+    "fine_inversions": 14,
+    "inversions": [
+      [
+        "2",
+        "3",
+        281.718487,
+        297.413789
+      ],
+      [
+        "8",
+        "9",
+        278.674155,
+        286.264303
+      ],
+      [
+        "10",
+        "11",
+        281.130555,
+        283.696008
+      ],
+      [
+        "11",
+        "12",
+        283.696008,
+        288.612469
+      ],
+      [
+        "12",
+        "13",
+        288.612469,
+        295.294835
+      ],
+      [
+        "14",
+        "15",
+        283.97903,
+        291.81849
+      ],
+      [
+        "16",
+        "17",
+        279.172411,
+        285.917732
+      ],
+      [
+        "18",
+        "19",
+        284.121868,
+        290.914912
+      ],
+      [
+        "20",
+        "21",
+        284.14909,
+        288.462635
+      ],
+      [
+        "22",
+        "23",
+        285.373508,
+        296.214404
+      ],
+      [
+        "24",
+        "25",
+        290.628263,
+        294.695103
+      ],
+      [
+        "26",
+        "27",
+        289.736359,
+        293.504008
+      ],
+      [
+        "28",
+        "29",
+        287.417257,
+        288.866424
+      ],
+      [
+        "29",
+        "30",
+        288.866424,
+        291.141294
+      ]
+    ]
+  },
+  "rechecks": {
+    "fine9": "100 ns, 286.264 MHz",
+    "fine19": "200 ns, 290.915 MHz"
+  },
+  "verification": {
+    "frequency_verified": "L3_dense_axes",
+    "pvt_verified": false,
+    "pex_verified": false,
+    "jitter_verified": false
+  },
+  "notes": "Fine bank at c8/m0. 30 ns outliers fine9/fine19 were truncated startup cycles and are replaced by 100/200 ns rechecks. Residual non-monotonicity and sparse-vs-dense differences show the startup/measurement window is still not fully controlled."
+}

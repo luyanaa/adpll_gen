@@ -1,0 +1,229 @@
+{
+  "technology": "ihp-sg13g2",
+  "characterization_level": "L3_transistor_dense_axes",
+  "points": 31,
+  "results": [
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "0",
+      "period_ns": "3.312487",
+      "freq_mhz": "301.887990"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "1",
+      "period_ns": "3.400919",
+      "freq_mhz": "294.038194"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "2",
+      "period_ns": "3.549643",
+      "freq_mhz": "281.718487"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "3",
+      "period_ns": "3.362319",
+      "freq_mhz": "297.413789"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "4",
+      "period_ns": "3.406160",
+      "freq_mhz": "293.585776"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "5",
+      "period_ns": "3.453223",
+      "freq_mhz": "289.584566"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "6",
+      "period_ns": "3.565813",
+      "freq_mhz": "280.440923"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "8",
+      "period_ns": "3.588420",
+      "freq_mhz": "278.674155"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "9",
+      "period_ns": "3.493275",
+      "freq_mhz": "286.264303"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "10",
+      "period_ns": "3.557066",
+      "freq_mhz": "281.130555"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "11",
+      "period_ns": "3.524900",
+      "freq_mhz": "283.696008"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "12",
+      "period_ns": "3.464854",
+      "freq_mhz": "288.612469"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "13",
+      "period_ns": "3.386446",
+      "freq_mhz": "295.294835"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "14",
+      "period_ns": "3.521387",
+      "freq_mhz": "283.979030"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "15",
+      "period_ns": "3.426788",
+      "freq_mhz": "291.818490"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "16",
+      "period_ns": "3.582016",
+      "freq_mhz": "279.172411"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "17",
+      "period_ns": "3.497510",
+      "freq_mhz": "285.917732"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "18",
+      "period_ns": "3.519616",
+      "freq_mhz": "284.121868"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "19",
+      "period_ns": "3.437431",
+      "freq_mhz": "290.914912"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "20",
+      "period_ns": "3.519279",
+      "freq_mhz": "284.149090"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "21",
+      "period_ns": "3.466653",
+      "freq_mhz": "288.462635"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "22",
+      "period_ns": "3.504180",
+      "freq_mhz": "285.373508"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "23",
+      "period_ns": "3.375933",
+      "freq_mhz": "296.214404"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "24",
+      "period_ns": "3.440822",
+      "freq_mhz": "290.628263"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "25",
+      "period_ns": "3.393338",
+      "freq_mhz": "294.695103"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "26",
+      "period_ns": "3.451414",
+      "freq_mhz": "289.736359"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "27",
+      "period_ns": "3.407109",
+      "freq_mhz": "293.504008"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "28",
+      "period_ns": "3.479262",
+      "freq_mhz": "287.417257"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "29",
+      "period_ns": "3.461808",
+      "freq_mhz": "288.866424"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "30",
+      "period_ns": "3.434758",
+      "freq_mhz": "291.141294"
+    },
+    {
+      "coarse_code": "8",
+      "mid_code": "0",
+      "fine_code": "31",
+      "period_ns": "3.644681",
+      "freq_mhz": "274.372410"
+    }
+  ],
+  "rechecks": {
+    "fine9": "100 ns, 286.264 MHz",
+    "fine19": "200 ns, 290.915 MHz"
+  },
+  "note": "Fine bank at c8/m0. 30 ns outliers fine9/fine19 were truncated startup cycles and are replaced by 100/200 ns rechecks. Residual non-monotonicity and sparse-vs-dense differences show the startup/measurement window is still not fully controlled."
+}

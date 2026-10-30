@@ -1,0 +1,9 @@
+*.sp
+*.raw
+*.log
+*.out
+*.osdi
+models_*.inc
+.spiceinit
+PLL_ILDCO.sp
+dco_tuning_l3_partial.csv

@@ -38,6 +38,7 @@ Detailed parameter and limit analysis:
 - `flow/characterization/ihp_l3/README.md`
 - `flow/characterization/ics55_l3/README.md`
 - `flow/characterization/ics55_l3_dense/README.md`
+- `flow/characterization/ihp_l3_dense/README.md`
 - `flow/characterization/pex_ics55/README.md`
 - `flow/characterization/pex_ihp/README.md`
 - `flow/characterization/JITTER_PHASE_NOISE.md`
@@ -74,7 +75,9 @@ DCO characterization status:
 
 - ics55: full L1 behavioral grid (8192 points) and capability manifest.
 - IHP SG13G2: sparse 27-point L3 transistor scan using PSP103 via OpenVAF
-  OSDI and ngspice; not PEX/PVT/jitter signoff.
+  OSDI and ngspice, plus a 31-point dense fine-bank check at `c8/m0`.
+  Startup-window outliers were rechecked at 100/200 ns, but residual
+  non-monotonicity remains; not PEX/PVT/jitter signoff.
 - ics55 L3: a 27-point sparse scan and a 110-point dense-axis scan after
   flattening the CDL and converting to BSIM4 foundry subcircuits; range
   703..1896 MHz.  A `.ic` startup makes the low-frequency `coarse=15` points
