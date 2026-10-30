@@ -88,6 +88,32 @@ failure.
   Relaxing the LEF VIA spacing makes DRT converge, but the resulting DEF
   still contains 1750 stacked VIA2-on-VIA1 sites, so this is **not** a
   DRC-clean PnR rule yet.  Do not claim ETRI DRC signoff.
+
+### Via/PnR route comparison (2026-10-31)
+
+Two routes were tried against the 2.0 µm via model:
+
+1. **Pin-access / via-spacing route (simpler).**  Keeping the vendor 2.0 µm
+   via metal and 0.8 µm cut, lowering the LEF `VIA1`/`VIA2` spacing from
+   0.8 to 0.6 makes OpenROAD pin access legal (`stdCellPinNoAp=0`, 672 valid
+   via access points).  Detailed routing then completes in about 6 minutes:
+   no MET1/2/3 spacing errors, LVS passes, and only
+   `11.VIA2.S_Stack` 1749 plus `11.VIA2.S` 5 remain (plus unfilled-cell
+   NWL/NSD/PSD context that filler removes).  This route is fast and simple,
+   but it does not remove the via stack.
+2. **No-stack rule route (harder / ineffective through LEF).**  Adding
+   `SPACING 0.6 SAMENET LAYER VIA1` without `STACK` under `LAYER VIA2` is
+   stored in the LEF, but OpenROAD's detailed router does not honor the
+   cross-layer cut-spacing rule: with `-droute_end_iter 10` the route still
+   ends with the same `11.VIA2.S_Stack` 1749 / `11.VIA2.S` 5.  Without the
+   iteration cap the run was still at 399 violations after ~25 minutes.  A
+   two-layer fallback (MET1-MET2 only) fails global routing with
+   `GRT-0116` congestion.  Closing this route needs a DRT source change or
+   relocating the ~1749 VIA2/VIA1 pairs and extending the connected MET3.
+
+Conclusion: the pin-access/via-spacing route is much simpler and is the
+right first step; the no-stack route is the actual DRC blocker and is not
+solvable by a LEF rule alone with this OpenROAD version.
 - **LVS:** KLayout LVS passes; Calibre LVS remains unrun.  The old Netgen
   “551 vs 2428” observation was from the period when top MET2/MET3 routing
   was accidentally deleted; it is not the current state.
