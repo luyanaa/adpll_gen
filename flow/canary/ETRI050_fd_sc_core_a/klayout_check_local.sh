@@ -6,7 +6,7 @@ def_file=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 topcell=$2
 outdir=${3:-$(pwd)/klayout_out}
 ref_cdl=${4:-}
-pdk_root=${PDK_ROOT:-/grid/OpenRAM/technology}
+pdk_root=${PDK_ROOT:-/grid}
 pdk=${PDK:-ETRI050}
 tech_lef="$pdk_root/$pdk/libs.ref/ETRI050_fd_sc_12t/lef/ETRI050_fd_sc_12t_tech_librelane.lef"
 cell_lef="$pdk_root/$pdk/libs.ref/ETRI050_fd_sc_12t/lef/ETRI050_fd_sc_12t.lef"
@@ -33,6 +33,18 @@ l.read("$def_file", opts)
 # shapes and false DRC/LVS devices at abutted cell boundaries.
 top = l.top_cell
 [2, 3, 11, 12, 13, 14, 15].each { |ln| top.shapes(l.layer(ln, 0)).clear }
+# Keep the LEF pin abstracts out of DRC: they are metal-only and would
+# trigger MET2/MET3.bad1 (no via).  Only the labels are moved below.
+# Duplicate top pin text on all three text layers so the LVS deck can bind
+# the label to whichever metal layer the pin uses.
+[9, 11, 13].each do |ln|
+  src = l.layer(ln, 1)
+  top.shapes(src).each do |sh|
+    next unless sh.is_text?
+    [42, 44, 46].each { |tl| top.shapes(l.layer(tl, 0)).insert(sh) }
+  end
+  top.shapes(src).clear
+end
 # KLayout DEF reader emits the LEF VIA macros on the LEF layer ordinals
 # instead of the ETRI GDS layer numbers.  Remap them before streamout.
 {"VIA_V12" => {11 => 32, 9 => 33, 10 => 34},

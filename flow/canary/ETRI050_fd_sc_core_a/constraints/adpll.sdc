@@ -28,7 +28,7 @@
 # -----------
 # The RTL's FCW=8 nominal ratio implies OUT = 8 x REF = 400 MHz (2.5 ns) with
 # REF = 10 MHz.  ETRI050 is a 5 V/0.5 um, single-corner library; the routed canary did
-# not close timing at 20 ns.  This file uses 100 ns (10 MHz) only as a
+# not close timing at 20 ns.  This file uses 200 ns (5 MHz) only as a
 # flow-qualification planning value, not a signoff claim.
 # The real period is a DCO characterization result either way.
 
@@ -39,13 +39,13 @@
 # it only if the flow has not already done so (keeps this file usable
 # standalone and avoids a duplicate definition).
 if {[llength [get_clocks -quiet REF]] == 0} {
-    create_clock -name REF -period 100.000 [get_ports REF]
+    create_clock -name REF -period 200.000 [get_ports REF]
 }
 
 # OUT / MID_OUT / INJ_EDGE: ports in the digital-only top, macro pins in the
 # full top.  Nominal periods are STA assumptions:
-#   OUT/MID_OUT : 100 ns (10 MHz) flow-qualification value
-#   INJ_EDGE    : 100 ns (10 MHz), a delayed copy of REF
+#   OUT/MID_OUT : 200 ns (5 MHz) flow-qualification value
+#   INJ_EDGE    : 200 ns (5 MHz), a delayed copy of REF
 # Prefer the macro pin in the full top: OUT/MID_OUT/INJ_EDGE are top-level
 # *outputs* there, and a clock defined on an output port would not propagate
 # back into the design.  In the digital-only top the pins do not exist and the
@@ -56,7 +56,7 @@ if {[llength [get_clocks -quiet OUT]] == 0} {
         set out_src [get_ports -quiet OUT]
     }
     if {[llength $out_src] > 0} {
-        create_clock -name OUT -period 100.000 $out_src
+        create_clock -name OUT -period 200.000 $out_src
     } else {
         puts "WARNING: adpll.sdc: OUT not found as pll_ana/OUT or a port"
     }
@@ -68,7 +68,7 @@ if {[llength [get_clocks -quiet MID_OUT]] == 0} {
         set mid_src [get_ports -quiet MID_OUT]
     }
     if {[llength $mid_src] > 0} {
-        create_clock -name MID_OUT -period 100.000 $mid_src
+        create_clock -name MID_OUT -period 200.000 $mid_src
     } else {
         puts "WARNING: adpll.sdc: MID_OUT not found as pll_ana/MID_OUT or a port"
     }
@@ -80,7 +80,7 @@ if {[llength [get_clocks -quiet INJ_EDGE]] == 0} {
         set inj_src [get_ports -quiet INJ_EDGE]
     }
     if {[llength $inj_src] > 0} {
-        create_clock -name INJ_EDGE -period 100.000 $inj_src
+        create_clock -name INJ_EDGE -period 200.000 $inj_src
     } else {
         puts "WARNING: adpll.sdc: INJ_EDGE not found as pll_ana/INJ_EDGE or a port"
     }

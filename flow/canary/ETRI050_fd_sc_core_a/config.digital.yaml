@@ -36,7 +36,13 @@ FP_CORE_UTIL: 15
 PL_TARGET_DENSITY_PCT: 35
 
 CLOCK_PORT: REF
-CLOCK_PERIOD: 100.0
+CLOCK_PERIOD: 200.0
+
+# The 12T GDS extends 1.3/1.4 um outside the LEF; empty sites leave NW/NSD/PSD
+# gaps.  Fill insertion is required before DRC, not optional.
+RUN_FILL_INSERTION: true
+FILL_CELLS: ["FILLX1", "FILLX2", "FILLX3", "FILLX4"]
+DECAP_CELLS: []
 PNR_SDC_FILE: dir::constraints/adpll.sdc
 SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
 

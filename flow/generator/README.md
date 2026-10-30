@@ -53,7 +53,7 @@ python3 flow/generator/capability.py --pdk ics55-l3-dense --target-mhz 1000
 
 The system ceilings are deliberately below the measured digital canary Fmax:
 GF180 AS 3.3 V is 150/80 MHz (OUT/REF), FD 5 V 25/15 MHz, FD 9T 30/20 MHz,
-3.3 V 7T 40/25 MHz, and ETRI050 10/10 MHz (experimental, not signoff).
+3.3 V 7T 40/25 MHz, and ETRI050 5/5 MHz (experimental, not signoff; hold still fails).
 
 ```sh
 python3 flow/generator/capability.py --pdk gf180mcu_as_sc_mcu7t3v3 \

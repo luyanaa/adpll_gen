@@ -97,13 +97,18 @@
   ~179 ns；padded final metrics 更差（setup -342.957 ns）。
 - 没有 macro，且只有 TT/5 V/25 °C；5 V 大单元 + 长走线会进一步降低。
 - 结论：pre-layout 的 ~90 MHz 不能当成可实现 Fmax。规划上只适合
-  **几 MHz 到 10 MHz** 的慢速/研究用途；不适合当前 ADPLL，也不适合面积
+  **1–5 MHz** 的慢速/研究用途；不适合当前 ADPLL，也不适合面积
   敏感设计。
 
 ### ETRI050 PnR blockers
 
 - **Core A 缺 `nand2b`**：原始库 `core_support.core_a_il_dco = no`；canary
   已用 NAND2/NOR2 + INV 做等价映射，但这是 flow-level 等价，不是 vendor cell。
+- **Fill/DRC**：原始 route 后空 site 未填。12T GDS 的 NW/NSD/PSD 比 LEF
+  外扩 1.3–1.4 µm，空 site 导致 636 个 NWL/NSD/PSD marker。用 OpenROAD
+  `filler_placement {FILLX1..4}` 填 16,305 个 filler 后，vendor KLayout
+  DRC 从 636 降到 **2 个 marker（1 NSD + 1 PSD）**。这不是流程参数问题，是原 canary
+  在 `DetailedRouting` 停止、没跑 `FillInsertion`。
 - **PDN/power-terminal**：默认 rail+MET2/MET3 strap 让
   `RepairDesignPostGPL` 失败；rails-only 能让 placement/CTS/DRT 完成（route
   DRC 0），但 PSM 仍看不到 VDD/VSS terminal；加 MET2/MET3 strap 又回到
@@ -129,7 +134,7 @@
 | GF180 FD 5 V | OUT 49.6 TT / 40.8 SS | 25 MHz | 15 MHz | 15–25 MHz | 50 MHz SS 未闭合 |
 | GF180 FD 9T 5 V | OUT 52.0 TT / 44.2 SS | 30 MHz | 20 MHz | 20–30 MHz | SS setup 仍未闭合 |
 | GF180 3.3 V 7T | 20 ns 全 corner 闭合（>50 MHz） | 40 MHz | 25 MHz | 25–40 MHz | 只有 20 ns 级证据 |
-| ETRI050 12T 5 V | pre-layout ~90 MHz；P&R 未签核 | 10 MHz | 10 MHz | 3–10 MHz | 仅研究用途，不是 signoff |
+| ETRI050 12T 5 V | pre-layout ~90 MHz；P&R 未签核，critical path ~179 ns | 5 MHz | 5 MHz | 1–5 MHz | 仅研究用途，不是 signoff |
 
 GF180 AS 的 150 MHz 上限相对 196.37 MHz SS 留了约 24% 余量；REF 80 MHz
 相对 INJ_EDGE 96.70 MHz 留了约 17% 余量。FD/9T 的上限相对 SS 结果留了

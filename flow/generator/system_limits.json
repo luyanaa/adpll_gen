@@ -60,18 +60,18 @@
     ]
   },
   "etri050": {
-    "max_out_mhz": 10.0,
-    "max_ref_mhz": 10.0,
+    "max_out_mhz": 5.0,
+    "max_ref_mhz": 5.0,
     "max_fcw": 4,
-    "basis": "ETRI050 12T route/fill complete but timing is not closed: setup -158.85 ns, hold -16.73 ns at 20 ns; 5 V/0.5 um and no signoff corner.",
+    "basis": "ETRI050 12T route/fill complete but timing is not closed: 20 ns setup -158.85 ns / hold -16.73 ns, critical path ~179 ns. A 5 MHz planning cap is the setup-path bound; hold is still negative, so even 5 MHz is not signoff.",
     "qualified": false,
     "recommended_out_mhz": [
-      3,
-      10
+      1,
+      5
     ],
     "recommended_ref_mhz": [
-      3,
-      10
+      1,
+      5
     ]
   }
 }

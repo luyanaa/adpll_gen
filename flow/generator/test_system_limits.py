@@ -20,8 +20,10 @@ def main():
     # signoff ceiling: the routed canary does not close timing.
     r = check_system("ETRI050_fd_sc_12t", 20)
     assert r and r["status"] == "FAIL_SYSTEM_FMAX", r
-    r = check_system("etri050", 10, ref_mhz=10, fcw=4)
+    r = check_system("etri050", 5, ref_mhz=5, fcw=4)
     assert r is None, r
+    r = check_system("etri050", 6, ref_mhz=5)
+    assert r and r["status"] == "FAIL_SYSTEM_FMAX", r
 
     # A target under the system ceiling still cannot pass without a DCO table.
     r = check_target("gf180mcu_as_sc_mcu7t3v3", 100, ref_mhz=50)
