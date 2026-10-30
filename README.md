@@ -37,6 +37,8 @@ Detailed parameter and limit analysis:
 - `flow/characterization/ics55_sim/README.md`
 - `flow/characterization/ihp_l3/README.md`
 - `flow/characterization/ics55_l3/README.md`
+- `flow/characterization/pex_ics55/README.md`
+- `flow/characterization/pex_ihp/README.md`
 - `flow/generator/README.md`
 - `flow/ADPLL_FREQ_DIV.md`
 - `flow/PERFORMANCE.md`
@@ -71,8 +73,9 @@ DCO characterization status:
 - ics55: full L1 behavioral grid (8192 points) and capability manifest.
 - IHP SG13G2: sparse 27-point L3 transistor scan using PSP103 via OpenVAF
   OSDI and ngspice; not PEX/PVT/jitter signoff.
-- ics55 L3: sparse 18-point transistor scan after flattening the CDL and
-  converting to BSIM4 foundry subcircuits; range 919..1899 MHz.
+- ics55 L3: 27-point transistor scan after flattening the CDL and converting
+  to BSIM4 foundry subcircuits; range 703..1897 MHz.  A `.ic` startup makes the
+  low-frequency `coarse=15` points converge.
 - IHP Xyce PSP model assembly remains unsuitable for this install; the working
   IHP L3 path is PSP103 Verilog-A -> OpenVAF OSDI -> ngspice.
 
@@ -80,6 +83,26 @@ Both sparse L3 baselines are registered in the generator (`ics55-l3` and
 `ihp-sg13g2`), but neither is PEX/PVT/jitter signoff.  Production requests
 return `FAIL_UNCHARACTERIZED`.  The physical-macro results below do not imply a
 DCO/noise signoff.
+
+Routed parasitics are now extracted from both macro final databases with
+OpenROAD RCX.  The DCO-net capacitance is back-annotated into one code:
+
+```text
+ics55     958.12 MHz -> 554.79 MHz  (121 DCO nets, 0.188 pF)
+IHP       330.88 MHz -> 250.28 MHz  (125 DCO nets, 0.845 pF)
+```
+
+PVT frequency at that code (TT/SS/FF):
+
+```text
+ics55     555.0 / 288.2 / 870.3 MHz
+IHP       251.0 / 158.8 / 369.5 MHz
+```
+
+These are **L3_PEX_CAP** results: total net capacitance grounded, with series
+wire resistance, coupling and phase noise still open.  Details:
+`flow/characterization/pex_ics55/README.md` and
+`flow/characterization/pex_ihp/README.md`.
 
 ## 3. Implemented hard macros
 

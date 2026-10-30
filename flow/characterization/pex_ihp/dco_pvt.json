@@ -1,0 +1,48 @@
+{
+  "characterization_level": "L3_PEX_CAP",
+  "code": {
+    "coarse": 8,
+    "mid": 8,
+    "fine": 8
+  },
+  "stopsim_ns": 40.0,
+  "rows": [
+    {
+      "pdk": "ihp-sg13g2",
+      "corner": "tt",
+      "lib": "mos_tt",
+      "vdd": 1.2,
+      "temp_c": 25,
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 3.984287664434506,
+      "freq_mhz": 250.985893645792
+    },
+    {
+      "pdk": "ihp-sg13g2",
+      "corner": "ss",
+      "lib": "mos_ss",
+      "vdd": 1.08,
+      "temp_c": 125,
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 6.298908356677391,
+      "freq_mhz": 158.75766773776175
+    },
+    {
+      "pdk": "ihp-sg13g2",
+      "corner": "ff",
+      "lib": "mos_ff",
+      "vdd": 1.32,
+      "temp_c": -40,
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 2.7067255035098396,
+      "freq_mhz": 369.4500970649921
+    }
+  ],
+  "note": "MOS corner frequency only; no jitter/phase-noise/PEX-R signoff."
+}

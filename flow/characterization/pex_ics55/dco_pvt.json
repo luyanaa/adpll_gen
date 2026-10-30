@@ -1,0 +1,48 @@
+{
+  "characterization_level": "L3_PEX_CAP",
+  "code": {
+    "coarse": 8,
+    "mid": 8,
+    "fine": 8
+  },
+  "stopsim_ns": 20.0,
+  "rows": [
+    {
+      "pdk": "ics55",
+      "corner": "tt",
+      "lib": "tt_mos",
+      "vdd": 1.2,
+      "temp_c": 25,
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 1.8018750000002015,
+      "freq_mhz": 554.9774540408675
+    },
+    {
+      "pdk": "ics55",
+      "corner": "ss",
+      "lib": "ss_mos",
+      "vdd": 1.08,
+      "temp_c": 125,
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 3.46975000000041,
+      "freq_mhz": 288.20520210386394
+    },
+    {
+      "pdk": "ics55",
+      "corner": "ff",
+      "lib": "ff_mos",
+      "vdd": 1.32,
+      "temp_c": -40,
+      "coarse": 8,
+      "mid": 8,
+      "fine": 8,
+      "period_ns": 1.1490000000001583,
+      "freq_mhz": 870.3220191469645
+    }
+  ],
+  "note": "MOS corner frequency only; no jitter/phase-noise/PEX-R signoff."
+}

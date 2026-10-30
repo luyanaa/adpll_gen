@@ -132,6 +132,8 @@ def main() -> int:
     ap.add_argument("--top", default="PLL_ANALOG_MACRO")
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--drop-top-ports", nargs="*", default=[])
+    ap.add_argument("--preserve-top-nets", action="store_true",
+                    help="Keep top-level internal net names (for SPEF/PEX back-annotation)")
     args = ap.parse_args()
 
     subckts = parse_cdl(args.cells)
@@ -173,7 +175,10 @@ def main() -> int:
             if n in global_nodes:
                 return n
             if n not in local_nodes:
-                local_nodes[n] = new_node()
+                # For PEX back-annotation keep the top-level net names
+                # (coarse/FCHAIN_..., mid/..., fine/...); child-cell internal
+                # nets must still be uniquified.
+                local_nodes[n] = n if (args.preserve_top_nets and depth == 0) else new_node()
             return local_nodes[n]
 
         local = dict(params)

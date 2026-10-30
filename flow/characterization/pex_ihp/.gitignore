@@ -1,0 +1,14 @@
+*.sp
+*.inc
+*.raw
+*.log
+*.spef
+*.osdi
+models_*.inc
+.spiceinit
+mos
+bjt
+dio
+res
+var
+mom
