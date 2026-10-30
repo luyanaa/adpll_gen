@@ -1,0 +1,36 @@
+DESIGN_NAME: counter
+VERILOG_FILES:
+  - dir::counter.v
+
+PDK: or1
+STD_CELL_LIBRARY: or1_fd_sc
+
+# Vendor LEF uses uppercase VDD/VSS; its power pins also lack DIRECTION.
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD]
+SCL_GROUND_PINS: [VSS]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+# PDK has only one timing library; the min/max corners point at missing files.
+STA_CORNERS: [nom_tt_3P3_25C]
+TIMING_VIOLATION_CORNERS: ["*tt*"]
+
+CLOCK_PORT: clk
+CLOCK_PERIOD: 100.0
+FP_CORE_UTIL: 20
+PL_TARGET_DENSITY_PCT: 35
+
+RT_MIN_LAYER: metal1
+RT_MAX_LAYER: metal3
+IO_PIN_H_LAYER: metal3
+IO_PIN_V_LAYER: metal2
+
+# Local copy with VDD/VSS DIRECTION INOUT.  Without this OpenROAD sees
+# VDD/VSS as signal inputs and refuses to insert BUFX2.
+CELL_LEFS:
+  - dir::or1_fd_sc_fixed.lef
+
+RUN_HEURISTIC_DIODE_INSERTION: false
+RUN_ANTENNA_REPAIR: false
