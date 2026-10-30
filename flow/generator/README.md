@@ -24,6 +24,10 @@ FAIL_OUT_OF_RANGE      Target is outside the measured L1 range.
 FAIL_UNCHARACTERIZED   No manifest for the PDK, no tuning table, non-monotonic
                        codes, or production signoff requested while the
                        characterization level is only L1.
+
+FAIL_SYSTEM_FMAX       Target/REF/FCW exceeds the PDK planning ceiling in
+                       `system_limits.json`.  This is checked before the DCO
+                       manifest and is not a substitute for DCO evidence.
 ```
 
 The current ics55 manifest is:
@@ -45,6 +49,19 @@ python3 flow/generator/capability.py --pdk ics55-l3 --target-mhz 1000
 
 python3 flow/generator/capability.py --pdk ics55-l3-dense --target-mhz 1000
 # PASS_L3_SPARSE, 110-point dense-axis table, exact 1000 MHz candidate
+```
+
+The system ceilings are deliberately below the measured digital canary Fmax:
+GF180 AS 3.3 V is 150/80 MHz (OUT/REF), FD 5 V 25/15 MHz, FD 9T 30/20 MHz,
+3.3 V 7T 40/25 MHz, and ETRI050 10/10 MHz (experimental, not signoff).
+
+```sh
+python3 flow/generator/capability.py --pdk gf180mcu_as_sc_mcu7t3v3 \
+  --target-mhz 200
+# FAIL_SYSTEM_FMAX
+python3 flow/generator/capability.py --pdk gf180mcu_as_sc_mcu7t3v3 \
+  --target-mhz 100 --ref-mhz 50
+# FAIL_UNCHARACTERIZED (no DCO table; digital ceiling is not DCO signoff)
 ```
 
 A target that is inside the range but more than the default 10 MHz tolerance

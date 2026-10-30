@@ -37,8 +37,9 @@
     `INJ_EDGE` **96.70 MHz**。
 - 另一个 pre-layout TT 3.3 V 结果（同一 `pll_logic`，无走线延时）：
   - 2.5 ns `OUT` 下 worst setup **-0.50 ns**，即约 **0.33 GHz** 量级。
-- 结论：GF180 3.3 V 数字控制适合 **100–300 MHz**，不是 1.6 GHz；高速宏需要
-  流水/重定时或更快的库。
+- 结论：GF180 3.3 V 数字控制规划在 **100–150 MHz**（196.37 MHz SS 是
+  绝对上限，仍要留走线/电压/温度余量），不是 1.6 GHz；高速宏需要流水/
+  重定时或更快的库。
 
 **FD `gf180mcu_fd_sc_mcu7t5v0`**
 
@@ -91,9 +92,13 @@
 - `ETRI050_fd_sc_12t`：5 V、0.5 µm、单 TT corner、无温度模型；synthesis 1654 cells，
   1,206,913 µm²（数字控制本身约 1.2 mm²）。
 - pre-layout TT 5 V、2.5 ns `OUT`：worst setup **-8.66 ns**，等效约 **90 MHz**。
-- 没有 P&R canary，也没有 macro；5 V 大单元 + 长走线会进一步降低。
-- 结论：ETRI050 只适合 **tens of MHz 到约 100 MHz** 的慢速/研究用途，
-  不适合当前 ADPLL 的 1.6 GHz 目标，也不适合面积敏感设计。
+- 已有 route/fill 完成的 Core A canary，但**不是 timing/DRC/LVS signoff**：
+  unpadded 20 ns 下 setup **-158.85 ns** / hold **-16.73 ns**，critical path
+  ~179 ns；padded final metrics 更差（setup -342.957 ns）。
+- 没有 macro，且只有 TT/5 V/25 °C；5 V 大单元 + 长走线会进一步降低。
+- 结论：pre-layout 的 ~90 MHz 不能当成可实现 Fmax。规划上只适合
+  **几 MHz 到 10 MHz** 的慢速/研究用途；不适合当前 ADPLL，也不适合面积
+  敏感设计。
 
 ### ETRI050 PnR blockers
 
@@ -112,7 +117,26 @@
 - **库端**：`ETRI050_fd_sc_12t` 的 38 cells 可综合，但 Core A 的 missing
   `nand2b` 是硬 blocker；不能靠改 flow 参数解决。
 
-## 3. 对 1.6 GHz 目标的判断
+## 3. 系统频率规划上限（Generator 约束）
+
+`flow/generator/system_limits.json` 把这些值作为**系统/数字规划上限**，
+不是 DCO 表征结果。低于上限只代表数字侧不是硬阻塞；没有 DCO 表时
+`capability.py` 仍返回 `FAIL_UNCHARACTERIZED`。
+
+| PDK / 库 | 实测/证据 | 规划上限 OUT | 规划上限 REF | 推荐 OUT | 备注 |
+|---|---|---:|---:|---:|---|
+| GF180 AS 3.3 V | OUT 196.37 MHz SS；REF 163.53；INJ 96.70 | 150 MHz | 80 MHz | 80–150 MHz | post-route clock report |
+| GF180 FD 5 V | OUT 49.6 TT / 40.8 SS | 25 MHz | 15 MHz | 15–25 MHz | 50 MHz SS 未闭合 |
+| GF180 FD 9T 5 V | OUT 52.0 TT / 44.2 SS | 30 MHz | 20 MHz | 20–30 MHz | SS setup 仍未闭合 |
+| GF180 3.3 V 7T | 20 ns 全 corner 闭合（>50 MHz） | 40 MHz | 25 MHz | 25–40 MHz | 只有 20 ns 级证据 |
+| ETRI050 12T 5 V | pre-layout ~90 MHz；P&R 未签核 | 10 MHz | 10 MHz | 3–10 MHz | 仅研究用途，不是 signoff |
+
+GF180 AS 的 150 MHz 上限相对 196.37 MHz SS 留了约 24% 余量；REF 80 MHz
+相对 INJ_EDGE 96.70 MHz 留了约 17% 余量。FD/9T 的上限相对 SS 结果留了
+约 30–40% 余量。所有 GF180 值都假设使用对应 canary 的库/电压；3.3 V 9T/12T
+OSU 的 tap/endcap/CTS 阻塞仍未解决，不能套用这些上限。
+
+## 4. 对 1.6 GHz 目标的判断
 
 所有 PDK 的现有数字控制都达不到 1.6 GHz：
 
@@ -128,7 +152,7 @@ ETRI   OUT ~90 MHz pre-layout
 调大 `FCW=16`。模拟 DCO 可以在硬宏里单独跑更高频率，但完整 PLL 的反馈计数器、
 DLF 和 SS-BBPD 采样也必须跟上。
 
-## 4. 估算的可信度
+## 5. 估算的可信度
 
 | 数据 | 可信度 |
 |---|---|

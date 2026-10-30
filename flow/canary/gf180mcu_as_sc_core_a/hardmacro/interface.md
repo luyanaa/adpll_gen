@@ -42,7 +42,7 @@ be updated in the same change.  The instance name in the top is `pll_ana`.
 | `MID_MUX` | in | `MID_NDELS` (15) | quasi-static, REF | Unary/thermometer mid delay code. |
 | `FINE_MUX` | in | `FINE_NDELS` (31) | quasi-static, DSM_CK (= MID_OUT/DSM_DIV) | Unary/thermometer fine delay code; MSB..LSB decoded by `pll_term_decoder_with_zero`. |
 | `DCO_EN` | in | 1 | INJ_EDGE (negedge) | DCO enable. 0 holds the DCO off; 1 free-runs. Driven by the startup FSM. |
-| `REF` | in | 1 | REF clock, 50 MHz nominal (20 ns) in this canary | Reference clock. Feeds the injection delay chain and the SS-BBPD sampler. |
+| `REF` | in | 1 | REF clock, 80 MHz nominal (12.5 ns) in this canary | Reference clock. Feeds the injection delay chain and the SS-BBPD sampler. |
 | `INJ_EN` | in | 1 | quasi-static | Injection enable. Gates the injection pulse; not a reset. |
 | `SS_BBPD` | out | 2 | sampled by REF/OUT; consumed at `negedge INJ_EDGE` | Sub-sampling bang-bang phase detector result. `SS_BBPD[0]` = REF sample, `SS_BBPD[1]` = OUT sample (see `digital_loop_filter.v`). |
 | `OUT` | out | 1 | DCO clock | DCO output. Also feeds the output divider (`pll_mod_divider`); the freq-lock counter uses `MID_OUT`, not `OUT`. |
@@ -74,13 +74,13 @@ three delay codes.
 
 ## Clock / reset assumptions
 
-- `REF` is the only reference clock: 20 ns period (50 MHz) in this canary.
+- `REF` is the only reference clock: 12.5 ns period (80 MHz) in this canary.
 - `OUT` and `MID_OUT` are DCO-rate clocks.  Their period is set by the delay
   codes, not by `REF`; the RTL's default FCW width is 8 bits and the
   frequency-lock loop targets the integer ratio `FCW`.  FCW = 8 therefore
   implies `OUT ≈ 8 × REF = 400 MHz` (2.5 ns).  At 180 nm / 3.3 V a 400 MHz
-  IL-DCO is **not claimed**; the canary SDC uses a conservative 5.0 ns
-  (200 MHz) planning period.  The real DCO range is a characterization result.
+  IL-DCO is **not claimed**; the canary SDC uses 6.667 ns (150 MHz) OUT and
+  12.5 ns (80 MHz) REF planning periods.  The real DCO range is a characterization result.
 - `INJ_EDGE` has the `REF` period and a delay set by `IL_NDELS` buffer stages.
   It is not a free-running clock and must be characterized as a delayed
   `REF` (or a generated clock) in the macro Liberty/top SDC.

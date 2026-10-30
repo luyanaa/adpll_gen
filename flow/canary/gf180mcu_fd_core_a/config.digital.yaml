@@ -133,7 +133,7 @@ CLOCK_TRANSITION_CONSTRAINT: 0.50
 # the digital-only top and are created as (asynchronous, nominal) clocks in
 # constraints/adpll.sdc, because CLOCK_PORT takes one port only.
 CLOCK_PORT: REF
-CLOCK_PERIOD: 20.0
+CLOCK_PERIOD: 66.667
 
 PNR_SDC_FILE: dir::constraints/adpll.sdc
 SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc

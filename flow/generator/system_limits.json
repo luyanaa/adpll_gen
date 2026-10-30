@@ -1,0 +1,77 @@
+{
+  "gf180mcu_as_sc_mcu7t3v3": {
+    "max_out_mhz": 150.0,
+    "max_ref_mhz": 80.0,
+    "max_fcw": 8,
+    "basis": "GF180 AS 3.3 V canary: OUT 196.37 MHz SS, REF 163.53 MHz, INJ_EDGE 96.70 MHz; 25% planning margin.",
+    "qualified": false,
+    "recommended_out_mhz": [
+      80,
+      150
+    ],
+    "recommended_ref_mhz": [
+      40,
+      80
+    ]
+  },
+  "gf180mcu_fd_sc_mcu7t5v0": {
+    "max_out_mhz": 25.0,
+    "max_ref_mhz": 15.0,
+    "max_fcw": 4,
+    "basis": "GF180mcuD FD 5 V post-route: OUT 49.6 MHz TT / 40.8 MHz SS; 50 MHz not closed at SS.",
+    "qualified": false,
+    "recommended_out_mhz": [
+      15,
+      25
+    ],
+    "recommended_ref_mhz": [
+      10,
+      15
+    ]
+  },
+  "gf180mcu_fd_sc_mcu9t5v0": {
+    "max_out_mhz": 30.0,
+    "max_ref_mhz": 20.0,
+    "max_fcw": 4,
+    "basis": "GF180mcuD FD 9T 5 V post-route: OUT 52.0 MHz TT / 44.2 MHz SS; SS setup still open.",
+    "qualified": false,
+    "recommended_out_mhz": [
+      20,
+      30
+    ],
+    "recommended_ref_mhz": [
+      10,
+      20
+    ]
+  },
+  "gf180mcu_3v3_7t": {
+    "max_out_mhz": 40.0,
+    "max_ref_mhz": 25.0,
+    "max_fcw": 4,
+    "basis": "GF180mcuD 3.3 V 7T: 20 ns closes all corners (>50 MHz), planning cap 40 MHz.",
+    "qualified": false,
+    "recommended_out_mhz": [
+      25,
+      40
+    ],
+    "recommended_ref_mhz": [
+      15,
+      25
+    ]
+  },
+  "etri050": {
+    "max_out_mhz": 10.0,
+    "max_ref_mhz": 10.0,
+    "max_fcw": 4,
+    "basis": "ETRI050 12T route/fill complete but timing is not closed: setup -158.85 ns, hold -16.73 ns at 20 ns; 5 V/0.5 um and no signoff corner.",
+    "qualified": false,
+    "recommended_out_mhz": [
+      3,
+      10
+    ],
+    "recommended_ref_mhz": [
+      3,
+      10
+    ]
+  }
+}

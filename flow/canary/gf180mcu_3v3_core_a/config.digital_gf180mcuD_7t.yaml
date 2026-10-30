@@ -32,7 +32,7 @@ PDN_CORE_RING: false
 PDN_ENABLE_PINS: true
 
 CLOCK_PORT: REF
-CLOCK_PERIOD: 20.0
+CLOCK_PERIOD: 40.0
 PNR_SDC_FILE: dir::constraints/adpll.sdc
 SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
 

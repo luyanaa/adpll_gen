@@ -36,7 +36,7 @@ FP_CORE_UTIL: 15
 PL_TARGET_DENSITY_PCT: 35
 
 CLOCK_PORT: REF
-CLOCK_PERIOD: 20.0
+CLOCK_PERIOD: 100.0
 PNR_SDC_FILE: dir::constraints/adpll.sdc
 SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc
 

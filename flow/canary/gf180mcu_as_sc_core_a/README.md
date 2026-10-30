@@ -333,8 +333,9 @@ symlinks.
    The last STA is mid-PnR after global route, with estimated parasitics:
    one FF register-to-register setup violation of -0.092 ns and zero hold
    violations.  Post-route timing is unproven.
-3. **No timing closure claim.**  The 5.0 ns OUT/MID_OUT period is a
-   conservative 180 nm planning value.  The RTL's FCW=8 nominal is 2.5 ns
+3. **No timing closure claim.**  The current SDC uses 6.667 ns
+   (150 MHz) OUT/MID_OUT and 12.5 ns (80 MHz) REF/INJ, below the measured
+   196.37 MHz SS digital Fmax.  The RTL's FCW=8 nominal is 2.5 ns
    (400 MHz), which is not claimed at 180 nm.  `CKR` and `DSM_CK` are
    internally generated clocks and are not declared; `SS_BBPD` is not
    constrained because there is no macro Liberty.  A timing claim without
@@ -387,7 +388,7 @@ Full details: `hardmacro/interface.md`, `hardmacro/manifest.yaml`.
 | `MID_MUX` | in | 15 | unary mid delay code |
 | `FINE_MUX` | in | 31 | unary fine delay code |
 | `DCO_EN` | in | 1 | DCO enable |
-| `REF` | in | 1 | 20 ns reference in this canary |
+| `REF` | in | 1 | 12.5 ns (80 MHz) reference in this canary |
 | `INJ_EN` | in | 1 | injection enable |
 | `SS_BBPD` | out | 2 | `[0]` = REF sample, `[1]` = OUT sample |
 | `OUT` | out | 1 | DCO output |
@@ -407,15 +408,15 @@ LibreLane.
 
 ## Constraints notes (`constraints/adpll.sdc`)
 
-- `REF` = 20 ns (50 MHz).  `OUT`/`MID_OUT` are created at 5.0 ns (200 MHz) as
-  a conservative 180 nm planning value; the real period is a DCO
-  characterization result.  The RTL's FCW=8 nominal is 2.5 ns / 400 MHz, not
-  claimed here.
-- `INJ_EDGE` is created as a 20 ns clock, but it is physically a delayed
+- `REF` = 12.5 ns (80 MHz).  `OUT`/`MID_OUT` are created at 6.667 ns
+  (150 MHz) as a planning value below the 196.37 MHz SS digital Fmax; the real
+  period is a DCO characterization result.  The RTL's FCW=8 nominal is
+  2.5 ns / 400 MHz, not claimed here.
+- `INJ_EDGE` is created as a 12.5 ns clock, but it is physically a delayed
   `REF`.  It is grouped asynchronous for now; replace with a generated clock
   + edge shift once the macro Liberty provides the insertion delay.
 - Input delays: REF-sampled controls max 5.0 / min 1.0 ns; OUT-sampled divider
-  controls max 0.5 / min 0.1 ns.  Output delays: `LOCKED`/`ERR` 5.0 ns
+  controls max 0.5 / min 0.1 ns.  Output delays: `LOCKED`/`ERR` 12.5 ns
   (INJ_EDGE domain), `OUT_DIV` 0.5 ns (OUT domain), DCO buses 0.5 ns in the
   digital-only top (min 0 for outputs).  These are planning values, not
   board-level numbers.

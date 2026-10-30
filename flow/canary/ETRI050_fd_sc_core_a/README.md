@@ -28,6 +28,28 @@ result, not a timing-signoff result.
 - `klayout_check_local.sh` adds the cell LEF to `macro_layout_files`; the PDK
   script omits it, which otherwise causes “Macro not found in LEF” warnings.
 
+## Why this is not a completed PnR/signoff
+
+The route itself completed: detailed routing converged to 0 OpenROAD route DRC
+errors, fill ran, and the DEF/GDS/CDL were emitted.  The flow stopped at
+`--to OpenROAD.DetailedRouting`; it was never a full signoff run.
+
+Continuing would still fail for independent reasons:
+
+- The 12T GDS extends 1.3–1.4 µm beyond the LEF at cell boundaries; abutted
+  cells produce 636 KLayout NWL/NSD/PSD markers.  The PDK's `ACCEPTANCE.md`
+  excludes this library.
+- The rails-only PDN has no top-level VDD/VSS terminal (`PSM-0038/0069`);
+  adding MET2/MET3 straps makes placement/repair fail.
+- LVS labels are written on 13/1 but the ETRI deck reads 42/44/46, and the
+  extracted stdcell bulk/tap nodes are not merged into VDD/VSS.
+- Timing is not close at 20 ns: unpadded setup -158.85 ns / hold -16.73 ns;
+  the padded final metrics are worse (setup -342.957 ns / hold -14.575 ns).
+  Critical path is ~179 ns, and there is only one TT/5 V/25 °C corner.
+
+So this is a **route-qualified, signoff-incomplete** result, not a route
+failure.
+
 ## Remaining blockers
 
 - **Timing:** 20 ns gives setup -158.85 ns / hold -16.73 ns.  The critical path

@@ -101,7 +101,7 @@ MACROS:
 # Clocks and constraints
 # ---------------------------------------------------------------------------
 CLOCK_PORT: REF
-CLOCK_PERIOD: 20.0
+CLOCK_PERIOD: 12.5
 
 PNR_SDC_FILE: dir::constraints/adpll.sdc
 SIGNOFF_SDC_FILE: dir::constraints/adpll.sdc

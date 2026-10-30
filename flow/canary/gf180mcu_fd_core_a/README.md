@@ -94,9 +94,11 @@ OpenROAD post-route STA with RCX/extracted parasitics, 20 ns clock:
 | SS / 4.5 V / 125 °C | **-4.516 ns** | 25 | +1.071 ns | 0 | 0 / 0 |
 | FF / 5.5 V / -40 °C | **+1.719 ns** | 0 | +0.390 ns | 0 | 0 / 0 |
 
-The 20 ns (50 MHz) constraint is not closed at SS/TT.  The equivalent
-single-clock estimate is about **49.6 MHz at TT** and **40.8 MHz at SS**;
-hold is positive at all three corners.  Use a relaxed period (about 25 ns) or
+The 20 ns (50 MHz) run is the archived characterization result and is not
+closed at SS/TT.  The current SDC uses 40 ns (25 MHz) OUT/MID and 66.667 ns
+(15 MHz) REF/INJ as planning constraints.  The equivalent single-clock
+estimate is about **49.6 MHz at TT** and **40.8 MHz at SS**; hold is positive
+at all three corners.  Use a relaxed period (about 25 ns) or
 fix the slow-corner path before claiming 50 MHz signoff.
 
 ## DPL history (legacy 3-metal view)

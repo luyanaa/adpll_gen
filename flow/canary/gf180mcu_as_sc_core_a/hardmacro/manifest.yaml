@@ -64,7 +64,7 @@ ports:
     direction: input
     width: 1
     domain: ref_clock
-    description: Reference clock, 20 ns period (50 MHz) in this canary.
+    description: Reference clock, 12.5 ns period (80 MHz) in this canary.
   - name: INJ_EN
     direction: input
     width: 1
@@ -118,7 +118,7 @@ clocks:
     period_ns_nominal: 5.0
     frequency_mhz_nominal: 200.0
     source: macro output, set by delay codes
-    note: Conservative 180 nm canary planning value. The RTL FCW=8 nominal is 2.5 ns / 400 MHz, which is NOT claimed at 180 nm; the real range is a DCO characterization result.
+    note: Conservative 150 MHz OUT / 80 MHz REF planning value. The RTL FCW=8 nominal is 2.5 ns / 400 MHz, which is NOT claimed at 180 nm; the real range is a DCO characterization result.
   MID_OUT:
     period_ns_nominal: 5.0
     frequency_mhz_nominal: 200.0
