@@ -15,9 +15,11 @@ from typing import Any
 
 try:  # package import
     from .capability import check_target
+    from .physical import macro_library_for_pdk
     from .system_limits import check_system, limits
 except ImportError:  # direct script execution
     from capability import check_target
+    from physical import macro_library_for_pdk
     from system_limits import check_system, limits
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -83,6 +85,7 @@ def best_library(pdk: str, core: str) -> dict[str, Any] | None:
     exact = [r for r in rows if r.get("library") == pdk]
     if exact:
         rows = exact
+    preferred = macro_library_for_pdk(pdk)
     candidates = []
     for r in rows:
         support = r.get("core_support", {}).get(core, {})
@@ -92,12 +95,13 @@ def best_library(pdk: str, core: str) -> dict[str, Any] | None:
         tier = {"2-flow": 0, "2-flow*": 1, "1+": 2, "1": 3}.get(r.get("tier", "1"), 3)
         candidates.append((0 if status == "full" else 1,
                            0 if r.get("pnr_ready") is True else 1,
+                           0 if (preferred and r.get("library") == preferred) else 1,
                            tier,
                            -int(r.get("corners", 0) or 0),
                            r.get("library", ""), r, support))
     if not candidates:
         return None
-    candidates.sort(key=lambda x: x[:5])
+    candidates.sort(key=lambda x: x[:6])
     *_, row, support = candidates[0]
     return {
         "pdk": row.get("pdk"),

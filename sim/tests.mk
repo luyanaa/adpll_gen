@@ -184,6 +184,16 @@ $(SIM_OUT)/freq_lock_tb.vcd: $(SRC_DIR)/freq_lock.v $(SRC_DIR)/freq_lock_tb.v $(
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1 $^ && $(VVP) a.out
 
+# Frequency-counter range and multi-period window regression
+test_freq_lock_overflow: $(SIM_OUT)/freq_lock_overflow.vcd
+
+view_test_freq_lock_overflow: $(SIM_OUT)/freq_lock_overflow.vcd
+	gtkwave $(SIM_OUT)/freq_lock_overflow.vcd
+
+$(SIM_OUT)/freq_lock_overflow.vcd: $(SRC_DIR)/freq_lock.v $(SRC_DIR)/freq_lock_overflow_tb.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1 $^ && $(VVP) a.out
+
 # Digital loop filter RTL simulation
 test_dlf: $(SIM_OUT)/digital_loop_filter_tb.vcd
 

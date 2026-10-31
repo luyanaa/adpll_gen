@@ -4,28 +4,28 @@
   "core": "core_a_il_dco",
   "blocks": {
     "dco": {
-      "library": "ics55_LLSC_H7CH",
+      "library": "ics55_LLSC_H7CR",
       "voltage": 1.2,
       "kind": "hard_macro"
     },
     "pd": {
-      "library": "ics55_LLSC_H7CH",
+      "library": "ics55_LLSC_H7CR",
       "voltage": 1.2,
       "kind": "hard_macro"
     },
     "digital": {
-      "library": "ics55_LLSC_H7CL",
+      "library": "ics55_LLSC_H7CR",
       "voltage": 1.2,
       "kind": "soft"
     }
   },
   "tier": "2-flow",
   "corners": "all",
-  "notes": "Example only. Same-voltage mixed-library choice; validate cell mapping, hold/setup, and clock isolation before use.",
+  "notes": "Example only. Uses the H7CR library family that matches the built PLL_ANALOG_MACRO identity; validate cell mapping, macro views, hold/setup, and clock isolation before use.",
   "features": {
-    "fractional_n": true,
+    "fractional_n": false,
     "ssc": false,
-    "bist": true,
+    "bist": false,
     "multiphase": false,
     "scan": true
   }

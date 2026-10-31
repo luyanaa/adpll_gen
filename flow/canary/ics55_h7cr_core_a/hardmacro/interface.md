@@ -1,9 +1,10 @@
 # PLL_ANALOG hard-macro interface
 
-Status: **not built / not characterized**.  This document is the contract that
-the hard-macro build and the LibreLane top must both satisfy.  The only
-executable artifact today is `PLL_ANALOG_blackbox.v` (synthesis/elaboration
-stub) plus `manifest.yaml` (machine-readable form of this file).
+Status: **layout/views built; macro-internal timing not characterized**.  The
+H7CR build is in `flow/macro/ics55_h7cr`, with generated views under
+`pnr/outputs/ics55` and `signoff/outputs/ics55`.  `manifest.yaml` records the
+built identity; `flow/generator/physical.py` verifies the views and parameter
+hash.  `PLL_ANALOG_blackbox.v` remains the synthesis/elaboration stub.
 
 Source of truth for the interface: `src/pll_analog.v`, `src/pll.v`.
 
@@ -99,11 +100,11 @@ three delay codes.
 
 | View | Path (expected) | Required contents |
 |---|---|---|
-| GDSII | `hardmacro/PLL_ANALOG.gds` | Final macro layout, top cell `PLL_ANALOG`, origin at (0,0), VDD/VSS rails, no unresolved DRC. |
-| LEF | `hardmacro/PLL_ANALOG.lef` | `MACRO PLL_ANALOG`, `SIZE`, `PIN` for every port above with `DIRECTION`/`USE`, `PORT` geometry on the routing grid, `OBS`, `PIN VDD/VSS`. Must be abstracted with the same pin layer/grid rules as the H7CR flow (MET1 rails, MET2 pin access, see the PDK `_ecos` LEF note). |
-| Liberty | `hardmacro/PLL_ANALOG.lib` | `cell (PLL_ANALOG)`, input pins with capacitance, `SS_BBPD`/`OUT`/`MID_OUT`/`INJ_EDGE` output timing, internal power, `pg_pin` VDD/VSS, operating conditions matching `STA_CORNERS`. |
-| CDL | `hardmacro/PLL_ANALOG.cdl` | Subcircuit for LVS, pin order matching the LEF/Verilog. |
-| SPICE | `hardmacro/PLL_ANALOG.spice` | Extracted/transistor netlist for macro-level simulation; used by the analog signoff, not by LibreLane. |
+| GDSII | `../../../../signoff/outputs/ics55/PLL_ANALOG_MACRO.gds` | Generated macro layout, top cell `PLL_ANALOG_MACRO`, VDD/VSS rails, explicit cell-internal DRC waiver. |
+| LEF | `../../../../pnr/outputs/ics55/PLL_ANALOG_MACRO.lef` | `MACRO PLL_ANALOG_MACRO`, pins for every port, pin geometry on the routing grid, `OBS`, VDD/VSS. |
+| Liberty | `../../../../pnr/outputs/ics55/PLL_ANALOG_MACRO.lib` | Macro Liberty for top STA; `SS_BBPD` timing is still not characterized. |
+| CDL | `../../../../pnr/outputs/ics55/PLL_ANALOG_MACRO.cdl` | Subcircuit for LVS; flat-reference flow used for KLayout. |
+| SPICE | `../../../../signoff/outputs/ics55/PLL_ANALOG_MACRO.spice` | Extracted/transistor netlist for macro-level simulation. |
 | Verilog | `hardmacro/PLL_ANALOG_blackbox.v` | Present.  Synthesis/elaboration stub only. |
 
 The macro Liberty is the piece that makes the top STA meaningful.  A

@@ -230,22 +230,91 @@ missing or mismatched `process_id`, `pdk_release`, `standard_cell_library`,
 stored as `null`, so a caller cannot accidentally claim them.  The old
 OSU/OCD/AS-EX aliases to the AS canary were removed for the same reason.
 
-## Remaining generator gaps
+## Delivery generator (P1-3)
 
-The following are intentionally still open; this repository is a planner and
-capability gate, not a closed-loop GDS generator:
+`spec.py` resolves a JSON specification into a `ResolvedDesign`; `delivery.py`
+writes the build package.  The boundary is explicit:
 
-- `Specification -> ResolvedDesign -> RTL/macro/SDC/validation -> package`
-  does not exist yet (P1-3).
-- There is no automatic re-build of a hard macro when structural parameters
-  change, and no `design.lock.json` physical-view hash (P1-2).
-- `pll.v` does not yet expose every new lock parameter, and the canary
-  selection/demo manifest is not reconciled with a built macro identity.
-- Frequency measurement still uses a fixed-width counter; the measured ratio
-  must remain below the `CNT_BITS` wrap limit.  A separate
-  `freq_measure`/`sample_valid`/`overflow` interface is the next refactor (P0-5).
-  `freq_lock.v` now exposes `SAMPLE_VALID`/`MEASURED_COUNT`, but does not yet
-  detect overflow or provide a multi-period measurement window.
-- Gray-bus physical skew, synchronizer placement/reset constraints, and a
-  CDC rule check are not automated; the RTL CDC test is not a layout signoff.
-- Full PVT/lock/jitter/PEX signoff is not claimed for any architecture.
+```text
+Specification -> ResolvedDesign -> RTL source set + top wrapper
+              -> macro config/rebuild plan + SDC + validation plan
+              -> design.lock.json + optional .tar.gz
+```
+
+```sh
+python3 flow/generator/delivery.py \
+  --spec flow/generator/spec.example.json \
+  --out build/adpll_ics55 --package
+
+python3 flow/generator/delivery.py --out build/adpll_ics55 --verify
+```
+
+The example resolves to Core A on ics55 and writes:
+
+```text
+resolved.json
+rtl/adpll_top.v
+rtl/src/*.v + sources.f
+macro/config.yaml
+macro/build.sh
+constraints/adpll.sdc
+constraints/freq_lock_cdc.sdc
+validation/plan.json
+design.lock.json
+README.md
+```
+
+`design.lock.json` records the spec/resolved hashes, source hashes, macro
+parameter hash, per-view hashes, and generated-file hashes.  The package is a
+template: it does not run synthesis/PnR/DRC/LVS and never claims production.
+
+`spec.schema.json` documents accepted fields.  `allow_experimental=true`
+permits MODEL_ONLY/RTL_SYNTHESIZABLE template generation with `mode=explore`;
+`allow_macro_rebuild=true` permits a package with a rebuild plan when a
+physical view or structural parameter does not match the built macro.  Add
+`--run-macro-build` to execute the recorded command and re-resolve the macro
+identity; without it, the generated `macro/build.sh` is the explicit trigger.
+
+## Physical identity (P1-2)
+
+`physical.py` binds a selection to `macro_inventory.json` and checks:
+
+- selected PDK/cell library against the built macro library;
+- `COARSE_NDELS/MID_NDELS/FINE_NDELS/IL_NDELS` parameter hash;
+- SHA-256 of LEF/Liberty/CDL/GDS/SPICE views.
+
+It returns `BUILT`, `MISSING_VIEWS`, `LIBRARY_MISMATCH`, or
+`PARAMETER_MISMATCH`; only the last three set `needs_rebuild`.  When allowed,
+`delivery.py` emits `macro/build.sh` with the rebuild command.  The
+architecture selector also prefers the library named by the macro inventory,
+so an ics55 build does not silently select H7CH when the built macro is H7CR.
+`flow/selection.example.json` is aligned with the H7CR macro identity.
+
+## Frequency measurement (P0-5)
+
+`freq_lock.v` now uses the filtered count for acquisition/lock, defaults
+`LOCK_TOL=1`, and exposes a measurement interface separate from control:
+
+```text
+SAMPLE_VALID
+MEASURED_COUNT
+CNT_EXTRA_BITS   (default 8; internal counter is CNT_BITS + extra)
+MEAS_PERIODS     (default 1; completed measurement window)
+```
+
+The 16-bit default source counter avoids the old 8-bit wrap at ratio >255;
+`freq_lock_overflow_tb.v` checks a 300:1 MID/REF ratio and a four-period
+window.  `spec.py` also computes the maximum acquisition ratio from the PDK
+architecture ceiling and REF, and blocks generation (`NEEDS_COUNTER_RANGE`) if
+`FCW_BITS + CNT_EXTRA_BITS` is too small.  Gray-bus skew/reset requirements
+and starter SDC constraints are in `cdc.py` and are emitted as
+`constraints/freq_lock_cdc.sdc`.  This is still a
+template: a placed CDC extraction/rule check and a multi-corner timing review
+remain required.
+
+## Residual limits
+
+- Full PVT/lock/jitter/PEX/DRC/LVS signoff is not claimed for any architecture.
+- `macro/build.sh` is generated but not executed automatically by
+  `delivery.py`; the caller chooses when to run a long macro build.
+- CDC skew values are starter constraints, not post-layout measurements.

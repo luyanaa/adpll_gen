@@ -1,9 +1,12 @@
 # Machine-readable interface contract for the PLL_ANALOG hard macro.
 # Human-readable companion: interface.md
-# Status: the macro does NOT exist yet. Every view below is expected, not built.
+# The H7CR macro has been built and LVS-checked in flow/macro/ics55_h7cr;
+# the generated views live under pnr/outputs/ics55 and signoff/outputs/ics55.
+# This file remains an interface contract, not a signoff certificate.
 name: PLL_ANALOG
-version: 0.1.0-draft
-status: not_built
+built_macro: PLL_ANALOG_MACRO
+version: 0.1.0-built
+status: built
 kind: hard_macro
 pdk: ics55
 cell_library: ics55_LLSC_H7CR
@@ -136,31 +139,31 @@ power:
 
 views:
   gds:
-    path: hardmacro/PLL_ANALOG.gds
-    exists: false
+    path: ../../../../signoff/outputs/ics55/PLL_ANALOG_MACRO.gds
+    exists: true
     required: true
   lef:
-    path: hardmacro/PLL_ANALOG.lef
-    exists: false
+    path: ../../../../pnr/outputs/ics55/PLL_ANALOG_MACRO.lef
+    exists: true
     required: true
   lib:
-    path: hardmacro/PLL_ANALOG.lib
-    exists: false
+    path: ../../../../pnr/outputs/ics55/PLL_ANALOG_MACRO.lib
+    exists: true
     required: true
     note: TT at first; multi-corner requires per-corner macro Liberty.
   cdl:
-    path: hardmacro/PLL_ANALOG.cdl
-    exists: false
+    path: ../../../../pnr/outputs/ics55/PLL_ANALOG_MACRO.cdl
+    exists: true
     required: true_for_lvs
   spice:
-    path: hardmacro/PLL_ANALOG.spice
-    exists: false
+    path: ../../../../signoff/outputs/ics55/PLL_ANALOG_MACRO.spice
+    exists: true
     required_for_macro_signoff: true
   verilog_blackbox:
     path: hardmacro/PLL_ANALOG_blackbox.v
     exists: true
     required: true
-    note: Synthesis/elaboration stub only.
+    note: Synthesis/elaboration stub only. The built gate-level view is PLL_ANALOG_MACRO.v.
 
 timing:
   macro_internal_sta: not_characterized
@@ -199,8 +202,19 @@ build_boundary:
     - top-level PDN, CTS, route, STA, DRC/LVS/antenna, IR/EM
   build_flow: ckdur hard-macro flow (pnr/) + ngspice/ISF characterization, not LibreLane
 
+identity:
+  source_of_truth: flow/generator/macro_inventory.json
+  cell_library: ics55_LLSC_H7CR
+  top: PLL_ANALOG_MACRO
+  parameters:
+    COARSE_NDELS: 15
+    MID_NDELS: 15
+    FINE_NDELS: 31
+    IL_NDELS: 4
+  physical_view_hash: computed per generation by flow/generator/physical.py
+
 blockers:
-  - PLL_ANALOG GDS/LEF/Liberty/CDL/SPICE have not been built or characterized.
-  - config.macro.yaml therefore cannot run.
-  - LibreLane is not installed in this environment (see README).
-  - Only the digital synthesis proof (config.digital.yaml / scripts/synth_digital.ys) is executable today.
+  - The generated GDS/LEF/Liberty/CDL/SPICE views are not tracked source files;
+    a clean checkout must rebuild them with flow/macro/ics55_h7cr/Makefile.
+  - Macro-internal STA is not characterized; DRC has a cell-internal waiver.
+  - The top-level PLL integration/timing/PDN evidence is still open.

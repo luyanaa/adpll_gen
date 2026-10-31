@@ -17,6 +17,8 @@ module pll_macro_top #(
     parameter integer LOCK_TOL = 1,
     parameter integer LOCK_COUNT = 16,
     parameter integer LOSS_COUNT = 4,
+    parameter integer CNT_EXTRA_BITS = 8,
+    parameter integer MEAS_PERIODS = 1,
 `ifndef PLL_WITHOUT_DIVIDER
     parameter integer DIV_BITS = 8,
 `endif
@@ -55,6 +57,8 @@ module pll_macro_top #(
         .LOCK_TOL(LOCK_TOL),
         .LOCK_COUNT(LOCK_COUNT),
         .LOSS_COUNT(LOSS_COUNT),
+        .CNT_EXTRA_BITS(CNT_EXTRA_BITS),
+        .MEAS_PERIODS(MEAS_PERIODS),
 `ifndef PLL_WITHOUT_DIVIDER
         .DIV_BITS(DIV_BITS),
 `endif

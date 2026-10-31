@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "macros": {
+    "ics55": {
+      "name": "PLL_ANALOG_MACRO",
+      "core": "core_a_il_dco",
+      "pdk": "ics55",
+      "cell_library": "ics55_LLSC_H7CR",
+      "root": "flow/macro/ics55_h7cr",
+      "flow": "ckdur_openroad",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "IL_NDELS": 4
+      },
+      "views": {
+        "lef": "pnr/outputs/ics55/PLL_ANALOG_MACRO.lef",
+        "lib": "pnr/outputs/ics55/PLL_ANALOG_MACRO.lib",
+        "cdl": "pnr/outputs/ics55/PLL_ANALOG_MACRO.cdl",
+        "verilog": "pnr/outputs/ics55/PLL_ANALOG_MACRO.v",
+        "spice": "signoff/outputs/ics55/PLL_ANALOG_MACRO.spice",
+        "gds": "signoff/outputs/ics55/PLL_ANALOG_MACRO.gds",
+        "sdc": "flow/macro/ics55_h7cr/PLL_ANALOG_MACRO.sdc.tcl"
+      },
+      "required_views": ["lef", "lib", "cdl", "gds"],
+      "build_command": "make -C flow/macro/ics55_h7cr pnr signoff",
+      "evidence": {
+        "drc": "top-level DRC 0; 7T cell-internal waiver only",
+        "lvs": "KLayout flat-reference LVS PASS",
+        "timing": "macro-internal STA not characterized"
+      }
+    },
+    "ihp-sg13g2": {
+      "name": "PLL_ANALOG_MACRO",
+      "core": "core_a_il_dco",
+      "pdk": "ihp-sg13g2",
+      "cell_library": "sg13g2_stdcell",
+      "root": "flow/macro/ihp130_sg13g2",
+      "flow": "ckdur_openroad",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "IL_NDELS": 4
+      },
+      "views": {
+        "lef": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.lef",
+        "lib": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.lib",
+        "cdl": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.cdl",
+        "verilog": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.v",
+        "def": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.def",
+        "gds": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.gds",
+        "sdc": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.sdc.tcl"
+      },
+      "required_views": ["lef", "lib", "cdl", "gds"],
+      "build_command": "make -C flow/macro/ihp130_sg13g2 pnr signoff",
+      "evidence": {
+        "drc": "minimal-deck DRC 0 with density fill",
+        "lvs": "KLayout LVS PASS on fill-stripped view",
+        "timing": "macro-internal STA not characterized"
+      }
+    },
+    "gf180mcu_as": {
+      "name": "PLL_ANALOG_MACRO",
+      "core": "core_a_il_dco",
+      "pdk": "gf180mcu",
+      "cell_library": "gf180mcu_as_sc_mcu7t3v3",
+      "root": "flow/macro/gf180mcu",
+      "flow": "librelane",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "IL_NDELS": 4
+      },
+      "views": {
+        "lef": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.lef",
+        "lib": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.lib",
+        "cdl": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.cdl",
+        "verilog": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.v",
+        "def": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.def",
+        "gds": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.gds",
+        "sdc": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.sdc"
+      },
+      "required_views": ["lef", "lib", "cdl", "gds"],
+      "build_command": "librelane flow/macro/gf180mcu/config.macro_build.yaml",
+      "evidence": {
+        "drc": "KLayout DRC 0 after density fill",
+        "lvs": "KLayout LVS PASS with fill-marker shim",
+        "timing": "macro-internal STA not characterized"
+      }
+    }
+  }
+}

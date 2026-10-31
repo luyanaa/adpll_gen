@@ -10,6 +10,13 @@ module pll_freq_lock #(
     parameter integer MID_NDELS = 5,        // Assign to mid delays
     parameter integer CNT_BITS = 8,         // Number of bits for the freq counter
     parameter integer CNT_TOL_BITS = 8,     // Number of bits for tolerances
+    // The measurement counter is widened beyond FCW so acquisition cannot
+    // silently wrap when the free-running DCO is far above REF.  The extra
+    // bits are not part of the legal FCW range.
+    parameter integer CNT_EXTRA_BITS = 8,
+    parameter integer MEAS_PERIODS = 1,     // REF periods per completed measurement window
+    parameter integer CNT_W = CNT_BITS + CNT_EXTRA_BITS,
+    parameter integer MEAS_W = CNT_W + ((MEAS_PERIODS > 1) ? $clog2(MEAS_PERIODS) : 0),
     parameter integer LOCK_LIMIT = 64,      // If CNT is inside the locking tolerance for this many cycles, lock
     parameter integer ERR_LIMIT = 64,       // If COARSE and MID cannot increase/decrease for this many cycles, err
     parameter integer LOCK_TOL = 0,         // Tolerance for the FCW for locking. 0 for exact (CNT = FCW +/- LOCK_TOL)
@@ -22,11 +29,11 @@ module pll_freq_lock #(
     output reg LOCKED, ERR,
     output reg [COARSE_NDELS-1:0] COARSE_MUX,
     output reg [MID_NDELS-1:0] MID_MUX,
-    // Measurement interface (separate from acquisition control).  The
-    // counter wraps after 2**CNT_BITS MID_OUT edges, so the REF/MID ratio
-    // must stay below that limit until a wider/prescaled counter is added.
+    // Measurement interface (separate from acquisition control).  CNT_EXTRA_BITS
+    // widens the source counter beyond the legal FCW width; MEAS_PERIODS sets
+    // the REF window used for the completed SAMPLE_VALID/MEASURED_COUNT.
     output reg SAMPLE_VALID,
-    output reg [CNT_BITS-1:0] MEASURED_COUNT
+    output reg [MEAS_W-1:0] MEASURED_COUNT
 );
     wire CLK_REF = REF; // NOTE: Negative injection
     wire CLK_OUT = MID_OUT;
@@ -41,14 +48,16 @@ module pll_freq_lock #(
     // over one REF period.  The Gray word is intentionally NOT used as a
     // one-bit snapshot-to-snapshot edge detector: many MID_OUT counts can pass
     // between two REF samples.
-    reg [CNT_BITS-1:0] cnt;
-    wire [CNT_BITS-1:0] cnt_gray = (cnt >> 1) ^ cnt;
-    (* ASYNC_REG = "TRUE" *) reg [CNT_BITS-1:0] cnt_gray_s1;
-    (* ASYNC_REG = "TRUE" *) reg [CNT_BITS-1:0] cnt_gray_s2;
-    reg [CNT_BITS-1:0] cnt_bin;
-    reg [CNT_BITS-1:0] sample_bin;
-    reg [CNT_BITS-1:0] cnt_cap; // count over the last REF period
-    reg [CNT_BITS-1:0] cnt_filt; // 1/4 IIR filter for lock/tuning decisions
+    reg [CNT_W-1:0] cnt;
+    wire [CNT_W-1:0] cnt_gray = (cnt >> 1) ^ cnt;
+    (* ASYNC_REG = "TRUE" *) reg [CNT_W-1:0] cnt_gray_s1;
+    (* ASYNC_REG = "TRUE" *) reg [CNT_W-1:0] cnt_gray_s2;
+    reg [CNT_W-1:0] cnt_bin;
+    reg [CNT_W-1:0] sample_bin;
+    reg [CNT_W-1:0] cnt_cap; // count over the last REF period
+    reg [CNT_W-1:0] cnt_filt; // 1/4 IIR filter for lock/tuning decisions
+    reg [MEAS_W-1:0] meas_accum;
+    reg [31:0] meas_count;
     reg cap_valid;
 
     initial begin
@@ -59,6 +68,8 @@ module pll_freq_lock #(
         sample_bin = 'd0;
         cnt_cap = 'd0;
         cnt_filt = 'd0;
+        meas_accum = 'd0;
+        meas_count = 'd0;
         cap_valid = 1'b0;
         SAMPLE_VALID = 1'b0;
         MEASURED_COUNT = 'd0;
@@ -81,6 +92,8 @@ module pll_freq_lock #(
             sample_bin <= 'd0;
             cnt_cap <= 'd0;
             cnt_filt <= 'd0;
+            meas_accum <= 'd0;
+            meas_count <= 'd0;
             cap_valid <= 1'b0;
             SAMPLE_VALID <= 1'b0;
             MEASURED_COUNT <= 'd0;
@@ -94,6 +107,8 @@ module pll_freq_lock #(
                 cnt_bin <= sample_bin;
                 cnt_cap <= 'd0;
                 cnt_filt <= 'd0;
+                meas_accum <= 'd0;
+                meas_count <= 'd0;
                 cap_valid <= 1'b1;
                 SAMPLE_VALID <= 1'b0;
                 MEASURED_COUNT <= 'd0;
@@ -101,25 +116,33 @@ module pll_freq_lock #(
                 cnt_cap <= sample_bin - cnt_bin;
                 cnt_filt <= (cnt_filt * 3 + (sample_bin - cnt_bin)) >> 2;
                 cnt_bin <= sample_bin;
-                SAMPLE_VALID <= 1'b1;
-                MEASURED_COUNT <= sample_bin - cnt_bin;
+                if(meas_count == MEAS_PERIODS - 1) begin
+                    MEASURED_COUNT <= meas_accum + (sample_bin - cnt_bin);
+                    meas_accum <= 'd0;
+                    meas_count <= 'd0;
+                    SAMPLE_VALID <= 1'b1;
+                end else begin
+                    meas_accum <= meas_accum + (sample_bin - cnt_bin);
+                    meas_count <= meas_count + 1'b1;
+                    SAMPLE_VALID <= 1'b0;
+                end
             end
         end
     end
 
-    function [CNT_BITS-1:0] gray_to_bin;
-        input [CNT_BITS-1:0] gray;
+    function [CNT_W-1:0] gray_to_bin;
+        input [CNT_W-1:0] gray;
         integer i;
         begin
-            gray_to_bin[CNT_BITS-1] = gray[CNT_BITS-1];
-            for(i = CNT_BITS-2; i >= 0; i = i - 1)
+            gray_to_bin[CNT_W-1] = gray[CNT_W-1];
+            for(i = CNT_W-2; i >= 0; i = i - 1)
                 gray_to_bin[i] = gray_to_bin[i+1] ^ gray[i];
         end
     endfunction
 
     // Register the tolerances... 
-    reg [CNT_BITS-1:0] FCW_PA; // FCW + TOL
-    reg [CNT_BITS-1:0] FCW_NA; // FCW - TOL
+    reg [CNT_W-1:0] FCW_PA; // FCW + TOL
+    reg [CNT_W-1:0] FCW_NA; // FCW - TOL
     always @(posedge CLK_REF) begin
         FCW_PA <= FCW + LOCK_TOL;
         FCW_NA <= FCW - LOCK_TOL;

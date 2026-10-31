@@ -41,6 +41,7 @@ def main():
     assert r["status"] == "PASS_ARCH_SELECTED_WITH_DCO", r
     assert r["selected"]["id"] == "core_a_il_dco", r["selected"]
     assert r["selected"]["physical_buildable"] is True
+    assert r["library"]["library"] == "ics55_LLSC_H7CR", r["library"]
     assert r["production_eligible"] is False
     r = select("ics55", 800, area="medium", ref_mhz=100, fcw=8,
                require_signoff=True)

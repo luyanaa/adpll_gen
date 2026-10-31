@@ -13,6 +13,8 @@ module pll_logic#(
     parameter integer LOCK_TOL = 1,
     parameter integer LOCK_COUNT = 16,
     parameter integer LOSS_COUNT = 4,
+    parameter integer CNT_EXTRA_BITS = 8,
+    parameter integer MEAS_PERIODS = 1,
 `ifndef PLL_WITHOUT_DIVIDER
     parameter integer DIV_BITS = 8,
 `endif
@@ -138,6 +140,8 @@ module pll_logic#(
         .COARSE_NDELS(COARSE_NDELS),
         .MID_NDELS(MID_NDELS),
         .CNT_BITS(FCW_BITS),
+        .CNT_EXTRA_BITS(CNT_EXTRA_BITS),
+        .MEAS_PERIODS(MEAS_PERIODS),
         .LOCK_TOL(LOCK_TOL)
     ) flock (
         .REF(REF), .MID_OUT(MID_OUT), .OUT(OUT),

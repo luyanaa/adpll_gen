@@ -18,8 +18,8 @@ changes.
 | Yosys synthesis of `pll_logic` -> H7CR cells | **PASS** (TT / 1.2 V / 25 C, Yosys 0.52) |
 | Digital timing through LibreLane | **COMPLETE (digital-only)** — final run `RUN_2026-10-29_10-21-16`, 80/80, exit 0 |
 | Place / CTS / route / DRC / LVS / antenna | **ROUTE DRC 0, setup/hold 0, antenna 0; KLayout DRC after GDS-map fix: 5734 = 4259 7T-cell-internal + 1453 via-cell + 22 top-level (density); LVS skipped** |
-| `PLL_ANALOG` hard macro | **NOT BUILT** — no GDS/LEF/Liberty/CDL/SPICE |
-| `config.macro.yaml` (full `pll` top) | **SKELETON ONLY — cannot run until the macro views exist** |
+| `PLL_ANALOG` hard macro | **BUILT** in `flow/macro/ics55_h7cr`; generated views under `pnr/outputs/ics55` + `signoff/outputs/ics55` |
+| `config.macro.yaml` (full `pll` top) | **SKELETON** — wire the generated macro views before running |
 | Multi-corner synthesis/STA | 3 PDK-wired corners enabled; 4 extra corners disabled after a cell-set mismatch (see below) |
 
 ### Runtime update (2026-10-29)
@@ -207,10 +207,13 @@ must record; a corner count alone is not enough.
 2. **OpenROAD steps are partially proven.** Placement, CTS, detailed routing,
    fill insertion, RCX and post-PnR STA ran; KLayout DRC/LVS, antenna,
    IR/EM and the final GDS are not yet a completed signoff.
-3. **`PLL_ANALOG` does not exist.** `hardmacro/PLL_ANALOG.{gds,lef,lib}` and
-   the CDL/SPICE views are expected, not built.  `config.macro.yaml` therefore
-   cannot run.  `SS_BBPD` -> digital timing is completely unconstrained until
-   the macro has a Liberty model.
+3. **`PLL_ANALOG` exists as a generated macro, not a tracked source view.**
+   The H7CR macro in `flow/macro/ics55_h7cr` has GDS/LEF/Liberty/CDL/SPICE
+   under `pnr/outputs/ics55` and `signoff/outputs/ics55`; those generated
+   files are not tracked.  `hardmacro/manifest.yaml` points at them, and
+   `flow/generator/physical.py` reports `MISSING_VIEWS` if a clean checkout
+   has not rebuilt them.  The macro Liberty does not characterize
+   `SS_BBPD` timing, so that interface remains unconstrained.
 4. **Internally generated clocks are not declared.** `CKR` (REF retimed by a
    `MID_OUT`-edge flop) and `DSM_CK` (`MID_OUT / DSM_DIV`) are used as clocks
    inside `pll_logic`.  They are not in the SDC because their hierarchical
@@ -283,7 +286,7 @@ flow/canary/ics55_h7cr_core_a/
   hardmacro/
     PLL_ANALOG_blackbox.v       synthesizable blackbox matching src/pll.v
     interface.md                port/clock/power/timing/build-boundary contract
-    manifest.yaml               machine-readable version of interface.md
+    manifest.yaml               built-macro identity + generated view paths
   scripts/
     synth_digital.ys            Yosys synthesis + stat + netlist
     sta_smoke.tcl               optional OpenSTA netlist/SDC smoke check

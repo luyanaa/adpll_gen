@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/adpll/spec.schema.json",
+  "title": "ADPLL generator specification",
+  "type": "object",
+  "required": ["design", "pdk", "target_mhz", "ref_mhz", "fcw"],
+  "properties": {
+    "design": {"type": "string", "minLength": 1},
+    "pdk": {"type": "string", "minLength": 1},
+    "target_mhz": {"type": "number", "exclusiveMinimum": 0},
+    "ref_mhz": {"type": "number", "exclusiveMinimum": 0},
+    "fcw": {"type": "integer", "minimum": 1},
+    "out_div": {"type": "integer", "minimum": 1, "default": 1},
+    "area": {"type": "string", "enum": ["low", "medium", "high"], "default": "medium"},
+    "mode": {"type": "string", "enum": ["buildable", "explore"], "default": "buildable"},
+    "features": {
+      "type": "object",
+      "properties": {
+        "wide_range": {"type": "boolean"},
+        "fractional": {"type": "boolean"},
+        "low_jitter": {"type": "boolean"},
+        "fast_lock": {"type": "boolean"},
+        "allow_low_res": {"type": "boolean"},
+        "allow_unimplemented": {"type": "boolean"},
+        "require_signoff": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "structural": {
+      "type": "object",
+      "properties": {
+        "COARSE_NDELS": {"type": "integer", "minimum": 1},
+        "MID_NDELS": {"type": "integer", "minimum": 1},
+        "FINE_NDELS": {"type": "integer", "minimum": 1},
+        "IL_NDELS": {"type": "integer", "minimum": 1},
+        "FILTER_BITS": {"type": "integer", "minimum": 8},
+        "FCW_BITS": {"type": "integer", "minimum": 1},
+        "CNT_EXTRA_BITS": {"type": "integer", "minimum": 0},
+        "MEAS_PERIODS": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": true
+    },
+    "evidence_identity": {"type": "object"},
+    "allow_experimental": {"type": "boolean", "default": false},
+    "allow_macro_rebuild": {"type": "boolean", "default": false},
+    "require_identity": {"type": "boolean", "default": false}
+  },
+  "additionalProperties": false
+}

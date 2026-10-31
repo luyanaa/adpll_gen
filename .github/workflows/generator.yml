@@ -1,0 +1,48 @@
+name: generator
+
+on:
+  push:
+    paths:
+      - "flow/generator/**"
+      - "flow/selection.example.json"
+      - "src/freq_lock.v"
+      - "src/freq_lock_overflow_tb.v"
+      - "src/pll_logic.v"
+      - "src/pll.v"
+      - "src/pll_macro_top.v"
+  pull_request:
+    paths:
+      - "flow/generator/**"
+      - "flow/selection.example.json"
+      - "src/freq_lock.v"
+      - "src/freq_lock_overflow_tb.v"
+      - "src/pll_logic.v"
+      - "src/pll.v"
+      - "src/pll_macro_top.v"
+
+jobs:
+  generator-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generator unit tests
+        run: |
+          python3 flow/generator/test_architecture.py
+          python3 flow/generator/test_system_limits.py
+          python3 flow/generator/test_robust.py
+          python3 flow/generator/test_delivery.py
+      - name: Selection schema sanity
+        run: python3 flow/validate_selection.py --selection flow/selection.example.json
+      - name: Install Icarus Verilog
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Frequency-acquisition regressions
+        run: |
+          iverilog -g2012 -o /tmp/freq_lock.out src/freq_lock.v src/freq_lock_tb.v src/sim_dco_lock.v
+          vvp /tmp/freq_lock.out
+          iverilog -g2012 -o /tmp/freq_lock_cdc.out src/freq_lock.v src/freq_lock_cdc_tb.v
+          vvp /tmp/freq_lock_cdc.out
+          iverilog -g2012 -o /tmp/freq_lock_overflow.out src/freq_lock.v src/freq_lock_overflow_tb.v
+          vvp /tmp/freq_lock_overflow.out

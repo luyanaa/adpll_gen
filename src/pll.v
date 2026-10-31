@@ -13,6 +13,8 @@ module pll #(
     parameter integer LOCK_TOL = 1,         // Frequency-counter tolerance in FCW counts
     parameter integer LOCK_COUNT = 16,      // Phase-lock detector count
     parameter integer LOSS_COUNT = 4,       // Phase-loss detector count
+    parameter integer CNT_EXTRA_BITS = 8,   // Frequency-counter headroom bits
+    parameter integer MEAS_PERIODS = 1,     // REF periods per measurement window
 `ifndef PLL_WITHOUT_DIVIDER
     parameter integer DIV_BITS = 8,
 `endif
@@ -55,6 +57,8 @@ module pll #(
         .LOCK_TOL(LOCK_TOL),
         .LOCK_COUNT(LOCK_COUNT),
         .LOSS_COUNT(LOSS_COUNT),
+        .CNT_EXTRA_BITS(CNT_EXTRA_BITS),
+        .MEAS_PERIODS(MEAS_PERIODS),
 `ifndef PLL_WITHOUT_DIVIDER
         .DIV_BITS(DIV_BITS),
 `endif
