@@ -93,5 +93,6 @@ categories separate:
 ```text
 KDCO  : local table values available; counter model corrected by /2
 jitter: counter deterministic quantization + physical ring macro transient
-        spread reported; sky130 ring NO_OSCILLATION; no pnoise signoff
+        spread reported; sky130 ring NOR2BX1 mapping fixed, post-fix
+        43.08/27.64/13.48 MHz (FF/TT/SS); no pnoise signoff
 ```

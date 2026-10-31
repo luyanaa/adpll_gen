@@ -27,6 +27,24 @@ PL_TARGET_DENSITY_PCT: 45
 
 CLOCK_PORT: TICK
 CLOCK_PERIOD: 10.0
+
+# OpenROAD 2026-02-17's CTS pass segfaults in separateMacroRegSinks on this
+# two-clock macro.  The macro is small and the timing signoff is gate-level
+# OpenSTA with ideal clocks, so skip CTS rather than fabricate a clock tree.
+RUN_CTS: false
+RUN_POST_CTS_RESIZER_TIMING: false
+
+# This experiment has no RCX ruleset; the dedicated characterization uses
+# gate-level OpenSTA and the macro SPICE view, so skip the flow's SPEF/IR-drop
+# and post-PnR multi-corner STA steps.
+RUN_SPEF_EXTRACTION: false
+RUN_IRDROP_REPORT: false
+RUN_MCSTA: false
+# The counter LVS closure uses the hierarchy-preserving Magic GDS (the
+# KLayout streamout loses the decap-cell hierarchy on this macro).  The
+# flow's Magic-vs-KLayout XOR check is not used by the dedicated DRC/LVS
+# driver.
+RUN_KLAYOUT_XOR: false
 PNR_SDC_FILE: dir::macro.sdc.tcl
 SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
 

@@ -59,7 +59,7 @@ library (PLL_COUNTER_DCO_PHYS) {
   }
 
   cell ("PLL_COUNTER_DCO_PHYS") {
-    area : 32178.025
+    area : 13935.909 
     is_macro_cell : true;
     pin("DCO_EN") {
       direction : input;
@@ -110,11 +110,11 @@ library (PLL_COUNTER_DCO_PHYS) {
       direction : input;
       capacitance : 0.0318;
     }
-    pin("VGND") {
+    pin("VPWR") {
       direction : input;
       capacitance : 0.0000;
     }
-    pin("VPWR") {
+    pin("VGND") {
       direction : input;
       capacitance : 0.0000;
     }

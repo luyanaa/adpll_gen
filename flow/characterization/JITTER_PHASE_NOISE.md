@@ -20,15 +20,19 @@ for gf180mcu, sky130 and IHP:
   0.11/0.26/0.24 ps (TT/SS/FF).
 - IHP ring: TT/SS/FF transient complete; deterministic period RMS
   1.44/0.13/0.42 ps (TT/SS/FF).
-- sky130 ring: functional probe reports `NO_OSCILLATION` at all three
-  corners; no sky130 ring frequency or jitter claim is made.
+- sky130 ring: the `PLL_CELL_NOR2BX1` RTL mapping was corrected so
+  `DCO_EN=1` enables the oscillator path.  Post-fix minimum-code transient:
+  **43.08/27.64/13.48 MHz** for FF/TT/SS (SS is a two-edge one-period
+  estimate).  Deterministic period RMS is 4.4 ps (FF) and 36.4 ps (TT); the
+  old `NO_OSCILLATION` rows are pre-fix and must not be reused.
 - Counter/NCO: exact TICK quantization (380/370 ns at 100 MHz TICK,
   pp 10 ns, RMS 4.985 ns) plus gate-level STA PVT.
 
 These are still **not** random jitter or phase noise.  The transients are
-noiseless and the views have no routed RC.  The sky130 counter SS corner
-fails setup at 100 MHz TICK (WNS -0.640 ns); this is a timing issue, not a
-jitter result.  See `macro_char/CHARACTERIZATION.md`.
+noiseless and the views have no routed RC.  The sky130 counter now passes
+setup at 100 MHz TICK in all three corners after the carry-select
+accumulator change (SS WNS +1.47 ns); this is a timing result, not a jitter
+result.  See `macro_char/CHARACTERIZATION.md`.
 
 ## Why
 

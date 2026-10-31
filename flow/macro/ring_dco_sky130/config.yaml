@@ -33,6 +33,22 @@ PL_TARGET_DENSITY_PCT: 45
 
 CLOCK_PORT: REF
 CLOCK_PERIOD: 20.0
+
+# The ring macro has no REF-clocked flops; REF only feeds the combinational
+# SS-BBPD and the slope balancer.  OpenROAD's CTS pass segfaults on this
+# sinkless clock, so skip CTS and route REF as an ordinary signal.
+RUN_CTS: false
+RUN_POST_CTS_RESIZER_TIMING: false
+
+# This experiment has no RCX ruleset; the dedicated characterization uses the
+# cell-level SPICE and gate-level OpenSTA, so skip SPEF/IR-drop steps.
+RUN_SPEF_EXTRACTION: false
+RUN_IRDROP_REPORT: false
+RUN_MCSTA: false
+# The Magic and KLayout streamout views differ by one fill polygon on
+# 235/4; the canonical view is the KLayout GDS.  The dedicated KLayout DRC/LVS
+# driver is used instead of the flow's XOR check.
+RUN_KLAYOUT_XOR: false
 PNR_SDC_FILE: dir::macro.sdc.tcl
 SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
 

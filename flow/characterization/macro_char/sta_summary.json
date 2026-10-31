@@ -436,7 +436,7 @@
           "paths": 3
         },
         "TICK": {
-          "wns_ns": 7.15,
+          "wns_ns": 7.59,
           "paths": 17
         }
       },
@@ -446,17 +446,17 @@
           "paths": 17
         }
       },
-      "wns_ns": 7.15,
+      "wns_ns": 7.59,
       "hold_wns_ns": 0.27,
       "tns_ns": 0.0,
-      "tick_wns_ns": 7.15,
+      "tick_wns_ns": 7.59,
       "timing_pass": true,
-      "max_tick_mhz": 350.877,
+      "max_tick_mhz": 414.938,
       "power": {
         "internal_w": 0.0,
-        "switching_w": 0.00175,
-        "leakage_w": 1.44e-08,
-        "total_w": 0.00175
+        "switching_w": 0.00224,
+        "leakage_w": 6.42e-09,
+        "total_w": 0.00224
       },
       "report": "flow/characterization/macro_char/work/sta/sky130/counter/ff/sta.rpt"
     },
@@ -474,27 +474,27 @@
           "paths": 3
         },
         "TICK": {
-          "wns_ns": -0.64,
+          "wns_ns": 1.47,
           "paths": 17
         }
       },
       "min_groups": {
         "TICK": {
-          "wns_ns": 0.91,
+          "wns_ns": 0.9,
           "paths": 17
         }
       },
-      "wns_ns": -0.64,
-      "hold_wns_ns": 0.91,
-      "tns_ns": -1.85,
-      "tick_wns_ns": -0.64,
-      "timing_pass": false,
-      "max_tick_mhz": 93.985,
+      "wns_ns": 1.47,
+      "hold_wns_ns": 0.9,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 1.47,
+      "timing_pass": true,
+      "max_tick_mhz": 117.233,
       "power": {
         "internal_w": 0.0,
-        "switching_w": 0.00113,
-        "leakage_w": 5.12e-06,
-        "total_w": 0.00114
+        "switching_w": 0.00145,
+        "leakage_w": 2.56e-06,
+        "total_w": 0.00145
       },
       "report": "flow/characterization/macro_char/work/sta/sky130/counter/ss/sta.rpt"
     },
@@ -512,7 +512,7 @@
           "paths": 3
         },
         "TICK": {
-          "wns_ns": 5.04,
+          "wns_ns": 5.93,
           "paths": 17
         }
       },
@@ -522,17 +522,17 @@
           "paths": 17
         }
       },
-      "wns_ns": 5.04,
+      "wns_ns": 5.93,
       "hold_wns_ns": 0.44,
       "tns_ns": 0.0,
-      "tick_wns_ns": 5.04,
+      "tick_wns_ns": 5.93,
       "timing_pass": true,
-      "max_tick_mhz": 201.613,
+      "max_tick_mhz": 245.7,
       "power": {
         "internal_w": 0.0,
-        "switching_w": 0.00147,
-        "leakage_w": 9.94e-09,
-        "total_w": 0.00147
+        "switching_w": 0.00188,
+        "leakage_w": 4.4e-09,
+        "total_w": 0.00188
       },
       "report": "flow/characterization/macro_char/work/sta/sky130/counter/tt/sta.rpt"
     },
@@ -564,9 +564,9 @@
       "max_tick_mhz": null,
       "power": {
         "internal_w": 0.0,
-        "switching_w": 2.88e-05,
-        "leakage_w": 6.34e-09,
-        "total_w": 2.88e-05
+        "switching_w": 3e-05,
+        "leakage_w": 6.36e-09,
+        "total_w": 3e-05
       },
       "report": "flow/characterization/macro_char/work/sta/sky130/ring/ff/sta.rpt"
     },
@@ -598,9 +598,9 @@
       "max_tick_mhz": null,
       "power": {
         "internal_w": 0.0,
-        "switching_w": 1.92e-05,
-        "leakage_w": 2.37e-06,
-        "total_w": 2.15e-05
+        "switching_w": 2e-05,
+        "leakage_w": 2.38e-06,
+        "total_w": 2.24e-05
       },
       "report": "flow/characterization/macro_char/work/sta/sky130/ring/ss/sta.rpt"
     },
@@ -632,9 +632,9 @@
       "max_tick_mhz": null,
       "power": {
         "internal_w": 0.0,
-        "switching_w": 2.45e-05,
-        "leakage_w": 3.4e-09,
-        "total_w": 2.45e-05
+        "switching_w": 2.55e-05,
+        "leakage_w": 3.42e-09,
+        "total_w": 2.55e-05
       },
       "report": "flow/characterization/macro_char/work/sta/sky130/ring/tt/sta.rpt"
     }

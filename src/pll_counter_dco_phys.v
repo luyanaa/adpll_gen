@@ -8,6 +8,20 @@
 // are unary thermometer codes from pll_logic.
 `timescale 1ns/1ps
 
+// 8-bit ripple-carry slice used by the carry-select phase accumulator below.
+// The module is intentionally not marked keep_hierarchy: LibreLane's
+// `prep -flatten` inlines it, so the three slices are ordinary gates after
+// synthesis and do not look like unresolved macros to CTS/PDN.
+module PLL_ADD8 (
+    input  [7:0] A,
+    input  [7:0] B,
+    input        CI,
+    output [7:0] S,
+    output       CO
+);
+    assign {CO, S} = A + B + CI;
+endmodule
+
 module PLL_COUNTER_DCO_PHYS #(
     parameter integer COARSE_NDELS = 15,
     parameter integer MID_NDELS = 15,
@@ -29,14 +43,15 @@ module PLL_COUNTER_DCO_PHYS #(
     output INJ_EDGE
 );
     reg [ACC_BITS-1:0] phase;
-    reg [ACC_BITS:0] phase_sum;
     reg [ACC_BITS:0] increment;
     integer i;
+    integer coarse_count, mid_count, fine_count, increment_calc;
 
     // Event semantics: one accumulator carry is one output toggle, not one
     // output period.  phase_overflow and output_edge are the same event here;
     // two carries are required for a complete OUT period.
-    wire phase_overflow = phase_sum[ACC_BITS];
+    wire phase_overflow;
+    wire [ACC_BITS-1:0] phase_next;
     wire output_edge = phase_overflow;
 
     assign MID_OUT = OUT;
@@ -45,26 +60,64 @@ module PLL_COUNTER_DCO_PHYS #(
     always @* begin
         // More unary delay bits means more delay and therefore a lower
         // output frequency, matching pll_logic's coarse/mid tuning direction.
-        increment = BASE_INC;
+        // Count each unary bank and do one arithmetic update instead of the
+        // previous serial chain of 61 conditional subtracts.  The counts are
+        // static configuration inputs, so this is a decode path, not the
+        // TICK-clocked accumulator loop.
+        coarse_count = 0;
         for (i = 0; i < COARSE_NDELS; i = i + 1)
-            if (COARSE_MUX[i]) increment = increment - COARSE_STEP;
+            coarse_count = coarse_count + COARSE_MUX[i];
+        mid_count = 0;
         for (i = 0; i < MID_NDELS; i = i + 1)
-            if (MID_MUX[i]) increment = increment - MID_STEP;
+            mid_count = mid_count + MID_MUX[i];
+        fine_count = 0;
         for (i = 0; i < FINE_NDELS; i = i + 1)
-            if (FINE_MUX[i]) increment = increment - FINE_STEP;
-        if (increment < 1)
-            increment = 1;
-        if (increment > (1 << ACC_BITS) / 2)
-            increment = (1 << ACC_BITS) / 2;
-        phase_sum = phase + increment;
+            fine_count = fine_count + FINE_MUX[i];
+        increment_calc = BASE_INC
+                         - coarse_count * COARSE_STEP
+                         - mid_count * MID_STEP
+                         - fine_count * FINE_STEP;
+        if (increment_calc < 1)
+            increment_calc = 1;
+        if (increment_calc > (1 << ACC_BITS) / 2)
+            increment_calc = (1 << ACC_BITS) / 2;
+        increment = increment_calc;
     end
+
+    // 16-bit carry-select phase accumulator.  The low byte propagates its
+    // carry directly; the high byte is computed twice (carry-in 0/1) and the
+    // correct result is selected.  The carry-select structure halves the
+    // critical TICK path versus a single 16-bit ripple chain while keeping
+    // the exact phase_sum / overflow semantics.
+    wire [7:0] lo_sum;
+    wire       lo_carry;
+    wire [7:0] hi_sum0, hi_sum1;
+    wire       hi_carry0, hi_carry1;
+    wire [7:0] hi_sum;
+
+    PLL_ADD8 add_lo (
+        .A(phase[7:0]), .B(increment[7:0]), .CI(1'b0),
+        .S(lo_sum), .CO(lo_carry)
+    );
+    PLL_ADD8 add_hi0 (
+        .A(phase[ACC_BITS-1:8]), .B(increment[ACC_BITS-1:8]), .CI(1'b0),
+        .S(hi_sum0), .CO(hi_carry0)
+    );
+    PLL_ADD8 add_hi1 (
+        .A(phase[ACC_BITS-1:8]), .B(increment[ACC_BITS-1:8]), .CI(1'b1),
+        .S(hi_sum1), .CO(hi_carry1)
+    );
+
+    assign hi_sum = lo_carry ? hi_sum1 : hi_sum0;
+    assign phase_overflow = lo_carry ? hi_carry1 : hi_carry0;
+    assign phase_next = {hi_sum, lo_sum};
 
     always @(posedge TICK or negedge DCO_EN) begin
         if (!DCO_EN) begin
             phase <= 'd0;
             OUT <= 1'b0;
         end else begin
-            phase <= phase_sum[ACC_BITS-1:0];
+            phase <= phase_next;
             if (output_edge)
                 OUT <= ~OUT;
         end

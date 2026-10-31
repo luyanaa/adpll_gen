@@ -168,14 +168,14 @@ MACRO_DIRS = {
     },
 }
 
-# The physical ring macros do not use the same PLL_CELL_NOR2BX1 mapping on
-# all PDKs.  For the built netlists, DCO_EN is active-high on gf180mcu and
-# active-low on sky130/IHP; the sky130 ring also needs INJ_WIN=1, which is
-# tied low in the built RTL/netlist.  Keep the actual netlist control values
-# here so the functional probe can report the real result.
+# DCO_EN is active-high in the RTL for all three ring macros.  INJ_WIN is
+# tied low inside PLL_RING_DCO_PHYS on every PDK, so the ring variant is
+# free-running and the top-level INJ_EN pin is unused.  Keep the probe values
+# explicit so the transient deck drives the enable that the built netlist
+# actually uses.
 RING_ENABLE = {
     "gf180mcu": ("vdd", "0"),
-    "sky130": ("0", "vdd"),
+    "sky130": ("vdd", "0"),
     "ihp-sg13g2": ("vdd", "0"),
 }
 
@@ -711,10 +711,30 @@ def period_metrics(
     threshold = 0.5 * (lo + hi)
     edges = _deglitch(_crossings(time, wave, threshold), min_gap_s)
     edges = [e for e in edges if e >= settle_s]
-    if len(edges) < 3:
+    if len(edges) < 2:
         return {
             "status": "NO_OSCILLATION",
             "edges": len(edges),
+            "vmin": lo,
+            "vmax": hi,
+        }
+    if len(edges) == 2:
+        # Slow corners can complete only one output period inside the
+        # committed transient window.  Report the frequency estimate and
+        # mark it clearly; do not fabricate a period-spread/jitter number.
+        period = edges[1] - edges[0]
+        return {
+            "status": "LIMITED_EDGES",
+            "edges": 2,
+            "settle_ns": settle_s * 1e9,
+            "period_mean_ns": period * 1e9,
+            "period_min_ns": period * 1e9,
+            "period_max_ns": period * 1e9,
+            "period_pp_ns": 0.0,
+            "period_rms_ns": 0.0,
+            "period_rms_ps": 0.0,
+            "c2c_rms_ps": None,
+            "freq_mhz": 1e-6 / period,
             "vmin": lo,
             "vmax": hi,
         }
@@ -811,12 +831,15 @@ def run_ring_case(
 
 RING_SIM = {
     "gf180mcu": (200.0, 0.01),
-    "sky130": (60.0, 0.01),
+    # The sky130 ring has a 256-stage base delay before the tuned delay line;
+    # the startup transient alone is tens of ns at SS.  Use a longer window
+    # and a coarser print step so the run captures several settled periods.
+    "sky130": (300.0, 0.05),
     "ihp-sg13g2": (150.0, 0.015),
 }
 
 
-def run_ring_pvt(pdks: Iterable[str], jobs: int) -> None:
+def run_ring_pvt(pdks: Iterable[str], jobs: int, *, stop_ns: float | None = None, step_ns: float | None = None) -> None:
     _ensure_dirs()
     rows = []
     jobs_list = [
@@ -828,7 +851,8 @@ def run_ring_pvt(pdks: Iterable[str], jobs: int) -> None:
         futs = {
             ex.submit(
                 run_ring_case, pdk, corner, code, tag,
-                stop_ns=RING_SIM[pdk][0], step_ns=RING_SIM[pdk][1],
+                stop_ns=(stop_ns if stop_ns is not None else RING_SIM[pdk][0]),
+                step_ns=(step_ns if step_ns is not None else RING_SIM[pdk][1]),
             ): (pdk, corner, code, tag)
             for pdk, corner, code, tag in jobs_list
         }
@@ -838,7 +862,9 @@ def run_ring_pvt(pdks: Iterable[str], jobs: int) -> None:
                 row = fut.result()
             except Exception as exc:  # noqa: BLE001
                 row = {"pdk": pdk, "macro": "ring", "corner": corner.label,
-                       "code": code, "tag": tag, "status": "SIM_ERROR",
+                       "code": {"coarse": code[0], "mid": code[1],
+                                "fine": code[2]},
+                       "tag": tag, "status": "SIM_ERROR",
                        "error": str(exc)}
             rows.append(row)
             print(f"RING {pdk:14s} {corner.label:2s} {tag}: {row.get('status')}")
@@ -892,7 +918,9 @@ def run_ring_tune(pdks: Iterable[str], jobs: int) -> None:
                 row = fut.result()
             except Exception as exc:  # noqa: BLE001
                 row = {"pdk": pdk, "macro": "ring", "corner": corner.label,
-                       "code": code, "tag": tag, "status": "SIM_ERROR",
+                       "code": {"coarse": code[0], "mid": code[1],
+                                "fine": code[2]},
+                       "tag": tag, "status": "SIM_ERROR",
                        "error": str(exc)}
             rows.append(row)
             print(f"TUNE {pdk:14s} {tag:8s}: {row.get('status')}")
@@ -1065,6 +1093,8 @@ def write_report() -> None:
         "",
         "The TT code-step table is a local large-signal frequency sensitivity",
         "check. It is not a calibrated KDCO over the full thermometer range.",
+        "A `LIMITED_EDGES` ring row is a one-period frequency estimate from a",
+        "slow corner; its RMS/pp fields are not a jitter claim.",
         "",
         "## Jitter interpretation",
         "",
@@ -1100,11 +1130,15 @@ def write_report() -> None:
         "  match the gate netlist, so this STA is gate-level rather than",
         "  SPEF-annotated. The IHP SPICE PVT run also uses the cell-level view.",
         "- The sky130 ring functional probe is included as an actual result.",
-        "  All three corners report `NO_OSCILLATION`: the built netlist is not",
-        "  a working free-running ring. Do not infer a frequency from it.",
-        "- The sky130 counter fails setup at the 100 MHz TICK planning point",
-        "  in the SS corner (WNS -0.640 ns, TNS -1.85 ns). The TT/FF corners",
-        "  pass. This is a real timing gap, not a characterization artifact.",
+        "  The RTL `PLL_CELL_NOR2BX1` mapping was corrected so `DCO_EN=1`",
+        "  enables the oscillator path.  Any row that still reports",
+        "  `NO_OSCILLATION` after this change is a startup-window or",
+        "  edge-count limitation of that transient, not the old",
+        "  `DCO_EN`/`INJ_WIN` mapping failure.",
+        "- The sky130 counter previously failed setup at the 100 MHz TICK",
+        "  planning point in the SS corner (WNS -0.640 ns, TNS -1.85 ns).",
+        "  The carry-select phase accumulator closes it (SS WNS +1.47 ns,",
+        "  estimated max TICK ~117.2 MHz); TT/FF also pass.",
         "- Counter PVT frequency is not a measured transistor-level number.",
         "  The digital output frequency is set by TICK and the code; PVT",
         "  affects timing closure and maximum TICK only.",
@@ -1143,6 +1177,8 @@ def main() -> int:
     p = sub.add_parser("ring-pvt")
     p.add_argument("--pdk", choices=("all",) + PDKS, default="all")
     p.add_argument("--jobs", type=int, default=2)
+    p.add_argument("--stop-ns", type=float, default=None)
+    p.add_argument("--step-ns", type=float, default=None)
 
     p = sub.add_parser("ring-tune")
     p.add_argument("--pdk", choices=("all",) + PDKS, default="all")
@@ -1156,7 +1192,8 @@ def main() -> int:
     if args.cmd == "sta":
         run_sta_all(_pdks(args.pdk), args.jobs)
     elif args.cmd == "ring-pvt":
-        run_ring_pvt(_pdks(args.pdk), args.jobs)
+        run_ring_pvt(_pdks(args.pdk), args.jobs,
+                      stop_ns=args.stop_ns, step_ns=args.step_ns)
     elif args.cmd == "ring-tune":
         run_ring_tune(_pdks(args.pdk), args.jobs)
     elif args.cmd == "counter":

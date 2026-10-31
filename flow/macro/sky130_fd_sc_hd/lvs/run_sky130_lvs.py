@@ -83,6 +83,10 @@ def normalize_tokens(line: str) -> str:
     if line.lstrip().startswith("*"):
         return line
     toks = line.split()
+    # The PDK CDL uses a standalone "/" as a model-name separator in a few
+    # cells (e.g. sky130_fd_sc_hd__macro_sparecell).  KLayout's netlist
+    # reader treats it as an extra pin, so drop it before comparison.
+    toks = [t for t in toks if t != "/"]
     if not toks:
         return line
     for i, tok in enumerate(toks):

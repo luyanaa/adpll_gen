@@ -44,9 +44,14 @@ Outputs:
 - gf180mcu and IHP ring PVT complete at TT/SS/FF (minimum delay code):
   gf180mcu 21.07/15.74/26.60 MHz and IHP 33.21/20.95/47.58 MHz for
   TT/SS/FF. Period spread is sub-ps to a few ps and is deterministic.
-- sky130 ring does not oscillate in the built netlist at any corner. This
-  is recorded as `NO_OSCILLATION`, not as a frequency.
-- sky130 counter fails setup at the 100 MHz TICK planning point in SS
-  (WNS -0.640 ns); TT/FF pass. gf180mcu and IHP counters pass all three
-  corners.
+- The sky130 ring RTL `PLL_CELL_NOR2BX1` mapping was corrected (the old
+  wrapper produced `!DCO_EN & INJ_WIN` and held `DCO_EN_INJ_WIN` at 0 with
+  `INJ_WIN` tied low).  The post-fix minimum-code transient is
+  **43.08/27.64/13.48 MHz** for FF/TT/SS (SS is a two-edge one-period
+  estimate).  Deterministic period RMS is 4.4 ps (FF) and 36.4 ps (TT);
+  do not reuse the old `NO_OSCILLATION` rows.
+- sky130 counter setup **passes** all three corners at the 100 MHz TICK
+  planning point after the carry-select accumulator change (WNS
+  +5.93/+1.47/+7.59 ns; SS max TICK ~117.2 MHz).  gf180mcu and IHP counters
+  also pass all three corners.
 - No phase-noise or random-jitter signoff is available.

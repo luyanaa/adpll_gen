@@ -46,16 +46,29 @@ CIEL checkout; the LVS pass uses a top-port naming waiver.
 | DRC | **0 violations** | **0 violations** |
 | LVS (netgen, official setup) | **PASS: Circuits match uniquely** | **PASS: Circuits match uniquely** |
 | LVS (official KLayout compare) | top-pin/net-name caveat | top-pin/net-name caveat |
-| STA, TT/SS/FF | **PASS** (gate-level; WNS +9.51/+9.28/+9.59 ns) | **TT/FF PASS; SS FAIL** at 100 MHz TICK (WNS -0.640 ns, TNS -1.85 ns) |
-| PVT transient | **NO_OSCILLATION at TT/SS/FF** | NCO frequency is ideal-digital PVT-invariant |
-| Deterministic period spread | not available (ring does not oscillate) | 380/370 ns quantization: pp 10 ns, RMS 4.985 ns |
+| STA, TT/SS/FF | **PASS** (gate-level; WNS +9.51/+9.28/+9.59 ns) | **PASS** at 100 MHz TICK (WNS +5.93/+1.47/+7.59 ns; SS max TICK ~117.2 MHz) |
+| PVT transient | **post-fix TT/SS/FF: 27.64/13.48/43.08 MHz** (min code; SS 2-edge estimate) | NCO frequency is ideal-digital PVT-invariant |
+| Deterministic period spread | TT RMS **36.4 ps**, pp 0.073 ns; FF RMS **4.4 ps**; SS one-period only | 380/370 ns quantization: pp 10 ns, RMS 4.985 ns |
 | Random jitter / phase noise | **not characterized** | **not characterized** |
 
-The sky130 ring is the one real functional blocker in this campaign: the
-built netlist ties the injection-window input low, so the sky130
-`PLL_CELL_NOR2BX1` mapping does not enable the oscillator path.  The
-transient probe is recorded as `NO_OSCILLATION`; no sky130 ring frequency
-or jitter number is claimed.
+The sky130 ring blocker was the `PLL_CELL_NOR2BX1` mapping, not the delay
+chain.  `sky130_fd_sc_hd__nor2b_2` implements `Y = !A & B_N`; the wrapper
+drove `.A(A0), .B_N(B0)`, producing `!DCO_EN & INJ_WIN`.  Since
+`PLL_RING_DCO_PHYS` ties `INJ_WIN=0`, `DCO_EN_INJ_WIN` was stuck at 0 and
+the sym-mux never passed the oscillator.  The wrapper now drives
+`.A(B0), .B_N(A0)`, giving the intended `A0 & !B0`; the rebuilt netlist
+has `.A(0), .B_N(DCO_EN)` and enables the ring when `DCO_EN=1`.
+
+The post-fix transient now oscillates at **43.08 MHz (FF), 27.64 MHz (TT)
+and 13.48 MHz (SS)** for the minimum delay code.  The SS number is a
+two-edge / one-period estimate from a 160 ns run; it is a frequency
+estimate, not a jitter/RMS claim.
+
+The counter SS timing gap was the 16-bit ripple `phase + increment` adder.
+The RTL now uses a 16-bit carry-select accumulator (low-byte carry selects
+a precomputed high-byte sum) and a popcount-based unary MUX decode.  The
+SS TICK WNS moved from -0.640 ns to **+1.47 ns** at 100 MHz (max TICK
+~117.2 MHz) with the NCO contract unchanged.
 
 Evidence: `flow/macro/ring_dco_sky130/SIGNOFF.md`,
 `flow/macro/counter_dco_sky130/SIGNOFF.md`, and

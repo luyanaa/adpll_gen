@@ -40,8 +40,11 @@ module PLL_CELL_NOR2X1(input A0, A1, output ZN);
   sky130_fd_sc_hd__nor2_2 impl(.A(A0), .B(A1), .Y(ZN));
 endmodule
 module PLL_CELL_NOR2BX1(input A0, B0, output ZN);
+  // sky130_fd_sc_hd__nor2b_2: Y = !A & B_N.
+  // PLL_CELL_NOR2BX1 is the A-inverted primitive: ZN = A0 & !B0, so B0
+  // must drive the cell's A pin and A0 the cell's B_N pin.
   (* keep *) (* dont_touch = "true" *)
-  sky130_fd_sc_hd__nor2b_2 impl(.A(A0), .B_N(B0), .Y(ZN));
+  sky130_fd_sc_hd__nor2b_2 impl(.A(B0), .B_N(A0), .Y(ZN));
 endmodule
 module PLL_CELL_NAND3X1(input A0, A1, A2, output ZN);
   (* keep *) (* dont_touch = "true" *)

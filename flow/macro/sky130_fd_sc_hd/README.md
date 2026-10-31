@@ -3,6 +3,23 @@
 This is a second sky130 lane, using the standard `~/.ciel` OpenPDK
 `sky130_fd_sc_hd` library instead of `sky130_as_sc_hs`.
 
+## LibreLane PDK root
+
+The in-repo `pdk_overlay` only contains the LibreLane shim (`libs.ref` plus
+`libs.tech/librelane`) and deliberately points KLayout/Magic/Netgen at
+placeholders.  For a build that streams out GDS/LEF and runs the physical
+checks, assemble a real root first:
+
+```sh
+flow/macro/sky130_fd_sc_hd/make_pdk_root.sh build/pdk_root
+librelane --manual-pdk --pdk-root build/pdk_root \
+  --pdk sky130_fd_sc_hd --scl sky130_fd_sc_hd <config.yaml>
+```
+
+The helper symlinks the real `libs.tech/{klayout,magic,netgen}` trees and
+patches the copied `librelane/config.tcl` to those paths.  `build/pdk_root`
+is git-ignored.
+
 ## Why
 
 `sky130_as_sc_hs` ships no CDL; its LVS reference had to be Magic-extracted

@@ -5,6 +5,6 @@ gf180mcu,tt,min,OK,0,0,0,21.066255004674666,47.469282023696046,0.000241157553508
 ihp-sg13g2,ff,min,OK,0,0,0,47.5780596198471,21.018091279679926,0.0012724258540812337,0.4244115416699734,0.5728734351262703,7,ngspice,flow/characterization/macro_char/work/ring/ihp-sg13g2/ff_min
 ihp-sg13g2,ss,min,OK,0,0,0,20.95155371749044,47.72915715387713,0.00025950466430107804,0.12975233215053902,0.25950466430107805,3,ngspice,flow/characterization/macro_char/work/ring/ihp-sg13g2/ss_min
 ihp-sg13g2,tt,min,OK,0,0,0,33.20994349482118,30.11146345840491,0.003262350649710844,1.435971857905849,3.0261943818806585,4,ngspice,flow/characterization/macro_char/work/ring/ihp-sg13g2/tt_min
-sky130,ff,min,NO_OSCILLATION,0,0,0,,,,,,0,xyce,flow/characterization/macro_char/work/ring/sky130/ff_min
-sky130,ss,min,NO_OSCILLATION,0,0,0,,,,,,0,xyce,flow/characterization/macro_char/work/ring/sky130/ss_min
-sky130,tt,min,NO_OSCILLATION,0,0,0,,,,,,0,xyce,flow/characterization/macro_char/work/ring/sky130/tt_min
+sky130,ff,min,OK,0,0,0,43.076112552367455,23.2147225166687,0.008851920054932131,4.425960027466066,8.851920054932132,3,xyce,flow/characterization/macro_char/work/ring/sky130/ff_min
+sky130,ss,min,LIMITED_EDGES,0,0,0,13.480787343465192,74.17964355655752,0.0,0.0,,2,xyce,flow/characterization/macro_char/work/ring/sky130/ss_min_long
+sky130,tt,min,OK,0,0,0,27.640560672478664,36.17871619354258,0.07271845177001147,36.359225885005735,72.71845177001147,3,xyce,flow/characterization/macro_char/work/ring/sky130/tt_min_long

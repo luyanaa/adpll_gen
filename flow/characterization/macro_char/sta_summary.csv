@@ -11,9 +11,9 @@ ihp-sg13g2,counter,tt,STA_OK,True,6.87,0.27,6.87,0.0,319.489,0.000204,flow/chara
 ihp-sg13g2,ring,ff,STA_OK,True,9.55,0.12,,0.0,,6.89e-05,flow/characterization/macro_char/work/sta/ihp-sg13g2/ring/ff/sta.rpt
 ihp-sg13g2,ring,ss,STA_OK,True,9.24,0.35,,0.0,,4.44e-05,flow/characterization/macro_char/work/sta/ihp-sg13g2/ring/ss/sta.rpt
 ihp-sg13g2,ring,tt,STA_OK,True,9.44,0.2,,0.0,,5.54e-05,flow/characterization/macro_char/work/sta/ihp-sg13g2/ring/tt/sta.rpt
-sky130,counter,ff,STA_OK,True,7.15,0.27,7.15,0.0,350.877,0.00175,flow/characterization/macro_char/work/sta/sky130/counter/ff/sta.rpt
-sky130,counter,ss,STA_OK,False,-0.64,0.91,-0.64,-1.85,93.985,0.00114,flow/characterization/macro_char/work/sta/sky130/counter/ss/sta.rpt
-sky130,counter,tt,STA_OK,True,5.04,0.44,5.04,0.0,201.613,0.00147,flow/characterization/macro_char/work/sta/sky130/counter/tt/sta.rpt
-sky130,ring,ff,STA_OK,True,9.59,0.18,,0.0,,2.88e-05,flow/characterization/macro_char/work/sta/sky130/ring/ff/sta.rpt
-sky130,ring,ss,STA_OK,True,9.28,0.52,,0.0,,2.15e-05,flow/characterization/macro_char/work/sta/sky130/ring/ss/sta.rpt
-sky130,ring,tt,STA_OK,True,9.51,0.27,,0.0,,2.45e-05,flow/characterization/macro_char/work/sta/sky130/ring/tt/sta.rpt
+sky130,counter,ff,STA_OK,True,7.59,0.27,7.59,0.0,414.938,0.00224,flow/characterization/macro_char/work/sta/sky130/counter/ff/sta.rpt
+sky130,counter,ss,STA_OK,True,1.47,0.9,1.47,0.0,117.233,0.00145,flow/characterization/macro_char/work/sta/sky130/counter/ss/sta.rpt
+sky130,counter,tt,STA_OK,True,5.93,0.44,5.93,0.0,245.7,0.00188,flow/characterization/macro_char/work/sta/sky130/counter/tt/sta.rpt
+sky130,ring,ff,STA_OK,True,9.59,0.18,,0.0,,3e-05,flow/characterization/macro_char/work/sta/sky130/ring/ff/sta.rpt
+sky130,ring,ss,STA_OK,True,9.28,0.52,,0.0,,2.24e-05,flow/characterization/macro_char/work/sta/sky130/ring/ss/sta.rpt
+sky130,ring,tt,STA_OK,True,9.51,0.27,,0.0,,2.55e-05,flow/characterization/macro_char/work/sta/sky130/ring/tt/sta.rpt

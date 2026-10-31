@@ -20,7 +20,7 @@ The official KLayout deck's own numeric compare still reports a top-pin /
 net-name mismatch on this macro.  The extracted functional netlist and the
 normalized native-cell reference match under netgen with the official sky130
 setup: unique topology match with all top-level functional cells and the
-merged decap/tie devices (488 compared top-level devices, 548 nets).  The
+merged decap/tie devices (489 compared top-level devices, 549 nets).  The
 normalization is limited to library-view differences (native `VNB` vs
 extracted `sky130_gnd`, CDL `m=N` multiplicity, the `conb_1` poly-short tie
 cell, and the unused `INJ_EN` port).  This is **not** a full production
@@ -29,10 +29,16 @@ signoff; the separate `macro_char` campaign covers STA and functional/PVT charac
 ## Characterization (2026-11-01)
 
 - Gate-level OpenSTA TT/SS/FF: **PASS**, WNS +9.51/+9.28/+9.59 ns.
-- Functional transient probe: **NO_OSCILLATION at TT/SS/FF**. The built
-  netlist ties the injection-window input low and the sky130
-  `PLL_CELL_NOR2BX1` mapping does not enable the oscillator path. No
-  sky130 ring frequency, PVT or jitter number is claimed.
-- This is a real functional blocker, not a missing measurement.
+- Functional fix: the old `PLL_CELL_NOR2BX1` wrapper drove
+  `sky130_fd_sc_hd__nor2b_2` as `.A(A0), .B_N(B0)`, which is
+  `!DCO_EN & INJ_WIN`.  `PLL_RING_DCO_PHYS` ties `INJ_WIN=0`, so
+  `DCO_EN_INJ_WIN` was held at 0 and the sym-mux never passed the
+  oscillator.  The wrapper now drives `.A(B0), .B_N(A0)`, giving the
+  intended `A0 & !B0`; the rebuilt netlist has `.A(0), .B_N(DCO_EN)`.
+- Post-fix transient: **FF 43.08 MHz**, **TT 27.64 MHz**, **SS 13.48 MHz**
+  (minimum code; SS is a two-edge one-period estimate).  FF deterministic
+  period RMS 4.4 ps, TT 36.4 ps; no random-jitter or phase-noise claim.
+  See `flow/characterization/macro_char/ring_pvt.json` and
+  `CHARACTERIZATION.md`.
 - Evidence: `flow/characterization/macro_char/CHARACTERIZATION.md`,
-  `ring_pvt.json` (status `NO_OSCILLATION`), `sta_summary.json`.
+  `ring_pvt.json`, `sta_summary.json`.
