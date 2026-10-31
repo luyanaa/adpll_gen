@@ -120,7 +120,8 @@ def selection_template(result: dict[str, Any], design: str = "adpll_top") -> dic
     voltages = lib.get("voltage") or [0.0]
     voltage = float(voltages[0])
     hard = (sel["core"] == "core_a_il_dco"
-            and sel.get("implementation") in ("rtl", "rtl_partial")
+            and sel.get("physical_buildable", False)
+            and sel.get("implementation") == "rtl"
             and sel.get("hardmacro_ready", False))
     return {
         "pdk": lib["pdk"],
@@ -141,6 +142,34 @@ def selection_template(result: dict[str, Any], design: str = "adpll_top") -> dic
         "features": {k: True for k in sel.get("features", [])
                      if k in ("fractional_n", "multiphase")},
     }
+
+
+BUILDABLE_STATES = {"PHYSICAL_IMPLEMENTABLE", "CHARACTERIZED"}
+
+
+def implementation_state(a: dict[str, Any]) -> str:
+    """Classify what the repository can actually do with an architecture.
+
+    MODEL_ONLY is a simulation model.  RTL_SYNTHESIZABLE can produce a netlist
+    but has no verified physical backend.  PHYSICAL_IMPLEMENTABLE has a
+    physical generation path (currently Core A).  CHARACTERIZED additionally
+    has the evidence bundle required by the selected corner/view.
+    """
+    if a.get("characterization_state") == "CHARACTERIZED":
+        return "CHARACTERIZED"
+    impl = a.get("implementation")
+    if impl in ("missing", "roadmap"):
+        return "UNIMPLEMENTED"
+    if impl == "simulation":
+        return "MODEL_ONLY"
+    if impl in ("rtl", "rtl_partial"):
+        # A hardmacro flag alone is not a physical backend.  Core A is the
+        # only architecture with a checked-in physical variant at present.
+        if (impl == "rtl" and a.get("hardmacro_ready") is True
+                and a.get("physical_variant", False)):
+            return "PHYSICAL_IMPLEMENTABLE"
+        return "RTL_SYNTHESIZABLE"
+    return "UNIMPLEMENTED"
 
 
 def implementation_ready(a: dict[str, Any]) -> bool:
@@ -166,13 +195,25 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
            low_jitter: bool = False, fast_lock: bool = False,
            allow_low_res: bool = False,
            require_signoff: bool = False,
-           allow_unimplemented: bool = False) -> dict[str, Any]:
+           allow_unimplemented: bool = False,
+           mode: str = "buildable",
+           out_div: int = 1,
+           evidence_identity: dict[str, Any] | None = None,
+           require_identity: bool = False) -> dict[str, Any]:
+    if mode not in ("buildable", "explore"):
+        raise ValueError("mode must be 'buildable' or 'explore'")
+    if allow_unimplemented and mode == "buildable":
+        raise ValueError("--allow-unimplemented requires --mode explore")
+    if out_div < 1:
+        raise ValueError("out_div must be at least 1")
     prof = profile_for(pdk)
     if prof is None:
         return {"status": "FAIL_UNKNOWN_PDK", "pdk": pdk,
                 "reason": "no architecture profile for this PDK"}
 
-    sys_hit = check_system(pdk, target_mhz, ref_mhz, fcw)
+    sys_hit = check_system(pdk, target_mhz, ref_mhz, fcw, out_div,
+                           identity=evidence_identity,
+                           require_identity=require_identity)
     if sys_hit:
         sys_hit["profile"] = prof
         return sys_hit
@@ -215,8 +256,21 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         # TDC/bang-bang variant is a cost fallback, not a default choice.
         if a["id"] == "low_res_tdc_bangbang" and not allow_low_res:
             continue
-        if not allow_unimplemented and not implementation_ready(a):
+        state = implementation_state(a)
+        # A model-only architecture is a simulation candidate, not a physical
+        # Generator build.  Only buildable mode may reach the backend.
+        if mode == "buildable" and state not in BUILDABLE_STATES:
             continue
+        # Simulation/RTL states must have their declared source files.  Only an
+        # explicit roadmap override may admit a missing implementation.
+        if state != "UNIMPLEMENTED" and not implementation_ready(a):
+            continue
+        if state == "UNIMPLEMENTED" and not allow_unimplemented:
+            continue
+        if state == "MODEL_ONLY":
+            model_freq = a.get("model_freq_mhz", a["freq_mhz"])
+            if target_mhz < model_freq[0] or target_mhz > model_freq[1]:
+                continue
         center = sum(a["freq_mhz"]) / 2.0
         freq_score = 1.0 - min(1.0, abs(target_mhz - center) / max(center, 1.0))
         area_penalty = AREA_RANK[a["area"]] * AREA_WEIGHT[area]
@@ -244,13 +298,17 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
                 "reason": "no usable library supports the selected core"}
 
     def materialize(score: float, a: dict) -> dict[str, Any]:
+        keep = ("id", "name", "core", "freq_mhz", "area", "area_rank",
+                "complexity", "features", "risk", "benefit", "implementation",
+                "implementation_refs", "hardmacro_ready", "implementation_class",
+                "model_freq_mhz", "model_note", "requires_reference_tick",
+                "external_clock_dependent")
         return {
-            **{k: a[k] for k in ("id", "name", "core", "freq_mhz", "area",
-                                  "area_rank", "complexity", "features", "risk",
-                                  "benefit", "implementation", "implementation_refs",
-                                  "hardmacro_ready")},
+            **{k: a[k] for k in keep if k in a},
             "score": round(score, 4),
             "implementation_ready": implementation_ready(a),
+            "implementation_state": implementation_state(a),
+            "physical_buildable": implementation_state(a) in BUILDABLE_STATES,
             "reasons": _candidate_reasons(a, target_mhz, prof["class"]),
         }
 
@@ -270,21 +328,37 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         warnings.append(f"library {lib['library']} is not PnR-ready")
     if area == "high" and selected["area_rank"] > 2:
         warnings.append("area-tight request still selected a medium/large DCO")
-    if selected["implementation"] == "simulation":
-        warnings.append("selected DCO has a behavioral simulation model, not a hardened macro")
-    elif selected["implementation"] == "rtl_partial":
-        warnings.append("selected architecture has partial RTL; signoff features may be missing")
+    if selected.get("external_clock_dependent"):
+        warnings.append(
+            f"selected architecture depends on an external "
+            f"{selected.get('requires_reference_tick', 'high-speed')} MHz tick; "
+            "it is not a standalone DCO")
+    if selected["implementation_state"] == "MODEL_ONLY":
+        warnings.append("selected architecture is MODEL_ONLY: simulation only, not a physical Generator build")
+    elif selected["implementation_state"] == "RTL_SYNTHESIZABLE":
+        warnings.append("selected architecture is RTL_SYNTHESIZABLE but has no verified physical backend")
+    elif selected["implementation_state"] == "UNIMPLEMENTED":
+        warnings.append("selected architecture has no implementation")
     if allow_unimplemented and selected["implementation"] in ("missing", "roadmap"):
         warnings.append("selected architecture is roadmap-only (--allow-unimplemented)")
     if not selected["implementation_ready"]:
         warnings.append("selected architecture implementation references are incomplete")
+    if evidence_identity is None and limits(pdk) is not None:
+        warnings.append(
+            "system-limit identity is unverified; pass --evidence-identity "
+            "and --require-evidence-identity before reusing this Fmax")
 
     cap_pdk = {
         "ics55": "ics55",
         "ihp130": "ihp-sg13g2",
     }.get(prof["key"], pdk)
     try:
-        dco = check_target(cap_pdk, target_mhz, 0.0, "l1", 10.0, ref_mhz, fcw)
+        dco = check_target(cap_pdk, target_mhz, 0.0, "l1", 10.0, ref_mhz, fcw,
+                           architecture_id=selected["id"],
+                           implementation_id=selected["implementation"],
+                           out_div=out_div,
+                           identity=evidence_identity,
+                           require_identity=require_identity)
     except Exception as exc:  # keep architecture output even if a manifest is broken
         dco = {"status": "FAIL_UNCHARACTERIZED", "reason": str(exc)}
 
@@ -293,6 +367,9 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         status = "FAIL_DCO_RANGE"
     elif dco_status == "FAIL_NO_CODE_WITHIN_TOLERANCE":
         status = "FAIL_DCO_CODE"
+    elif dco_status == "NEEDS_DCO_CHARACTERIZATION":
+        status = ("NEEDS_DCO_CHARACTERIZATION" if mode == "buildable"
+                  else "PASS_ARCH_SELECTED_EXPERIMENTAL")
     elif dco_status.startswith("PASS_"):
         status = "PASS_ARCH_SELECTED_WITH_DCO"
     else:
@@ -307,10 +384,18 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         "ref_mhz": ref_mhz,
         "fcw": fcw,
         "pdk_profile": prof,
+        "mode": mode,
         "selected": selected,
         "fallbacks": fallbacks,
         "library": lib,
         "dco_capability": dco,
+        "dco_binding": {
+            "architecture_id": selected["id"],
+            "implementation_id": selected["implementation"],
+            "architecture_state": selected["implementation_state"],
+            "evidence_identity": evidence_identity,
+            "identity_verified": evidence_identity is not None,
+        },
         "warnings": warnings,
         "production_eligible": False,
         "required_evidence": [
@@ -337,13 +422,23 @@ def main() -> int:
     ap.add_argument("--allow-low-res", action="store_true")
     ap.add_argument("--require-signoff", action="store_true")
     ap.add_argument("--allow-unimplemented", action="store_true")
+    ap.add_argument("--mode", choices=("buildable", "explore"), default="buildable")
+    ap.add_argument("--out-div", type=int, default=1)
+    ap.add_argument("--evidence-identity", type=Path,
+                    help="JSON object with process/view/flow/hash/corner fields")
+    ap.add_argument("--require-evidence-identity", action="store_true")
     ap.add_argument("--json-out", type=Path)
     ap.add_argument("--emit-selection", type=Path)
     args = ap.parse_args()
+    identity = (json.loads(args.evidence_identity.read_text())
+                if args.evidence_identity else None)
     result = select(args.pdk, args.target_mhz, args.area, args.ref_mhz,
                     args.fcw, args.wide_range, args.fractional,
                     args.low_jitter, args.fast_lock, args.allow_low_res,
-                    args.require_signoff, args.allow_unimplemented)
+                    args.require_signoff, args.allow_unimplemented,
+                    mode=args.mode, out_div=args.out_div,
+                    evidence_identity=identity,
+                    require_identity=args.require_evidence_identity)
     text = json.dumps(result, indent=2)
     if args.json_out:
         args.json_out.write_text(text + "\n")

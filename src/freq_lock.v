@@ -21,7 +21,12 @@ module pll_freq_lock #(
     input FORCE_P, FORCE_N,                 // Force count up or down
     output reg LOCKED, ERR,
     output reg [COARSE_NDELS-1:0] COARSE_MUX,
-    output reg [MID_NDELS-1:0] MID_MUX
+    output reg [MID_NDELS-1:0] MID_MUX,
+    // Measurement interface (separate from acquisition control).  The
+    // counter wraps after 2**CNT_BITS MID_OUT edges, so the REF/MID ratio
+    // must stay below that limit until a wider/prescaled counter is added.
+    output reg SAMPLE_VALID,
+    output reg [CNT_BITS-1:0] MEASURED_COUNT
 );
     wire CLK_REF = REF; // NOTE: Negative injection
     wire CLK_OUT = MID_OUT;
@@ -55,6 +60,8 @@ module pll_freq_lock #(
         cnt_cap = 'd0;
         cnt_filt = 'd0;
         cap_valid = 1'b0;
+        SAMPLE_VALID = 1'b0;
+        MEASURED_COUNT = 'd0;
     end
 
     // Free-running MID_OUT counter.  No REF-derived reset crosses domains.
@@ -75,6 +82,8 @@ module pll_freq_lock #(
             cnt_cap <= 'd0;
             cnt_filt <= 'd0;
             cap_valid <= 1'b0;
+            SAMPLE_VALID <= 1'b0;
+            MEASURED_COUNT <= 'd0;
         end else begin
             cnt_gray_s1 <= cnt_gray;
             cnt_gray_s2 <= cnt_gray_s1;
@@ -86,10 +95,14 @@ module pll_freq_lock #(
                 cnt_cap <= 'd0;
                 cnt_filt <= 'd0;
                 cap_valid <= 1'b1;
+                SAMPLE_VALID <= 1'b0;
+                MEASURED_COUNT <= 'd0;
             end else begin
                 cnt_cap <= sample_bin - cnt_bin;
                 cnt_filt <= (cnt_filt * 3 + (sample_bin - cnt_bin)) >> 2;
                 cnt_bin <= sample_bin;
+                SAMPLE_VALID <= 1'b1;
+                MEASURED_COUNT <= sample_bin - cnt_bin;
             end
         end
     end
@@ -120,8 +133,10 @@ module pll_freq_lock #(
 `else
     wire cnt_less;
     wire cnt_more;
-    assign cnt_less = cnt_cap < FCW;
-    assign cnt_more = cnt_cap > FCW;
+    // Judge acquisition on the filtered count, not the raw single-cycle
+    // capture.  This keeps a noisy REF edge from toggling the tuning FSM.
+    assign cnt_less = cnt_filt < FCW;
+    assign cnt_more = cnt_filt > FCW;
 `endif
 
     reg [CNT_TOL_BITS-1:0] cnt_done;
@@ -157,7 +172,7 @@ module pll_freq_lock #(
 
                 // Increase the locking counter when the frequency counter is
                 // within the range. Reset the counter when counters are different
-                if(FCW_NA <= cnt_cap && cnt_cap <= FCW_PA)
+                if(FCW_NA <= cnt_filt && cnt_filt <= FCW_PA)
                     cnt_done <= cnt_done + 1;
                 else if(cnt_done != 0)
                     cnt_done <= cnt_done - 1; // leaky: one bad sample must not restart acquisition

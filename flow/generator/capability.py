@@ -61,6 +61,14 @@ def _tuning_rows(pdk: str, manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+def _implementation_matches(requested: str, bound: str) -> bool:
+    """Accept ``rtl`` for a manifest bound as ``core_a_il_dco.rtl``."""
+    if requested == bound:
+        return True
+    leaf = bound.rsplit(".", 1)[-1]
+    return requested == leaf or bound.endswith("." + requested)
+
+
 def check_target(
     pdk: str,
     target_mhz: float,
@@ -69,20 +77,67 @@ def check_target(
     tolerance_mhz: float = 10.0,
     ref_mhz: float | None = None,
     fcw: int | None = None,
+    architecture_id: str | None = None,
+    implementation_id: str | None = None,
+    out_div: int = 1,
+    identity: dict | None = None,
+    require_identity: bool = False,
 ) -> dict[str, Any]:
-    limit_hit = check_system(pdk, target_mhz, ref_mhz, fcw)
+    limit_hit = check_system(pdk, target_mhz, ref_mhz, fcw, out_div,
+                             identity=identity,
+                             require_identity=require_identity)
     if limit_hit:
         return limit_hit
+
+    # The measured tables in this repository are for the Core A IL-DCO.
+    # They are not evidence for a ring, counter, or any other variant.
+    if architecture_id is not None and architecture_id != "core_a_il_dco":
+        return {
+            "status": "NEEDS_DCO_CHARACTERIZATION",
+            "pdk": pdk,
+            "architecture_id": architecture_id,
+            "implementation_id": implementation_id,
+            "target_mhz": target_mhz,
+            "reason": "no DCO characterization manifest is bound to this architecture/implementation",
+        }
 
     try:
         manifest = load_manifest(pdk)
     except FileNotFoundError:
         return {
-            "status": "FAIL_UNCHARACTERIZED",
+            "status": "NEEDS_DCO_CHARACTERIZATION" if architecture_id else "FAIL_UNCHARACTERIZED",
             "pdk": pdk,
+            "architecture_id": architecture_id,
+            "implementation_id": implementation_id,
             "target_mhz": target_mhz,
             "system_limits": limits(pdk),
             "reason": "no DCO capability manifest; digital ceiling is not DCO evidence",
+        }
+
+    bound_arch = manifest.get("architecture_id", "core_a_il_dco")
+    bound_impl = manifest.get("implementation_id", "core_a_il_dco.rtl")
+    if architecture_id is not None and architecture_id != bound_arch:
+        return {
+            "status": "NEEDS_DCO_CHARACTERIZATION",
+            "pdk": pdk,
+            "architecture_id": architecture_id,
+            "implementation_id": implementation_id,
+            "manifest_architecture_id": bound_arch,
+            "manifest_implementation_id": bound_impl,
+            "target_mhz": target_mhz,
+            "reason": "manifest architecture does not match the selected architecture",
+        }
+    if implementation_id is not None and not _implementation_matches(
+            implementation_id, bound_impl):
+        return {
+            "status": "NEEDS_DCO_CHARACTERIZATION",
+            "pdk": pdk,
+            "architecture_id": architecture_id,
+            "implementation_id": implementation_id,
+            "manifest_architecture_id": bound_arch,
+            "manifest_implementation_id": bound_impl,
+            "target_mhz": target_mhz,
+            "reason": "manifest implementation does not match the selected implementation",
         }
 
     level = manifest.get("characterization_level")
@@ -164,9 +219,19 @@ def main() -> int:
     ap.add_argument("--ref-mhz", type=float)
     ap.add_argument("--fcw", type=int)
     ap.add_argument("--tolerance-mhz", type=float, default=10.0)
+    ap.add_argument("--architecture-id")
+    ap.add_argument("--implementation-id")
+    ap.add_argument("--out-div", type=int, default=1)
+    ap.add_argument("--evidence-identity", type=Path,
+                    help="JSON object with process/view/flow/hash/corner fields")
+    ap.add_argument("--require-evidence-identity", action="store_true")
     args = ap.parse_args()
+    identity = (json.loads(args.evidence_identity.read_text())
+                if args.evidence_identity else None)
     result = check_target(args.pdk, args.target_mhz, args.margin_mhz, args.signoff,
-                          args.tolerance_mhz, args.ref_mhz, args.fcw)
+                          args.tolerance_mhz, args.ref_mhz, args.fcw,
+                          args.architecture_id, args.implementation_id, args.out_div,
+                          identity, args.require_evidence_identity)
     print(json.dumps(result, indent=2))
     return 0 if result["status"] in ("PASS_L1_EXPERIMENTAL", "PASS_L3_SPARSE", "PASS_L3") else 1
 

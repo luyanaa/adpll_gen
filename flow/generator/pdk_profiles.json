@@ -68,7 +68,7 @@
     "max_arch_mhz": 5.0,
     "signoff_mhz": 5.0,
     "max_ref_mhz": 5.0,
-    "maturity": "route complete; setup ~5.6 MHz, hold and LVS open",
+    "maturity": "KLayout LVS pass; via-stack DRC, PDN and hold timing open; not signoff",
     "qualified": false
   }
 }

@@ -170,5 +170,12 @@
     "pex_verified": false,
     "jitter_verified": false
   },
-  "notes": "Dense fine sweep at c0/m0, c0/m15, c8/m0 merged with the 27-point sparse corners; c8 fine 27-30 timed out; c15 remains sparse."
+  "notes": "Dense fine sweep at c0/m0, c0/m15, c8/m0 merged with the 27-point sparse corners; c8 fine 27-30 timed out; c15 remains sparse.",
+  "architecture_id": "core_a_il_dco",
+  "implementation_id": "core_a_il_dco.rtl",
+  "pvt_corners": [
+    "TT"
+  ],
+  "physical_variant_hash": null,
+  "extraction_fidelity": "L3_transistor_dense_axes"
 }

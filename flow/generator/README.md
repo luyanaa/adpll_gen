@@ -34,8 +34,17 @@ PASS_ARCH_SELECTED_EXPERIMENTAL
                        manifest or signoff evidence exists.
 
 PASS_ARCH_SELECTED_WITH_DCO
-                       Architecture selected and the DCO manifest accepts the
-                       target; still not production/PVT/jitter signoff.
+                       Architecture selected and a matching DCO manifest
+                       accepts the target; still not production/PVT/jitter
+                       signoff.
+
+NEEDS_DCO_CHARACTERIZATION
+                       The selected architecture/implementation has no DCO
+                       manifest bound to it.  Core A data is never reused for
+                       Core B/C.
+
+FAIL_FREQUENCY_PLAN    target/REF/FCW violate the integer-N planning relation
+                       f_out = FCW * f_REF / out_div.
 
 FAIL_SIGNOFF_FMAX      --require-signoff was used and the target exceeds
                        the conservative PDK signoff ceiling.
@@ -75,6 +84,12 @@ python3 flow/generator/capability.py --pdk gf180mcu_as_sc_mcu7t3v3 \
 # FAIL_UNCHARACTERIZED (no DCO table; digital ceiling is not DCO signoff)
 ```
 
+`robust.py` always emits `PVT_FREQUENCY_SCREEN` and `production_eligible:
+false`; it never grants production.  It separately reports
+`evidence_complete` for the required TT/SS/FF set, PEX/PVT data, lock/STA/
+injection checks, jitter, DRC/LVS, and an evidence key.  A production decision
+belongs to an external evidence review, not this module.
+
 A target that is inside the range but more than the default 10 MHz tolerance
 from a measured code returns `FAIL_NO_CODE_WITHIN_TOLERANCE`; use a measured
 code or a denser scan.  Production signoff still returns
@@ -100,28 +115,38 @@ optional features, then returns fallbacks, the best library for the selected
 core, the DCO capability result, and the remaining signoff evidence.
 
 ```sh
-# ETRI: low frequency + area sensitive -> Core C counter
-python3 flow/generator/architecture.py --pdk ETRI050_fd_sc_12t \
-  --target-mhz 5 --area high
-
-# GF180 AS: 100 MHz -> Core B ring
-python3 flow/generator/architecture.py --pdk gf180mcu_as_sc_mcu7t3v3 \
-  --target-mhz 100 --area medium --ref-mhz 50
-
-# ics55: high-frequency segmented IL-DCO (experimental above the 479 MHz
-# conservative SS ceiling)
+# Default buildable mode: only PHYSICAL_IMPLEMENTABLE/CHARACTERIZED entries.
 python3 flow/generator/architecture.py --pdk ics55 \
-  --target-mhz 800 --area medium --ref-mhz 100
+  --target-mhz 800 --area medium --ref-mhz 100 --fcw 8
 
-# Emit a per-block selection template for validate_selection.py
+# Planning/exploration: MODEL_ONLY Core B/C are allowed, but never returned
+# as a physical build.
+python3 flow/generator/architecture.py --pdk ETRI050_fd_sc_12t \
+  --target-mhz 5 --area high --mode explore
 python3 flow/generator/architecture.py --pdk gf180mcu_as_sc_mcu7t3v3 \
-  --target-mhz 100 --area medium --ref-mhz 50 \
+  --target-mhz 100 --area medium --ref-mhz 50 --mode explore
+
+# --allow-unimplemented is only legal with --mode explore.
+python3 flow/generator/architecture.py --pdk ics55 \
+  --target-mhz 800 --area medium --ref-mhz 100 --fcw 8 \
+  --mode explore --allow-unimplemented
+
+# Emit a per-block selection template for validate_selection.py.  Buildable
+# mode only accepts a physical backend; use an architecture with one.
+python3 flow/generator/architecture.py --pdk ics55 \
+  --target-mhz 800 --area medium --ref-mhz 100 --fcw 8 \
   --emit-selection /tmp/selection.json
 python3 flow/validate_selection.py --selection /tmp/selection.json
 ```
 
 Selection rules:
 
+- `--mode buildable` is the default and only selects
+  `PHYSICAL_IMPLEMENTABLE` (currently Core A) or `CHARACTERIZED` entries.
+- `--mode explore` permits `MODEL_ONLY` Core B/C simulation candidates, but
+  reports `NEEDS_DCO_CHARACTERIZATION` unless a matching DCO manifest exists.
+- `--allow-unimplemented` is an explicit planning override and requires
+  `--mode explore`.
 - `<150 MHz`: Core C counter / ring path; `--allow-low-res` enables the
   low-res TDC/bang-bang cost fallback.
 - `150–500 MHz`: Core B ring / hybrid.
@@ -130,6 +155,8 @@ Selection rules:
 - `--area high`: limits the DCO area rank and forces Core C for `<150 MHz`.
 - `--fractional`, `--low-jitter`, `--fast-lock`, `--wide-range`: hard feature
   filters, not suggestions.
+- `fractional_n_dsm` is `DCO_FINE_CODE_DSM`; true fractional feedback is a
+  separate, currently unimplemented `fractional_n_feedback` candidate.
 - A target above the conservative PDK signoff ceiling but below the measured
   architecture ceiling is returned as experimental with an explicit warning.
 - `--require-signoff` rejects targets above the conservative PDK signoff
@@ -150,11 +177,16 @@ roadmap item.  Each catalog entry carries:
 implementation       rtl / rtl_partial / simulation / missing / roadmap
 implementation_refs  source paths that must exist
 implementation_ready all refs exist and implementation is not missing
+implementation_state MODEL_ONLY / RTL_SYNTHESIZABLE /
+                     PHYSICAL_IMPLEMENTABLE / CHARACTERIZED
 ```
 
-By default only `rtl`, `rtl_partial`, and `simulation` entries with existing
-refs are selectable.  Use `--allow-unimplemented` only for a planning/roadmap
-selection; the result is marked as a warning and is not production-eligible.
+`MODEL_ONLY` is simulation-only.  `RTL_SYNTHESIZABLE` can make a netlist but
+has no verified physical backend.  `PHYSICAL_IMPLEMENTABLE` has a physical
+generation path.  `CHARACTERIZED` also has the matching evidence bundle.
+Default `--mode buildable` never selects MODEL_ONLY.  Use `--mode explore`
+for behavioral planning, and `--allow-unimplemented` only for roadmap
+exploration; no mode grants production eligibility.
 
 Current implementation status:
 
@@ -168,4 +200,52 @@ Current implementation status:
 | Segmented / hybrid / low-res TDC / multi-phase | roadmap | not selectable by default |
 
 Core B/C models are behavioral RTL, not hardened macros and not DCO/PVT
-signoff.  The generated selection template marks their `dco`/`pd` as soft.
+signoff.  Their catalog model ranges are 20–109 MHz and 2.5–26.5 MHz,
+respectively; the wider catalog bands are architecture targets, not measured
+model limits.  Core C additionally requires an external 1 GHz tick and is
+therefore an NCO/digital clock synthesizer candidate, not a standalone DCO
+claim.
+
+DCO characterization is bound to `architecture_id + implementation_id +
+PDK/library + structural parameters + physical hash + extraction fidelity +
+PVT corner`.  A Core A manifest cannot be reused for Core B/C; the selector
+returns `NEEDS_DCO_CHARACTERIZATION` instead.
+
+## System-limit identity
+
+A PDK/library name is not a complete timing identity.  `system_limits.json`
+stores an `evidence_identity` per entry and `check_system()` accepts an
+explicit identity file/argument:
+
+```sh
+python3 flow/generator/architecture.py --pdk gf180mcu_as_sc_mcu7t3v3 \
+  --target-mhz 100 --ref-mhz 50 --fcw 2 \
+  --evidence-identity /tmp/limit_identity.json
+```
+
+With `--require-evidence-identity` (or `check_system(..., require_identity=True)`),
+missing or mismatched `process_id`, `pdk_release`, `standard_cell_library`,
+`technology_view`, `metal_stack`, `physical_flow`, `implementation_hash`, or
+`timing_corner` returns `FAIL_EVIDENCE_IDENTITY`.  Unverified values are
+stored as `null`, so a caller cannot accidentally claim them.  The old
+OSU/OCD/AS-EX aliases to the AS canary were removed for the same reason.
+
+## Remaining generator gaps
+
+The following are intentionally still open; this repository is a planner and
+capability gate, not a closed-loop GDS generator:
+
+- `Specification -> ResolvedDesign -> RTL/macro/SDC/validation -> package`
+  does not exist yet (P1-3).
+- There is no automatic re-build of a hard macro when structural parameters
+  change, and no `design.lock.json` physical-view hash (P1-2).
+- `pll.v` does not yet expose every new lock parameter, and the canary
+  selection/demo manifest is not reconciled with a built macro identity.
+- Frequency measurement still uses a fixed-width counter; the measured ratio
+  must remain below the `CNT_BITS` wrap limit.  A separate
+  `freq_measure`/`sample_valid`/`overflow` interface is the next refactor (P0-5).
+  `freq_lock.v` now exposes `SAMPLE_VALID`/`MEASURED_COUNT`, but does not yet
+  detect overflow or provide a multi-period measurement window.
+- Gray-bus physical skew, synchronizer placement/reset constraints, and a
+  CDC rule check are not automated; the RTL CDC test is not a layout signoff.
+- Full PVT/lock/jitter/PEX signoff is not claimed for any architecture.

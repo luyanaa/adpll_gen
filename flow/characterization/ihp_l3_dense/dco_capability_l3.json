@@ -152,5 +152,12 @@
     "pex_verified": false,
     "jitter_verified": false
   },
-  "notes": "100 ns fine bank at c8/m0. The 30 ns table was a startup transient; its 376/369 MHz outliers disappear. Sparse f0/f8/f31 match exactly. Residual non-monotonicity remains and is treated as a real fine-bank/startup issue."
+  "notes": "100 ns fine bank at c8/m0. The 30 ns table was a startup transient; its 376/369 MHz outliers disappear. Sparse f0/f8/f31 match exactly. Residual non-monotonicity remains and is treated as a real fine-bank/startup issue.",
+  "architecture_id": "core_a_il_dco",
+  "implementation_id": "core_a_il_dco.rtl",
+  "pvt_corners": [
+    "TT"
+  ],
+  "physical_variant_hash": null,
+  "extraction_fidelity": "L3_transistor_dense_axes"
 }

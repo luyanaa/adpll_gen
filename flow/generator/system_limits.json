@@ -12,7 +12,17 @@
     "recommended_ref_mhz": [
       40,
       80
-    ]
+    ],
+    "evidence_identity": {
+      "process_id": "gf180mcu",
+      "pdk_release": null,
+      "standard_cell_library": "gf180mcu_as_sc_mcu7t3v3",
+      "technology_view": "3.3V",
+      "metal_stack": null,
+      "physical_flow": "librelane",
+      "implementation_hash": null,
+      "timing_corner": "SS"
+    }
   },
   "gf180mcu_fd_sc_mcu7t5v0": {
     "max_out_mhz": 25.0,
@@ -27,7 +37,17 @@
     "recommended_ref_mhz": [
       10,
       15
-    ]
+    ],
+    "evidence_identity": {
+      "process_id": "gf180mcu",
+      "pdk_release": null,
+      "standard_cell_library": "gf180mcu_fd_sc_mcu7t5v0",
+      "technology_view": "5V",
+      "metal_stack": null,
+      "physical_flow": "librelane",
+      "implementation_hash": null,
+      "timing_corner": "SS"
+    }
   },
   "gf180mcu_fd_sc_mcu9t5v0": {
     "max_out_mhz": 30.0,
@@ -42,7 +62,17 @@
     "recommended_ref_mhz": [
       10,
       20
-    ]
+    ],
+    "evidence_identity": {
+      "process_id": "gf180mcu",
+      "pdk_release": null,
+      "standard_cell_library": "gf180mcu_fd_sc_mcu9t5v0",
+      "technology_view": "5V",
+      "metal_stack": null,
+      "physical_flow": "librelane",
+      "implementation_hash": null,
+      "timing_corner": "SS"
+    }
   },
   "gf180mcu_3v3_7t": {
     "max_out_mhz": 40.0,
@@ -57,7 +87,17 @@
     "recommended_ref_mhz": [
       15,
       25
-    ]
+    ],
+    "evidence_identity": {
+      "process_id": "gf180mcu",
+      "pdk_release": null,
+      "standard_cell_library": "gf180mcu_3v3_7t",
+      "technology_view": "3.3V",
+      "metal_stack": null,
+      "physical_flow": null,
+      "implementation_hash": null,
+      "timing_corner": "unknown"
+    }
   },
   "etri050": {
     "max_out_mhz": 5.0,
@@ -72,6 +112,16 @@
     "recommended_ref_mhz": [
       1,
       5
-    ]
+    ],
+    "evidence_identity": {
+      "process_id": "etri050",
+      "pdk_release": null,
+      "standard_cell_library": "ETRI050_fd_sc_12t",
+      "technology_view": "5V",
+      "metal_stack": "2P3M",
+      "physical_flow": "librelane",
+      "implementation_hash": null,
+      "timing_corner": "TT"
+    }
   }
 }

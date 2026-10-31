@@ -69,5 +69,12 @@
     "pex_verified": false,
     "jitter_verified": false
   },
-  "notes": "Full 16x16x32 behavioral grid. Codes are thermometer-coded; increasing code increases delay and lowers frequency. Not a PVT/PEX/jitter signoff."
+  "notes": "Full 16x16x32 behavioral grid. Codes are thermometer-coded; increasing code increases delay and lowers frequency. Not a PVT/PEX/jitter signoff.",
+  "architecture_id": "core_a_il_dco",
+  "implementation_id": "core_a_il_dco.rtl",
+  "pvt_corners": [
+    "TT"
+  ],
+  "physical_variant_hash": null,
+  "extraction_fidelity": "L1_behavioral"
 }

@@ -39,5 +39,12 @@
     "pex_verified": false,
     "jitter_verified": false
   },
-  "notes": "Sparse 27-point transistor-level DCO, no PEX/PVT; non-monotonic points remain."
+  "notes": "Sparse 27-point transistor-level DCO, no PEX/PVT; non-monotonic points remain.",
+  "architecture_id": "core_a_il_dco",
+  "implementation_id": "core_a_il_dco.rtl",
+  "pvt_corners": [
+    "TT"
+  ],
+  "physical_variant_hash": null,
+  "extraction_fidelity": "L3_transistor_sparse"
 }

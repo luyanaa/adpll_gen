@@ -30,7 +30,8 @@
         "src/pll_analog.v",
         "src/pll_macro_top.v"
       ],
-      "hardmacro_ready": true
+      "hardmacro_ready": true,
+      "physical_variant": true
     },
     {
       "id": "segmented_il_dco",
@@ -92,7 +93,12 @@
         "src/pll_ring_dco.v",
         "src/arch_models_tb.v"
       ],
-      "hardmacro_ready": false
+      "hardmacro_ready": false,
+      "model_freq_mhz": [
+        20,
+        109
+      ],
+      "model_note": "Default behavioral ring model; not layout/device calibrated."
     },
     {
       "id": "core_c_counter",
@@ -123,7 +129,14 @@
         "src/pll_counter_dco.v",
         "src/arch_models_tb.v"
       ],
-      "hardmacro_ready": false
+      "hardmacro_ready": false,
+      "model_freq_mhz": [
+        2.5,
+        26.5
+      ],
+      "model_note": "Default behavioral counter model; f_out = f_tick*increment/(2*PHASE_MOD).",
+      "requires_reference_tick": 1000.0,
+      "external_clock_dependent": true
     },
     {
       "id": "hybrid_dco",
@@ -192,7 +205,7 @@
     },
     {
       "id": "fractional_n_dsm",
-      "name": "Fractional-N / DSM ADPLL",
+      "name": "DCO fine-code DSM (partial RTL)",
       "core": "core_a_il_dco",
       "freq_mhz": [
         50,
@@ -209,18 +222,19 @@
       ],
       "complexity": 5,
       "features": [
-        "fractional_n",
-        "dsm",
-        "integer_n"
+        "integer_n",
+        "dsm"
       ],
       "risk": "noise shaping, quantization, larger digital area",
-      "benefit": "fine frequency resolution and fractional outputs",
+      "benefit": "fine frequency resolution through DCO code noise shaping",
       "implementation": "rtl_partial",
       "implementation_refs": [
         "src/delta_sigma.v",
         "src/pll_logic.v"
       ],
-      "hardmacro_ready": true
+      "hardmacro_ready": true,
+      "implementation_class": "DCO_FINE_CODE_DSM",
+      "note": "Delta-sigma shapes fine control code; this is not fractional feedback."
     },
     {
       "id": "low_res_tdc_bangbang",
@@ -280,6 +294,36 @@
       "implementation": "missing",
       "implementation_refs": [],
       "hardmacro_ready": false
+    },
+    {
+      "id": "fractional_n_feedback",
+      "name": "Fractional-N feedback (unimplemented)",
+      "core": "core_a_il_dco",
+      "freq_mhz": [
+        50,
+        1000
+      ],
+      "area": "medium",
+      "area_rank": 3,
+      "complexity": 5,
+      "features": [
+        "integer_n",
+        "fractional_n"
+      ],
+      "risk": "fractional feedback divider and quantization cancellation not implemented",
+      "benefit": "true fractional-N average frequency",
+      "implementation": "missing",
+      "implementation_refs": [],
+      "hardmacro_ready": false,
+      "implementation_class": "FRACTIONAL_N_FEEDBACK",
+      "note": "Requires a real fractional feedback path; DSM alone is insufficient.",
+      "bands": [
+        "mid",
+        "high"
+      ],
+      "pdk_classes": [
+        "high"
+      ]
     }
   ]
 }

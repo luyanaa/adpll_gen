@@ -10,7 +10,7 @@ module pll_logic#(
     parameter integer DSM_DIV = 2,
     parameter integer LOCKED_WAIT = 64,
     parameter integer FILTER_ILL = 16,
-    parameter integer LOCK_TOL = 6,
+    parameter integer LOCK_TOL = 1,
     parameter integer LOCK_COUNT = 16,
     parameter integer LOSS_COUNT = 4,
 `ifndef PLL_WITHOUT_DIVIDER

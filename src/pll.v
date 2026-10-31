@@ -10,6 +10,9 @@ module pll #(
     parameter integer DSM_DIV = 2,          // The DSM will work at the output clock divided by DSM_DIV
     parameter integer LOCKED_WAIT = 64,     // Number of clock cycles of REF from the freq lock until we trigger LOCKED
     parameter integer FILTER_ILL = 16,      // While locking, if illegal (positive/negative) in the filter, will force increase/decrease freq lock
+    parameter integer LOCK_TOL = 1,         // Frequency-counter tolerance in FCW counts
+    parameter integer LOCK_COUNT = 16,      // Phase-lock detector count
+    parameter integer LOSS_COUNT = 4,       // Phase-loss detector count
 `ifndef PLL_WITHOUT_DIVIDER
     parameter integer DIV_BITS = 8,
 `endif
@@ -49,6 +52,9 @@ module pll #(
         .DSM_DIV(DSM_DIV),
         .LOCKED_WAIT(LOCKED_WAIT),
         .FILTER_ILL(FILTER_ILL),
+        .LOCK_TOL(LOCK_TOL),
+        .LOCK_COUNT(LOCK_COUNT),
+        .LOSS_COUNT(LOSS_COUNT),
 `ifndef PLL_WITHOUT_DIVIDER
         .DIV_BITS(DIV_BITS),
 `endif
