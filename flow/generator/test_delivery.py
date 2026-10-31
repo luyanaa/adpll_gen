@@ -192,8 +192,17 @@ def main():
         assert resolved["architecture_state"] == "PHYSICAL_IMPLEMENTABLE", resolved
         assert resolved["macro"]["status"] == "BUILT", resolved["macro"]
 
-        # A PDK without a core-specific physical entry remains RTL/experimental.
+        # IHP now has core-specific physical ring/counter entries too.
         exp = base_spec(pdk="ihp-sg13g2", target_mhz=100,
+                        ref_mhz=50, fcw=2, mode="buildable",
+                        allow_unverified_dco=True)
+        resolved = resolve_spec(exp)
+        assert resolved["status"] == "READY_PHYSICAL_UNCHARACTERIZED", resolved
+        assert resolved["architecture_state"] == "PHYSICAL_IMPLEMENTABLE", resolved
+        assert resolved["macro"]["status"] == "BUILT", resolved["macro"]
+
+        # A PDK without a core-specific physical entry remains RTL/experimental.
+        exp = base_spec(pdk="sky130_fd_sc_hd", target_mhz=100,
                         ref_mhz=50, fcw=2, mode="explore",
                         allow_experimental=True)
         resolved = resolve_spec(exp)

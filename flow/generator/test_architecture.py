@@ -66,6 +66,14 @@ def main():
                allow_unimplemented=True, mode="explore")
     assert r["selected"]["implementation"] == "missing", r["selected"]
 
+    # FreePDK45 is in the flow as a planning-only predictive PDK: it has no
+    # core-specific physical macro entry and must not be called buildable.
+    r = select("FreePDK45", 100, area="medium", ref_mhz=50, fcw=2,
+               mode="explore")
+    assert r["status"] == "PASS_ARCH_SELECTED_EXPERIMENTAL", r
+    assert r["selected"]["id"] == "core_b_ring_dco", r["selected"]
+    assert r["selected"]["implementation_state"] == "RTL_SYNTHESIZABLE", r
+
     # IHP has a physical Core A path but the target must still match its
     # architecture band; 300 MHz is a valid physical candidate.
     r = select("ihp-sg13g2", 300, area="medium", ref_mhz=100, fcw=3)

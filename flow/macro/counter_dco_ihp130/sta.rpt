@@ -1,0 +1,80 @@
+OpenSTA 2.0.17 GITDIR-NOT Copyright (c) 2019, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details.
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Startpoint: ins_2453_ (rising edge-triggered flip-flop clocked by TICK)
+Endpoint: ins_2468_ (rising edge-triggered flip-flop clocked by TICK)
+Path Group: TICK
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000 ^ ins_2453_/CLK (sg13g2_dfrbpq_1)
+   0.1863    0.1863 ^ ins_2453_/Q (sg13g2_dfrbpq_1)
+   0.0460    0.2323 v ins_1241_/Y (sg13g2_inv_1)
+   0.1378    0.3701 v ins_2407_/X (sg13g2_or2_1)
+   0.1772    0.5473 ^ ins_2409_/Y (sg13g2_o21ai_1)
+   0.1944    0.7416 ^ ins_2411_/Y (sg13g2_nor2b_1)
+   0.1221    0.8637 v ins_2412_/Y (sg13g2_o21ai_1)
+   0.1519    1.0156 ^ ins_2416_/Y (sg13g2_a21oi_1)
+   0.1525    1.1681 v ins_2417_/Y (sg13g2_a21oi_1)
+   0.0927    1.2608 ^ ins_2418_/Y (sg13g2_nor2_1)
+   0.0781    1.3388 v ins_2419_/Y (sg13g2_nor2_1)
+   0.0488    1.3877 ^ ins_2420_/Y (sg13g2_inv_1)
+   0.1056    1.4933 v ins_2421_/Y (sg13g2_a21oi_1)
+   0.1987    1.6920 ^ ins_2422_/Y (sg13g2_o21ai_1)
+   0.1635    1.8554 v ins_2424_/Y (sg13g2_a21oi_1)
+   0.1962    2.0517 ^ ins_2425_/Y (sg13g2_o21ai_1)
+   0.1559    2.2076 v ins_2426_/Y (sg13g2_a21oi_1)
+   0.1423    2.3499 v ins_2427_/Y (sg13g2_nand2b_1)
+   0.1999    2.5498 v ins_2429_/X (sg13g2_a21o_1)
+   0.2021    2.7519 ^ ins_2430_/Y (sg13g2_nor3_1)
+   0.1409    2.8928 ^ ins_2450_/Y (sg13g2_xnor2_1)
+   0.0002    2.8930 ^ ins_2468_/D (sg13g2_dfrbpq_1)
+             2.8930   data arrival time
+
+  10.0000   10.0000   clock TICK (rise edge)
+   0.0000   10.0000   clock network delay (ideal)
+  -0.1000    9.9000   clock uncertainty
+   0.0000    9.9000   clock reconvergence pessimism
+             9.9000 ^ ins_2468_/CLK (sg13g2_dfrbpq_1)
+  -0.1389    9.7611   library setup time
+             9.7611   data required time
+-------------------------------------------------------------
+             9.7611   data required time
+            -2.8930   data arrival time
+-------------------------------------------------------------
+             6.8681   slack (MET)
+
+
+Startpoint: ins_2453_ (rising edge-triggered flip-flop clocked by TICK)
+Endpoint: ins_2453_ (rising edge-triggered flip-flop clocked by TICK)
+Path Group: TICK
+Path Type: min
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000 ^ ins_2453_/CLK (sg13g2_dfrbpq_1)
+   0.1715    0.1715 v ins_2453_/Q (sg13g2_dfrbpq_1)
+   0.0710    0.2425 v ins_2451_/Y (sg13g2_xnor2_1)
+   0.0002    0.2427 v ins_2453_/D (sg13g2_dfrbpq_1)
+             0.2427   data arrival time
+
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0200    0.0200   clock uncertainty
+   0.0000    0.0200   clock reconvergence pessimism
+             0.0200 ^ ins_2453_/CLK (sg13g2_dfrbpq_1)
+  -0.0436   -0.0236   library hold time
+            -0.0236   data required time
+-------------------------------------------------------------
+            -0.0236   data required time
+            -0.2427   data arrival time
+-------------------------------------------------------------
+             0.2662   slack (MET)

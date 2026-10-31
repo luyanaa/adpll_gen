@@ -11,6 +11,10 @@
 | `PLL_COUNTER_DCO_PHYS` | ics55 H7CR | 96.3×102.7; digital NCO/counter; GDS/LEF/LIB/DEF; DRC/LVS not clean |
 | `PLL_RING_DCO_PHYS` | gf180mcu `gf180mcu_as_sc_mcu7t3v3` | **DRC 0, LVS PASS** after density fill; GDS/LEF/LIB/CDL/DEF/SPICE; nominal STA only |
 | `PLL_COUNTER_DCO_PHYS` | gf180mcu `gf180mcu_as_sc_mcu7t3v3` | **DRC 0, LVS PASS** after density fill; GDS/LEF/LIB/CDL/DEF/SPICE; nominal STA only |
+| `PLL_RING_DCO_PHYS` | IHP SG13G2 `sg13g2_stdcell` | **DRC 0 (ORFS minimal deck), LVS PASS** on fill-stripped GDS; nominal STA only |
+| `PLL_COUNTER_DCO_PHYS` | IHP SG13G2 `sg13g2_stdcell` | **DRC 0 (ORFS minimal deck), LVS PASS** on fill-stripped GDS; nominal STA only |
+| `PLL_RING_DCO_PHYS` | sky130 `sky130_fd_sc_hd` | **DRC 0**; LVS **FAIL** (cell/top netlist view); experiment only |
+| `PLL_COUNTER_DCO_PHYS` | sky130 `sky130_fd_sc_hd` | **DRC 0**; LVS **FAIL** (cell/top netlist view); experiment only |
 
 Each macro directory contains a wrapper, macro-only SDC and a Makefile or
 LibreLane config.  The ics55/IHP builds use the ckdur OpenROAD flow; gf180 and
@@ -21,6 +25,10 @@ The ics55 macro uses `flow/maps/ics55_lefdef.map` (a LEF/DEF map, not the PDK
 GDS-import map), `add_density_fill.rb` and an explicit cell-internal DRC
 waiver.  The IHP macro uses `flow/macro/ihp130_sg13g2/add_density_fill.rb` on
 the IHP FILL layers with NODRC markers; its LVS is run on a fill-stripped
-view.  GF180 has DRC/LVS deck evidence.  sky130 has DRC 0, a corrected PDN,
-and a generated cell CDL; its remaining LVS failure is cell-subcircuit
-device/pin comparison, not PDN connectivity.
+view.  GF180 and IHP have DRC/LVS evidence.  IHP uses the ORFS minimal deck and
+flow-local fill-stripped LVS view, not the official IHP deck.  sky130 has DRC 0
+but LVS still fails at the cell/top netlist view; it is recorded as an
+experiment, not a passing signoff.
+
+FreePDK45 is included as a planning-only predictive profile/library; see
+`FREEPDK45.md`.  It has no physical GDS/DRC/LVS signoff path in this checkout.

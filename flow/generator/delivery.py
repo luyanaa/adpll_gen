@@ -69,6 +69,7 @@ CELL_SOURCES = {
     "ics55": "src/pll_cells_ics55.v",
     "ihp-sg13g2": "src/pll_cells_ihp-sg13g2.v",
     "gf180mcu_as": "src/pll_cells_gf180mcu.v",
+    "freepdk45": "src/pll_cells_freepdk45.v",
 }
 MACRO_WRAPPERS = {
     "ics55": "flow/macro/ics55_h7cr/pll_analog_macro.v",

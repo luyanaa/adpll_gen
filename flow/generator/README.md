@@ -194,20 +194,24 @@ Current implementation status:
 | Architecture | Status | Artifact |
 |---|---|---|
 | Core A IL-DCO | RTL/macro | `src/il_dco.v`, `src/pll_analog.v`, `src/pll_macro_top.v` |
-| Core B ring DCO | RTL + physical macro | `src/pll_ring_dco_phys.v`, `src/pll_ring_top.v`, `flow/macro/ring_dco_gf180mcu/` (DRC/LVS clean), `flow/macro/ring_dco_ics55/` |
-| Core C counter DCO | RTL + physical macro | `src/pll_counter_dco_phys.v`, `src/pll_counter_top.v`, `flow/macro/counter_dco_gf180mcu/` (DRC/LVS clean), `flow/macro/counter_dco_ics55/` |
+| Core B ring DCO | RTL + physical macro | `src/pll_ring_dco_phys.v`, `src/pll_ring_top.v`, `flow/macro/ring_dco_gf180mcu/` and `flow/macro/ring_dco_ihp130/` (DRC/LVS clean), `flow/macro/ring_dco_ics55/` (bring-up), `flow/macro/ring_dco_sky130/` (DRC 0, LVS fail) |
+| Core C counter DCO | RTL + physical macro | `src/pll_counter_dco_phys.v`, `src/pll_counter_top.v`, `flow/macro/counter_dco_gf180mcu/` and `flow/macro/counter_dco_ihp130/` (DRC/LVS clean), `flow/macro/counter_dco_ics55/` (bring-up), `flow/macro/counter_dco_sky130/` (DRC 0, LVS fail) |
 | Core A dual loop | partial RTL | `src/freq_lock.v`, `src/digital_loop_filter.v` |
 | Fractional / DSM | partial RTL | `src/delta_sigma.v`, `src/pll_logic.v` |
 | Segmented / hybrid / low-res TDC / multi-phase | roadmap | not selectable by default |
 
 Core B/C are now physical implementations: a fixed-inverter-ring macro and a
-synthesizable phase-accumulator/NCO macro.  The gf180mcu variants have DRC 0
-and LVS PASS in `flow/macro/*_dco_gf180mcu/`; the ics55 variants remain
-non-signoff bring-up artifacts.  The old behavioral modules remain
+synthesizable phase-accumulator/NCO macro.  The gf180mcu and IHP variants have
+DRC 0 and LVS PASS in `flow/macro/*_dco_{gf180mcu,ihp130}/`; IHP uses the ORFS
+minimal deck.  The ics55 variants remain non-signoff bring-up artifacts; the
+sky130 variants have DRC 0 but LVS still fails and are not inventory entries.  The old behavioral modules remain
 under `src/pll_ring_dco.v` and `src/pll_counter_dco.v` only for historical
 simulation, and are not referenced by the delivery source set.  The physical
 catalog bands are 20–300 MHz and 2.5–26.5 MHz; these are architecture/physical
-targets, not measured silicon limits.  Core C requires an external 1 GHz tick
+targets, not measured silicon limits.  FreePDK45 is included as a
+planning-only predictive profile/library: it has no GDS standard-cell views or
+DRC/LVS path in this checkout, so it remains `RTL_SYNTHESIZABLE` and can only
+be packaged with `--mode explore --allow-experimental`.  Core C requires an external 1 GHz tick
 and is an NCO/digital clock synthesizer candidate, not a standalone DCO claim.
 Neither macro has a DCO/PVT manifest; buildable selection returns
 `PASS_ARCH_SELECTED_PHYSICAL` and the DCO evidence remains a separate blocker

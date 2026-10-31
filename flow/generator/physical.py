@@ -70,6 +70,8 @@ def macro_key_for_pdk(pdk: str) -> str | None:
         return "ihp-sg13g2"
     if p.startswith("gf180mcu_as") or p == "gf180mcu":
         return "gf180mcu_as"
+    if p.startswith("freepdk45"):
+        return "freepdk45"
     return None
 
 

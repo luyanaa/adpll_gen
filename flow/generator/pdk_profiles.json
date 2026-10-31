@@ -1,6 +1,10 @@
 {
   "ics55": {
-    "aliases": ["ics55", "ics55-l3", "ics55-l3-dense"],
+    "aliases": [
+      "ics55",
+      "ics55-l3",
+      "ics55-l3-dense"
+    ],
     "class": "high",
     "max_arch_mhz": 836.0,
     "signoff_mhz": 479.0,
@@ -9,7 +13,11 @@
     "qualified": false
   },
   "ihp130": {
-    "aliases": ["ihp130", "ihp-sg13g2", "sg13g2"],
+    "aliases": [
+      "ihp130",
+      "ihp-sg13g2",
+      "sg13g2"
+    ],
     "class": "high",
     "max_arch_mhz": 525.0,
     "signoff_mhz": 400.0,
@@ -18,7 +26,10 @@
     "qualified": false
   },
   "sky130": {
-    "aliases": ["sky130", "sky130_fd_sc_hd"],
+    "aliases": [
+      "sky130",
+      "sky130_fd_sc_hd"
+    ],
     "class": "mid",
     "max_arch_mhz": 570.0,
     "signoff_mhz": 300.0,
@@ -27,7 +38,11 @@
     "qualified": false
   },
   "gf180mcu_as": {
-    "aliases": ["gf180mcu_as", "gf180mcu_as_sc_mcu7t3v3", "gf180mcu"],
+    "aliases": [
+      "gf180mcu_as",
+      "gf180mcu_as_sc_mcu7t3v3",
+      "gf180mcu"
+    ],
     "class": "mid",
     "max_arch_mhz": 196.0,
     "signoff_mhz": 150.0,
@@ -36,7 +51,10 @@
     "qualified": false
   },
   "gf180mcu_fd5": {
-    "aliases": ["gf180mcu_fd5", "gf180mcu_fd_sc_mcu7t5v0"],
+    "aliases": [
+      "gf180mcu_fd5",
+      "gf180mcu_fd_sc_mcu7t5v0"
+    ],
     "class": "low",
     "max_arch_mhz": 49.6,
     "signoff_mhz": 25.0,
@@ -45,7 +63,10 @@
     "qualified": false
   },
   "gf180mcu_fd9": {
-    "aliases": ["gf180mcu_fd9", "gf180mcu_fd_sc_mcu9t5v0"],
+    "aliases": [
+      "gf180mcu_fd9",
+      "gf180mcu_fd_sc_mcu9t5v0"
+    ],
     "class": "low",
     "max_arch_mhz": 52.0,
     "signoff_mhz": 30.0,
@@ -54,7 +75,10 @@
     "qualified": false
   },
   "gf180mcu_7t": {
-    "aliases": ["gf180mcu_7t", "gf180mcu_3v3_7t"],
+    "aliases": [
+      "gf180mcu_7t",
+      "gf180mcu_3v3_7t"
+    ],
     "class": "low",
     "max_arch_mhz": 50.0,
     "signoff_mhz": 40.0,
@@ -63,12 +87,29 @@
     "qualified": false
   },
   "etri050": {
-    "aliases": ["etri050", "ETRI050", "ETRI050_fd_sc_12t"],
+    "aliases": [
+      "etri050",
+      "ETRI050",
+      "ETRI050_fd_sc_12t"
+    ],
     "class": "low",
     "max_arch_mhz": 5.0,
     "signoff_mhz": 5.0,
     "max_ref_mhz": 5.0,
     "maturity": "KLayout LVS pass; via-stack DRC, PDN and hold timing open; not signoff",
+    "qualified": false
+  },
+  "freepdk45": {
+    "aliases": [
+      "FreePDK45",
+      "freepdk45",
+      "freepdk45_osu"
+    ],
+    "class": "high",
+    "max_arch_mhz": 300.0,
+    "signoff_mhz": 0.0,
+    "max_ref_mhz": 250.0,
+    "maturity": "predictive 45 nm PDK; Liberty/LEF/SPICE views only, no GDS/std-cell physical signoff path identified",
     "qualified": false
   }
 }

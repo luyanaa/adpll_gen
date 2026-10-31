@@ -1,0 +1,416 @@
+library (PLL_COUNTER_DCO_PHYS) {
+  comment                        : "";
+  delay_model                    : table_lookup;
+  simulation                     : false;
+  capacitive_load_unit (1,pF);
+  leakage_power_unit             : 1pW;
+  current_unit                   : "1mA";
+  pulling_resistance_unit        : "1kohm";
+  time_unit                      : "1ns";
+  voltage_unit                   : "1v";
+  library_features(report_delay_calculation);
+
+  input_threshold_pct_rise : 50;
+  input_threshold_pct_fall : 50;
+  output_threshold_pct_rise : 50;
+  output_threshold_pct_fall : 50;
+  slew_lower_threshold_pct_rise : 20;
+  slew_lower_threshold_pct_fall : 20;
+  slew_upper_threshold_pct_rise : 80;
+  slew_upper_threshold_pct_fall : 80;
+  slew_derate_from_library : 1.0;
+
+
+  nom_process                    : 1.0;
+  nom_temperature                : 25.0;
+  nom_voltage                    : 1.80;
+
+  lu_table_template(template_1) {
+    variable_1 : total_output_net_capacitance;
+    index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+  }
+  type ("COARSE_MUX") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 15;
+    bit_from : 14;
+    bit_to : 0;
+  }
+  type ("FINE_MUX") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 31;
+    bit_from : 30;
+    bit_to : 0;
+  }
+  type ("MID_MUX") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 15;
+    bit_from : 14;
+    bit_to : 0;
+  }
+  type ("SS_BBPD") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 2;
+    bit_from : 1;
+    bit_to : 0;
+  }
+
+  cell ("PLL_COUNTER_DCO_PHYS") {
+    area : 32178.025
+    is_macro_cell : true;
+    pin("DCO_EN") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("INJ_EDGE") {
+      direction : output;
+      capacitance : 0.0000;
+      timing() {
+        related_pin : "REF";
+        timing_sense : positive_unate;
+        timing_type : combinational;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+          values("0.51076,0.51892,0.53677,0.57633,0.67276,0.91821,1.55645");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+          values("0.02765,0.03515,0.05368,0.10266,0.23373,0.58027,1.49250");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+          values("0.47457,0.48379,0.50311,0.54322,0.62809,0.82816,1.34408");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+          values("0.03167,0.03895,0.05524,0.09288,0.18703,0.44197,1.13049");
+	}
+      }
+    }
+    pin("INJ_EN") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("MID_OUT") {
+      direction : output;
+      capacitance : 0.0000;
+    }
+    pin("OUT") {
+      direction : output;
+      capacitance : 0.0000;
+    }
+    pin("REF") {
+      direction : input;
+      capacitance : 0.0064;
+    }
+    pin("TICK") {
+      direction : input;
+      capacitance : 0.0318;
+    }
+    pin("VGND") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("VPWR") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    bus("COARSE_MUX") {
+      bus_type : COARSE_MUX;
+      direction : input;
+      capacitance : 0.0000;
+    pin("COARSE_MUX[14]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[13]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[12]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[11]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[10]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[9]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[8]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[7]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[6]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[5]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[4]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[3]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[2]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[1]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("COARSE_MUX[0]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    }
+    bus("FINE_MUX") {
+      bus_type : FINE_MUX;
+      direction : input;
+      capacitance : 0.0000;
+    pin("FINE_MUX[30]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[29]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[28]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[27]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[26]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[25]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[24]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[23]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[22]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[21]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[20]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[19]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[18]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[17]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[16]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[15]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[14]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[13]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[12]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[11]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[10]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[9]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[8]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[7]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[6]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[5]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[4]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[3]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[2]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[1]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("FINE_MUX[0]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    }
+    bus("MID_MUX") {
+      bus_type : MID_MUX;
+      direction : input;
+      capacitance : 0.0000;
+    pin("MID_MUX[14]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[13]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[12]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[11]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[10]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[9]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[8]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[7]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[6]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[5]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[4]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[3]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[2]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[1]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    pin("MID_MUX[0]") {
+      direction : input;
+      capacitance : 0.0023;
+    }
+    }
+    bus("SS_BBPD") {
+      bus_type : SS_BBPD;
+      direction : output;
+      capacitance : 0.0000;
+    pin("SS_BBPD[1]") {
+      direction : output;
+      capacitance : 0.0000;
+    }
+    pin("SS_BBPD[0]") {
+      direction : output;
+      capacitance : 0.0000;
+      timing() {
+        related_pin : "REF";
+        timing_sense : negative_unate;
+        timing_type : combinational;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+          values("0.65091,0.65907,0.67692,0.71648,0.81291,1.05836,1.69661");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+          values("0.02765,0.03515,0.05368,0.10266,0.23373,0.58027,1.49250");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+          values("0.62035,0.62957,0.64888,0.68900,0.77386,0.97394,1.48986");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00130,  0.00340,  0.00885,  0.02306,  0.06008,  0.15656");
+          values("0.03167,0.03895,0.05524,0.09288,0.18703,0.44197,1.13049");
+	}
+      }
+    }
+    }
+  }
+
+}

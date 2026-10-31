@@ -14,6 +14,42 @@
 Evidence: `flow/macro/ring_dco_gf180mcu/` and
 `flow/macro/counter_dco_gf180mcu/`.
 
+## IHP SG13G2 (DRC/LVS clean, minimal decks)
+
+| Check | Ring DCO | Counter/NCO |
+|---|---|---|
+| PDK/library | ihp-sg13g2 / sg13g2_stdcell | ihp-sg13g2 / sg13g2_stdcell |
+| GDS/LEF/LIB/CDL/DEF | present | present |
+| DRC | **0 violations** (ORFS minimal deck) | **0 violations** |
+| LVS | **PASS** (ORFS deck, fill-stripped GDS) | **PASS** |
+| STA | nominal only | nominal only |
+| PVT/jitter/KDCO | not characterized | not characterized |
+
+Evidence: `flow/macro/ring_dco_ihp130/` and
+`flow/macro/counter_dco_ihp130/`.  The official IHP signoff deck is not present
+in the local PDK root.
+
+## sky130 (experiment, not passing LVS)
+
+| Check | Ring DCO | Counter/NCO |
+|---|---|---|
+| PDK/library | sky130_fd_sc_hd | sky130_fd_sc_hd |
+| GDS/LEF/LIB/CDL/DEF | present | present |
+| DRC | **0 violations** | **0 violations** |
+| LVS | **FAIL** | **FAIL** |
+| STA | P&R only | P&R only |
+
+Evidence: `flow/macro/ring_dco_sky130/` and
+`flow/macro/counter_dco_sky130/`.  The shipped `macro_sparecell` CDL pin-count
+error was removed from the flow-local schematic; the remaining mismatch is at
+the top/cell device comparison.
+
+## FreePDK45 (planning only)
+
+Included in `pdk_profiles.json` and `libraries.json`.  The available
+`osu_soc` views include Liberty/LEF/SPICE but no GDS standard-cell physical
+signoff path, so it is **not** a physical macro/Signoff target.
+
 ## ics55 (earlier attempt)
 
 | Check | Ring DCO | Counter/NCO |

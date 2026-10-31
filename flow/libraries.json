@@ -13021,5 +13021,74 @@
       }
     },
     "notes": "single corner; drc_lvs=declared"
+  },
+  {
+    "pdk": "freepdk45",
+    "node": "45nm",
+    "library": "freepdk45",
+    "path": "/grid/predictive/FreePDK45/FreePDK45/osu_soc",
+    "usable": true,
+    "tier": "2-flow*",
+    "tier2_candidate": false,
+    "drc_lvs": "not-run",
+    "corners": 1,
+    "corner_consistent": false,
+    "common_cells": 0,
+    "corner_missing": {},
+    "voltage": [
+      1.1
+    ],
+    "liberty_files": 1,
+    "lef_files": 1,
+    "lef_macros": 0,
+    "gds_files": 0,
+    "cdl_files": 1,
+    "verilog_files": 1,
+    "cells": 0,
+    "librelane": false,
+    "pdk_librelane": false,
+    "pnr_ready": false,
+    "core_support": {
+      "core_a_il_dco": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "clkbuf"
+        ]
+      },
+      "core_b_ring_dco": {
+        "status": "partial",
+        "missing": [
+          "nand2b",
+          "nor2b"
+        ],
+        "optional_missing": [
+          "clkinv"
+        ]
+      },
+      "core_c_counter": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "nand2b",
+          "nor2b"
+        ]
+      },
+      "digital": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "scan_dff"
+        ]
+      },
+      "pd_ssbbpd": {
+        "status": "partial",
+        "missing": [],
+        "optional_missing": [
+          "clkinv"
+        ]
+      }
+    },
+    "notes": "predictive PDK included for planning; no GDS-based DRC/LVS path identified"
   }
 ]

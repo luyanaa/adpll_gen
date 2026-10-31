@@ -1,0 +1,62 @@
+OpenSTA 2.0.17 GITDIR-NOT Copyright (c) 2019, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details.
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Startpoint: REF (clock source 'REF')
+Endpoint: ring/dff_y_impl (rising edge-triggered flip-flop clocked by REF')
+Path Group: REF
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock REF (rise edge)
+   0.0000    0.0000 ^ REF (in)
+   0.0459    0.0459 v ring/sym/inj_slope_balancer_impl/Y (sg13g2_inv_1)
+   0.0639    0.1098 ^ ring/sym/ssbbpd_impl/nand_y_impl/Y (sg13g2_nand2_1)
+   0.0789    0.1887 ^ ring/sym/ssbbpd_impl/buf_nand_y_impl/X (sg13g2_buf_1)
+   0.0002    0.1889 ^ ring/dff_y_impl/D (sg13g2_dfrbp_1)
+             0.1889   data arrival time
+
+  10.0000   10.0000   clock REF' (rise edge)
+   0.0000   10.0000   clock network delay (ideal)
+  -0.2500    9.7500   clock uncertainty
+   0.0000    9.7500   clock reconvergence pessimism
+             9.7500 ^ ring/dff_y_impl/CLK (sg13g2_dfrbp_1)
+  -0.1177    9.6323   library setup time
+             9.6323   data required time
+-------------------------------------------------------------
+             9.6323   data required time
+            -0.1889   data arrival time
+-------------------------------------------------------------
+             9.4434   slack (MET)
+
+
+Startpoint: REF (clock source 'REF')
+Endpoint: ring/dff_y_impl (rising edge-triggered flip-flop clocked by REF')
+Path Group: REF
+Path Type: min
+
+    Delay      Time   Description
+-------------------------------------------------------------
+  10.0000   10.0000   clock REF (fall edge)
+   0.0000   10.0000 v REF (in)
+   0.0506   10.0506 ^ ring/sym/inj_slope_balancer_impl/Y (sg13g2_inv_1)
+   0.0825   10.1331 v ring/sym/ssbbpd_impl/nand_y_impl/Y (sg13g2_nand2_1)
+   0.0818   10.2149 v ring/sym/ssbbpd_impl/buf_nand_y_impl/X (sg13g2_buf_1)
+   0.0002   10.2151 v ring/dff_y_impl/D (sg13g2_dfrbp_1)
+            10.2151   data arrival time
+
+  10.0000   10.0000   clock REF' (rise edge)
+   0.0000   10.0000   clock network delay (ideal)
+   0.0500   10.0500   clock uncertainty
+   0.0000   10.0500   clock reconvergence pessimism
+            10.0500 ^ ring/dff_y_impl/CLK (sg13g2_dfrbp_1)
+  -0.0370   10.0130   library hold time
+            10.0130   data required time
+-------------------------------------------------------------
+            10.0130   data required time
+           -10.2151   data arrival time
+-------------------------------------------------------------
+             0.2021   slack (MET)

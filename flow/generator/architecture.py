@@ -59,6 +59,8 @@ def profile_for(pdk: str) -> dict[str, Any] | None:
         return {"key": "sky130", **profiles["sky130"]}
     if pdk.lower().startswith("etri"):
         return {"key": "etri050", **profiles["etri050"]}
+    if pdk.lower().startswith("freepdk45"):
+        return {"key": "freepdk45", **profiles["freepdk45"]}
     return None
 
 
@@ -74,6 +76,8 @@ def library_pdk(pdk: str) -> str:
         return "ETRI050"
     if p.startswith("sky130"):
         return "sky130"
+    if p.startswith("freepdk45"):
+        return "freepdk45"
     return pdk
 
 
