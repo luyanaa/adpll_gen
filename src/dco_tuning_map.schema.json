@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ADPLL measured DCO tuning map",
+  "type": "object",
+  "required": ["schema_version", "pdk", "process", "temperature_c", "voltage_v", "coarse", "mid", "monotonic", "overlap"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "pdk": {"type": "string"},
+    "process": {"type": "string"},
+    "temperature_c": {"type": "number"},
+    "voltage_v": {"type": "number"},
+    "source": {"type": "string", "description": "measurement flow and hash"},
+    "coarse": {
+      "type": "array", "minItems": 16, "maxItems": 16,
+      "items": {
+        "type": "object", "required": ["code", "frequency_mhz", "kdco_mhz_per_code"],
+        "properties": {
+          "code": {"type": "integer", "minimum": 0, "maximum": 15},
+          "frequency_mhz": {"type": "number", "exclusiveMinimum": 0},
+          "kdco_mhz_per_code": {"type": "number"}
+        }
+      }
+    },
+    "mid": {
+      "type": "array", "minItems": 16, "maxItems": 16,
+      "items": {
+        "type": "object", "required": ["code", "frequency_mhz", "kdco_mhz_per_code"],
+        "properties": {
+          "code": {"type": "integer", "minimum": 0, "maximum": 15},
+          "frequency_mhz": {"type": "number", "exclusiveMinimum": 0},
+          "kdco_mhz_per_code": {"type": "number"}
+        }
+      }
+    },
+    "monotonic": {"type": "boolean"},
+    "overlap": {"type": "boolean"},
+    "step_error_max_pct": {"type": "number"},
+    "missing_codes": {"type": "array", "items": {"type": "integer"}},
+    "corners_required": {"type": "array", "items": {"type": "string"}},
+    "corners_present": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

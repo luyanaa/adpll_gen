@@ -38,6 +38,7 @@ COMMON_SOURCES = (
     "src/pll_macro_top.v",
     "src/pll_logic.v",
     "src/freq_lock.v",
+    "src/frequency_counter_frontend.v",
     "src/digital_loop_filter.v",
     "src/lock_detector.v",
     "src/term_decoder.v",

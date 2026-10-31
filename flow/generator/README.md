@@ -325,3 +325,27 @@ remain required.
 - `macro/build.sh` is generated but not executed automatically by
   `delivery.py`; the caller chooses when to run a long macro build.
 - CDC skew values are starter constraints, not post-layout measurements.
+
+## Frequency acquisition research candidates
+
+`src/frequency_counter_frontend.v` makes the DCO-domain counter replaceable:
+synchronous binary (default), asynchronous ripple, or a 4-stage Johnson
+prescaler/extension.  Only the synchronous mode is marked `CDC_SAFE`; the
+alternate modes are explicit experiments because their multi-bit state can be
+asynchronous/glitchy at a REF capture.  `freq_lock.v` defaults to
+`FRONTEND_MODE=0` and preserves the existing Gray-sample handshake.
+
+`src/freq_search_sar.v` is an optional two-stage binary-search controller.  It
+refuses to start unless `MONOTONIC_MAP_VALID` is high, and it reports
+`FALLBACK` rather than taking ownership of the DCO codes for an unproven map.
+Eight comparison decisions for 16x16 is not eight REF cycles to lock; settling,
+observation windows, retries and phase acquisition remain.
+
+`src/dco_tuning.py` validates measured coarse/mid maps, computes code-to-code
+KDCO and reports PVT spread.  It does not synthesize missing corners.
+`src/dco_tuning_map.schema.json` defines the evidence contract.  No production
+DCO/PVT map is committed.
+
+`src/isf_sampling.py` adds edge-dense adaptive ISF phase sampling and a reuse
+gate based on RMS/integrated `h^2` error.  The DCO is not a simple symmetric
+ring, so 2*pi/M ISF reuse is not assumed.

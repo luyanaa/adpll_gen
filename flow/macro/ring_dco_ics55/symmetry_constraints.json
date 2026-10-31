@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "applied_to_current_gds": false,
+  "requirements": [
+    "mirrored fixed inverter bank with equal stage count",
+    "matched coarse/mid/fine wire lengths",
+    "symmetric SS-BBPD/mux and observation path",
+    "symmetric fill and dummy placement",
+    "mirrored power/ground, well taps and decap",
+    "no divider/observation buffer inside the oscillator loop"
+  ],
+  "isf_policy": "no 2*pi/M symmetry reuse without per-node error validation"
+}

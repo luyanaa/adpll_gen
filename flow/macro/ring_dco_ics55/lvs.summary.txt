@@ -1,0 +1,45 @@
+Circuit PLL_RING_DCO_PHYS: nomatch
+  net        mismatch         layout=-  schematic=COARSE_MUX[0]
+  net        mismatch         layout=-  schematic=COARSE_MUX[10]
+  net        mismatch         layout=-  schematic=COARSE_MUX[11]
+  net        mismatch         layout=-  schematic=COARSE_MUX[1]
+  net        mismatch         layout=-  schematic=COARSE_MUX[2]
+  net        mismatch         layout=-  schematic=COARSE_MUX[3]
+  net        mismatch         layout=-  schematic=COARSE_MUX[8]
+  net        mismatch         layout=-  schematic=COARSE_MUX[9]
+  net        mismatch         layout=-  schematic=N251
+  net        mismatch         layout=-  schematic=N252
+  net        mismatch         layout=-  schematic=N253
+  net        mismatch         layout=-  schematic=N254
+  net        mismatch         layout=-  schematic=N255
+  net        mismatch         layout=-  schematic=N257
+  net        mismatch         layout=-  schematic=N258
+  net        mismatch         layout=-  schematic=N259
+  net        mismatch         layout=-  schematic=N260
+  net        mismatch         layout=-  schematic=N261
+  net        mismatch         layout=-  schematic=N267
+  net        mismatch         layout=-  schematic=N268
+  ... 112 more net mismatches
+  device     mismatch         layout=$167  schematic=307_MM3
+  device     mismatch         layout=$168  schematic=308_MM2
+  device     mismatch         layout=$165  schematic=319_MM3
+  device     mismatch         layout=$166  schematic=320_MM2
+  device     mismatch         layout=$144  schematic=334_MM2
+  device     mismatch         layout=$132  schematic=335_MM3
+  device     mismatch         layout=$133  schematic=336_MM2
+  device     mismatch         layout=$547  schematic=377_MM3
+  device     mismatch         layout=$548  schematic=378_MM2
+  device     mismatch         layout=$501  schematic=404_MM2
+  device     mismatch         layout=$432  schematic=430_MM2
+  device     mismatch         layout=$435  schematic=443_MM3
+  device     mismatch         layout=$436  schematic=444_MM2
+  device     mismatch         layout=$196  schematic=1009_MM3
+  device     mismatch         layout=$197  schematic=1010_MM2
+  device     mismatch         layout=$176  schematic=1024_MM2
+  device     mismatch         layout=$581  schematic=455_MN0
+  device     mismatch         layout=$623  schematic=371_MN0
+  device     mismatch         layout=$428  schematic=385_MN0
+  device     mismatch         layout=$322  schematic=357_MN0
+  ... 104 more device mismatches
+LVS circuits: 1 nomatch
+LVS: MISMATCH

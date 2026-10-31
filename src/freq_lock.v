@@ -20,7 +20,11 @@ module pll_freq_lock #(
     parameter integer LOCK_LIMIT = 64,      // If CNT is inside the locking tolerance for this many cycles, lock
     parameter integer ERR_LIMIT = 64,       // If COARSE and MID cannot increase/decrease for this many cycles, err
     parameter integer LOCK_TOL = 0,         // Tolerance for the FCW for locking. 0 for exact (CNT = FCW +/- LOCK_TOL)
-    parameter integer TOL_COARSE_WAIT = 1   // Wait REF cycles for changing the COARSE once the MID is in the limit, 1 for always change
+    parameter integer TOL_COARSE_WAIT = 1,  // Wait REF cycles for changing the COARSE once the MID is in the limit, 1 for always change
+    // Counter frontend selection. 0 = synchronous (default), 1 = async ripple,
+    // 2 = Johnson prescaler.  Ripple/Johnson require an explicit CDC review.
+    parameter integer FRONTEND_MODE = 0,
+    parameter integer PRESCALE = 1
 ) (
     input REF, MID_OUT, OUT, RST_N, START,
     input [CNT_BITS-1:0] FCW,
@@ -48,8 +52,20 @@ module pll_freq_lock #(
     // over one REF period.  The Gray word is intentionally NOT used as a
     // one-bit snapshot-to-snapshot edge detector: many MID_OUT counts can pass
     // between two REF samples.
-    reg [CNT_W-1:0] cnt;
-    wire [CNT_W-1:0] cnt_gray = (cnt >> 1) ^ cnt;
+    wire [CNT_W-1:0] cnt;
+    wire [CNT_W-1:0] cnt_gray;
+    wire frontend_cdc_safe;
+    frequency_counter_frontend #(
+        .CNT_W(CNT_W),
+        .MODE(FRONTEND_MODE),
+        .PRESCALE(PRESCALE)
+    ) counter_frontend (
+        .CLK(CLK_OUT),
+        .RST_N(RST_N),
+        .COUNT(cnt),
+        .GRAY_COUNT(cnt_gray),
+        .CDC_SAFE(frontend_cdc_safe)
+    );
     (* ASYNC_REG = "TRUE" *) reg [CNT_W-1:0] cnt_gray_s1;
     (* ASYNC_REG = "TRUE" *) reg [CNT_W-1:0] cnt_gray_s2;
     reg [CNT_W-1:0] cnt_bin;
@@ -61,7 +77,6 @@ module pll_freq_lock #(
     reg cap_valid;
 
     initial begin
-        cnt = 'd0;
         cnt_gray_s1 = 'd0;
         cnt_gray_s2 = 'd0;
         cnt_bin = 'd0;
@@ -75,13 +90,9 @@ module pll_freq_lock #(
         MEASURED_COUNT = 'd0;
     end
 
-    // Free-running MID_OUT counter.  No REF-derived reset crosses domains.
-    always @(posedge CLK_OUT or negedge RST_N) begin
-        if(!RST_N)
-            cnt <= 'd0;
-        else
-            cnt <= cnt + 1'b1;
-    end
+    // The selected counter frontend is free-running in the DCO domain.  The
+    // default synchronous mode has no REF-derived reset.  The alternate modes
+    // are explicit CDC experiments; see frequency_counter_frontend.v.
 
     // REF-domain Gray sampling and per-REF delta.
     always @(posedge CLK_REF or negedge RST_N) begin

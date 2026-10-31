@@ -1,0 +1,121 @@
+OpenSTA 2.0.17 GITDIR-NOT Copyright (c) 2019, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details.
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Warning: flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.v, line 1286 module FILLER64H7R not found.  Creating black box for FILLER_0_0.
+Warning: flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.v, line 1289 module FILLER1H7R not found.  Creating black box for FILLER_0_132.
+Warning: flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.v, line 1291 module FILLER2H7R not found.  Creating black box for FILLER_0_145.
+Warning: flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.v, line 3670 module FILLTAPH7R not found.  Creating black box for TAP_TAPCELL_ROW_0_0.
+Startpoint: REF (clock source 'REF')
+Endpoint: SS_BBPD[1] (output port clocked by REF)
+Path Group: REF
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   5.0000    5.0000   clock REF (fall edge)
+   0.0000    5.0000 v REF (in)
+   0.0210    5.0210 ^ bbpd/nand_y.impl/Y (NAND2X1H7R)
+   0.0354    5.0564 v bbpd/nand_x.impl/Y (NAND2X1H7R)
+   0.0452    5.1016 v bbpd/buf_nand_x.impl/Y (BUFX0P5H7R)
+   0.0363    5.1379 v bbpd/_1_/Y (BUFX4H7R)
+   0.1229    5.2608 v output67/Y (BUFX1P4H7R)
+   0.0000    5.2608 v SS_BBPD[1] (out)
+             5.2608   data arrival time
+
+  10.0000   10.0000   clock REF (rise edge)
+   0.0000   10.0000   clock network delay (ideal)
+  -0.0500    9.9500   clock uncertainty
+   0.0000    9.9500   clock reconvergence pessimism
+  -1.0000    8.9500   output external delay
+             8.9500   data required time
+-------------------------------------------------------------
+             8.9500   data required time
+            -5.2608   data arrival time
+-------------------------------------------------------------
+             3.6892   slack (MET)
+
+
+Startpoint: _2287_ (rising edge-triggered flip-flop clocked by TICK)
+Endpoint: _2302_ (rising edge-triggered flip-flop clocked by TICK)
+Path Group: TICK
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000 ^ _2287_/CK (DFFRQX2H7R)
+   0.1057    0.1057 ^ _2287_/Q (DFFRQX2H7R)
+   0.0898    0.1955 v _1268_/Y (XNOR2X4H7R)
+   0.0254    0.2209 ^ _1269_/Y (NAND2BX8H7R)
+   0.0264    0.2472 v _1360_/Y (AOI21X8H7R)
+   0.0381    0.2853 ^ _1363_/Y (AOI21X8H7R)
+   0.0203    0.3056 v _1465_/Y (NOR2X8H7R)
+   0.0390    0.3446 ^ _1625_/Y (OAI21X8H7R)
+   0.0312    0.3758 v _1628_/Y (OAI21X8H7R)
+   0.0202    0.3959 ^ _1725_/Y (NAND2X8H7R)
+   0.0540    0.4500 ^ _1856_/Y (OAI2BB1X6H7R)
+   0.0600    0.5100 ^ _1966_/Y (OAI2BB1X6H7R)
+   0.0256    0.5356 v _2064_/Y (AOI21X8H7R)
+   0.0428    0.5784 ^ _2159_/Y (AOAI211X4H7R)
+   0.0629    0.6413 ^ _2238_/Y (OAI2BB1X6H7R)
+   0.0468    0.6882 v _2274_/Y (AOI31X4H7R)
+   0.0512    0.7394 v rebuffer75/Y (BUFX16H7R)
+   0.0186    0.7580 ^ _2283_/Y (NAND3X6H7R)
+   0.0910    0.8489 v _2285_/Y (XNOR2X3H7R)
+   0.0000    0.8489 v _2302_/D (DFFRQX2H7R)
+             0.8489   data arrival time
+
+   1.0000    1.0000   clock TICK (rise edge)
+   0.0000    1.0000   clock network delay (ideal)
+  -0.0500    0.9500   clock uncertainty
+   0.0000    0.9500   clock reconvergence pessimism
+             0.9500 ^ _2302_/CK (DFFRQX2H7R)
+  -0.0691    0.8809   library setup time
+             0.8809   data required time
+-------------------------------------------------------------
+             0.8809   data required time
+            -0.8489   data arrival time
+-------------------------------------------------------------
+             0.0319   slack (MET)
+
+
+Startpoint: _2295_ (rising edge-triggered flip-flop clocked by TICK)
+Endpoint: _2296_ (rising edge-triggered flip-flop clocked by TICK)
+Path Group: TICK
+Path Type: min
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000 ^ _2295_/CK (DFFRQX2H7R)
+   0.0978    0.0978 ^ _2295_/Q (DFFRQX2H7R)
+   0.0326    0.1304 v _2157_/Y (OAI21X0P5H7R)
+   0.0237    0.1541 ^ _2162_/Y (NAND2X0P5H7R)
+   0.0174    0.1714 v _2239_/Y (NOR2X0P5H7R)
+   0.0297    0.2012 ^ _2240_/Z (NOR2BX1H7R)
+   0.0000    0.2012 ^ _2296_/D (DFFRQX2H7R)
+             0.2012   data arrival time
+
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0200    0.0200   clock uncertainty
+   0.0000    0.0200   clock reconvergence pessimism
+             0.0200 ^ _2296_/CK (DFFRQX2H7R)
+  -0.0103    0.0097   library hold time
+             0.0097   data required time
+-------------------------------------------------------------
+             0.0097   data required time
+            -0.2012   data arrival time
+-------------------------------------------------------------
+             0.1915   slack (MET)
+
+
+Clock                   Period          Waveform
+----------------------------------------------------
+TICK                      1.00        0.00      0.50
+REF                      10.00        0.00      5.00

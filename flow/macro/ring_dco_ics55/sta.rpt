@@ -1,0 +1,68 @@
+OpenSTA 2.0.17 GITDIR-NOT Copyright (c) 2019, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details.
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Warning: flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.v, line 195 module FILLER64H7R not found.  Creating black box for FILLER_0_0.
+Warning: flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.v, line 204 module FILLER2H7R not found.  Creating black box for FILLER_0_376.
+Warning: flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.v, line 216 module FILLER1H7R not found.  Creating black box for FILLER_10_377.
+Warning: flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.v, line 1013 module FILLTAPH7R not found.  Creating black box for TAP_TAPCELL_ROW_0_0.
+Startpoint: ring/dff_y_impl (falling edge-triggered flip-flop clocked by REF)
+Endpoint: SS_BBPD[0] (output port clocked by REF)
+Path Group: REF
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   5.0000    5.0000   clock REF (fall edge)
+   0.0000    5.0000   clock network delay (ideal)
+   0.0000    5.0000 v ring/dff_y_impl/CKN (DFFNQX2H7R)
+   0.3568    5.3568 ^ ring/dff_y_impl/Q (DFFNQX2H7R)
+   0.0000    5.3568 ^ SS_BBPD[0] (out)
+             5.3568   data arrival time
+
+  10.0000   10.0000   clock REF (rise edge)
+   0.0000   10.0000   clock network delay (ideal)
+  -0.1000    9.9000   clock uncertainty
+   0.0000    9.9000   clock reconvergence pessimism
+  -1.0000    8.9000   output external delay
+             8.9000   data required time
+-------------------------------------------------------------
+             8.9000   data required time
+            -5.3568   data arrival time
+-------------------------------------------------------------
+             3.5432   slack (MET)
+
+
+Startpoint: REF (clock source 'REF')
+Endpoint: ring/dff_y_impl (falling edge-triggered flip-flop clocked by REF)
+Path Group: REF
+Path Type: min
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   5.0000    5.0000   clock REF (fall edge)
+   0.0000    5.0000 v REF (in)
+   0.0192    5.0192 ^ ring/sym/inj_slope_balancer_impl/Y (INVX1H7R)
+   0.0461    5.0653 v ring/sym/ssbbpd_impl/nand_y_impl/Y (NAND2X1H7R)
+   0.0448    5.1101 v ring/sym/ssbbpd_impl/buf_nand_y_impl/Y (BUFX0P5H7R)
+   0.0000    5.1101 v ring/dff_y_impl/D (DFFNQX2H7R)
+             5.1101   data arrival time
+
+   5.0000    5.0000   clock REF (fall edge)
+   0.0000    5.0000   clock network delay (ideal)
+   0.0000    5.0000   clock reconvergence pessimism
+             5.0000 v ring/dff_y_impl/CKN (DFFNQX2H7R)
+  -0.0240    4.9760   library hold time
+             4.9760   data required time
+-------------------------------------------------------------
+             4.9760   data required time
+            -5.1101   data arrival time
+-------------------------------------------------------------
+             0.1341   slack (MET)
+
+
+Clock                   Period          Waveform
+----------------------------------------------------
+REF                      10.00        0.00      5.00

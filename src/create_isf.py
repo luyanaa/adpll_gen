@@ -21,6 +21,7 @@
 import argparse, json, re, sys
 from spice_io import read_raw
 from spice_netlist import Netlist
+from isf_sampling import adaptive_phases, uniform_phases
 
 TB = "test_dco.sp"          # The DCO testbench (fixed codes)
 DUT = "PLL_ILDCO.sp"        # The netlist of the DCO
@@ -136,7 +137,14 @@ def cmd_runs(args):
     tr = 0.1e-12
     t0 = edges[0]
     k0 = int(np.ceil((args.twarm - t0) / T)) + 1
-    tinj = [t0 + (k0 + k * args.nper + k / args.nphase) * T for k in range(args.nphase)]
+    if args.adaptive:
+        phases = adaptive_phases(args.nphase, edge_window=args.edge_window,
+                                 edge_density=args.edge_density,
+                                 budget=(args.phase_budget or 2 * args.nphase))
+    else:
+        phases = uniform_phases(args.nphase)
+    tinj = [t0 + (k0 + k * args.nper + float(ph)) * T
+            for k, ph in enumerate(phases)]
     tstop = tinj[-1] + (args.nper + 1) * T
 
     text = tb_text()
@@ -214,6 +222,11 @@ quit
     with open("isf_runs.txt", "w") as f:
         f.write("\n".join(runs) + "\n")
     setup = dict(T=T, vdd=vdd, out=OUT, dq=args.dq, tinj=tinj, nper=args.nper,
+                 phases=phases.tolist(),
+                 sampling=dict(mode="adaptive" if args.adaptive else "uniform",
+                               edge_window=args.edge_window,
+                               edge_density=args.edge_density,
+                               phase_budget=args.phase_budget),
                  nodes=[dict(name=f"isf_node{i}", net=n) for i, (n, _) in enumerate(nodes)],
                  luts=luts,
                  devices=[dict(name=d["name"], type=d["type"], key=device_key(d),
@@ -229,6 +242,14 @@ parser.add_argument("--twarm", type=spice_num, default=15e-9, help="Time to reac
 parser.add_argument("--len", type=spice_num, default=5e-9, help="Length of the steady-state waveforms")
 parser.add_argument("--nphase", type=int, default=128, help="Points of the ISF per period")
 parser.add_argument("--nper", type=int, default=3, help="Periods between injections")
+parser.add_argument("--adaptive", action="store_true",
+                    help="Use edge-dense adaptive phase sampling")
+parser.add_argument("--edge-window", type=float, default=0.05,
+                    help="Half-width of each adaptive edge window (fraction of T)")
+parser.add_argument("--edge-density", type=int, default=2,
+                    help="Extra phase density multiplier around edges")
+parser.add_argument("--phase-budget", type=int, default=0,
+                    help="Maximum phases for adaptive mode (0 = 2*nphase)")
 parser.add_argument("--dq", type=spice_num, default=50e-18, help="Injected charge (C)")
 args = parser.parse_args()
 {"wave": cmd_wave, "runs": cmd_runs}[args.step](args)
