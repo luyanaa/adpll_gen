@@ -114,7 +114,10 @@ module pll_freq_lock #(
                 MEASURED_COUNT <= 'd0;
             end else begin
                 cnt_cap <= sample_bin - cnt_bin;
-                cnt_filt <= (cnt_filt * 3 + (sample_bin - cnt_bin)) >> 2;
+                // Round the IIR update.  Truncating every low-count sample
+                // can pin the filtered value at zero when REF sees only 1-3
+                // DCO edges per period (Core C / low-frequency operation).
+                cnt_filt <= (cnt_filt * 3 + (sample_bin - cnt_bin) + 2) >> 2;
                 cnt_bin <= sample_bin;
                 if(meas_count == MEAS_PERIODS - 1) begin
                     MEASURED_COUNT <= meas_accum + (sample_bin - cnt_bin);

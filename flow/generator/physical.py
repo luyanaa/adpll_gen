@@ -73,12 +73,29 @@ def macro_key_for_pdk(pdk: str) -> str | None:
     return None
 
 
-def macro_library_for_pdk(pdk: str) -> str | None:
+def _inventory_entry(inventory: dict[str, Any], pdk: str,
+                     core: str | None = None) -> tuple[str, dict[str, Any]] | None:
     key = macro_key_for_pdk(pdk)
     if key is None:
         return None
+    macros = inventory.get("macros", {})
+    if core:
+        if f"{key}:{core}" in macros:
+            return f"{key}:{core}", macros[f"{key}:{core}"]
+        # The base entry is the Core A IL-DCO macro.  Do not silently reuse it
+        # for a different core; that would make a ring/counter look physical.
+        if core == "core_a_il_dco" and key in macros:
+            return key, macros[key]
+        return None
+    if key in macros:
+        return key, macros[key]
+    return None
+
+
+def macro_library_for_pdk(pdk: str, core: str | None = None) -> str | None:
     try:
-        return _load(DEFAULT_INVENTORY).get("macros", {}).get(key, {}).get("cell_library")
+        entry = _inventory_entry(_load(DEFAULT_INVENTORY), pdk, core)
+        return entry[1].get("cell_library") if entry else None
     except (OSError, ValueError):
         return None
 
@@ -106,21 +123,28 @@ def resolve_macro(result: dict[str, Any],
     inv_path = inventory_path or DEFAULT_INVENTORY
     inventory = _load(inv_path)
     pdk = str(result.get("pdk") or "")
-    key = macro_key_for_pdk(pdk)
-    if key is None or key not in inventory.get("macros", {}):
+    selected = result.get("selected") or {}
+    core = selected.get("id") or result.get("core")
+    entry = _inventory_entry(inventory, pdk, core)
+    if entry is None:
         return {
             "status": "NOT_AVAILABLE",
             "needs_rebuild": False,
-            "reason": f"no hard-macro inventory entry for PDK {pdk}",
+            "reason": f"no hard-macro inventory entry for PDK {pdk} / core {core}",
             "macro": None,
         }
-    macro = dict(inventory["macros"][key])
+    key, macro_row = entry
+    macro = dict(macro_row)
     expected = normalize_parameters(macro.get("parameters"))
     requested = normalize_parameters(structural)
-    requested = {k: requested.get(k, expected.get(k)) for k in PARAMETER_KEYS}
+    extra_keys = [k for k in ("BASE_NDELS", "ACC_BITS", "BASE_INC",
+                              "COARSE_STEP", "MID_STEP", "FINE_STEP")
+                  if k in expected]
+    keys = list(PARAMETER_KEYS) + extra_keys
+    requested = {k: requested.get(k, expected.get(k)) for k in keys}
     pmismatch = {
         k: {"expected": expected.get(k), "requested": requested.get(k)}
-        for k in PARAMETER_KEYS
+        for k in keys
         if expected.get(k) != requested.get(k)
     }
     lib_name = selected_library(result)

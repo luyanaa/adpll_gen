@@ -85,7 +85,7 @@ def best_library(pdk: str, core: str) -> dict[str, Any] | None:
     exact = [r for r in rows if r.get("library") == pdk]
     if exact:
         rows = exact
-    preferred = macro_library_for_pdk(pdk)
+    preferred = macro_library_for_pdk(pdk, core)
     candidates = []
     for r in rows:
         support = r.get("core_support", {}).get(core, {})
@@ -123,8 +123,7 @@ def selection_template(result: dict[str, Any], design: str = "adpll_top") -> dic
         return None
     voltages = lib.get("voltage") or [0.0]
     voltage = float(voltages[0])
-    hard = (sel["core"] == "core_a_il_dco"
-            and sel.get("physical_buildable", False)
+    hard = (sel.get("physical_buildable", False)
             and sel.get("implementation") == "rtl"
             and sel.get("hardmacro_ready", False))
     return {
@@ -151,13 +150,13 @@ def selection_template(result: dict[str, Any], design: str = "adpll_top") -> dic
 BUILDABLE_STATES = {"PHYSICAL_IMPLEMENTABLE", "CHARACTERIZED"}
 
 
-def implementation_state(a: dict[str, Any]) -> str:
+def implementation_state(a: dict[str, Any], pdk: str | None = None) -> str:
     """Classify what the repository can actually do with an architecture.
 
     MODEL_ONLY is a simulation model.  RTL_SYNTHESIZABLE can produce a netlist
     but has no verified physical backend.  PHYSICAL_IMPLEMENTABLE has a
-    physical generation path (currently Core A).  CHARACTERIZED additionally
-    has the evidence bundle required by the selected corner/view.
+    physical generation path (Core A/B/C).  CHARACTERIZED additionally has the
+    evidence bundle required by the selected corner/view.
     """
     if a.get("characterization_state") == "CHARACTERIZED":
         return "CHARACTERIZED"
@@ -167,10 +166,14 @@ def implementation_state(a: dict[str, Any]) -> str:
     if impl == "simulation":
         return "MODEL_ONLY"
     if impl in ("rtl", "rtl_partial"):
-        # A hardmacro flag alone is not a physical backend.  Core A is the
-        # only architecture with a checked-in physical variant at present.
+        # A hardmacro flag alone is not a physical backend.
         if (impl == "rtl" and a.get("hardmacro_ready") is True
                 and a.get("physical_variant", False)):
+            core = str(a.get("core") or a.get("id") or "")
+            if pdk is not None and macro_library_for_pdk(pdk, core) is None:
+                # The architecture has physical RTL, but this PDK has no
+                # core-specific physical macro inventory entry.
+                return "RTL_SYNTHESIZABLE"
             return "PHYSICAL_IMPLEMENTABLE"
         return "RTL_SYNTHESIZABLE"
     return "UNIMPLEMENTED"
@@ -260,7 +263,7 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         # TDC/bang-bang variant is a cost fallback, not a default choice.
         if a["id"] == "low_res_tdc_bangbang" and not allow_low_res:
             continue
-        state = implementation_state(a)
+        state = implementation_state(a, pdk)
         # A model-only architecture is a simulation candidate, not a physical
         # Generator build.  Only buildable mode may reach the backend.
         if mode == "buildable" and state not in BUILDABLE_STATES:
@@ -305,14 +308,14 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         keep = ("id", "name", "core", "freq_mhz", "area", "area_rank",
                 "complexity", "features", "risk", "benefit", "implementation",
                 "implementation_refs", "hardmacro_ready", "implementation_class",
-                "model_freq_mhz", "model_note", "requires_reference_tick",
+                "model_freq_mhz", "physical_note", "requires_reference_tick",
                 "external_clock_dependent")
         return {
             **{k: a[k] for k in keep if k in a},
             "score": round(score, 4),
             "implementation_ready": implementation_ready(a),
-            "implementation_state": implementation_state(a),
-            "physical_buildable": implementation_state(a) in BUILDABLE_STATES,
+            "implementation_state": implementation_state(a, pdk),
+            "physical_buildable": implementation_state(a, pdk) in BUILDABLE_STATES,
             "reasons": _candidate_reasons(a, target_mhz, prof["class"]),
         }
 
@@ -372,8 +375,13 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
     elif dco_status == "FAIL_NO_CODE_WITHIN_TOLERANCE":
         status = "FAIL_DCO_CODE"
     elif dco_status == "NEEDS_DCO_CHARACTERIZATION":
-        status = ("NEEDS_DCO_CHARACTERIZATION" if mode == "buildable"
-                  else "PASS_ARCH_SELECTED_EXPERIMENTAL")
+        if selected.get("physical_buildable"):
+            # Physical silicon/macro path exists; DCO evidence is a separate
+            # characterization gate, not an architecture-selection failure.
+            status = "PASS_ARCH_SELECTED_PHYSICAL"
+        else:
+            status = ("NEEDS_DCO_CHARACTERIZATION" if mode == "buildable"
+                      else "PASS_ARCH_SELECTED_EXPERIMENTAL")
     elif dco_status.startswith("PASS_"):
         status = "PASS_ARCH_SELECTED_WITH_DCO"
     else:

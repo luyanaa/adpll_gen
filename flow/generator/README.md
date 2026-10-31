@@ -119,8 +119,8 @@ core, the DCO capability result, and the remaining signoff evidence.
 python3 flow/generator/architecture.py --pdk ics55 \
   --target-mhz 800 --area medium --ref-mhz 100 --fcw 8
 
-# Planning/exploration: MODEL_ONLY Core B/C are allowed, but never returned
-# as a physical build.
+# Planning/exploration: RTL-only variants for a PDK without a core-specific
+# physical macro are allowed, but never returned as a physical build.
 python3 flow/generator/architecture.py --pdk ETRI050_fd_sc_12t \
   --target-mhz 5 --area high --mode explore
 python3 flow/generator/architecture.py --pdk gf180mcu_as_sc_mcu7t3v3 \
@@ -142,8 +142,9 @@ python3 flow/validate_selection.py --selection /tmp/selection.json
 Selection rules:
 
 - `--mode buildable` is the default and only selects
-  `PHYSICAL_IMPLEMENTABLE` (currently Core A) or `CHARACTERIZED` entries.
-- `--mode explore` permits `MODEL_ONLY` Core B/C simulation candidates, but
+  `PHYSICAL_IMPLEMENTABLE` (Core A/B/C where a core-specific macro entry exists)
+  or `CHARACTERIZED` entries.
+- `--mode explore` permits `MODEL_ONLY`/`RTL_SYNTHESIZABLE` candidates, but
   reports `NEEDS_DCO_CHARACTERIZATION` unless a matching DCO manifest exists.
 - `--allow-unimplemented` is an explicit planning override and requires
   `--mode explore`.
@@ -193,18 +194,22 @@ Current implementation status:
 | Architecture | Status | Artifact |
 |---|---|---|
 | Core A IL-DCO | RTL/macro | `src/il_dco.v`, `src/pll_analog.v`, `src/pll_macro_top.v` |
-| Core B ring DCO | simulation model | `src/pll_ring_dco.v`, `src/arch_models_tb.v` |
-| Core C counter DCO | simulation model | `src/pll_counter_dco.v`, `src/arch_models_tb.v` |
+| Core B ring DCO | RTL + physical macro | `src/pll_ring_dco_phys.v`, `src/pll_ring_top.v`, `flow/macro/ring_dco_ics55/` |
+| Core C counter DCO | RTL + physical macro | `src/pll_counter_dco_phys.v`, `src/pll_counter_top.v`, `flow/macro/counter_dco_ics55/` |
 | Core A dual loop | partial RTL | `src/freq_lock.v`, `src/digital_loop_filter.v` |
 | Fractional / DSM | partial RTL | `src/delta_sigma.v`, `src/pll_logic.v` |
 | Segmented / hybrid / low-res TDC / multi-phase | roadmap | not selectable by default |
 
-Core B/C models are behavioral RTL, not hardened macros and not DCO/PVT
-signoff.  Their catalog model ranges are 20–109 MHz and 2.5–26.5 MHz,
-respectively; the wider catalog bands are architecture targets, not measured
-model limits.  Core C additionally requires an external 1 GHz tick and is
-therefore an NCO/digital clock synthesizer candidate, not a standalone DCO
-claim.
+Core B/C are now physical implementations: a fixed-inverter-ring macro and a
+synthesizable phase-accumulator/NCO macro.  The old behavioral modules remain
+under `src/pll_ring_dco.v` and `src/pll_counter_dco.v` only for historical
+simulation, and are not referenced by the delivery source set.  The physical
+catalog bands are 20–300 MHz and 2.5–26.5 MHz; these are architecture/physical
+targets, not measured silicon limits.  Core C requires an external 1 GHz tick
+and is an NCO/digital clock synthesizer candidate, not a standalone DCO claim.
+Neither macro has a DCO/PVT manifest; buildable selection returns
+`PASS_ARCH_SELECTED_PHYSICAL` and the DCO evidence remains a separate blocker
+unless `allow_unverified_dco` explicitly permits a physical bring-up package.
 
 DCO characterization is bound to `architecture_id + implementation_id +
 PDK/library + structural parameters + physical hash + extraction fidelity +
@@ -271,7 +276,9 @@ template: it does not run synthesis/PnR/DRC/LVS and never claims production.
 `spec.schema.json` documents accepted fields.  `allow_experimental=true`
 permits MODEL_ONLY/RTL_SYNTHESIZABLE template generation with `mode=explore`;
 `allow_macro_rebuild=true` permits a package with a rebuild plan when a
-physical view or structural parameter does not match the built macro.  Add
+physical view or structural parameter does not match the built macro.
+`allow_unverified_dco=true` permits a physical bring-up package with
+`READY_PHYSICAL_UNCHARACTERIZED`; it never grants production eligibility.  Add
 `--run-macro-build` to execute the recorded command and re-resolve the macro
 identity; without it, the generated `macro/build.sh` is the explicit trigger.
 

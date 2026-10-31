@@ -6,11 +6,11 @@ from architecture import select, selection_template
 
 
 def main():
-    # Model-only Core C is exploratory, never a default physical build.
+    # Core C RTL exists, but ETRI has no core-specific physical macro entry.
     r = select("ETRI050_fd_sc_12t", 5, area="high", mode="explore")
     assert r["status"] == "PASS_ARCH_SELECTED_EXPERIMENTAL", r["status"]
     assert r["selected"]["id"] == "core_c_counter", r["selected"]
-    assert r["selected"]["implementation_state"] == "MODEL_ONLY", r["selected"]
+    assert r["selected"]["implementation_state"] == "RTL_SYNTHESIZABLE", r["selected"]
     assert r["dco_capability"]["status"] == "NEEDS_DCO_CHARACTERIZATION", r
     assert r["selected"]["physical_buildable"] is False
 
@@ -21,7 +21,8 @@ def main():
     r = select("etri050", 20, mode="explore")
     assert r["status"] == "FAIL_SYSTEM_FMAX", r
 
-    # Model-only low-frequency candidates remain available for planning only.
+    # Low-frequency candidates remain available for planning only when the PDK
+    # has no core-specific physical macro entry.
     r = select("gf180mcu_as_sc_mcu7t3v3", 100, area="medium",
                ref_mhz=50, mode="explore")
     assert r["selected"]["id"] == "core_b_ring_dco", r["selected"]
@@ -36,7 +37,22 @@ def main():
     r = select("gf180mcu_as_sc_mcu7t3v3", 200, ref_mhz=50, mode="explore")
     assert r["status"] == "FAIL_SYSTEM_FMAX", r
 
-    # Core A has the only physical backend and a bound L1 manifest.
+    # ics55 Core B/C have core-specific physical macro entries and are
+    # buildable physical candidates; DCO evidence remains a separate gate.
+    r = select("ics55", 100, area="medium", ref_mhz=10, fcw=10)
+    assert r["status"] == "PASS_ARCH_SELECTED_PHYSICAL", r
+    assert r["selected"]["id"] == "core_b_ring_dco", r["selected"]
+    assert r["selected"]["implementation_state"] == "PHYSICAL_IMPLEMENTABLE", r
+    assert r["selected"]["physical_buildable"] is True
+    assert r["dco_capability"]["status"] == "NEEDS_DCO_CHARACTERIZATION"
+    r = select("ics55", 20, area="high", ref_mhz=10, fcw=2)
+    assert r["status"] == "PASS_ARCH_SELECTED_PHYSICAL", r
+    assert r["selected"]["id"] == "core_c_counter", r["selected"]
+    assert r["selected"]["physical_buildable"] is True
+    tpl = selection_template(r)
+    assert tpl["blocks"]["dco"]["kind"] == "hard_macro", tpl
+
+    # Core A has a bound L1 manifest and its own physical macro.
     r = select("ics55", 800, area="medium", ref_mhz=100, fcw=8)
     assert r["status"] == "PASS_ARCH_SELECTED_WITH_DCO", r
     assert r["selected"]["id"] == "core_a_il_dco", r["selected"]

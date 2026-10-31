@@ -49,6 +49,36 @@ def make_inventory(root: Path, *, library="ics55_LLSC_H7CR",
     return path
 
 
+def make_counter_inventory(root: Path):
+    """A core-specific physical inventory entry used to exercise Core C."""
+    root.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "name": "PLL_COUNTER_DCO_PHYS",
+        "core": "core_c_counter",
+        "pdk": "ics55",
+        "cell_library": "ics55_LLSC_H7CR",
+        "root": str(root),
+        "flow": "test_flow",
+        "parameters": {
+            "COARSE_NDELS": 15, "MID_NDELS": 15, "FINE_NDELS": 31,
+            "IL_NDELS": 4, "ACC_BITS": 16, "BASE_INC": 328,
+            "COARSE_STEP": 120, "MID_STEP": 60, "FINE_STEP": 15,
+        },
+        "views": {},
+        "required_views": ["lef", "lib", "gds"],
+        "build_command": "make test-counter-macro",
+    }
+    for name in entry["required_views"]:
+        path = root / f"PLL_COUNTER_DCO_PHYS.{name}"
+        path.write_text(f"{name} view\n")
+        entry["views"][name] = str(path)
+    inv = {"schema_version": 1,
+           "macros": {"ics55:core_c_counter": entry}}
+    path = root / "macro_inventory.json"
+    path.write_text(json.dumps(inv, indent=2) + "\n")
+    return path
+
+
 def base_spec(**overrides):
     spec = {
         "design": "adpll_top",
@@ -132,13 +162,34 @@ def main():
         assert resolved["counter_range"]["ok"] is False, resolved["counter_range"]
         assert resolved["status"] == "NEEDS_COUNTER_RANGE", resolved
 
-        # MODEL_ONLY can be packaged as an explicitly experimental template.
+        # Core C is a physical counter/NCO macro; its generated top must
+        # expose TICK and instantiate PLL_COUNTER_TOP rather than Core A.
+        counter_inv = make_counter_inventory(root / "counter")
+        counter = base_spec(target_mhz=20, ref_mhz=10, fcw=2, area="high")
+        counter["structural"].update({
+            "ACC_BITS": 16, "BASE_INC": 328,
+            "COARSE_STEP": 120, "MID_STEP": 60, "FINE_STEP": 15,
+        })
+        counter["allow_unverified_dco"] = True
+        resolved = resolve_spec(counter, counter_inv)
+        assert resolved["selected"]["id"] == "core_c_counter", resolved
+        assert resolved["status"] == "READY_PHYSICAL_UNCHARACTERIZED", resolved
+        counter_pkg = root / "counter_pkg"
+        result = generate(resolved, counter_pkg)
+        assert result["status"] == "READY_PHYSICAL_UNCHARACTERIZED", result
+        wrapper = (counter_pkg / "rtl" / "adpll_top.v").read_text()
+        assert "PLL_COUNTER_TOP" in wrapper and "input TICK" in wrapper, wrapper
+        assert "TICK(TICK)" in wrapper, wrapper
+        assert verify(counter_pkg)["status"] == "PASS"
+
+        # A non-physical (RTL-only for this PDK) variant can be packaged as an
+        # explicitly experimental template.
         exp = base_spec(pdk="gf180mcu_as_sc_mcu7t3v3", target_mhz=100,
                         ref_mhz=50, fcw=2, mode="explore",
                         allow_experimental=True)
         resolved = resolve_spec(exp)
         assert resolved["status"] == "READY_EXPERIMENTAL", resolved
-        assert resolved["architecture_state"] == "MODEL_ONLY", resolved
+        assert resolved["architecture_state"] == "RTL_SYNTHESIZABLE", resolved
 
     print("test_delivery: PASS")
 

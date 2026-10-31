@@ -1,0 +1,33 @@
+# Physical Core B ring-DCO macro.
+# The fixed inverter bank + coarse/mid/fine delay cells form the ring.  This
+# is not a behavioral oscillator; no delay statements are used.
+DESIGN_NAME: PLL_RING_DCO_PHYS
+VERILOG_FILES:
+  - dir::../../../src/pll_ring_dco_phys.v
+  - dir::../../../src/il_dco.v
+  - dir::../../../src/coarse_delay.v
+  - dir::../../../src/mid_delay.v
+  - dir::../../../src/fine_delay.v
+  - dir::../../../src/sym.v
+  - dir::../../../src/sym_mux.v
+  - dir::../../../src/ssbbpd.v
+  - dir::../../../src/pll_cells_ics55.v
+
+PDK: ics55
+STD_CELL_LIBRARY: ics55_LLSC_H7CR
+CLOCK_PORT: REF
+CLOCK_PERIOD: 10.0
+
+PNR_SDC_FILE: dir::constraints/top.sdc
+SIGNOFF_SDC_FILE: dir::constraints/top.sdc
+
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+RT_MIN_LAYER: MET1
+RT_MAX_LAYER: MET5
+IO_PIN_H_LAYER: MET3
+IO_PIN_V_LAYER: MET2
+FP_CORE_UTIL: 30
+PL_TARGET_DENSITY_PCT: 45
+DIE_AREA: [0, 0, 260, 260]
+

@@ -88,25 +88,27 @@
       ],
       "risk": "jitter/phase noise, limited range",
       "benefit": "low area, simple layout, easy integration",
-      "implementation": "simulation",
+      "implementation": "rtl",
       "implementation_refs": [
-        "src/pll_ring_dco.v",
-        "src/arch_models_tb.v"
+        "src/pll_ring_dco_phys.v",
+        "src/pll_ring_top.v"
       ],
-      "hardmacro_ready": false,
+      "hardmacro_ready": true,
       "model_freq_mhz": [
         20,
         109
       ],
-      "model_note": "Default behavioral ring model; not layout/device calibrated."
+      "physical_variant": true,
+      "implementation_class": "PHYSICAL_RING_DCO",
+      "physical_note": "Synthesizable/hard-macro ring topology with a fixed inverter bank plus coarse/mid/fine delay cells; injection disabled. Frequency/PVT is not characterized."
     },
     {
       "id": "core_c_counter",
       "name": "Core C + counter DCO",
       "core": "core_c_counter",
       "freq_mhz": [
-        5,
-        100
+        2.5,
+        26.5
       ],
       "bands": [
         "low"
@@ -114,6 +116,7 @@
       "area": "small",
       "area_rank": 1,
       "pdk_classes": [
+        "high",
         "mid",
         "low"
       ],
@@ -124,19 +127,21 @@
       ],
       "risk": "low frequency ceiling, coarse resolution",
       "benefit": "smallest area and simplest DRC/LVS path",
-      "implementation": "simulation",
+      "implementation": "rtl",
       "implementation_refs": [
-        "src/pll_counter_dco.v",
-        "src/arch_models_tb.v"
+        "src/pll_counter_dco_phys.v",
+        "src/pll_counter_top.v"
       ],
-      "hardmacro_ready": false,
+      "hardmacro_ready": true,
       "model_freq_mhz": [
         2.5,
         26.5
       ],
-      "model_note": "Default behavioral counter model; f_out = f_tick*increment/(2*PHASE_MOD).",
       "requires_reference_tick": 1000.0,
-      "external_clock_dependent": true
+      "external_clock_dependent": true,
+      "physical_variant": true,
+      "implementation_class": "PHYSICAL_COUNTER_NCO",
+      "physical_note": "Synthesizable phase-accumulator/NCO hard macro; requires an external high-speed TICK (nominally 1 GHz). Frequency/PVT is not characterized."
     },
     {
       "id": "hybrid_dco",

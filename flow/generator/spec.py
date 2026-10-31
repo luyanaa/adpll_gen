@@ -31,6 +31,13 @@ DEFAULT_STRUCTURAL = {
     "FCW_BITS": 8,
     "CNT_EXTRA_BITS": 8,
     "MEAS_PERIODS": 1,
+    # Physical Core B/C defaults; ignored by Core A.
+    "BASE_NDELS": 256,
+    "ACC_BITS": 16,
+    "BASE_INC": 3493,
+    "COARSE_STEP": 120,
+    "MID_STEP": 60,
+    "FINE_STEP": 15,
 }
 FEATURE_FLAGS = (
     "wide_range", "fractional", "low_jitter", "fast_lock",
@@ -77,6 +84,7 @@ def _spec_defaults(raw: dict[str, Any]) -> dict[str, Any]:
     spec.setdefault("structural", {})
     spec.setdefault("allow_experimental", False)
     spec.setdefault("allow_macro_rebuild", False)
+    spec.setdefault("allow_unverified_dco", False)
     spec.setdefault("require_identity", False)
     if not isinstance(spec["features"], dict):
         raise SpecError("features must be an object")
@@ -153,6 +161,12 @@ def resolve_spec(raw: dict[str, Any],
     if dco.get("status", "").startswith("NEEDS_"):
         if state in ("MODEL_ONLY", "RTL_SYNTHESIZABLE", "UNIMPLEMENTED"):
             warnings.append(f"DCO: {dco.get('status')}")
+        elif spec["allow_unverified_dco"]:
+            warnings.append(
+                f"DCO: {dco.get('status')}; physical bring-up allowed without "
+                "frequency/PVT evidence")
+            if status == "READY":
+                status = "READY_PHYSICAL_UNCHARACTERIZED"
         else:
             blockers.append(f"DCO: {dco.get('status')}")
             if status == "READY":

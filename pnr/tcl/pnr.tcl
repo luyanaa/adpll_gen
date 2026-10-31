@@ -155,7 +155,9 @@ make_routing
 ## PLL placement
 ####################################
 
-source ${PNR_DIR}/tcl/pll_pos.tcl
+if {![info exists ::env(SKIP_PLL_POS)] || $::env(SKIP_PLL_POS) != 1} {
+  source ${PNR_DIR}/tcl/pll_pos.tcl
+}
 
 set well_w 0
 if {[llength $TAPCells] > 0} {
@@ -172,11 +174,15 @@ set RightWell_x [expr $Region_xur - $well_w - $track*3]
 set st_y_analog [expr  $Region_yur - $row*3]
 set st_x_analog $RightWell_x
 
-lassign [pos_coarse $st_x_analog $st_y_analog 15] coarse_x coarse_y
-lassign [pos_mid [expr $coarse_x - $track*2] [expr $coarse_y+$row] 15] mid_x mid_y
-lassign [pos_fine [expr $mid_x - $track*2] $st_y_analog 31 15] fine_x fine_y
-lassign [pos_balanced [expr $fine_x - $track*2] [expr $coarse_y+$row]] balanced_x balanced_y
-lassign [pos_injection [expr $balanced_x - $track*2] [expr $coarse_y+$row] 4] inj_x inj_y
+if {![info exists ::env(SKIP_PLL_POS)] || $::env(SKIP_PLL_POS) != 1} {
+  lassign [pos_coarse $st_x_analog $st_y_analog 15] coarse_x coarse_y
+  lassign [pos_mid [expr $coarse_x - $track*2] [expr $coarse_y+$row] 15] mid_x mid_y
+  lassign [pos_fine [expr $mid_x - $track*2] $st_y_analog 31 15] fine_x fine_y
+  lassign [pos_balanced [expr $fine_x - $track*2] [expr $coarse_y+$row]] balanced_x balanced_y
+  lassign [pos_injection [expr $balanced_x - $track*2] [expr $coarse_y+$row] 4] inj_x inj_y
+} else {
+  puts "\[INFO\] SKIP_PLL_POS=1; using automatic placement for non-analog macro"
+}
 
 write_def $OUTPUTS/${TOP}.analog.def
 
@@ -230,8 +236,12 @@ source ${PNR_DIR}/tcl/pindef.tcl
 write_abstract_lef $OUTPUTS/${TOP}.early.lef
 
 # Give the digital its own copy of the clocks shared with the analog (before gpl, so the buffers get placed)
-source ${PNR_DIR}/tcl/clk_isolate.tcl
-isolate_dig_clocks
+if {![info exists ::env(SKIP_CLK_ISOLATE)] || $::env(SKIP_CLK_ISOLATE) != 1} {
+  source ${PNR_DIR}/tcl/clk_isolate.tcl
+  isolate_dig_clocks
+} else {
+  puts "\[INFO\] SKIP_CLK_ISOLATE=1; leaving clocks at top level"
+}
 
 source ${PNR_DIR}/tcl/gpl.tcl
 source ${PNR_DIR}/tcl/dpl.tcl
@@ -278,7 +288,9 @@ puts "\[INFO\] Setting signal max routing layer to: $signal_max_layer and clock 
 set_routing_layers -signal [subst $signal_min_layer]-[subst $signal_max_layer] -clock [subst $clock_min_layer]-[subst $clock_max_layer]
 
 # CTS must not touch the analog cells nor the analog side of the clocks
-protect_analog
+if {![info exists ::env(SKIP_CLK_ISOLATE)] || $::env(SKIP_CLK_ISOLATE) != 1} {
+  protect_analog
+}
 if {[info exists ::env(SKIP_CTS)] && $::env(SKIP_CTS) == 1} {
   puts "\[INFO\] Skipping CTS (SKIP_CTS=1; macro-only top has no digital clock tree)"
   # cts.tcl normally sources the RC setup; macro-only still needs it for

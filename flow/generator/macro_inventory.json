@@ -23,7 +23,12 @@
         "gds": "signoff/outputs/ics55/PLL_ANALOG_MACRO.gds",
         "sdc": "flow/macro/ics55_h7cr/PLL_ANALOG_MACRO.sdc.tcl"
       },
-      "required_views": ["lef", "lib", "cdl", "gds"],
+      "required_views": [
+        "lef",
+        "lib",
+        "cdl",
+        "gds"
+      ],
       "build_command": "make -C flow/macro/ics55_h7cr pnr signoff",
       "evidence": {
         "drc": "top-level DRC 0; 7T cell-internal waiver only",
@@ -53,7 +58,12 @@
         "gds": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.gds",
         "sdc": "flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.sdc.tcl"
       },
-      "required_views": ["lef", "lib", "cdl", "gds"],
+      "required_views": [
+        "lef",
+        "lib",
+        "cdl",
+        "gds"
+      ],
       "build_command": "make -C flow/macro/ihp130_sg13g2 pnr signoff",
       "evidence": {
         "drc": "minimal-deck DRC 0 with density fill",
@@ -83,12 +93,92 @@
         "gds": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.gds",
         "sdc": "flow/macro/gf180mcu/PLL_ANALOG_MACRO.sdc"
       },
-      "required_views": ["lef", "lib", "cdl", "gds"],
+      "required_views": [
+        "lef",
+        "lib",
+        "cdl",
+        "gds"
+      ],
       "build_command": "librelane flow/macro/gf180mcu/config.macro_build.yaml",
       "evidence": {
         "drc": "KLayout DRC 0 after density fill",
         "lvs": "KLayout LVS PASS with fill-marker shim",
         "timing": "macro-internal STA not characterized"
+      }
+    },
+    "ics55:core_b_ring_dco": {
+      "name": "PLL_RING_DCO_PHYS",
+      "core": "core_b_ring_dco",
+      "pdk": "ics55",
+      "cell_library": "ics55_LLSC_H7CR",
+      "root": "flow/macro/ring_dco_ics55",
+      "flow": "ckdur",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "IL_NDELS": 4,
+        "BASE_NDELS": 256
+      },
+      "views": {
+        "lef": "flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.lef",
+        "lib": "flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.lib",
+        "cdl": "flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.cdl",
+        "gds": "flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.gds",
+        "def": "flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.def",
+        "verilog": "flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.v",
+        "sdc": "flow/macro/ring_dco_ics55/PLL_RING_DCO_PHYS.sdc.tcl"
+      },
+      "required_views": [
+        "lef",
+        "lib",
+        "gds"
+      ],
+      "build_command": "make -C flow/macro/ring_dco_ics55 pnr",
+      "evidence": {
+        "drc": "not run",
+        "lvs": "not run",
+        "timing": "not characterized",
+        "pvt": "not characterized"
+      }
+    },
+    "ics55:core_c_counter": {
+      "name": "PLL_COUNTER_DCO_PHYS",
+      "core": "core_c_counter",
+      "pdk": "ics55",
+      "cell_library": "ics55_LLSC_H7CR",
+      "root": "flow/macro/counter_dco_ics55",
+      "flow": "librelane",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "IL_NDELS": 4,
+        "ACC_BITS": 16,
+        "BASE_INC": 3493,
+        "COARSE_STEP": 120,
+        "MID_STEP": 60,
+        "FINE_STEP": 15
+      },
+      "views": {
+        "lef": "flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.lef",
+        "lib": "flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.lib",
+        "gds": "flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.gds",
+        "def": "flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.def",
+        "verilog": "flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.v",
+        "sdc": "flow/macro/counter_dco_ics55/PLL_COUNTER_DCO_PHYS.sdc.tcl"
+      },
+      "required_views": [
+        "lef",
+        "lib",
+        "gds"
+      ],
+      "build_command": "make -C flow/macro/counter_dco_ics55 pnr",
+      "evidence": {
+        "drc": "LibreLane bring-up reported KLayout DRC errors; not signoff",
+        "lvs": "not run",
+        "timing": "post-PnR STA skipped in physical bring-up",
+        "pvt": "not characterized"
       }
     }
   }
