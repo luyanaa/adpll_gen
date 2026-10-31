@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "inputs": {
+    "tuning_csv": "flow/characterization/ihp_l3/dco_tuning_l3.csv",
+    "raw": "flow/characterization/pex_ihp/test_dco_pvt_tt_c8_m8_f8.raw"
+  },
+  "limitations": [
+    "KDCO is local adjacent-code data, not a smooth model.",
+    "Transient period spread is not random jitter or phase noise.",
+    "No pnoise/device-noise run is claimed by this report."
+  ],
+  "points": 27,
+  "kdco": {
+    "coarse": {
+      "count": 18,
+      "min_mhz_per_code": -42.850911124999996,
+      "max_mhz_per_code": -6.921363428571425,
+      "median_mhz_per_code": -22.996026107142853,
+      "direction": "decreasing"
+    },
+    "mid": {
+      "count": 18,
+      "min_mhz_per_code": -4.706327857142859,
+      "max_mhz_per_code": 1.0656625714285732,
+      "median_mhz_per_code": -1.0394435535714257,
+      "direction": "decreasing"
+    },
+    "fine": {
+      "count": 18,
+      "min_mhz_per_code": -1.9547897499999891,
+      "max_mhz_per_code": 1.8799196249999994,
+      "median_mhz_per_code": -0.17715569565217232,
+      "direction": "decreasing"
+    }
+  },
+  "frequency_mhz": {
+    "min": 212.089943,
+    "max": 624.262449
+  },
+  "jitter": {
+    "trace": "v(out)",
+    "edges_used": 16,
+    "periods_used": 15,
+    "mean_period_ns": 5.587521081840287,
+    "freq_mhz": 178.97024196473245,
+    "period_jitter_pp_ns": 0.43489615409451365,
+    "period_jitter_rms_ns": 0.10213907814821446,
+    "period_jitter_rms_ps": 102.13907814821447,
+    "note": "deterministic transient period spread; not random/phase noise"
+  }
+}

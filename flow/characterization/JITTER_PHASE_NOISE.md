@@ -6,7 +6,10 @@ The DCO now has:
 - routed macro PEX extraction;
 - one-code PEX-capacitance and TT/SS/FF frequency checks.
 
-Jitter and phase noise are **not** signoff results yet.
+Jitter and phase noise are **not** signoff results yet.  A new
+`kdco_jitter.py` report now extracts local KDCO and deterministic transient
+period spread from the existing IHP table/PEX raw; see
+`KDCO_JITTER_REPORT.md`.  It still does not provide random/phase noise.
 
 ## Why
 

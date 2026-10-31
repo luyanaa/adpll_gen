@@ -14,20 +14,21 @@
 Evidence: `flow/macro/ring_dco_gf180mcu/` and
 `flow/macro/counter_dco_gf180mcu/`.
 
-## IHP SG13G2 (DRC/LVS clean, minimal decks)
+## IHP SG13G2 (official deck, official KLayout run)
 
 | Check | Ring DCO | Counter/NCO |
 |---|---|---|
 | PDK/library | ihp-sg13g2 / sg13g2_stdcell | ihp-sg13g2 / sg13g2_stdcell |
 | GDS/LEF/LIB/CDL/DEF | present | present |
-| DRC | **0 violations** (ORFS minimal deck) | **0 violations** |
-| LVS | **PASS** (ORFS deck, fill-stripped GDS) | **PASS** |
+| DRC | **0 violations** (official maximal+density) | max+fill **0** with density disabled; density `M2.j/M3.j` **open** |
+| LVS | **PASS** (official deck, fill-stripped, top-port waiver) | **PASS** (same waiver) |
 | STA | nominal only | nominal only |
 | PVT/jitter/KDCO | not characterized | not characterized |
 
-Evidence: `flow/macro/ring_dco_ihp130/` and
-`flow/macro/counter_dco_ihp130/`.  The official IHP signoff deck is not present
-in the local PDK root.
+Evidence: `flow/macro/ring_dco_ihp130/OFFICIAL_SIGNOFF.md` and
+`flow/macro/counter_dco_ihp130/OFFICIAL_SIGNOFF.md`.  The official IHP deck is
+available from the local CIEL checkout; the LVS pass uses a top-port naming
+waiver, and counter density closure is still open.
 
 ## sky130 (experiment, not passing LVS)
 

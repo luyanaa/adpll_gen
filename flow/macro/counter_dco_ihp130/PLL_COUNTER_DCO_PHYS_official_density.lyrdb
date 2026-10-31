@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<report-database>
+ <description>Density DRC Run Report at</description>
+ <original-file/>
+ <generator>drc: script='/home/yanlu/.ciel/ciel/ihp-sg13/versions/89d42ee6d2fd9b50b86a1aada6fee6673c3e6008/ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/density.drc'</generator>
+ <top-cell>PLL_COUNTER_DCO_PHYS</top-cell>
+ <tags>
+ </tags>
+ <categories>
+  <category>
+   <name>M2.j</name>
+   <description>5.17. M2.j: Min. global Metal2 density [%]: 35.00.</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>M3.j</name>
+   <description>5.17. M3.j: Min. global Metal3 density [%]: 35.00.</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Slt.i_M1</name>
+   <description>Min. metal1:slit density for any Metal plate bigger than 35µm x 35µm [%] is 6.00.</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Slt.i_M2</name>
+   <description>Min. metal2:slit density for any Metal plate bigger than 35µm x 35µm [%] is 6.00.</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Slt.i_M3</name>
+   <description>Min. metal3:slit density for any Metal plate bigger than 35µm x 35µm [%] is 6.00.</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Slt.i_M4</name>
+   <description>Min. metal4:slit density for any Metal plate bigger than 35µm x 35µm [%] is 6.00.</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Slt.i_M5</name>
+   <description>Min. metal5:slit density for any Metal plate bigger than 35µm x 35µm [%] is 6.00.</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Slt.i_TM1</name>
+   <description>Min. topmetal1:slit density for any Metal plate bigger than 35µm x 35µm [%] is 6.00.</description>
+   <categories>
+   </categories>
+  </category>
+  <category>
+   <name>Slt.i_TM2</name>
+   <description>Min. topmetal2:slit density for any Metal plate bigger than 35µm x 35µm [%] is 6.00.</description>
+   <categories>
+   </categories>
+  </category>
+ </categories>
+ <cells>
+  <cell>
+   <name>PLL_COUNTER_DCO_PHYS</name>
+   <variant/>
+   <layout-name/>
+   <references>
+   </references>
+  </cell>
+ </cells>
+ <items>
+  <item>
+   <tags/>
+   <category>'M2.j'</category>
+   <cell>PLL_COUNTER_DCO_PHYS</cell>
+   <visited>false</visited>
+   <multiplicity>1</multiplicity>
+   <comment/>
+   <image/>
+   <values>
+    <value>polygon: (0,0;0,167.605;298.21,167.605;298.21,0)</value>
+    <value>text: 'Global Density Violation'</value>
+    <value>text: 'chip_bbox_um      : (0.000,0.000) - (298.210,167.605)'</value>
+    <value>text: 'chip_area_um2     : 49981.487'</value>
+    <value>text: 'layer_area_um2    : 16037.988'</value>
+    <value>text: 'ratio_percent     : 32.088'</value>
+    <value>text: 'limit_percent     : 35.000 (min)'</value>
+    <value>text: 'gap_percent       : 2.912 (below limit)'</value>
+    <value>text: 'area_gap_um2      : 1455.533'</value>
+   </values>
+  </item>
+  <item>
+   <tags/>
+   <category>'M3.j'</category>
+   <cell>PLL_COUNTER_DCO_PHYS</cell>
+   <visited>false</visited>
+   <multiplicity>1</multiplicity>
+   <comment/>
+   <image/>
+   <values>
+    <value>polygon: (0,0;0,167.605;298.21,167.605;298.21,0)</value>
+    <value>text: 'Global Density Violation'</value>
+    <value>text: 'chip_bbox_um      : (0.000,0.000) - (298.210,167.605)'</value>
+    <value>text: 'chip_area_um2     : 49981.487'</value>
+    <value>text: 'layer_area_um2    : 16741.607'</value>
+    <value>text: 'ratio_percent     : 33.496'</value>
+    <value>text: 'limit_percent     : 35.000 (min)'</value>
+    <value>text: 'gap_percent       : 1.504 (below limit)'</value>
+    <value>text: 'area_gap_um2      : 751.913'</value>
+   </values>
+  </item>
+ </items>
+</report-database>
