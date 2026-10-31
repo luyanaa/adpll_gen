@@ -17,6 +17,7 @@ module pll_logic#(
     parameter integer MEAS_PERIODS = 1,
 `ifndef PLL_WITHOUT_DIVIDER
     parameter integer DIV_BITS = 8,
+    parameter integer DIV_INIT = 2,
 `endif
     parameter integer FCW_BITS = 8
 ) (
@@ -243,7 +244,7 @@ module pll_logic#(
     end
     
 `ifndef PLL_WITHOUT_DIVIDER
-    pll_mod_divider #(.W(DIV_BITS)) div(
+    pll_mod_divider #(.W(DIV_BITS), .DIV_INIT(DIV_INIT)) div(
         .clk(OUT),
         .rst_n(RST_N),
         .set_div(SET_DIV),

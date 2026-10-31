@@ -1,5 +1,5 @@
-// Divider boundary regression: DIV=2/3/4 and runtime load, including the
-// illegal DIV<2 clamp path in the configurable divider.
+// Divider boundary regression: DIV=2/3/4, runtime load, and the /1 bypass
+// in the configurable divider.
 `timescale 1ns/1ps
 
 module divider_tb;
@@ -64,7 +64,7 @@ module divider_tb;
         check_period(p4, 40, "DIV=4");
         check_period(pm, 20, "mod reset DIV=2");
 
-        // Runtime load: 3 then an illegal 1 (must clamp to 2).
+        // Runtime load: 3 then a /1 bypass request.
         @(negedge clk); set_div = 8'd3; load_div = 1'b1;
         @(negedge clk); load_div = 1'b0;
         #100;
@@ -73,7 +73,7 @@ module divider_tb;
         @(negedge clk); set_div = 8'd1; load_div = 1'b1;
         @(negedge clk); load_div = 1'b0;
         #100;
-        check_period(pm, 20, "mod illegal DIV=1 clamps to 2");
+        check_period(pm, 10, "mod DIV=1 bypass");
 
         if (errors != 0) $fatal(1, "divider_tb failed");
         $display("divider_tb: PASS");

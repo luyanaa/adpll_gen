@@ -7,6 +7,7 @@ DIGITAL_RTL_SRCS := \
 	$(ROOT_DIR)/src/digital_loop_filter.v \
 	$(ROOT_DIR)/src/term_decoder.v \
 	$(ROOT_DIR)/src/freq_lock.v \
+	$(ROOT_DIR)/src/frequency_counter_frontend.v \
 	$(ROOT_DIR)/src/delta_sigma.v \
 	$(ROOT_DIR)/src/fix_div.v \
 	$(ROOT_DIR)/src/conf_div.v

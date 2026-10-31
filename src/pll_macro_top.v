@@ -21,6 +21,7 @@ module pll_macro_top #(
     parameter integer MEAS_PERIODS = 1,
 `ifndef PLL_WITHOUT_DIVIDER
     parameter integer DIV_BITS = 8,
+    parameter integer DIV_INIT = 2,
 `endif
     parameter integer FCW_BITS = 8,
     parameter integer IL_NDELS = 4
@@ -61,6 +62,7 @@ module pll_macro_top #(
         .MEAS_PERIODS(MEAS_PERIODS),
 `ifndef PLL_WITHOUT_DIVIDER
         .DIV_BITS(DIV_BITS),
+        .DIV_INIT(DIV_INIT),
 `endif
         .FCW_BITS(FCW_BITS)
     ) pll_dig (

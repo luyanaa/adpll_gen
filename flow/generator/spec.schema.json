@@ -21,7 +21,8 @@
     },
     "target_mhz": {
       "type": "number",
-      "exclusiveMinimum": 0
+      "exclusiveMinimum": 0,
+      "description": "Post-divider OUT_DIV frequency in MHz; raw DCO target is target_mhz * out_div"
     },
     "ref_mhz": {
       "type": "number",
@@ -34,7 +35,8 @@
     "out_div": {
       "type": "integer",
       "minimum": 1,
-      "default": 1
+      "default": 1,
+      "description": "Post-divider ratio; drives dco_target_mhz and generated DIV_INIT"
     },
     "area": {
       "type": "string",
@@ -78,7 +80,7 @@
           "type": "boolean"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "structural": {
       "type": "object",
@@ -140,7 +142,7 @@
           "minimum": 0
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "evidence_identity": {
       "type": "object"
@@ -160,6 +162,11 @@
     "allow_unverified_dco": {
       "type": "boolean",
       "default": false
+    },
+    "tick_frequency_mhz": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "External Core C TICK frequency in MHz; required when the selected architecture is core_c_counter"
     }
   },
   "additionalProperties": false

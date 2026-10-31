@@ -222,24 +222,31 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         return {"status": "FAIL_UNKNOWN_PDK", "pdk": pdk,
                 "reason": "no architecture profile for this PDK"}
 
+    # ``target_mhz`` is the post-divider output contract.  Architecture and
+    # DCO capability decisions are made at the actual DCO frequency.
+    dco_target_mhz = float(target_mhz) * int(out_div)
     sys_hit = check_system(pdk, target_mhz, ref_mhz, fcw, out_div,
                            identity=evidence_identity,
                            require_identity=require_identity)
     if sys_hit:
         sys_hit["profile"] = prof
         return sys_hit
-    if target_mhz > prof["max_arch_mhz"]:
+    if dco_target_mhz > prof["max_arch_mhz"]:
         return {"status": "FAIL_PDK_FMAX", "pdk": pdk,
                 "target_mhz": target_mhz,
+                "dco_target_mhz": dco_target_mhz,
+                "out_div": out_div,
                 "max_arch_mhz": prof["max_arch_mhz"],
-                "reason": "target exceeds the measured architecture ceiling"}
-    if require_signoff and target_mhz > prof["signoff_mhz"]:
+                "reason": "DCO target exceeds the measured architecture ceiling"}
+    if require_signoff and dco_target_mhz > prof["signoff_mhz"]:
         return {"status": "FAIL_SIGNOFF_FMAX", "pdk": pdk,
                 "target_mhz": target_mhz,
+                "dco_target_mhz": dco_target_mhz,
+                "out_div": out_div,
                 "signoff_mhz": prof["signoff_mhz"],
-                "reason": "target exceeds the conservative PDK signoff ceiling"}
+                "reason": "DCO target exceeds the conservative PDK signoff ceiling"}
 
-    band = BAND(target_mhz)
+    band = BAND(dco_target_mhz)
     required = set()
     if wide_range:
         required.add("wide_range")
@@ -257,7 +264,7 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
             continue
         if prof["class"] not in a["pdk_classes"]:
             continue
-        if target_mhz < a["freq_mhz"][0] or target_mhz > a["freq_mhz"][1]:
+        if dco_target_mhz < a["freq_mhz"][0] or dco_target_mhz > a["freq_mhz"][1]:
             continue
         if AREA_RANK[a["area"]] > AREA_LIMIT[area]:
             continue
@@ -280,10 +287,10 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
             continue
         if state == "MODEL_ONLY":
             model_freq = a.get("model_freq_mhz", a["freq_mhz"])
-            if target_mhz < model_freq[0] or target_mhz > model_freq[1]:
+            if dco_target_mhz < model_freq[0] or dco_target_mhz > model_freq[1]:
                 continue
         center = sum(a["freq_mhz"]) / 2.0
-        freq_score = 1.0 - min(1.0, abs(target_mhz - center) / max(center, 1.0))
+        freq_score = 1.0 - min(1.0, abs(dco_target_mhz - center) / max(center, 1.0))
         area_penalty = AREA_RANK[a["area"]] * AREA_WEIGHT[area]
         complexity_penalty = a["complexity"] * 0.035
         score = 0.82 * freq_score + 0.12 - area_penalty - complexity_penalty
@@ -291,13 +298,14 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
 
     # Area-tight low-frequency designs should not be pulled back to a larger
     # ring/Core A by a marginal frequency-fit score.
-    if area == "high" and target_mhz < 150:
+    if area == "high" and dco_target_mhz < 150:
         forced = [x for x in candidates if x[1]["id"] == "core_c_counter"]
         if forced:
             candidates = forced
     if not candidates:
         return {"status": "FAIL_NO_ARCHITECTURE", "pdk": pdk,
-                "target_mhz": target_mhz, "band": band, "area": area,
+                "target_mhz": target_mhz, "dco_target_mhz": dco_target_mhz,
+                "band": band, "area": area,
                 "reason": "no candidate satisfies frequency, PDK class, area, and feature constraints"}
 
     candidates.sort(key=lambda x: (-x[0], x[1]["id"]))
@@ -320,16 +328,16 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
             "implementation_ready": implementation_ready(a),
             "implementation_state": implementation_state(a, pdk),
             "physical_buildable": implementation_state(a, pdk) in BUILDABLE_STATES,
-            "reasons": _candidate_reasons(a, target_mhz, prof["class"]),
+            "reasons": _candidate_reasons(a, dco_target_mhz, prof["class"]),
         }
 
     selected = materialize(*candidates[0])
     fallbacks = [materialize(*x) for x in candidates[1:4]]
 
     warnings = []
-    if target_mhz > prof["signoff_mhz"]:
+    if dco_target_mhz > prof["signoff_mhz"]:
         warnings.append(
-            f"target {target_mhz:g} MHz exceeds the conservative signoff ceiling "
+            f"DCO target {dco_target_mhz:g} MHz exceeds the conservative signoff ceiling "
             f"{prof['signoff_mhz']:g} MHz; architecture selection is experimental")
     if not prof.get("qualified"):
         warnings.append(prof.get("maturity", "PDK is not signoff-qualified"))
@@ -341,9 +349,8 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         warnings.append("area-tight request still selected a medium/large DCO")
     if selected.get("external_clock_dependent"):
         warnings.append(
-            f"selected architecture depends on an external "
-            f"{selected.get('requires_reference_tick', 'high-speed')} MHz tick; "
-            "it is not a standalone DCO")
+            "selected architecture depends on an external TICK; its frequency "
+            "must be supplied as tick_frequency_mhz, not assumed")
     if selected["implementation_state"] == "MODEL_ONLY":
         warnings.append("selected architecture is MODEL_ONLY: simulation only, not a physical Generator build")
     elif selected["implementation_state"] == "RTL_SYNTHESIZABLE":
@@ -364,6 +371,7 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         "ihp130": "ihp-sg13g2",
     }.get(prof["key"], pdk)
     try:
+        # check_target applies out_div internally to obtain the DCO target.
         dco = check_target(cap_pdk, target_mhz, 0.0, "l1", 10.0, ref_mhz, fcw,
                            architecture_id=selected["id"],
                            implementation_id=selected["implementation"],
@@ -395,6 +403,8 @@ def select(pdk: str, target_mhz: float, area: str = "medium",
         "status": status,
         "pdk": pdk,
         "target_mhz": target_mhz,
+        "dco_target_mhz": dco_target_mhz,
+        "out_div": out_div,
         "band": band,
         "area": area,
         "ref_mhz": ref_mhz,

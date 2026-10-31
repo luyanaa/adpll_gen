@@ -23,6 +23,8 @@ module pll_freq_lock #(
     parameter integer TOL_COARSE_WAIT = 1,  // Wait REF cycles for changing the COARSE once the MID is in the limit, 1 for always change
     // Counter frontend selection. 0 = synchronous (default), 1 = async ripple,
     // 2 = Johnson prescaler.  Ripple/Johnson require an explicit CDC review.
+    // PRESCALE only changes the internal update rate; the frontend COUNT/GRAY
+    // contract is normalized to actual input edges so FCW is unchanged.
     parameter integer FRONTEND_MODE = 0,
     parameter integer PRESCALE = 1
 ) (

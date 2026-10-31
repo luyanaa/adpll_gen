@@ -51,6 +51,14 @@ def main():
     tpl = selection_template(r)
     assert tpl["blocks"]["dco"]["kind"] == "hard_macro", tpl
 
+    # target_mhz is the post-divider contract.  Architecture and DCO band
+    # selection must use target*out_div, not the output target by itself.
+    r = select("ics55", 100, area="medium", ref_mhz=50, fcw=4, out_div=2)
+    assert r["status"].startswith("PASS_"), r
+    assert r["target_mhz"] == 100.0, r
+    assert r["dco_target_mhz"] == 200.0, r
+    assert r["selected"]["id"] == "core_b_ring_dco", r["selected"]
+
     # Core A has a bound L1 manifest and its own physical macro.
     r = select("ics55", 800, area="medium", ref_mhz=100, fcw=8)
     assert r["status"] == "PASS_ARCH_SELECTED_WITH_DCO", r

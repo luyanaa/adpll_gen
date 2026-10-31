@@ -1,9 +1,11 @@
 // Physical Core C counter DCO / NCO.
 //
 // This is a synthesizable phase accumulator, not a behavioral delay model.
-// The DCO needs an external high-speed TICK (the 1 GHz Core C contract); its
-// output clock toggles on accumulator carry.  The control codes are unary
-// thermometer codes from pll_logic.
+// The DCO needs an externally supplied high-speed TICK.  There is no fixed
+// 1 GHz assumption: the generator must bind tick_frequency_mhz.  The output
+// clock toggles once per accumulator carry, so one output period is two
+// carries and f_OUT = f_TICK * increment / 2^(ACC_BITS+1).  The control codes
+// are unary thermometer codes from pll_logic.
 `timescale 1ns/1ps
 
 module PLL_COUNTER_DCO_PHYS #(
@@ -31,6 +33,12 @@ module PLL_COUNTER_DCO_PHYS #(
     reg [ACC_BITS:0] increment;
     integer i;
 
+    // Event semantics: one accumulator carry is one output toggle, not one
+    // output period.  phase_overflow and output_edge are the same event here;
+    // two carries are required for a complete OUT period.
+    wire phase_overflow = phase_sum[ACC_BITS];
+    wire output_edge = phase_overflow;
+
     assign MID_OUT = OUT;
     assign INJ_EDGE = REF;
 
@@ -57,7 +65,7 @@ module PLL_COUNTER_DCO_PHYS #(
             OUT <= 1'b0;
         end else begin
             phase <= phase_sum[ACC_BITS-1:0];
-            if (phase_sum[ACC_BITS])
+            if (output_edge)
                 OUT <= ~OUT;
         end
     end

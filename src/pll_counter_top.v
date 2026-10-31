@@ -1,5 +1,6 @@
 // Closed-loop Core C top: digital control + physical counter/NCO DCO.
-// TICK is the external high-speed (nominally 1 GHz) Core C reference.
+// TICK is an external high-speed reference.  Its frequency is a required
+// specification input; the macro does not assume 1 GHz.
 `timescale 1ns/1ps
 
 module PLL_COUNTER_TOP #(
@@ -15,6 +16,7 @@ module PLL_COUNTER_TOP #(
     parameter integer LOCK_COUNT = 16,
     parameter integer LOSS_COUNT = 4,
     parameter integer DIV_BITS = 8,
+    parameter integer DIV_INIT = 2,
     parameter integer FCW_BITS = 8,
     parameter integer CNT_EXTRA_BITS = 8,
     parameter integer MEAS_PERIODS = 1,
@@ -52,6 +54,7 @@ module PLL_COUNTER_TOP #(
         .LOCK_COUNT(LOCK_COUNT),
         .LOSS_COUNT(LOSS_COUNT),
         .DIV_BITS(DIV_BITS),
+        .DIV_INIT(DIV_INIT),
         .FCW_BITS(FCW_BITS),
         .CNT_EXTRA_BITS(CNT_EXTRA_BITS),
         .MEAS_PERIODS(MEAS_PERIODS)

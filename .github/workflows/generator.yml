@@ -8,6 +8,15 @@ on:
       - "src/freq_lock.v"
       - "src/freq_lock_overflow_tb.v"
       - "src/pll_logic.v"
+      - "src/pll_counter_dco_phys.v"
+      - "src/pll_counter_top.v"
+      - "src/pll_ring_dco_phys.v"
+      - "src/pll_ring_top.v"
+      - "src/frequency_counter_frontend.v"
+      - "src/conf_div.v"
+      - "src/counter_dco_phys_tb.v"
+      - "src/frequency_counter_frontend_tb.v"
+      - "src/test_counter_frequency_model.py"
       - "src/pll.v"
       - "src/pll_macro_top.v"
   pull_request:
@@ -17,6 +26,15 @@ on:
       - "src/freq_lock.v"
       - "src/freq_lock_overflow_tb.v"
       - "src/pll_logic.v"
+      - "src/pll_counter_dco_phys.v"
+      - "src/pll_counter_top.v"
+      - "src/pll_ring_dco_phys.v"
+      - "src/pll_ring_top.v"
+      - "src/frequency_counter_frontend.v"
+      - "src/conf_div.v"
+      - "src/counter_dco_phys_tb.v"
+      - "src/frequency_counter_frontend_tb.v"
+      - "src/test_counter_frequency_model.py"
       - "src/pll.v"
       - "src/pll_macro_top.v"
 
@@ -38,11 +56,16 @@ jobs:
         run: python3 flow/validate_selection.py --selection flow/selection.example.json
       - name: Install Icarus Verilog
         run: sudo apt-get update && sudo apt-get install -y iverilog
-      - name: Frequency-acquisition regressions
+      - name: Frequency-acquisition and counter regressions
         run: |
-          iverilog -g2012 -o /tmp/freq_lock.out src/freq_lock.v src/freq_lock_tb.v src/sim_dco_lock.v
+          iverilog -g2012 -o /tmp/freq_lock.out src/freq_lock.v src/frequency_counter_frontend.v src/freq_lock_tb.v src/sim_dco_lock.v
           vvp /tmp/freq_lock.out
-          iverilog -g2012 -o /tmp/freq_lock_cdc.out src/freq_lock.v src/freq_lock_cdc_tb.v
+          iverilog -g2012 -o /tmp/freq_lock_cdc.out src/freq_lock.v src/frequency_counter_frontend.v src/freq_lock_cdc_tb.v
           vvp /tmp/freq_lock_cdc.out
-          iverilog -g2012 -o /tmp/freq_lock_overflow.out src/freq_lock.v src/freq_lock_overflow_tb.v
+          iverilog -g2012 -o /tmp/freq_lock_overflow.out src/freq_lock.v src/frequency_counter_frontend.v src/freq_lock_overflow_tb.v
           vvp /tmp/freq_lock_overflow.out
+          iverilog -g2012 -o /tmp/frontend.out src/frequency_counter_frontend.v src/frequency_counter_frontend_tb.v
+          vvp /tmp/frontend.out
+          python3 src/test_counter_frequency_model.py
+      - name: Generated-RTL elaboration
+        run: python3 flow/generator/test_elaboration.py

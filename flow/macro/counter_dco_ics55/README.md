@@ -4,12 +4,13 @@ This is the physical Core C counter/NCO macro.  It is a standard-cell
 phase accumulator, not a behavioral delay model.
 
 - Top: `PLL_COUNTER_DCO_PHYS`
-- Clocking: external `TICK` (nominally 1 GHz); `OUT` toggles on accumulator carry
+- Clocking: external `TICK`; its frequency is a required spec input. `OUT` toggles on accumulator carry
 - Control: unary `COARSE_MUX`, `MID_MUX`, `FINE_MUX`
 - Default mapping: `BASE_INC=3493`, `COARSE_STEP=120`, `MID_STEP=60`,
   `FINE_STEP=15`, `ACC_BITS=16`; more unary delay bits reduce the increment,
   matching `pll_logic`'s tuning direction (simulated range about 26.6-2.5 MHz
-  at 1 GHz tick)
+  at a 1 GHz TICK; the generator requires the actual tick_frequency_mhz and
+  applies the /2 carry-toggle factor)
 - Views: `PLL_COUNTER_DCO_PHYS.lef`, `.lib`, `.def`, `.gds`, `.v`
 - Size: 96.303 x 102.703 um
 - Build: `librelane flow/macro/counter_dco_ics55/config.yaml` (or the recorded

@@ -15,6 +15,7 @@ module PLL_RING_TOP #(
     parameter integer LOCK_COUNT = 16,
     parameter integer LOSS_COUNT = 4,
     parameter integer DIV_BITS = 8,
+    parameter integer DIV_INIT = 2,
     parameter integer FCW_BITS = 8,
     parameter integer CNT_EXTRA_BITS = 8,
     parameter integer MEAS_PERIODS = 1,
@@ -48,6 +49,7 @@ module PLL_RING_TOP #(
         .LOCK_COUNT(LOCK_COUNT),
         .LOSS_COUNT(LOSS_COUNT),
         .DIV_BITS(DIV_BITS),
+        .DIV_INIT(DIV_INIT),
         .FCW_BITS(FCW_BITS),
         .CNT_EXTRA_BITS(CNT_EXTRA_BITS),
         .MEAS_PERIODS(MEAS_PERIODS)

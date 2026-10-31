@@ -5,8 +5,9 @@ This tool is deliberately explicit about what it measures:
   * KDCO comes from adjacent tuning-table points, not from a model.
   * Period jitter comes from edge timestamps in a transient waveform.  It is
     not phase noise and does not include a calibrated device-noise source.
-  * The NCO path is deterministic: its period is set by TICK and the phase
-    increment, so its period jitter is exactly zero for an ideal TICK.
+  * The NCO path has zero *random* jitter for an ideal TICK, but its carry
+    intervals are quantized.  The report therefore separates deterministic
+    period quantization from external TICK jitter and device noise.
 """
 from __future__ import annotations
 
@@ -109,26 +110,87 @@ def period_jitter(path: Path):
 
 def counter(base_inc: int, coarse_step: int, mid_step: int, fine_step: int,
             acc_bits: int, tick_mhz: float):
-    scale = 2 ** acc_bits
+    """Return the NCO model, including deterministic carry quantization.
+
+    OUT toggles once per accumulator carry, so one output period is two
+    carries:
+        f_out = f_tick * increment / 2^(acc_bits + 1)
+    The extra /2 is not a reporting convention; it is the RTL edge count.
+    """
+    modulus = 2 ** acc_bits
+    scale = float(2 ** (acc_bits + 1))
+    tick_period_ns = 1000.0 / tick_mhz
+
     def inc(c, m, f):
         return base_inc - c * coarse_step - m * mid_step - f * fine_step
+
     def freq(c, m, f):
         return tick_mhz * inc(c, m, f) / scale
+
+    def deterministic_periods(inc_value: int):
+        if inc_value <= 0:
+            return {"valid": False, "reason": "increment must be positive"}
+        phase = 0
+        carries = []
+        # One full phase-accumulator cycle is enough to enumerate the carry
+        # pattern.  This is an ideal-TICK, event-level model, not SPICE.
+        for tick in range(1, modulus + 1):
+            phase += inc_value
+            if phase >= modulus:
+                phase -= modulus
+                carries.append(tick)
+        if len(carries) < 3:
+            return {"valid": False, "reason": "fewer than three carries"}
+        carry_intervals = [b - a for a, b in zip(carries, carries[1:])]
+        # Rising OUT edges occur every second carry; use pairs of carry
+        # intervals so the output period is measured edge-to-edge.
+        rising = carries[0::2]
+        periods = [b - a for a, b in zip(rising, rising[1:])]
+        if not periods:
+            return {"valid": False, "reason": "fewer than two output periods"}
+        periods_ns = [p * tick_period_ns for p in periods]
+        mean = sum(periods_ns) / len(periods_ns)
+        rms = math.sqrt(sum((p - mean) ** 2 for p in periods_ns) / len(periods_ns))
+        return {
+            "valid": True,
+            "carry_interval_ticks_min": min(carry_intervals),
+            "carry_interval_ticks_max": max(carry_intervals),
+            "carry_interval_ticks_mean": sum(carry_intervals) / len(carry_intervals),
+            "carry_interval_quantization_pp_ns": (
+                (max(carry_intervals) - min(carry_intervals)) * tick_period_ns),
+            "output_period_ns_min": min(periods_ns),
+            "output_period_ns_max": max(periods_ns),
+            "output_period_mean_ns": mean,
+            "period_jitter_pp_ns": max(periods_ns) - min(periods_ns),
+            "period_jitter_rms_ps": rms * 1000.0,
+            "periods_observed": len(periods_ns),
+            "note": ("ideal-TICK deterministic accumulator quantization; "
+                     "not random/phase noise"),
+        }
+
     f0 = freq(0, 0, 0)
+    f111 = freq(1, 1, 1)
     return {
         "base_inc": base_inc,
         "acc_bits": acc_bits,
         "tick_mhz": tick_mhz,
-        "frequency_mhz": {"code_000": f0, "code_111": freq(1, 1, 1)},
+        "formula": "f_out = f_tick * increment / 2^(acc_bits+1)",
+        "modulus_ticks": modulus,
+        "frequency_mhz": {
+            "code_000": f0,
+            "code_111": f111,
+            "mean_output_period_ns_code_000": 1000.0 / f0 if f0 > 0 else None,
+        },
         "kdco_mhz_per_code": {
             "coarse": abs(tick_mhz * coarse_step / scale),
             "mid": abs(tick_mhz * mid_step / scale),
             "fine": abs(tick_mhz * fine_step / scale),
         },
-        "period_jitter": {
-            "rms_ps": 0.0,
-            "pp_ps": 0.0,
-            "note": "ideal-TICK NCO; deterministic edge quantization only",
+        "deterministic_period_quantization": deterministic_periods(
+            max(1, min(modulus, base_inc))),
+        "external_tick_jitter": {
+            "modeled": False,
+            "note": "TICK jitter is a separate source; no source waveform is bound",
         },
     }
 
@@ -143,7 +205,8 @@ def main() -> int:
     ap.add_argument("--mid-step", type=int, default=60)
     ap.add_argument("--fine-step", type=int, default=15)
     ap.add_argument("--acc-bits", type=int, default=16)
-    ap.add_argument("--tick-mhz", type=float, default=1000.0)
+    ap.add_argument("--tick-mhz", type=float, default=100.0,
+                    help="external TICK frequency; default matches physical counter STA")
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
     result = {"schema_version": 1, "inputs": {}, "limitations": [

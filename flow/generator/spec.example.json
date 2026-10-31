@@ -26,5 +26,6 @@
   },
   "allow_experimental": false,
   "allow_macro_rebuild": true,
-  "require_identity": false
+  "require_identity": false,
+  "tick_frequency_mhz": 100.0
 }

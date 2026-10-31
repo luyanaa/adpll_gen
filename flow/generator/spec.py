@@ -41,8 +41,14 @@ DEFAULT_STRUCTURAL = {
 }
 FEATURE_FLAGS = (
     "wide_range", "fractional", "low_jitter", "fast_lock",
-    "allow_low_res", "allow_unimplemented",
+    "allow_low_res", "allow_unimplemented", "require_signoff",
 )
+ALLOWED_SPEC_FIELDS = {
+    "design", "pdk", "target_mhz", "ref_mhz", "fcw", "out_div",
+    "tick_frequency_mhz", "area", "mode", "features", "structural",
+    "evidence_identity", "allow_experimental", "allow_macro_rebuild",
+    "require_identity", "allow_unverified_dco",
+}
 
 
 class SpecError(ValueError):
@@ -61,6 +67,19 @@ def load_spec(path: Path) -> dict[str, Any]:
     raw = json.loads(path.read_text())
     if not isinstance(raw, dict):
         raise SpecError("specification must be a JSON object")
+    unknown = sorted(set(raw) - ALLOWED_SPEC_FIELDS)
+    if unknown:
+        raise SpecError(f"unknown specification field(s): {', '.join(unknown)}")
+    features = raw.get("features", {})
+    if not isinstance(features, dict):
+        raise SpecError("features must be an object")
+    unknown_features = sorted(set(features) - set(FEATURE_FLAGS))
+    if unknown_features:
+        raise SpecError(
+            f"unknown feature flag(s): {', '.join(unknown_features)}")
+    for key, value in features.items():
+        if not isinstance(value, bool):
+            raise SpecError(f"feature flag {key} must be boolean")
     for key in ("design", "pdk", "target_mhz", "ref_mhz", "fcw"):
         if key not in raw:
             raise SpecError(f"missing required specification field: {key}")
@@ -68,6 +87,13 @@ def load_spec(path: Path) -> dict[str, Any]:
         raise SpecError("target_mhz and ref_mhz must be positive")
     if int(raw["fcw"]) <= 0 or int(raw["out_div"] if "out_div" in raw else 1) < 1:
         raise SpecError("fcw and out_div must be positive")
+    if "tick_frequency_mhz" in raw:
+        try:
+            tick = float(raw["tick_frequency_mhz"])
+        except (TypeError, ValueError) as exc:
+            raise SpecError("tick_frequency_mhz must be numeric") from exc
+        if tick <= 0:
+            raise SpecError("tick_frequency_mhz must be positive")
     if raw.get("mode", "buildable") not in ("buildable", "explore"):
         raise SpecError("mode must be buildable or explore")
     if raw.get("area", "medium") not in ("low", "medium", "high"):
@@ -78,6 +104,7 @@ def load_spec(path: Path) -> dict[str, Any]:
 def _spec_defaults(raw: dict[str, Any]) -> dict[str, Any]:
     spec = dict(raw)
     spec.setdefault("out_div", 1)
+    spec.setdefault("tick_frequency_mhz", None)
     spec.setdefault("area", "medium")
     spec.setdefault("mode", "buildable")
     spec.setdefault("features", {})
@@ -90,6 +117,10 @@ def _spec_defaults(raw: dict[str, Any]) -> dict[str, Any]:
         raise SpecError("features must be an object")
     if not isinstance(spec["structural"], dict):
         raise SpecError("structural must be an object")
+    unknown = sorted(set(spec["structural"]) - set(DEFAULT_STRUCTURAL))
+    if unknown:
+        raise SpecError(
+            f"unknown structural parameter(s): {', '.join(unknown)}")
     return spec
 
 
@@ -157,6 +188,17 @@ def resolve_spec(raw: dict[str, Any],
     else:
         status = "READY"
 
+    # Core C is an externally ticked NCO.  A fixed 1 GHz assumption is not a
+    # specification; the tick must be supplied and propagated to the NCO plan
+    # and generated TICK constraint.
+    selected_id = (selected or {}).get("id")
+    tick_mhz = spec.get("tick_frequency_mhz")
+    if selected_id == "core_c_counter" and tick_mhz is None:
+        blockers.append(
+            "Core C requires tick_frequency_mhz; a 1 GHz TICK is not assumed")
+        if status != "BLOCKED":
+            status = "NEEDS_TICK_FREQUENCY"
+
     dco = selection.get("dco_capability") or {}
     if dco.get("status", "").startswith("NEEDS_"):
         if state in ("MODEL_ONLY", "RTL_SYNTHESIZABLE", "UNIMPLEMENTED"):
@@ -172,7 +214,8 @@ def resolve_spec(raw: dict[str, Any],
             if status == "READY":
                 status = "NEEDS_DCO_CHARACTERIZATION"
     profile = selection.get("pdk_profile") or {}
-    max_arch_mhz = float(profile.get("max_arch_mhz", spec["target_mhz"]))
+    dco_target_mhz = float(spec["target_mhz"]) * int(spec["out_div"])
+    max_arch_mhz = float(profile.get("max_arch_mhz", dco_target_mhz))
     max_ratio = max(1, math.ceil(max_arch_mhz / float(spec["ref_mhz"])))
     counter_bits = (int(structural.get("FCW_BITS", 8))
                     + int(structural.get("CNT_EXTRA_BITS", 8)))
@@ -193,14 +236,57 @@ def resolve_spec(raw: dict[str, Any],
         if status in ("READY", "READY_EXPERIMENTAL"):
             status = "NEEDS_COUNTER_RANGE"
 
+    acc_bits = int(structural.get("ACC_BITS", 16))
+    base_inc = int(structural.get("BASE_INC", 3493))
+    tick_for_nco = float(tick_mhz) if tick_mhz is not None else None
+    nco = None
+    if selected_id == "core_c_counter" and tick_for_nco is not None:
+        # The RTL toggles OUT on every accumulator carry.  One output period
+        # therefore needs two carries; the /2 factor is intentional.
+        denom = float(2 ** (acc_bits + 1))
+        nco = {
+            "tick_mhz": tick_for_nco,
+            "acc_bits": acc_bits,
+            "base_inc": base_inc,
+            "formula": "f_out = f_tick * increment / 2^(acc_bits+1)",
+            "increment_min": 1,
+            # PLL_COUNTER_DCO_PHYS clamps at half scale to keep the NCO below
+            # the TICK Nyquist limit.
+            "increment_max": 2 ** (acc_bits - 1),
+            "f_out_code_0_mhz": tick_for_nco * min(
+                base_inc, 2 ** (acc_bits - 1)) / denom,
+            "increment_for_dco_target": max(1, min(
+                2 ** (acc_bits - 1),
+                int(round(dco_target_mhz * denom / tick_for_nco)))),
+            "max_output_mhz": tick_for_nco / 2.0,
+            "note": "carry-toggle NCO: increment is clamped at half scale; "
+                    "maximum output is TICK/2",
+            "kdco_coarse_mhz_per_code": tick_for_nco * int(structural.get("COARSE_STEP", 120)) / denom,
+            "kdco_mid_mhz_per_code": tick_for_nco * int(structural.get("MID_STEP", 60)) / denom,
+            "kdco_fine_mhz_per_code": tick_for_nco * int(structural.get("FINE_STEP", 15)) / denom,
+        }
+        if dco_target_mhz > float(nco["max_output_mhz"]):
+            blockers.append(
+                f"DCO target {dco_target_mhz:g} MHz exceeds TICK/2 "
+                f"({nco['max_output_mhz']:g} MHz) for a carry-toggle NCO")
+            if status != "BLOCKED":
+                status = "NEEDS_NCO_RANGE"
+        if (int(structural.get("BASE_INC", 3493)) !=
+                int(nco["increment_for_dco_target"])):
+            warnings.append(
+                "BASE_INC is not the increment implied by the DCO target; "
+                "the NCO will not hit dco_target_mhz without retuning BASE_INC")
     frequency_plan = {
         "target_mhz": float(spec["target_mhz"]),
+        "target_semantics": "post_divider_OUT_DIV",
         "ref_mhz": float(spec["ref_mhz"]),
         "fcw": int(spec["fcw"]),
         "out_div": int(spec["out_div"]),
-        "dco_target_mhz": float(spec["target_mhz"]) * int(spec["out_div"]),
+        "dco_target_mhz": dco_target_mhz,
         "fcw_times_ref_mhz": int(spec["fcw"]) * float(spec["ref_mhz"]),
         "integer_n": int(spec["fcw"]),
+        "tick_frequency_mhz": tick_for_nco,
+        "nco": nco,
     }
     resolved = {
         "schema_version": SCHEMA_VERSION,
@@ -216,6 +302,14 @@ def resolve_spec(raw: dict[str, Any],
         "structural_parameters": structural,
         "parameter_hash": _hash(structural),
         "frequency_plan": frequency_plan,
+        "divider_contract": {
+            "out_div": int(spec["out_div"]),
+            "initial_divisor_parameter": "DIV_INIT",
+            "target": "OUT_DIV",
+            "physical_runtime_ports": ["SET_DIV", "LOAD_DIV"],
+            "generated_wrapper_exposes_runtime_ports": False,
+            "note": "generated adpll_top ties SET_DIV to DIV_INIT and LOAD_DIV to 0",
+        },
         "macro": macro,
         "dco": dco,
         "counter_range": counter_range,

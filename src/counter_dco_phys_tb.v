@@ -27,11 +27,11 @@ module counter_dco_phys_tb;
             last_edge = 0;
             @(posedge TICK);
             DCO_EN = 1;
-            repeat (20) @(posedge OUT);
+            repeat (100) @(posedge OUT);
             first_edge = $realtime;
-            repeat (20) @(posedge OUT);
+            repeat (100) @(posedge OUT);
             last_edge = $realtime;
-            measured_period = (last_edge - first_edge) / 20.0;
+            measured_period = (last_edge - first_edge) / 100.0;
             $display("COARSE=%0d MID=%0d FINE=%0d period_ns=%0.3f freq_mhz=%0.3f",
                      COARSE, MID, FINE, measured_period, 1000.0 / measured_period);
         end

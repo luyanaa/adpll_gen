@@ -19,7 +19,8 @@ PASS_L1_EXPERIMENTAL   Target is inside the L1 behavioral DCO range and a
                        measured code candidate exists.  The result is not
                        production/PVT/PEX/jitter verified.
 
-FAIL_OUT_OF_RANGE      Target is outside the measured L1 range.
+FAIL_OUT_OF_RANGE      DCO target (target_mhz * out_div) is outside the
+                       measured L1 range.
 
 FAIL_UNCHARACTERIZED   No manifest for the PDK, no tuning table, non-monotonic
                        codes, or production signoff requested while the
@@ -42,6 +43,12 @@ NEEDS_DCO_CHARACTERIZATION
                        The selected architecture/implementation has no DCO
                        manifest bound to it.  Core A data is never reused for
                        Core B/C.
+
+NEEDS_TICK_FREQUENCY   Core C was selected but no tick_frequency_mhz was
+                       supplied; no fixed 1 GHz fallback is applied.
+
+NEEDS_NCO_RANGE        Core C DCO target exceeds the carry-toggle NCO ceiling
+                       TICK/2.
 
 FAIL_FREQUENCY_PLAN    target/REF/FCW violate the integer-N planning relation
                        f_out = FCW * f_REF / out_div.
@@ -211,8 +218,9 @@ catalog bands are 20–300 MHz and 2.5–26.5 MHz; these are architecture/physic
 targets, not measured silicon limits.  FreePDK45 is included as a
 planning-only predictive profile/library: it has no GDS standard-cell views or
 DRC/LVS path in this checkout, so it remains `RTL_SYNTHESIZABLE` and can only
-be packaged with `--mode explore --allow-experimental`.  Core C requires an external 1 GHz tick
-and is an NCO/digital clock synthesizer candidate, not a standalone DCO claim.
+be packaged with `--mode explore --allow-experimental`.  Core C requires an external TICK whose frequency is a required specification
+input; it is an NCO/digital clock synthesizer candidate, not a standalone DCO
+claim.
 Neither macro has a DCO/PVT manifest; buildable selection returns
 `PASS_ARCH_SELECTED_PHYSICAL` and the DCO evidence remains a separate blocker
 unless `allow_unverified_dco` explicitly permits a physical bring-up package.
@@ -260,6 +268,35 @@ python3 flow/generator/delivery.py \
 python3 flow/generator/delivery.py --out build/adpll_ics55 --verify
 ```
 
+### Frequency semantics and emit targets
+
+`target_mhz` is the **post-divider `OUT_DIV`** contract.  The raw DCO output
+is `dco_target_mhz = target_mhz * out_div`, and the generated SDC uses
+different periods for `OUT` (raw DCO), `OUT_DIV`, the internal `MID_OUT`, and
+`TICK`.  `out_div` is bound to the generated `DIV_INIT` parameter.  The generated
+`adpll_top` does not expose `SET_DIV/LOAD_DIV`; it ties `SET_DIV` to
+`DIV_INIT` and `LOAD_DIV` to zero.  The underlying physical top retains those
+pins for bring-up, but changing the divisor requires regenerating the wrapper.
+
+Core C requires `tick_frequency_mhz`.  There is no fixed 1 GHz assumption:
+missing tick is `NEEDS_TICK_FREQUENCY`, and a DCO target above `TICK/2` is
+`NEEDS_NCO_RANGE`.  The counter RTL toggles `OUT` once per accumulator carry,
+so the plan uses `f_out = f_tick * increment / 2^(ACC_BITS+1)` and reports
+`increment_for_dco_target`; a `BASE_INC` that disagrees is a warning, not a
+silent frequency assumption.
+
+The delivery command accepts three source-set targets:
+
+```sh
+python3 flow/generator/delivery.py --spec spec.json --out build/sim --target simulation
+python3 flow/generator/delivery.py --spec spec.json --out build/macro --target macro-build
+python3 flow/generator/delivery.py --spec spec.json --out build/top --target top-integration
+```
+
+`top-integration` copies a generated hard-macro blackbox and does **not**
+copy the physical DCO RTL, so it cannot silently re-synthesize the macro.
+Add `--elaborate` to compile the generated wrapper with Icarus Verilog.
+
 The example resolves to Core A on ics55 and writes:
 
 ```text
@@ -269,6 +306,7 @@ rtl/src/*.v + sources.f
 macro/config.yaml
 macro/build.sh
 constraints/adpll.sdc
+constraints/clock_ir.json
 constraints/freq_lock_cdc.sdc
 validation/plan.json
 design.lock.json
@@ -331,6 +369,11 @@ remain required.
 - `macro/build.sh` is generated but not executed automatically by
   `delivery.py`; the caller chooses when to run a long macro build.
 - CDC skew values are starter constraints, not post-layout measurements.
+- `--elaborate` checks generated wrapper connectivity with Icarus Verilog; it
+  is not synthesis, place-and-route, or OpenSTA signoff.
+- `top-integration` treats the selected top as one hard-macro blackbox; a
+  partition that needs internal Gray-bus constraints must apply the
+  macro-build/simulation constraint set inside that partition.
 
 ## Frequency acquisition research candidates
 

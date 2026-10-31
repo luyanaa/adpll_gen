@@ -153,13 +153,18 @@ def check_target(
                       f"{level}",
         }
 
-    if target_mhz < fmin + margin_mhz or target_mhz > fmax - margin_mhz:
+    # The measured manifest is a DCO-output capability table.  ``target_mhz``
+    # is the post-divider contract, so compare the actual DCO target here.
+    dco_target_mhz = float(target_mhz) * int(out_div)
+    if dco_target_mhz < fmin + margin_mhz or dco_target_mhz > fmax - margin_mhz:
         return {
             "status": "FAIL_OUT_OF_RANGE",
             "pdk": pdk,
             "target_mhz": target_mhz,
+            "dco_target_mhz": dco_target_mhz,
+            "out_div": out_div,
             "range_mhz": [fmin, fmax],
-            "reason": "target is outside the characterized L1 range",
+            "reason": "DCO target is outside the characterized L1 range",
         }
 
     rows = _tuning_rows(pdk, manifest)
@@ -182,24 +187,28 @@ def check_target(
 
     # Pick the closest measured point; return a few neighbours for a local
     # acquisition search.
-    best = sorted(rows, key=lambda r: abs(r["freq_mhz"] - target_mhz))[:3]
-    error = best[0]["freq_mhz"] - target_mhz
+    best = sorted(rows, key=lambda r: abs(r["freq_mhz"] - dco_target_mhz))[:3]
+    error = best[0]["freq_mhz"] - dco_target_mhz
     if abs(error) > tolerance_mhz:
         return {
             "status": "FAIL_NO_CODE_WITHIN_TOLERANCE",
             "pdk": pdk,
             "target_mhz": target_mhz,
+            "dco_target_mhz": dco_target_mhz,
+            "out_div": out_div,
             "range_mhz": [fmin, fmax],
             "characterization_level": level,
             "candidates": best,
             "error_mhz": error,
             "tolerance_mhz": tolerance_mhz,
-            "reason": "no measured code is close enough to the target",
+            "reason": "no measured code is close enough to the DCO target",
         }
     return {
         "status": status,
         "pdk": pdk,
         "target_mhz": target_mhz,
+        "dco_target_mhz": dco_target_mhz,
+        "out_div": out_div,
         "range_mhz": [fmin, fmax],
         "characterization_level": level,
         "production_eligible": False,

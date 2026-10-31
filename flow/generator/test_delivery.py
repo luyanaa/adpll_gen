@@ -87,6 +87,7 @@ def base_spec(**overrides):
         "ref_mhz": 100,
         "fcw": 8,
         "out_div": 1,
+        "tick_frequency_mhz": 100.0,
         "area": "medium",
         "mode": "buildable",
         "features": {},
@@ -180,7 +181,65 @@ def main():
         wrapper = (counter_pkg / "rtl" / "adpll_top.v").read_text()
         assert "PLL_COUNTER_TOP" in wrapper and "input TICK" in wrapper, wrapper
         assert "TICK(TICK)" in wrapper, wrapper
+        assert "DIV_INIT" in wrapper, wrapper
+        assert "input [DIV_BITS-1:0] SET_DIV" not in wrapper, wrapper
+        assert ".SET_DIV(DIV_SET), .LOAD_DIV(1'b0)" in wrapper, wrapper
+        sdc = (counter_pkg / "constraints" / "adpll.sdc").read_text()
+        assert "get_ports MID_OUT" not in sdc, sdc
+        assert "create_clock -name DCO_OUT -period 50.000000" in sdc, sdc
+        assert "create_clock -name TICK -period 10.000000" in sdc, sdc
+        cdc = (counter_pkg / "constraints" / "freq_lock_cdc.sdc").read_text()
+        assert "get_ports MID_OUT" not in cdc, cdc
+        assert "create_clock -name MID_OUT -period 50.000000" in cdc, cdc
+        assert "\nset_false_path" not in cdc, cdc
         assert verify(counter_pkg)["status"] == "PASS"
+
+        # Source sets are target-specific: top integration must not copy the
+        # physical DCO RTL and re-elaborate it by accident.
+        for emit_target in ("simulation", "macro-build", "top-integration"):
+            pkg = root / f"target_{emit_target}"
+            result = generate(resolved, pkg, target=emit_target)
+            assert result["status"] == "READY_PHYSICAL_UNCHARACTERIZED", result
+            srcs = (pkg / "rtl" / "src" / "sources.f").read_text()
+            if emit_target == "top-integration":
+                assert "hardmacro_blackbox.v" in srcs, srcs
+                assert "pll_counter_dco_phys.v" not in srcs, srcs
+                assert "pll_counter_top.v" not in srcs, srcs
+                assert "get_ports MID_OUT" not in (pkg / "constraints" / "adpll.sdc").read_text()
+            else:
+                assert "pll_counter_dco_phys.v" in srcs, srcs
+
+        # out_div must change both the DCO target and the generated OUT_DIV
+        # out_div must change both the DCO target and the generated OUT_DIV
+        # constraint.  The output contract is 10 MHz, so the raw DCO is 20 MHz.
+        divided = base_spec(target_mhz=10, ref_mhz=10, fcw=2, area="high",
+                            out_div=2)
+        divided["structural"].update({
+            "ACC_BITS": 16, "BASE_INC": 328,
+            "COARSE_STEP": 120, "MID_STEP": 60, "FINE_STEP": 15,
+        })
+        divided["allow_unverified_dco"] = True
+        resolved = resolve_spec(divided, counter_inv)
+        assert resolved["frequency_plan"]["dco_target_mhz"] == 20.0, resolved
+        divided_pkg = root / "divided_pkg"
+        result = generate(resolved, divided_pkg)
+        assert result["status"] == "READY_PHYSICAL_UNCHARACTERIZED", result
+        sdc = (divided_pkg / "constraints" / "adpll.sdc").read_text()
+        assert "create_clock -name DCO_OUT -period 50.000000" in sdc, sdc
+        assert "create_generated_clock -name OUT_DIV" in sdc, sdc
+        assert "-divide_by 2" in sdc, sdc
+        assert "create_generated_clock -name OUT_DIV -source [get_ports OUT] -divide_by 2 [get_ports OUT_DIV]" in sdc, sdc
+        wrapper = (divided_pkg / "rtl" / "adpll_top.v").read_text()
+        assert "parameter integer DIV_INIT = 2" in wrapper, wrapper
+
+        # Core C without a tick is a blocker, not a silent 1 GHz assumption.
+        no_tick = base_spec(target_mhz=20, ref_mhz=10, fcw=2, area="high",
+                            allow_macro_rebuild=True)
+        no_tick.pop("tick_frequency_mhz", None)
+        no_tick["allow_unverified_dco"] = True
+        resolved = resolve_spec(no_tick, counter_inv)
+        assert resolved["status"] == "NEEDS_TICK_FREQUENCY", resolved
+        assert any("tick_frequency_mhz" in b for b in resolved["blockers"]), resolved
 
         # gf180mcu has a physical Core B macro; uncharacterized bring-up
         # packaging is explicit rather than an experimental fallback.

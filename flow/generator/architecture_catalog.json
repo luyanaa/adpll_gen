@@ -137,11 +137,10 @@
         2.5,
         26.5
       ],
-      "requires_reference_tick": 1000.0,
       "external_clock_dependent": true,
       "physical_variant": true,
       "implementation_class": "PHYSICAL_COUNTER_NCO",
-      "physical_note": "Synthesizable phase-accumulator/NCO hard macro; requires an external high-speed TICK (nominally 1 GHz). Frequency/PVT is not characterized."
+      "physical_note": "Synthesizable phase-accumulator/NCO hard macro; requires an external TICK whose frequency is a required specification input. Frequency/PVT is not characterized."
     },
     {
       "id": "hybrid_dco",

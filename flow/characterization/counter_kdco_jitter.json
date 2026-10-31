@@ -10,19 +10,35 @@
     "base_inc": 3493,
     "acc_bits": 16,
     "tick_mhz": 100.0,
+    "formula": "f_out = f_tick * increment / 2^(acc_bits+1)",
+    "modulus_ticks": 65536,
     "frequency_mhz": {
-      "code_000": 5.32989501953125,
-      "code_111": 5.0323486328125
+      "code_000": 2.664947509765625,
+      "code_111": 2.51617431640625,
+      "mean_output_period_ns_code_000": 375.24191239622104
     },
     "kdco_mhz_per_code": {
-      "coarse": 0.18310546875,
-      "mid": 0.091552734375,
-      "fine": 0.02288818359375
+      "coarse": 0.091552734375,
+      "mid": 0.0457763671875,
+      "fine": 0.011444091796875
     },
-    "period_jitter": {
-      "rms_ps": 0.0,
-      "pp_ps": 0.0,
-      "note": "ideal-TICK NCO; deterministic edge quantization only"
+    "deterministic_period_quantization": {
+      "valid": true,
+      "carry_interval_ticks_min": 18,
+      "carry_interval_ticks_max": 19,
+      "carry_interval_ticks_mean": 18.762027491408936,
+      "carry_interval_quantization_pp_ns": 10.0,
+      "output_period_ns_min": 370.0,
+      "output_period_ns_max": 380.0,
+      "output_period_mean_ns": 375.2405498281787,
+      "period_jitter_pp_ns": 10.0,
+      "period_jitter_rms_ps": 4994.21022586787,
+      "periods_observed": 1746,
+      "note": "ideal-TICK deterministic accumulator quantization; not random/phase noise"
+    },
+    "external_tick_jitter": {
+      "modeled": false,
+      "note": "TICK jitter is a separate source; no source waveform is bound"
     }
   }
 }

@@ -30,19 +30,36 @@ module frequency_counter_frontend #(
             localparam integer PS = (PRESCALE < 1) ? 1 : PRESCALE;
             reg [CNT_W-1:0] cnt;
             reg [CNT_W-1:0] ps;
+            reg [CNT_W-1:0] count_q;
+            reg [CNT_W-1:0] gray_q;
+            // COUNT is the actual input-edge count, not the prescaled count.
+            // This keeps the FCW comparison in freq_lock independent of P.
+            wire [CNT_W-1:0] cnt_inc = cnt + 1'b1;
+            wire [CNT_W-1:0] ps_inc = ps + 1'b1;
+            wire [CNT_W-1:0] count_next = (ps == PS - 1)
+                ? cnt_inc * PS
+                : cnt * PS + ps_inc;
             always @(posedge CLK or negedge RST_N) begin
                 if (!RST_N) begin
                     cnt <= 'd0;
                     ps <= 'd0;
-                end else if (ps == PS - 1) begin
-                    ps <= 'd0;
-                    cnt <= cnt + 1'b1;
+                    count_q <= 'd0;
+                    gray_q <= 'd0;
                 end else begin
-                    ps <= ps + 1'b1;
+                    if (ps == PS - 1) begin
+                        ps <= 'd0;
+                        cnt <= cnt_inc;
+                    end else begin
+                        ps <= ps_inc;
+                    end
+                    // Register the Gray word in the source clock domain; the
+                    // binary-to-Gray XOR must not be left combinational.
+                    count_q <= count_next;
+                    gray_q <= (count_next >> 1) ^ count_next;
                 end
             end
-            assign COUNT = cnt;
-            assign GRAY_COUNT = (cnt >> 1) ^ cnt;
+            assign COUNT = count_q;
+            assign GRAY_COUNT = gray_q;
             assign CDC_SAFE = 1'b1;
         end else if (MODE == MODE_RIPPLE) begin : ripple_frontend
             // Asynchronous toggle chain.  The multi-bit COUNT/GRAY outputs are
@@ -72,7 +89,11 @@ module frequency_counter_frontend #(
             reg [JOHNSON_STAGES-1:0] john;
             reg [CNT_W-1:0] ext;
             reg [2:0] phase;
-            wire terminal = john[JOHNSON_STAGES-1];
+            // Johnson state 000...0 is the wrap/terminal state.  The old
+            // terminal used the MSB, which is high for half of the state
+            // sequence and therefore incremented ext by JOHNSON_STAGES/2 per
+            // Johnson cycle instead of once.
+            wire terminal = (john == {JOHNSON_STAGES{1'b0}});
             always @(posedge CLK or negedge RST_N) begin
                 if (!RST_N) begin
                     john <= {{(JOHNSON_STAGES-1){1'b0}}, 1'b1};
