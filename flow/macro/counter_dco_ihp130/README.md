@@ -7,8 +7,8 @@ Physical phase-accumulator/NCO macro built with the local ckdur/OpenROAD flow.
 - Views: LEF/LIB/GDS/CDL/DEF/Verilog/SPICE/SDC
 - LVS: **PASS** with the official IHP deck on the fill-stripped GDS
   (top-port naming waiver)
-- DRC: maximum-rule + fill rules pass with density disabled; density-only
-  official check is **open** on `M2.j`/`M3.j`
+- DRC: **PASS, 0 violations** with official maximal+density rules after
+  legal M2/M3 bar fill (M2 40.61%, M3 40.99%)
 - STA: nominal only (`sta.rpt`); no PVT/KDCO/jitter signoff
 
 `PLL_COUNTER_DCO_PHYS` needs an external `TICK`; the macro-level SDC uses a

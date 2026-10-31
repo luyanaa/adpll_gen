@@ -20,7 +20,7 @@ Evidence: `flow/macro/ring_dco_gf180mcu/` and
 |---|---|---|
 | PDK/library | ihp-sg13g2 / sg13g2_stdcell | ihp-sg13g2 / sg13g2_stdcell |
 | GDS/LEF/LIB/CDL/DEF | present | present |
-| DRC | **0 violations** (official maximal+density) | max+fill **0** with density disabled; density `M2.j/M3.j` **open** |
+| DRC | **0 violations** (official maximal+density) | **0 violations** (official maximal+density) |
 | LVS | **PASS** (official deck, fill-stripped, top-port waiver) | **PASS** (same waiver) |
 | STA | nominal only | nominal only |
 | PVT/jitter/KDCO | not characterized | not characterized |
@@ -28,7 +28,7 @@ Evidence: `flow/macro/ring_dco_gf180mcu/` and
 Evidence: `flow/macro/ring_dco_ihp130/OFFICIAL_SIGNOFF.md` and
 `flow/macro/counter_dco_ihp130/OFFICIAL_SIGNOFF.md`.  The official IHP deck is
 available from the local CIEL checkout; the LVS pass uses a top-port naming
-waiver, and counter density closure is still open.
+waiver.
 
 ## sky130 (experiment, not passing LVS)
 

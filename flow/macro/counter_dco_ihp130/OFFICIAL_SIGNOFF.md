@@ -1,14 +1,17 @@
 # IHP official-deck signoff record — counter/NCO
 
 - PDK: official IHP SG13G2 checkout.
+- DRC: official `run_drc.py` maximal + density, **PASS, 0 violations**
+  on the legal filled GDS (`PLL_COUNTER_DCO_PHYS.gds`).
+  - Activ 38.37%, GatPoly 34.20%
+  - Metal1 40.63%, Metal2 40.61%, Metal3 40.99%
+  - Metal4 41.76%, Metal5 41.92%
+  - TopMetal1 31.52%, TopMetal2 33.69%
 - LVS: official `run_lvs.py`, **PASS** on the fill-stripped LVS view,
-  using `--ignore_top_ports_mismatch` (same top-port naming waiver as ring).
-- DRC maximum-rule + fill rules: **PASS, 0 violations** with density disabled
-  (`PLL_COUNTER_DCO_PHYS_official_drc_nodensity.log`).
-- Density-only official run: **FAIL** on `M2.j`/`M3.j` (about 32–33% versus
-  35% minimum on this larger macro).  Full official DRC is therefore **not
-  closed** and is not claimed.
-- Evidence: `PLL_COUNTER_DCO_PHYS_official_lvs.log`,
-  `PLL_COUNTER_DCO_PHYS_official_lvs.lvsdb`,
-  `PLL_COUNTER_DCO_PHYS_official_drc_nodensity.log`,
+  using `--ignore_top_ports_mismatch` because the layout pin labels are
+  KLayout `A|...`-style while the schematic uses RTL port names.
+- Evidence: `PLL_COUNTER_DCO_PHYS_official_drc.log`,
+  `PLL_COUNTER_DCO_PHYS_official_drc.lyrdb`,
+  `PLL_COUNTER_DCO_PHYS_official_lvs.log`,
   `PLL_COUNTER_DCO_PHYS_official_density.log`.
+- Not claimed: PVT/jitter/KDCO, or top-port strict LVS without the waiver.
