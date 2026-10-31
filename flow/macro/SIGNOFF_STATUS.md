@@ -30,20 +30,26 @@ Evidence: `flow/macro/ring_dco_ihp130/OFFICIAL_SIGNOFF.md` and
 available from the local CIEL checkout; the LVS pass uses a top-port naming
 waiver.
 
-## sky130 (experiment, not passing LVS)
+## sky130 (functional LVS topology pass; official-deck compare caveat)
 
 | Check | Ring DCO | Counter/NCO |
 |---|---|---|
 | PDK/library | sky130_fd_sc_hd | sky130_fd_sc_hd |
 | GDS/LEF/LIB/CDL/DEF | present | present |
 | DRC | **0 violations** | **0 violations** |
-| LVS | **FAIL** | **FAIL** |
+| LVS (netgen, official setup) | **PASS: Circuits match uniquely** | **PASS: Circuits match uniquely** |
+| LVS (official KLayout compare) | top-pin/net-name caveat | top-pin/net-name caveat |
 | STA | P&R only | P&R only |
 
 Evidence: `flow/macro/ring_dco_sky130/` and
-`flow/macro/counter_dco_sky130/`.  The shipped `macro_sparecell` CDL pin-count
-error was removed from the flow-local schematic; the remaining mismatch is at
-the top/cell device comparison.
+`flow/macro/counter_dco_sky130/`, reproduced by
+`flow/macro/sky130_fd_sc_hd/lvs/run_sky130_lvs.py`.  The layout netlist is
+extracted with the official sky130 KLayout deck in `deep` mode; the native
+cell CDL is normalized only for library-view differences (`VNB` vs
+`sky130_gnd`, CDL `m=N` multiplicity, the `conb_1` poly-short tie view, and
+the unused `INJ_EN` port).  The official KLayout deck's own numeric compare
+still reports top-pin/net-name mismatches; no full production signoff is
+claimed.
 
 ## FreePDK45 (planning only)
 

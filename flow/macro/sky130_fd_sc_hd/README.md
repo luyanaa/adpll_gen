@@ -17,7 +17,7 @@ the better candidate for a clean LVS signoff path.
 | LibreLane P&R | reaches detailed route/fill; stops later at missing antenna LEF |
 | Die | 79.665 × 90.385 µm = 0.00720 mm² |
 | KLayout DRC | **0 violations** |
-| LVS | **still fails at cell-subcircuit comparison**; no PDN/must-connect blocker after using `tapvpwrvgnd_1` |
+| LVS | **PASS (topology) via netgen with official sky130 setup**; official KLayout numeric compare still has a top-pin/net-name caveat |
 | Density fill | not implemented |
 
 ## Important library mapping differences
@@ -76,3 +76,34 @@ issue, not a macro routing/PDN issue.  DRC remains 0.
 
 A clean blackbox top-level LVS or a reference cell CDL with the special tap
 devices normalized is still required before claiming LVS PASS.
+
+## Functional LVS closure (2026-10-31)
+
+The remaining mismatch was a library-view mismatch, not a routing/PDN
+problem.  The flow now uses the official `~/.ciel` sky130 KLayout LVS deck in
+`deep` mode for layout extraction, normalizes the native cell CDL for the
+view differences, and compares with netgen and the official
+`sky130A_setup.tcl`:
+
+- native `VNB` substrate port -> extracted `sky130_gnd`
+- native CDL `m=N` -> KLayout's expanded parallel-device count
+- `conb_1` ideal poly resistors -> the layout's poly-short VGND tie
+- unused top-level `INJ_EN` port removed from the reference
+
+Result for both ring and counter:
+
+```text
+Final result: Circuits match uniquely.
+```
+
+Reproduce:
+
+```sh
+python3 flow/macro/sky130_fd_sc_hd/lvs/run_sky130_lvs.py
+```
+
+Evidence is stored as `PLL_*_lvs_netgen.rpt` in the corresponding macro
+directories.  The official KLayout deck's own numeric compare still reports
+top-pin/net-name mismatches (`PLL_*_lvs_klayout.log`); the netgen topology
+result is the functional closure.  This does not extend to PVT/STA/jitter
+signoff.

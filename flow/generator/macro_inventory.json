@@ -336,6 +336,83 @@
         "timing": "nominal STA only; no PVT",
         "note": "ORFS minimal deck; official IHP deck unavailable"
       }
+    },
+    "sky130_fd_sc_hd:core_b_ring_dco": {
+      "name": "PLL_RING_DCO_PHYS",
+      "core": "core_b_ring_dco",
+      "pdk": "sky130_fd_sc_hd",
+      "cell_library": "sky130_fd_sc_hd",
+      "root": "flow/macro/ring_dco_sky130",
+      "flow": "librelane",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "IL_NDELS": 4,
+        "BASE_NDELS": 256
+      },
+      "views": {
+        "lef": "flow/macro/ring_dco_sky130/PLL_RING_DCO_PHYS.lef",
+        "lib": "flow/macro/ring_dco_sky130/PLL_RING_DCO_PHYS.lib",
+        "cdl": "flow/macro/ring_dco_sky130/PLL_RING_DCO_PHYS.cdl",
+        "gds": "flow/macro/ring_dco_sky130/PLL_RING_DCO_PHYS.gds",
+        "def": "flow/macro/ring_dco_sky130/PLL_RING_DCO_PHYS.def",
+        "verilog": "flow/macro/ring_dco_sky130/PLL_RING_DCO_PHYS.v",
+        "spice": "flow/macro/ring_dco_sky130/PLL_RING_DCO_PHYS.spice"
+      },
+      "required_views": [
+        "lef",
+        "lib",
+        "cdl",
+        "gds"
+      ],
+      "build_command": "librelane flow/macro/ring_dco_sky130/config.yaml",
+      "evidence": {
+        "drc": "sky130A KLayout DRC 0",
+        "lvs": "netgen topology PASS with official sky130 setup; official KLayout compare top-pin/net-name caveat",
+        "timing": "P&R only; no PVT/STA signoff",
+        "note": "functional topology closure, not full production signoff"
+      }
+    },
+    "sky130_fd_sc_hd:core_c_counter": {
+      "name": "PLL_COUNTER_DCO_PHYS",
+      "core": "core_c_counter",
+      "pdk": "sky130_fd_sc_hd",
+      "cell_library": "sky130_fd_sc_hd",
+      "root": "flow/macro/counter_dco_sky130",
+      "flow": "librelane",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "ACC_BITS": 16,
+        "BASE_INC": 3493,
+        "COARSE_STEP": 120,
+        "MID_STEP": 60,
+        "FINE_STEP": 15
+      },
+      "views": {
+        "lef": "flow/macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lef",
+        "lib": "flow/macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lib",
+        "cdl": "flow/macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.cdl",
+        "gds": "flow/macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.gds",
+        "def": "flow/macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.def",
+        "verilog": "flow/macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.v",
+        "spice": "flow/macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.spice"
+      },
+      "required_views": [
+        "lef",
+        "lib",
+        "cdl",
+        "gds"
+      ],
+      "build_command": "librelane flow/macro/counter_dco_sky130/config.yaml",
+      "evidence": {
+        "drc": "sky130A KLayout DRC 0",
+        "lvs": "netgen topology PASS with official sky130 setup; official KLayout compare top-pin/net-name caveat",
+        "timing": "P&R only; no PVT/STA signoff",
+        "note": "functional topology closure, not full production signoff"
+      }
     }
   }
 }
