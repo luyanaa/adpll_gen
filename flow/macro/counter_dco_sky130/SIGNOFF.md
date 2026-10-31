@@ -22,5 +22,19 @@ normalized native-cell reference match under netgen with the official sky130
 setup: unique topology match after the library-view normalization (native
 `VNB` vs extracted `sky130_gnd`, CDL `m=N` multiplicity, removed `conb_1`
 ideal-resistor/tie view, and the unused `INJ_EN` port).  This is **not** a
-full production signoff; PVT/STA/jitter characterization remains outside this
-result.
+full production signoff; the separate `macro_char` campaign covers STA and
+functional/PVT characterization.  No random-jitter or phase-noise signoff is
+claimed.
+
+## Characterization (2026-11-01)
+
+- Gate-level OpenSTA: TT/FF **PASS** (TICK WNS +5.04/+7.15 ns);
+  **SS FAIL at the 100 MHz TICK planning point** (WNS -0.640 ns,
+  TNS -1.85 ns). Estimated SS max TICK is 94.0 MHz.
+- NCO at TICK=100 MHz, code 0, `BASE_INC=3493`: mean output period
+  **375.385 ns**, alternating 380/370 ns; period pp **10 ns**, RMS
+  **4.985 ns**. This is deterministic TICK quantization, not random jitter.
+- Counter output frequency is PVT-invariant in the ideal digital model;
+  no transistor-level counter PVT frequency is claimed.
+- Evidence: `flow/characterization/macro_char/CHARACTERIZATION.md`,
+  `sta_summary.json`, `counter_nco.json`.

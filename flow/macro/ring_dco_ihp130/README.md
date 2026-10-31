@@ -10,8 +10,13 @@ Physical ring-DCO macro built with the local ckdur/OpenROAD flow.
   legal filled GDS
 - LVS: **PASS** with the official IHP deck on the fill-stripped GDS
   (top-port naming waiver)
-- STA: nominal only (`sta.rpt`); no PVT/KDCO/jitter signoff
+- STA: nominal `sta.rpt` plus 3-corner characterization; no random-jitter/phase-noise signoff
 
 The official IHP KLayout deck is available through the local CIEL checkout;
 see `OFFICIAL_SIGNOFF.md`.  The pass still uses a top-port naming waiver and is
 not a Calibre/foundry signoff.
+
+- Characterization: gate-level STA TT/SS/FF PASS; ring transient PVT
+  TT/SS/FF 33.21/20.95/47.58 MHz; deterministic period RMS <=1.44 ps.
+  No random-jitter or phase-noise claim. See
+  `flow/characterization/macro_char/CHARACTERIZATION.md`.

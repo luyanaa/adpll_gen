@@ -1,0 +1,7 @@
+work/
+*.sp
+*.prn
+*.raw
+*.log
+*.inc
+.spiceinit

@@ -214,7 +214,10 @@
       "evidence": {
         "drc": "KLayout gf180mcuD DRC 0 after density fill",
         "lvs": "KLayout LVS PASS with fill-marker exclusion",
-        "timing": "nominal STA only; no PVT"
+        "timing": "gate-level OpenSTA TT/SS/FF PASS (WNS +8.02/+7.78/+8.17 ns)",
+        "pvt": "cell-level transient TT/SS/FF complete at min code: 21.07/15.74/26.60 MHz; no routed RC",
+        "jitter": "deterministic transient period spread only; TT pp 0.24 ps RMS 0.11 ps; no random/phase-noise signoff",
+        "characterization_report": "flow/characterization/macro_char/CHARACTERIZATION.md"
       }
     },
     "gf180mcu_as:core_c_counter": {
@@ -254,7 +257,10 @@
       "evidence": {
         "drc": "KLayout gf180mcuD DRC 0 after density fill",
         "lvs": "KLayout LVS PASS with fill-marker exclusion",
-        "timing": "nominal STA only; no PVT"
+        "timing": "gate-level OpenSTA TT/SS/FF PASS; TICK WNS +5.53/+3.96/+6.50 ns",
+        "pvt": "NCO output frequency is ideal-digital PVT-invariant; no transistor-level counter PVT frequency claim",
+        "jitter": "TICK quantization at 100 MHz: 380/370 ns, pp 10 ns, RMS 4.985 ns; deterministic, not random",
+        "characterization_report": "flow/characterization/macro_char/CHARACTERIZATION.md"
       }
     },
     "ihp-sg13g2:core_b_ring_dco": {
@@ -291,8 +297,11 @@
       "evidence": {
         "drc": "IHP/ORFS minimal KLayout DRC 0 on density-filled GDS",
         "lvs": "KLayout IHP LVS PASS on fill-stripped GDS",
-        "timing": "nominal STA only; no PVT",
-        "note": "ORFS minimal deck; official IHP deck unavailable"
+        "timing": "gate-level OpenSTA TT/SS/FF PASS (WNS +9.44/+9.24/+9.55 ns)",
+        "note": "ORFS minimal deck; official IHP deck unavailable",
+        "pvt": "cell-level transient TT/SS/FF complete at min code: 33.21/20.95/47.58 MHz; no routed RC",
+        "jitter": "deterministic transient period spread only; TT pp 3.26 ps RMS 1.44 ps; no random/phase-noise signoff",
+        "characterization_report": "flow/characterization/macro_char/CHARACTERIZATION.md"
       }
     },
     "ihp-sg13g2:core_c_counter": {
@@ -333,8 +342,11 @@
       "evidence": {
         "drc": "IHP/ORFS minimal KLayout DRC 0 on density-filled GDS",
         "lvs": "KLayout IHP LVS PASS on fill-stripped GDS",
-        "timing": "nominal STA only; no PVT",
-        "note": "ORFS minimal deck; official IHP deck unavailable"
+        "timing": "gate-level OpenSTA TT/SS/FF PASS; TICK WNS +6.87/+5.10/+7.90 ns",
+        "note": "ORFS minimal deck; official IHP deck unavailable",
+        "pvt": "NCO output frequency is ideal-digital PVT-invariant; no transistor-level counter PVT frequency claim",
+        "jitter": "TICK quantization at 100 MHz: 380/370 ns, pp 10 ns, RMS 4.985 ns; deterministic, not random",
+        "characterization_report": "flow/characterization/macro_char/CHARACTERIZATION.md"
       }
     },
     "sky130_fd_sc_hd:core_b_ring_dco": {
@@ -370,8 +382,11 @@
       "evidence": {
         "drc": "sky130A KLayout DRC 0",
         "lvs": "netgen topology PASS with official sky130 setup; official KLayout compare top-pin/net-name caveat",
-        "timing": "P&R only; no PVT/STA signoff",
-        "note": "functional topology closure, not full production signoff"
+        "timing": "gate-level OpenSTA TT/SS/FF PASS (WNS +9.51/+9.28/+9.59 ns)",
+        "note": "functional topology closure, not full production signoff",
+        "pvt": "functional transient probe: NO_OSCILLATION at TT/SS/FF; no frequency claim",
+        "jitter": "not available because the built ring does not oscillate",
+        "characterization_report": "flow/characterization/macro_char/CHARACTERIZATION.md"
       }
     },
     "sky130_fd_sc_hd:core_c_counter": {
@@ -410,8 +425,11 @@
       "evidence": {
         "drc": "sky130A KLayout DRC 0",
         "lvs": "netgen topology PASS with official sky130 setup; official KLayout compare top-pin/net-name caveat",
-        "timing": "P&R only; no PVT/STA signoff",
-        "note": "functional topology closure, not full production signoff"
+        "timing": "gate-level OpenSTA TT/FF PASS; SS FAIL at 100 MHz TICK (WNS -0.640 ns, TNS -1.85 ns)",
+        "note": "functional topology closure, not full production signoff",
+        "pvt": "NCO output frequency is ideal-digital PVT-invariant; no transistor-level counter PVT frequency claim",
+        "jitter": "TICK quantization at 100 MHz: 380/370 ns, pp 10 ns, RMS 4.985 ns; deterministic, not random",
+        "characterization_report": "flow/characterization/macro_char/CHARACTERIZATION.md"
       }
     }
   }

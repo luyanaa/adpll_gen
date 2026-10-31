@@ -8,7 +8,7 @@ This is the DRC/LVS-clean second-PDK physical variant of `PLL_RING_DCO_PHYS`.
 - Views: `LEF/LIB/GDS/CDL/DEF/Verilog/SPICE` in this directory
 - DRC: **0 violations** (KLayout 0.30.7, `gf180mcuD`, `variant=D`, after density fill)
 - LVS: **PASS** (KLayout GF180 LVS with flow-local fill-marker exclusion)
-- STA: nominal only (`sta.rpt`); no PVT/jitter signoff
+- STA: nominal `sta.rpt` plus 3-corner characterization; no random-jitter/phase-noise signoff
 
 Build/flow notes:
 ```sh
@@ -21,5 +21,10 @@ librelane --manual-pdk \
 
 The fill-marker LVS exclusion is the same documented flow-local shim used for
 `flow/macro/gf180mcu/PLL_ANALOG_MACRO`; it is not a change to the foundry deck.
-The ring is still not frequency/PVT characterized, and the current layout does
+The ring has gate-level STA and cell-level transient PVT characterization, but the current layout does
 not satisfy the symmetry contract in `SYMMETRY.md`.
+
+- Characterization: gate-level STA TT/SS/FF PASS; ring transient PVT
+  TT/SS/FF 21.07/15.74/26.60 MHz; deterministic period RMS <=0.26 ps.
+  No random-jitter or phase-noise claim. See
+  `flow/characterization/macro_char/CHARACTERIZATION.md`.

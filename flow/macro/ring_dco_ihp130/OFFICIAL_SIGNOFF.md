@@ -12,4 +12,5 @@
   `PLL_RING_DCO_PHYS_official_drc.lyrdb`,
   `PLL_RING_DCO_PHYS_official_lvs.log`,
   `PLL_RING_DCO_PHYS_official_lvs.lvsdb`.
-- Not claimed: PVT/jitter/KDCO, or top-port strict LVS without the waiver.
+- Characterization (2026-11-01): gate-level STA TT/SS/FF PASS; ring transient PVT 33.21/20.95/47.58 MHz; deterministic period RMS <=1.44 ps. No random-jitter/phase-noise signoff.
+- Not claimed: random-jitter/phase-noise, SPEF-annotated STA (SPEF names do not match this netlist), or strict LVS without the waiver.

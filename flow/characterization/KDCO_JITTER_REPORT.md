@@ -18,6 +18,20 @@ is **not** a SAR-valid map.  The physical ring macro uses the same
 `PLL_ILDCO` core but has not been swept post-layout, so a ring-specific KDCO
 is not claimed.
 
+### Physical ring macros (2026-11-01)
+
+The built macro runner `flow/characterization/macro_char.py` adds one-bit
+large-signal code steps at TT (min code 0/0/0):
+
+| PDK | f_min (MHz) | f_coarse1 (MHz) | f_mid1 (MHz) | f_fine1 (MHz) |
+|---|---:|---:|---:|---:|
+| gf180mcu | 21.066 | 20.951 | 21.064 | 21.065 |
+| ihp-sg13g2 | 33.210 | 32.973 | 33.201 | 33.209 |
+
+These are local large-signal sensitivities, not a calibrated full-range
+KDCO.  The sky130 ring does not oscillate in the built netlist, so no
+sky130 ring KDCO is claimed.
+
 ### IHP counter/NCO (physical RTL/macro, ideal TICK)
 
 At `TICK=100 MHz`, `ACC_BITS=16`, `BASE_INC=3493`:
@@ -63,7 +77,7 @@ period alternates between 370 and 380 ns:
 
 ```text
 deterministic period pp   10.0 ns
-deterministic period RMS  4.994 ns (4994 ps)
+deterministic period RMS  4.985 ns (4985 ps)
 ```
 
 That is quantization, not random jitter or phase noise.  External TICK jitter
@@ -78,5 +92,6 @@ categories separate:
 
 ```text
 KDCO  : local table values available; counter model corrected by /2
-jitter: counter deterministic quantization reported; no pnoise signoff
+jitter: counter deterministic quantization + physical ring macro transient
+        spread reported; sky130 ring NO_OSCILLATION; no pnoise signoff
 ```

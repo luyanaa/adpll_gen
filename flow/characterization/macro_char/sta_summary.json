@@ -1,0 +1,642 @@
+{
+  "evidence_level": "gate_level_opensta",
+  "note": "Gate-level OpenSTA on built macro Verilog + PDK corner Liberty + macro SDC. Vectorless report_power. No SPEF except IHP (not applied here).",
+  "rows": [
+    {
+      "pdk": "gf180mcu",
+      "macro": "counter",
+      "corner": "ff",
+      "liberty": "/grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__ff_n40C_3v60.lib",
+      "vdd": 3.6,
+      "temp_c": -40,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 48.49,
+          "paths": 3
+        },
+        "TICK": {
+          "wns_ns": 6.5,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.47,
+          "paths": 17
+        }
+      },
+      "wns_ns": 6.5,
+      "hold_wns_ns": 0.47,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 6.5,
+      "timing_pass": true,
+      "max_tick_mhz": 285.714,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.0115,
+        "leakage_w": 0.0,
+        "total_w": 0.0115
+      },
+      "report": "flow/characterization/macro_char/work/sta/gf180mcu/counter/ff/sta.rpt"
+    },
+    {
+      "pdk": "gf180mcu",
+      "macro": "counter",
+      "corner": "ss",
+      "liberty": "/grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__ss_125C_3v00.lib",
+      "vdd": 3.0,
+      "temp_c": 125,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 48.2,
+          "paths": 3
+        },
+        "TICK": {
+          "wns_ns": 3.96,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.81,
+          "paths": 17
+        }
+      },
+      "wns_ns": 3.96,
+      "hold_wns_ns": 0.81,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 3.96,
+      "timing_pass": true,
+      "max_tick_mhz": 165.563,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.00839,
+        "leakage_w": 0.0,
+        "total_w": 0.00839
+      },
+      "report": "flow/characterization/macro_char/work/sta/gf180mcu/counter/ss/sta.rpt"
+    },
+    {
+      "pdk": "gf180mcu",
+      "macro": "counter",
+      "corner": "tt",
+      "liberty": "/grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib",
+      "vdd": 3.3,
+      "temp_c": 25,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 48.38,
+          "paths": 3
+        },
+        "TICK": {
+          "wns_ns": 5.53,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.6,
+          "paths": 17
+        }
+      },
+      "wns_ns": 5.53,
+      "hold_wns_ns": 0.6,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 5.53,
+      "timing_pass": true,
+      "max_tick_mhz": 223.714,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.00995,
+        "leakage_w": 0.0,
+        "total_w": 0.00995
+      },
+      "report": "flow/characterization/macro_char/work/sta/gf180mcu/counter/tt/sta.rpt"
+    },
+    {
+      "pdk": "gf180mcu",
+      "macro": "ring",
+      "corner": "ff",
+      "liberty": "/grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__ff_n40C_3v60.lib",
+      "vdd": 3.6,
+      "temp_c": -40,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 8.17,
+          "paths": 4
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.13,
+          "paths": 1
+        }
+      },
+      "wns_ns": 8.17,
+      "hold_wns_ns": 0.13,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.000279,
+        "leakage_w": 0.0,
+        "total_w": 0.000279
+      },
+      "report": "flow/characterization/macro_char/work/sta/gf180mcu/ring/ff/sta.rpt"
+    },
+    {
+      "pdk": "gf180mcu",
+      "macro": "ring",
+      "corner": "ss",
+      "liberty": "/grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__ss_125C_3v00.lib",
+      "vdd": 3.0,
+      "temp_c": 125,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 7.78,
+          "paths": 4
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.22,
+          "paths": 1
+        }
+      },
+      "wns_ns": 7.78,
+      "hold_wns_ns": 0.22,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.000199,
+        "leakage_w": 0.0,
+        "total_w": 0.000199
+      },
+      "report": "flow/characterization/macro_char/work/sta/gf180mcu/ring/ss/sta.rpt"
+    },
+    {
+      "pdk": "gf180mcu",
+      "macro": "ring",
+      "corner": "tt",
+      "liberty": "/grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib",
+      "vdd": 3.3,
+      "temp_c": 25,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 8.02,
+          "paths": 4
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.17,
+          "paths": 1
+        }
+      },
+      "wns_ns": 8.02,
+      "hold_wns_ns": 0.17,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.000237,
+        "leakage_w": 0.0,
+        "total_w": 0.000237
+      },
+      "report": "flow/characterization/macro_char/work/sta/gf180mcu/ring/tt/sta.rpt"
+    },
+    {
+      "pdk": "ihp-sg13g2",
+      "macro": "counter",
+      "corner": "ff",
+      "liberty": "/home/yanlu/.ciel/ciel/ihp-sg13/versions/89d42ee6d2fd9b50b86a1aada6fee6673c3e6008/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p32V_m40C.lib",
+      "vdd": 1.32,
+      "temp_c": -40,
+      "status": "STA_OK",
+      "max_groups": {
+        "TICK": {
+          "wns_ns": 7.9,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.17,
+          "paths": 17
+        }
+      },
+      "wns_ns": 7.9,
+      "hold_wns_ns": 0.17,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 7.9,
+      "timing_pass": true,
+      "max_tick_mhz": 476.19,
+      "power": {
+        "internal_w": 0.000235,
+        "switching_w": 1.1e-05,
+        "leakage_w": 4.53e-06,
+        "total_w": 0.000251
+      },
+      "report": "flow/characterization/macro_char/work/sta/ihp-sg13g2/counter/ff/sta.rpt"
+    },
+    {
+      "pdk": "ihp-sg13g2",
+      "macro": "counter",
+      "corner": "ss",
+      "liberty": "/home/yanlu/.ciel/ciel/ihp-sg13/versions/89d42ee6d2fd9b50b86a1aada6fee6673c3e6008/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib",
+      "vdd": 1.08,
+      "temp_c": 125,
+      "status": "STA_OK",
+      "max_groups": {
+        "TICK": {
+          "wns_ns": 5.1,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.44,
+          "paths": 17
+        }
+      },
+      "wns_ns": 5.1,
+      "hold_wns_ns": 0.44,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 5.1,
+      "timing_pass": true,
+      "max_tick_mhz": 204.082,
+      "power": {
+        "internal_w": 0.00016,
+        "switching_w": 6.96e-06,
+        "leakage_w": 1.01e-06,
+        "total_w": 0.000168
+      },
+      "report": "flow/characterization/macro_char/work/sta/ihp-sg13g2/counter/ss/sta.rpt"
+    },
+    {
+      "pdk": "ihp-sg13g2",
+      "macro": "counter",
+      "corner": "tt",
+      "liberty": "/home/yanlu/.ciel/ciel/ihp-sg13/versions/89d42ee6d2fd9b50b86a1aada6fee6673c3e6008/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib",
+      "vdd": 1.2,
+      "temp_c": 25,
+      "status": "STA_OK",
+      "max_groups": {
+        "TICK": {
+          "wns_ns": 6.87,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.27,
+          "paths": 17
+        }
+      },
+      "wns_ns": 6.87,
+      "hold_wns_ns": 0.27,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 6.87,
+      "timing_pass": true,
+      "max_tick_mhz": 319.489,
+      "power": {
+        "internal_w": 0.000194,
+        "switching_w": 8.83e-06,
+        "leakage_w": 1.28e-06,
+        "total_w": 0.000204
+      },
+      "report": "flow/characterization/macro_char/work/sta/ihp-sg13g2/counter/tt/sta.rpt"
+    },
+    {
+      "pdk": "ihp-sg13g2",
+      "macro": "ring",
+      "corner": "ff",
+      "liberty": "/home/yanlu/.ciel/ciel/ihp-sg13/versions/89d42ee6d2fd9b50b86a1aada6fee6673c3e6008/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p32V_m40C.lib",
+      "vdd": 1.32,
+      "temp_c": -40,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 9.55,
+          "paths": 1
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.12,
+          "paths": 1
+        }
+      },
+      "wns_ns": 9.55,
+      "hold_wns_ns": 0.12,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 5.74e-05,
+        "switching_w": 1.03e-05,
+        "leakage_w": 1.2e-06,
+        "total_w": 6.89e-05
+      },
+      "report": "flow/characterization/macro_char/work/sta/ihp-sg13g2/ring/ff/sta.rpt"
+    },
+    {
+      "pdk": "ihp-sg13g2",
+      "macro": "ring",
+      "corner": "ss",
+      "liberty": "/home/yanlu/.ciel/ciel/ihp-sg13/versions/89d42ee6d2fd9b50b86a1aada6fee6673c3e6008/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib",
+      "vdd": 1.08,
+      "temp_c": 125,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 9.24,
+          "paths": 1
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.35,
+          "paths": 1
+        }
+      },
+      "wns_ns": 9.24,
+      "hold_wns_ns": 0.35,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 3.74e-05,
+        "switching_w": 6.66e-06,
+        "leakage_w": 3.08e-07,
+        "total_w": 4.44e-05
+      },
+      "report": "flow/characterization/macro_char/work/sta/ihp-sg13g2/ring/ss/sta.rpt"
+    },
+    {
+      "pdk": "ihp-sg13g2",
+      "macro": "ring",
+      "corner": "tt",
+      "liberty": "/home/yanlu/.ciel/ciel/ihp-sg13/versions/89d42ee6d2fd9b50b86a1aada6fee6673c3e6008/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib",
+      "vdd": 1.2,
+      "temp_c": 25,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 9.44,
+          "paths": 1
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.2,
+          "paths": 1
+        }
+      },
+      "wns_ns": 9.44,
+      "hold_wns_ns": 0.2,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 4.67e-05,
+        "switching_w": 8.35e-06,
+        "leakage_w": 3.47e-07,
+        "total_w": 5.54e-05
+      },
+      "report": "flow/characterization/macro_char/work/sta/ihp-sg13g2/ring/tt/sta.rpt"
+    },
+    {
+      "pdk": "sky130",
+      "macro": "counter",
+      "corner": "ff",
+      "liberty": "/home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib",
+      "vdd": 1.95,
+      "temp_c": -40,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 48.35,
+          "paths": 3
+        },
+        "TICK": {
+          "wns_ns": 7.15,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.27,
+          "paths": 17
+        }
+      },
+      "wns_ns": 7.15,
+      "hold_wns_ns": 0.27,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 7.15,
+      "timing_pass": true,
+      "max_tick_mhz": 350.877,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.00175,
+        "leakage_w": 1.44e-08,
+        "total_w": 0.00175
+      },
+      "report": "flow/characterization/macro_char/work/sta/sky130/counter/ff/sta.rpt"
+    },
+    {
+      "pdk": "sky130",
+      "macro": "counter",
+      "corner": "ss",
+      "liberty": "/home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib",
+      "vdd": 1.6,
+      "temp_c": 100,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 47.38,
+          "paths": 3
+        },
+        "TICK": {
+          "wns_ns": -0.64,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.91,
+          "paths": 17
+        }
+      },
+      "wns_ns": -0.64,
+      "hold_wns_ns": 0.91,
+      "tns_ns": -1.85,
+      "tick_wns_ns": -0.64,
+      "timing_pass": false,
+      "max_tick_mhz": 93.985,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.00113,
+        "leakage_w": 5.12e-06,
+        "total_w": 0.00114
+      },
+      "report": "flow/characterization/macro_char/work/sta/sky130/counter/ss/sta.rpt"
+    },
+    {
+      "pdk": "sky130",
+      "macro": "counter",
+      "corner": "tt",
+      "liberty": "/home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib",
+      "vdd": 1.8,
+      "temp_c": 25,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 48.06,
+          "paths": 3
+        },
+        "TICK": {
+          "wns_ns": 5.04,
+          "paths": 17
+        }
+      },
+      "min_groups": {
+        "TICK": {
+          "wns_ns": 0.44,
+          "paths": 17
+        }
+      },
+      "wns_ns": 5.04,
+      "hold_wns_ns": 0.44,
+      "tns_ns": 0.0,
+      "tick_wns_ns": 5.04,
+      "timing_pass": true,
+      "max_tick_mhz": 201.613,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 0.00147,
+        "leakage_w": 9.94e-09,
+        "total_w": 0.00147
+      },
+      "report": "flow/characterization/macro_char/work/sta/sky130/counter/tt/sta.rpt"
+    },
+    {
+      "pdk": "sky130",
+      "macro": "ring",
+      "corner": "ff",
+      "liberty": "/home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib",
+      "vdd": 1.95,
+      "temp_c": -40,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 9.59,
+          "paths": 1
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.18,
+          "paths": 1
+        }
+      },
+      "wns_ns": 9.59,
+      "hold_wns_ns": 0.18,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 2.88e-05,
+        "leakage_w": 6.34e-09,
+        "total_w": 2.88e-05
+      },
+      "report": "flow/characterization/macro_char/work/sta/sky130/ring/ff/sta.rpt"
+    },
+    {
+      "pdk": "sky130",
+      "macro": "ring",
+      "corner": "ss",
+      "liberty": "/home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib",
+      "vdd": 1.6,
+      "temp_c": 100,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 9.28,
+          "paths": 1
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.52,
+          "paths": 1
+        }
+      },
+      "wns_ns": 9.28,
+      "hold_wns_ns": 0.52,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 1.92e-05,
+        "leakage_w": 2.37e-06,
+        "total_w": 2.15e-05
+      },
+      "report": "flow/characterization/macro_char/work/sta/sky130/ring/ss/sta.rpt"
+    },
+    {
+      "pdk": "sky130",
+      "macro": "ring",
+      "corner": "tt",
+      "liberty": "/home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib",
+      "vdd": 1.8,
+      "temp_c": 25,
+      "status": "STA_OK",
+      "max_groups": {
+        "REF": {
+          "wns_ns": 9.51,
+          "paths": 1
+        }
+      },
+      "min_groups": {
+        "REF": {
+          "wns_ns": 0.27,
+          "paths": 1
+        }
+      },
+      "wns_ns": 9.51,
+      "hold_wns_ns": 0.27,
+      "tns_ns": 0.0,
+      "tick_wns_ns": null,
+      "timing_pass": true,
+      "max_tick_mhz": null,
+      "power": {
+        "internal_w": 0.0,
+        "switching_w": 2.45e-05,
+        "leakage_w": 3.4e-09,
+        "total_w": 2.45e-05
+      },
+      "report": "flow/characterization/macro_char/work/sta/sky130/ring/tt/sta.rpt"
+    }
+  ]
+}

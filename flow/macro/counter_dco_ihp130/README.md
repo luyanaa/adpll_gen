@@ -9,7 +9,12 @@ Physical phase-accumulator/NCO macro built with the local ckdur/OpenROAD flow.
   (top-port naming waiver)
 - DRC: **PASS, 0 violations** with official maximal+density rules after
   legal M2/M3 bar fill (M2 40.61%, M3 40.99%)
-- STA: nominal only (`sta.rpt`); no PVT/KDCO/jitter signoff
+- STA: nominal `sta.rpt` plus 3-corner characterization; no transistor-level counter PVT/phase-noise claim
 
 `PLL_COUNTER_DCO_PHYS` needs an external `TICK`; the macro-level SDC uses a
-10 ns TICK and a 100 ns REF.  The macro is not frequency-characterized.
+10 ns TICK and a 100 ns REF.  NCO quantization and STA corners are characterized; no transistor-level counter PVT is claimed.
+
+- Characterization: gate-level STA TT/SS/FF PASS; NCO quantization at
+  100 MHz TICK is 380/370 ns (pp 10 ns, RMS 4.985 ns). No transistor-level
+  counter PVT frequency or phase-noise claim. See
+  `flow/characterization/macro_char/CHARACTERIZATION.md`.

@@ -11,6 +11,25 @@ Jitter and phase noise are **not** signoff results yet.  A new
 period spread from the existing IHP table/PEX raw; see
 `KDCO_JITTER_REPORT.md`.  It still does not provide random/phase noise.
 
+## Physical macro update (2026-11-01)
+
+`flow/characterization/macro_char.py` now runs the built ring/counter macros
+for gf180mcu, sky130 and IHP:
+
+- gf180mcu ring: TT/SS/FF transient complete; deterministic period RMS
+  0.11/0.26/0.24 ps (TT/SS/FF).
+- IHP ring: TT/SS/FF transient complete; deterministic period RMS
+  1.44/0.13/0.42 ps (TT/SS/FF).
+- sky130 ring: functional probe reports `NO_OSCILLATION` at all three
+  corners; no sky130 ring frequency or jitter claim is made.
+- Counter/NCO: exact TICK quantization (380/370 ns at 100 MHz TICK,
+  pp 10 ns, RMS 4.985 ns) plus gate-level STA PVT.
+
+These are still **not** random jitter or phase noise.  The transients are
+noiseless and the views have no routed RC.  The sky130 counter SS corner
+fails setup at 100 MHz TICK (WNS -0.640 ns); this is a timing issue, not a
+jitter result.  See `macro_char/CHARACTERIZATION.md`.
+
 ## Why
 
 `ngspice-44.2` exposes a `.pss` analysis, but it has no matching `.pnoise`

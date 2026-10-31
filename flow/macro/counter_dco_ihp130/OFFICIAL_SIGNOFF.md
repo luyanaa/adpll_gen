@@ -14,4 +14,5 @@
   `PLL_COUNTER_DCO_PHYS_official_drc.lyrdb`,
   `PLL_COUNTER_DCO_PHYS_official_lvs.log`,
   `PLL_COUNTER_DCO_PHYS_official_density.log`.
-- Not claimed: PVT/jitter/KDCO, or top-port strict LVS without the waiver.
+- Characterization (2026-11-01): gate-level STA TT/SS/FF PASS; NCO quantization 380/370 ns (pp 10 ns, RMS 4.985 ns). No transistor-level counter PVT/phase-noise signoff.
+- Not claimed: random-jitter/phase-noise, or strict LVS without the waiver.

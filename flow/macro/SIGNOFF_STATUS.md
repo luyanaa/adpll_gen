@@ -1,4 +1,4 @@
-# Physical DCO signoff status (2026-10-31)
+# Physical DCO signoff status (2026-11-01)
 
 ## gf180mcu (DRC/LVS clean)
 
@@ -8,11 +8,16 @@
 | GDS/LEF/LIB/CDL/DEF | present | present |
 | DRC | **0 violations** (KLayout 0.30.7, gf180mcuD, after fill) | **0 violations** |
 | LVS | **PASS** (fill-marker exclusion) | **PASS** (fill-marker exclusion) |
-| STA | nominal only | nominal only |
-| PVT/jitter/KDCO | not characterized | not characterized |
+| STA, TT/SS/FF | **PASS** (gate-level; WNS +8.02/+7.78/+8.17 ns) | **PASS** (TICK WNS +5.53/+3.96/+6.50 ns) |
+| PVT transient | **TT/SS/FF complete** (min code): 21.07/15.74/26.60 MHz | NCO frequency is ideal-digital PVT-invariant |
+| Deterministic period spread | TT 47.469 ns, pp 0.24 ps, RMS 0.11 ps | 380/370 ns quantization: pp 10 ns, RMS 4.985 ns |
+| Random jitter / phase noise | **not characterized** (no Pnoise) | **not characterized** (no Pnoise) |
 
-Evidence: `flow/macro/ring_dco_gf180mcu/` and
-`flow/macro/counter_dco_gf180mcu/`.
+Ring/counter STA and PVT evidence:
+`flow/characterization/macro_char/{sta_summary,ring_pvt,counter_nco}.json`
+and `flow/characterization/macro_char/CHARACTERIZATION.md`.  Ring PVT is
+cell-level (no routed RC); period spread is deterministic transient spread,
+not random jitter.
 
 ## IHP SG13G2 (official deck, official KLayout run)
 
@@ -22,13 +27,15 @@ Evidence: `flow/macro/ring_dco_gf180mcu/` and
 | GDS/LEF/LIB/CDL/DEF | present | present |
 | DRC | **0 violations** (official maximal+density) | **0 violations** (official maximal+density) |
 | LVS | **PASS** (official deck, fill-stripped, top-port waiver) | **PASS** (same waiver) |
-| STA | nominal only | nominal only |
-| PVT/jitter/KDCO | not characterized | not characterized |
+| STA, TT/SS/FF | **PASS** (gate-level; WNS +9.44/+9.24/+9.55 ns) | **PASS** (TICK WNS +6.87/+5.10/+7.90 ns) |
+| PVT transient | **TT/SS/FF complete** (min code): 33.21/20.95/47.58 MHz | NCO frequency is ideal-digital PVT-invariant |
+| Deterministic period spread | TT 30.111 ns, pp 3.26 ps, RMS 1.44 ps | 380/370 ns quantization: pp 10 ns, RMS 4.985 ns |
+| Random jitter / phase noise | **not characterized** (no Pnoise) | **not characterized** (no Pnoise) |
 
-Evidence: `flow/macro/ring_dco_ihp130/OFFICIAL_SIGNOFF.md` and
-`flow/macro/counter_dco_ihp130/OFFICIAL_SIGNOFF.md`.  The official IHP deck is
-available from the local CIEL checkout; the LVS pass uses a top-port naming
-waiver.
+Evidence: `flow/macro/ring_dco_ihp130/OFFICIAL_SIGNOFF.md`,
+`flow/macro/counter_dco_ihp130/OFFICIAL_SIGNOFF.md`, and the shared
+`macro_char` reports.  The official IHP deck is available from the local
+CIEL checkout; the LVS pass uses a top-port naming waiver.
 
 ## sky130 (functional LVS topology pass; official-deck compare caveat)
 
@@ -39,13 +46,22 @@ waiver.
 | DRC | **0 violations** | **0 violations** |
 | LVS (netgen, official setup) | **PASS: Circuits match uniquely** | **PASS: Circuits match uniquely** |
 | LVS (official KLayout compare) | top-pin/net-name caveat | top-pin/net-name caveat |
-| STA | P&R only | P&R only |
+| STA, TT/SS/FF | **PASS** (gate-level; WNS +9.51/+9.28/+9.59 ns) | **TT/FF PASS; SS FAIL** at 100 MHz TICK (WNS -0.640 ns, TNS -1.85 ns) |
+| PVT transient | **NO_OSCILLATION at TT/SS/FF** | NCO frequency is ideal-digital PVT-invariant |
+| Deterministic period spread | not available (ring does not oscillate) | 380/370 ns quantization: pp 10 ns, RMS 4.985 ns |
+| Random jitter / phase noise | **not characterized** | **not characterized** |
 
-Evidence: `flow/macro/ring_dco_sky130/` and
-`flow/macro/counter_dco_sky130/`, reproduced by
-`flow/macro/sky130_fd_sc_hd/lvs/run_sky130_lvs.py`.  The layout netlist is
-extracted with the official sky130 KLayout deck in `deep` mode; the native
-cell CDL is normalized only for library-view differences (`VNB` vs
+The sky130 ring is the one real functional blocker in this campaign: the
+built netlist ties the injection-window input low, so the sky130
+`PLL_CELL_NOR2BX1` mapping does not enable the oscillator path.  The
+transient probe is recorded as `NO_OSCILLATION`; no sky130 ring frequency
+or jitter number is claimed.
+
+Evidence: `flow/macro/ring_dco_sky130/SIGNOFF.md`,
+`flow/macro/counter_dco_sky130/SIGNOFF.md`, and
+`flow/characterization/macro_char/CHARACTERIZATION.md`.  The layout netlist
+is extracted with the official sky130 KLayout deck in `deep` mode; the
+native cell CDL is normalized only for library-view differences (`VNB` vs
 `sky130_gnd`, CDL `m=N` multiplicity, the `conb_1` poly-short tie view, and
 the unused `INJ_EN` port).  The official KLayout deck's own numeric compare
 still reports top-pin/net-name mismatches; no full production signoff is

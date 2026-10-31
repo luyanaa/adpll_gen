@@ -91,6 +91,14 @@ Both L3 baselines are registered in the generator (`ics55-l3`,
 return `FAIL_UNCHARACTERIZED`.  The physical-macro results below do not imply a
 DCO/noise signoff.
 
+Physical `PLL_RING_DCO_PHYS` / `PLL_COUNTER_DCO_PHYS` macro characterization is
+now reproducible with `flow/characterization/macro_char.py` (gate-level STA at
+TT/SS/FF, ring transient PVT, deterministic period spread, and exact counter
+NCO quantization).  The sky130 ring does not oscillate in the built netlist,
+and the sky130 counter fails setup in SS at 100 MHz TICK; both are recorded as
+failures, not signoff.  No random-jitter or phase-noise signoff is claimed.
+See `flow/characterization/macro_char/CHARACTERIZATION.md`.
+
 Routed parasitics are now extracted from both macro final databases with
 OpenROAD RCX.  The DCO-net capacitance is back-annotated into one code:
 
@@ -368,6 +376,11 @@ Machine-readable characterization data:
 
 ```text
 flow/characterization/post_layout.json
+flow/characterization/macro_char/sta_summary.json
+flow/characterization/macro_char/ring_pvt.json
+flow/characterization/macro_char/ring_tuning.json
+flow/characterization/macro_char/counter_nco.json
+flow/characterization/macro_char/CHARACTERIZATION.md
 ```
 
 Macro build and signoff commands are in each directory's `README.md`:
@@ -385,7 +398,7 @@ flow/canary/ETRI050_fd_sc_core_a/
 
 ## 9. What is not characterized
 
-- DCO measured frequency, tuning range, monotonicity
+- DCO full-range measured frequency, tuning range, monotonicity (macro TT/SS/FF and local code steps are now covered); random jitter and phase noise
 - Injection lock range, lock time, false-lock behavior
 - DCO phase noise / ISF analysis
 - Full ADPLL RMS jitter and integrated phase noise
