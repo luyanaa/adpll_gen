@@ -182,9 +182,18 @@ def main():
         assert "TICK(TICK)" in wrapper, wrapper
         assert verify(counter_pkg)["status"] == "PASS"
 
-        # A non-physical (RTL-only for this PDK) variant can be packaged as an
-        # explicitly experimental template.
+        # gf180mcu has a physical Core B macro; uncharacterized bring-up
+        # packaging is explicit rather than an experimental fallback.
         exp = base_spec(pdk="gf180mcu_as_sc_mcu7t3v3", target_mhz=100,
+                        ref_mhz=50, fcw=2, mode="buildable",
+                        allow_unverified_dco=True)
+        resolved = resolve_spec(exp)
+        assert resolved["status"] == "READY_PHYSICAL_UNCHARACTERIZED", resolved
+        assert resolved["architecture_state"] == "PHYSICAL_IMPLEMENTABLE", resolved
+        assert resolved["macro"]["status"] == "BUILT", resolved["macro"]
+
+        # A PDK without a core-specific physical entry remains RTL/experimental.
+        exp = base_spec(pdk="ihp-sg13g2", target_mhz=100,
                         ref_mhz=50, fcw=2, mode="explore",
                         allow_experimental=True)
         resolved = resolve_spec(exp)

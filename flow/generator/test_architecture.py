@@ -21,19 +21,18 @@ def main():
     r = select("etri050", 20, mode="explore")
     assert r["status"] == "FAIL_SYSTEM_FMAX", r
 
-    # Low-frequency candidates remain available for planning only when the PDK
-    # has no core-specific physical macro entry.
+    # gf180mcu now has core-specific physical ring/counter macros.
     r = select("gf180mcu_as_sc_mcu7t3v3", 100, area="medium",
-               ref_mhz=50, mode="explore")
+               ref_mhz=50, mode="buildable")
+    assert r["status"] == "PASS_ARCH_SELECTED_PHYSICAL", r
     assert r["selected"]["id"] == "core_b_ring_dco", r["selected"]
+    assert r["selected"]["implementation_state"] == "PHYSICAL_IMPLEMENTABLE", r
     assert r["dco_capability"]["status"] == "NEEDS_DCO_CHARACTERIZATION", r
-    r = select("gf180mcu_as_sc_mcu7t3v3", 100, area="high",
-               ref_mhz=50, mode="explore")
-    assert r["selected"]["id"] == "core_b_ring_dco", r["selected"]
-    # Core C is only a model-only candidate inside its behavioral range.
     r = select("gf180mcu_as_sc_mcu7t3v3", 25, area="high",
-               ref_mhz=25, fcw=1, mode="explore")
+               ref_mhz=25, fcw=1, mode="buildable")
+    assert r["status"] == "PASS_ARCH_SELECTED_PHYSICAL", r
     assert r["selected"]["id"] == "core_c_counter", r["selected"]
+    assert r["selected"]["physical_buildable"] is True
     r = select("gf180mcu_as_sc_mcu7t3v3", 200, ref_mhz=50, mode="explore")
     assert r["status"] == "FAIL_SYSTEM_FMAX", r
 

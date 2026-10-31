@@ -1,0 +1,106 @@
+OpenSTA 2.0.17 GITDIR-NOT Copyright (c) 2019, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details.
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Warning: /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib, line 18 default_operating_condition tt_025C_3v30 not found.
+Startpoint: REF (clock source 'REF')
+Endpoint: SS_BBPD[1] (output port clocked by REF)
+Path Group: REF
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+  50.0000   50.0000   clock REF (fall edge)
+   0.0000   50.0000 v REF (in)
+   0.0838   50.0838 ^ bbpd.nand_y.impl/Y (gf180mcu_as_sc_mcu7t3v3__nand2_2)
+   0.0750   50.1588 v bbpd.nand_x.impl/Y (gf180mcu_as_sc_mcu7t3v3__nand2_2)
+   0.1145   50.2733 v bbpd.buf_nand_x.impl/Y (gf180mcu_as_sc_mcu7t3v3__buff_2)
+   0.1103   50.3836 v _2277_/Y (gf180mcu_as_sc_mcu7t3v3__buff_2)
+   0.1404   50.5240 v output67/Y (gf180mcu_as_sc_mcu7t3v3__buff_2)
+   0.0000   50.5240 v SS_BBPD[1] (out)
+            50.5240   data arrival time
+
+ 100.0000  100.0000   clock REF (rise edge)
+   0.0000  100.0000   clock network delay (ideal)
+  -0.1000   99.9000   clock uncertainty
+   0.0000   99.9000   clock reconvergence pessimism
+  -1.0000   98.9000   output external delay
+            98.9000   data required time
+-------------------------------------------------------------
+            98.9000   data required time
+           -50.5240   data arrival time
+-------------------------------------------------------------
+            48.3760   slack (MET)
+
+
+Startpoint: _2241_ (rising edge-triggered flip-flop clocked by TICK)
+Endpoint: _2254_ (rising edge-triggered flip-flop clocked by TICK)
+Path Group: TICK
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000 ^ _2241_/CLK (gf180mcu_as_sc_mcu7t3v3__dfsrtp_2)
+   0.4802    0.4802 v _2241_/Q (gf180mcu_as_sc_mcu7t3v3__dfsrtp_2)
+   0.2535    0.7337 v _1256_/Y (gf180mcu_as_sc_mcu7t3v3__xnor2_2)
+   0.0646    0.7983 ^ _1257_/Y (gf180mcu_as_sc_mcu7t3v3__nand2_2)
+   0.0949    0.8932 v _1259_/Y (gf180mcu_as_sc_mcu7t3v3__oai21_2)
+   0.3464    1.2396 v _1347_/Y (gf180mcu_as_sc_mcu7t3v3__maj3_2)
+   0.3463    1.5859 v _1438_/Y (gf180mcu_as_sc_mcu7t3v3__maj3_2)
+   0.3463    1.9322 v _1602_/Y (gf180mcu_as_sc_mcu7t3v3__maj3_2)
+   0.3463    2.2785 v _1692_/Y (gf180mcu_as_sc_mcu7t3v3__maj3_2)
+   0.3527    2.6312 v _1831_/Y (gf180mcu_as_sc_mcu7t3v3__maj3_2)
+   0.2384    2.8696 ^ _1926_/Y (gf180mcu_as_sc_mcu7t3v3__aoi21_2)
+   0.2801    3.1496 ^ _2019_/Y (gf180mcu_as_sc_mcu7t3v3__maj3_2)
+   0.2721    3.4218 ^ _2112_/Y (gf180mcu_as_sc_mcu7t3v3__maj3_2)
+   0.3155    3.7372 ^ _2226_/Y (gf180mcu_as_sc_mcu7t3v3__oa211_2)
+   0.0851    3.8224 v _2231_/Y (gf180mcu_as_sc_mcu7t3v3__nor3_2)
+   0.2566    4.0789 ^ _2234_/Y (gf180mcu_as_sc_mcu7t3v3__xnor2_2)
+   0.0000    4.0789 ^ _2254_/D (gf180mcu_as_sc_mcu7t3v3__dfsrtp_2)
+             4.0789   data arrival time
+
+  10.0000   10.0000   clock TICK (rise edge)
+   0.0000   10.0000   clock network delay (ideal)
+  -0.1000    9.9000   clock uncertainty
+   0.0000    9.9000   clock reconvergence pessimism
+             9.9000 ^ _2254_/CLK (gf180mcu_as_sc_mcu7t3v3__dfsrtp_2)
+  -0.2949    9.6051   library setup time
+             9.6051   data required time
+-------------------------------------------------------------
+             9.6051   data required time
+            -4.0789   data arrival time
+-------------------------------------------------------------
+             5.5262   slack (MET)
+
+
+Startpoint: _2240_ (rising edge-triggered flip-flop clocked by TICK)
+Endpoint: _2240_ (rising edge-triggered flip-flop clocked by TICK)
+Path Group: TICK
+Path Type: min
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000 ^ _2240_/CLK (gf180mcu_as_sc_mcu7t3v3__dfsrtp_2)
+   0.4511    0.4511 ^ _2240_/Q (gf180mcu_as_sc_mcu7t3v3__dfsrtp_2)
+   0.1765    0.6276 ^ _1208_/Y (gf180mcu_as_sc_mcu7t3v3__xor2_2)
+   0.0000    0.6276 ^ _2240_/D (gf180mcu_as_sc_mcu7t3v3__dfsrtp_2)
+             0.6276   data arrival time
+
+   0.0000    0.0000   clock TICK (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0200    0.0200   clock uncertainty
+   0.0000    0.0200   clock reconvergence pessimism
+             0.0200 ^ _2240_/CLK (gf180mcu_as_sc_mcu7t3v3__dfsrtp_2)
+   0.0070    0.0270   library hold time
+             0.0270   data required time
+-------------------------------------------------------------
+             0.0270   data required time
+            -0.6276   data arrival time
+-------------------------------------------------------------
+             0.6006   slack (MET)

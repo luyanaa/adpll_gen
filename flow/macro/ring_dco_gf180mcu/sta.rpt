@@ -1,0 +1,62 @@
+OpenSTA 2.0.17 GITDIR-NOT Copyright (c) 2019, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details.
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Warning: /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib, line 18 default_operating_condition tt_025C_3v30 not found.
+Startpoint: ring.dff_y.impl (falling edge-triggered flip-flop clocked by REF)
+Endpoint: SS_BBPD[0] (output port clocked by REF)
+Path Group: REF
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+  10.0000   10.0000   clock REF (fall edge)
+   0.0000   10.0000   clock network delay (ideal)
+   0.0000   10.0000 v ring.dff_y.impl/CLK (gf180mcu_as_sc_mcu7t3v3__dfxtn_2)
+   0.4090   10.4090 ^ ring.dff_y.impl/Q (gf180mcu_as_sc_mcu7t3v3__dfxtn_2)
+   0.1005   10.5095 ^ _5_/Y (gf180mcu_as_sc_mcu7t3v3__buff_2)
+   0.2167   10.7262 ^ output66/Y (gf180mcu_as_sc_mcu7t3v3__buff_2)
+   0.0000   10.7262 ^ SS_BBPD[0] (out)
+            10.7262   data arrival time
+
+  20.0000   20.0000   clock REF (rise edge)
+   0.0000   20.0000   clock network delay (ideal)
+  -0.2500   19.7500   clock uncertainty
+   0.0000   19.7500   clock reconvergence pessimism
+  -1.0000   18.7500   output external delay
+            18.7500   data required time
+-------------------------------------------------------------
+            18.7500   data required time
+           -10.7262   data arrival time
+-------------------------------------------------------------
+             8.0238   slack (MET)
+
+
+Startpoint: REF (clock source 'REF')
+Endpoint: ring.dff_y.impl (falling edge-triggered flip-flop clocked by REF)
+Path Group: REF
+Path Type: min
+
+    Delay      Time   Description
+-------------------------------------------------------------
+  10.0000   10.0000   clock REF (fall edge)
+   0.0000   10.0000 v REF (in)
+   0.0897   10.0897 ^ ring.sym.inj_slope_balancer.impl/Y (gf180mcu_as_sc_mcu7t3v3__inv_2)
+   0.0879   10.1776 v ring.sym.ssbbpd_impl.nand_y.impl/Y (gf180mcu_as_sc_mcu7t3v3__nand2_2)
+   0.1117   10.2893 v ring.sym.ssbbpd_impl.buf_nand_y.impl/Y (gf180mcu_as_sc_mcu7t3v3__buff_2)
+   0.0000   10.2893 v ring.dff_y.impl/D (gf180mcu_as_sc_mcu7t3v3__dfxtn_2)
+            10.2893   data arrival time
+
+  10.0000   10.0000   clock REF (fall edge)
+   0.0000   10.0000   clock network delay (ideal)
+   0.0000   10.0000   clock reconvergence pessimism
+            10.0000 v ring.dff_y.impl/CLK (gf180mcu_as_sc_mcu7t3v3__dfxtn_2)
+   0.1200   10.1200   library hold time
+            10.1200   data required time
+-------------------------------------------------------------
+            10.1200   data required time
+           -10.2893   data arrival time
+-------------------------------------------------------------
+             0.1693   slack (MET)

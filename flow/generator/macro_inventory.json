@@ -180,6 +180,82 @@
         "timing": "post-PnR STA skipped in physical bring-up",
         "pvt": "not characterized"
       }
+    },
+    "gf180mcu_as:core_b_ring_dco": {
+      "name": "PLL_RING_DCO_PHYS",
+      "core": "core_b_ring_dco",
+      "pdk": "gf180mcu_as",
+      "cell_library": "gf180mcu_as_sc_mcu7t3v3",
+      "root": "flow/macro/ring_dco_gf180mcu",
+      "flow": "librelane",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "IL_NDELS": 4,
+        "BASE_NDELS": 256
+      },
+      "views": {
+        "lef": "flow/macro/ring_dco_gf180mcu/PLL_RING_DCO_PHYS.lef",
+        "lib": "flow/macro/ring_dco_gf180mcu/PLL_RING_DCO_PHYS.lib",
+        "cdl": "flow/macro/ring_dco_gf180mcu/PLL_RING_DCO_PHYS.cdl",
+        "gds": "flow/macro/ring_dco_gf180mcu/PLL_RING_DCO_PHYS.gds",
+        "def": "flow/macro/ring_dco_gf180mcu/PLL_RING_DCO_PHYS.def",
+        "verilog": "flow/macro/ring_dco_gf180mcu/PLL_RING_DCO_PHYS.v",
+        "spice": "flow/macro/ring_dco_gf180mcu/PLL_RING_DCO_PHYS.spice"
+      },
+      "required_views": [
+        "lef",
+        "lib",
+        "cdl",
+        "gds"
+      ],
+      "build_command": "librelane flow/macro/ring_dco_gf180mcu/config.yaml",
+      "evidence": {
+        "drc": "KLayout gf180mcuD DRC 0 after density fill",
+        "lvs": "KLayout LVS PASS with fill-marker exclusion",
+        "timing": "nominal STA only; no PVT"
+      }
+    },
+    "gf180mcu_as:core_c_counter": {
+      "name": "PLL_COUNTER_DCO_PHYS",
+      "core": "core_c_counter",
+      "pdk": "gf180mcu_as",
+      "cell_library": "gf180mcu_as_sc_mcu7t3v3",
+      "root": "flow/macro/counter_dco_gf180mcu",
+      "flow": "librelane",
+      "parameters": {
+        "COARSE_NDELS": 15,
+        "MID_NDELS": 15,
+        "FINE_NDELS": 31,
+        "ACC_BITS": 16,
+        "BASE_INC": 3493,
+        "COARSE_STEP": 120,
+        "MID_STEP": 60,
+        "FINE_STEP": 15,
+        "IL_NDELS": 4
+      },
+      "views": {
+        "lef": "flow/macro/counter_dco_gf180mcu/PLL_COUNTER_DCO_PHYS.lef",
+        "lib": "flow/macro/counter_dco_gf180mcu/PLL_COUNTER_DCO_PHYS.lib",
+        "cdl": "flow/macro/counter_dco_gf180mcu/PLL_COUNTER_DCO_PHYS.cdl",
+        "gds": "flow/macro/counter_dco_gf180mcu/PLL_COUNTER_DCO_PHYS.gds",
+        "def": "flow/macro/counter_dco_gf180mcu/PLL_COUNTER_DCO_PHYS.def",
+        "verilog": "flow/macro/counter_dco_gf180mcu/PLL_COUNTER_DCO_PHYS.v",
+        "spice": "flow/macro/counter_dco_gf180mcu/PLL_COUNTER_DCO_PHYS.spice"
+      },
+      "required_views": [
+        "lef",
+        "lib",
+        "cdl",
+        "gds"
+      ],
+      "build_command": "librelane flow/macro/counter_dco_gf180mcu/config.yaml",
+      "evidence": {
+        "drc": "KLayout gf180mcuD DRC 0 after density fill",
+        "lvs": "KLayout LVS PASS with fill-marker exclusion",
+        "timing": "nominal STA only; no PVT"
+      }
     }
   }
 }

@@ -1,0 +1,69 @@
+# LibreLane physical macro for PLL_COUNTER_DCO_PHYS on gf180mcu.
+DESIGN_NAME: PLL_COUNTER_DCO_PHYS
+
+VERILOG_FILES:
+  - dir::src/pll_counter_dco_phys.v
+  - dir::src/ssbbpd.v
+  - dir::src/pll_cells_gf180mcu.v
+
+PDK: gf180mcu
+STD_CELL_LIBRARY: gf180mcu_as_sc_mcu7t3v3
+
+TECH_LEFS:
+  "nom_*": /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/techlef/gf180mcu_as_sc_mcu7t3v3__nom.tlef
+  "min_*": /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/techlef/gf180mcu_as_sc_mcu7t3v3__min.tlef
+  "max_*": /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/techlef/gf180mcu_as_sc_mcu7t3v3__max.tlef
+
+CELL_LEFS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lef/gf180mcu_as_sc_mcu7t3v3.lef
+CELL_GDS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/gds/gf180mcu_as_sc_mcu7t3v3.gds
+CELL_VERILOG_MODELS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/verilog/gf180mcu_as_sc_mcu7t3v3.v
+CELL_SPICE_MODELS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/cdl/gf180mcu_as_sc_mcu7t3v3.cdl
+CELL_CDLS:
+  - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/cdl/gf180mcu_as_sc_mcu7t3v3.cdl
+
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD, VNW]
+SCL_GROUND_PINS: [VSS, VPW]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal5
+IO_PIN_H_LAYER: Metal3
+IO_PIN_V_LAYER: Metal2
+DIE_AREA: [0, 0, 180, 140]
+FP_CORE_UTIL: 25
+PL_TARGET_DENSITY_PCT: 45
+
+CLOCK_PORT: TICK
+CLOCK_PERIOD: 10.0
+PNR_SDC_FILE: dir::macro.sdc.tcl
+SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
+
+LIB:
+  "*_tt_025C_3v30":
+    - /grid/gf180mcu/gf180mcu_as_sc_mcu7t3v3/pdk/libs.ref/gf180mcu_as_sc_mcu7t3v3/lib/gf180mcu_as_sc_mcu7t3v3__tt_025C_3v30.lib
+STA_CORNERS:
+  - nom_tt_025C_3v30
+PNR_CORNERS:
+  - nom_tt_025C_3v30
+
+RCX_RULESETS: {}
+LAYERS_RC:
+  "nom_*":
+    Metal1: {res: 0.090, cap: 0.0004}
+    Metal2: {res: 0.090, cap: 0.0003}
+    Metal3: {res: 0.090, cap: 0.00028}
+    Metal4: {res: 0.090, cap: 0.000277}
+    Metal5: {res: 0.060, cap: 0.0000394}
+VIAS_R:
+  "nom_*":
+    Via1: {res: 5.0}
+    Via2: {res: 5.0}
+    Via3: {res: 5.0}
+    Via4: {res: 5.0}

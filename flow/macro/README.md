@@ -7,8 +7,10 @@
 | `PLL_ANALOG_MACRO` | gf180mcu `gf180mcu_as_sc_mcu7t3v3` | 85.6×103.6; 80/80 P&R; route DRC 0; **DRC 0**, **LVS PASS** (fill-marker shim); GDS/LEF/Liberty/CDL/DEF |
 | `PLL_ANALOG_MACRO` | sky130 `sky130_as_sc_hs` | 80.2×90.9; 80/80 P&R; route DRC 0; **KLayout DRC 0**; **PDN fixed** (0 PSM unconnected); LVS still fails cell-subcircuit device/pin comparison |
 | `PLL_ANALOG_MACRO` | sky130 `sky130_fd_sc_hd` | 79.7×90.4; route/fill; **KLayout DRC 0**; **PDN fixed**; LVS still cell-subcircuit comparison; full CDL available |
-| `PLL_RING_DCO_PHYS` | ics55 H7CR | 120×120; physical ring macro (256 fixed delay stages + coarse/mid/fine); GDS/LEF/LIB/CDL/DEF; no DRC/LVS/timing/PVT signoff |
-| `PLL_COUNTER_DCO_PHYS` | ics55 H7CR | 96.3×102.7; digital NCO/counter macro; TICK input; GDS/LEF/LIB/DEF; LibreLane DRC errors and no LVS; no CDL |
+| `PLL_RING_DCO_PHYS` | ics55 H7CR | 120×120; physical ring macro; GDS/LEF/LIB/CDL/DEF; DRC/LVS not clean |
+| `PLL_COUNTER_DCO_PHYS` | ics55 H7CR | 96.3×102.7; digital NCO/counter; GDS/LEF/LIB/DEF; DRC/LVS not clean |
+| `PLL_RING_DCO_PHYS` | gf180mcu `gf180mcu_as_sc_mcu7t3v3` | **DRC 0, LVS PASS** after density fill; GDS/LEF/LIB/CDL/DEF/SPICE; nominal STA only |
+| `PLL_COUNTER_DCO_PHYS` | gf180mcu `gf180mcu_as_sc_mcu7t3v3` | **DRC 0, LVS PASS** after density fill; GDS/LEF/LIB/CDL/DEF/SPICE; nominal STA only |
 
 Each macro directory contains a wrapper, macro-only SDC and a Makefile or
 LibreLane config.  The ics55/IHP builds use the ckdur OpenROAD flow; gf180 and
