@@ -51,7 +51,9 @@ f_out = f_tick * increment / 2^(acc_bits + 1)
 
 At `TICK=100 MHz`, `ACC_BITS=16`, `BASE_INC=3493`, code 0 is
 **2.664948 MHz**, not 5.329895 MHz.  This is an exact NCO relation, not a
-measured analog DCO.
+measured analog DCO.  The 512-carry `nco_sequence` mean period is
+375.385 ns -> **2.663934 MHz**; the small difference is output-period
+quantization, not a unit conversion error.
 
 ## Jitter
 

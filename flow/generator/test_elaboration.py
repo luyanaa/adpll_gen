@@ -2,8 +2,8 @@
 """Generated-RTL elaboration gate.
 
 Run after installing Icarus Verilog.  The three emit targets must compile as
-separate source sets; in particular, top integration must use the blackbox and
-must not silently re-synthesize the physical DCO RTL.
+separate source sets; top integration must keep the digital controller RTL and
+blackbox only the physical DCO/analog macro.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def main() -> int:
         inv = make_counter_inventory(root / "counter")
         spec = base_spec(target_mhz=20, ref_mhz=10, fcw=2, area="high")
         spec["structural"].update({
-            "ACC_BITS": 16, "BASE_INC": 328,
+            "ACC_BITS": 16, "BASE_INC": 26214,
             "COARSE_STEP": 120, "MID_STEP": 60, "FINE_STEP": 15,
         })
         spec["allow_unverified_dco"] = True

@@ -28,7 +28,7 @@
       "period_mean_ns": 375.38461538461536,
       "period_pp_ns": 10.0,
       "period_rms_ns": 4.9851851526214315,
-      "freq_mhz": 2663.9344262295085,
+      "freq_mhz": 2.6639344262295084,
       "edge_count": 14
     },
     {
@@ -57,7 +57,7 @@
       "period_mean_ns": 375.38461538461536,
       "period_pp_ns": 10.0,
       "period_rms_ns": 4.9851851526214315,
-      "freq_mhz": 2663.9344262295085,
+      "freq_mhz": 2.6639344262295084,
       "edge_count": 14
     },
     {
@@ -86,7 +86,7 @@
       "period_mean_ns": 375.38461538461536,
       "period_pp_ns": 10.0,
       "period_rms_ns": 4.9851851526214315,
-      "freq_mhz": 2663.9344262295085,
+      "freq_mhz": 2.6639344262295084,
       "edge_count": 14
     }
   ]

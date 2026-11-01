@@ -52,6 +52,7 @@ jobs:
           python3 flow/generator/test_system_limits.py
           python3 flow/generator/test_robust.py
           python3 flow/generator/test_delivery.py
+          python3 flow/characterization/test_macro_char.py
       - name: Selection schema sanity
         run: python3 flow/validate_selection.py --selection flow/selection.example.json
       - name: Install Icarus Verilog

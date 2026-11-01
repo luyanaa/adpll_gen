@@ -22,7 +22,7 @@ def expected_mhz(coarse: int, mid: int, fine: int, tick_mhz: float = 1000.0) -> 
     # COARSE/MID/FINE are thermometer/unary buses, not binary code values.
     inc = (BASE_INC - bin(coarse).count("1") * 120
            - bin(mid).count("1") * 60 - bin(fine).count("1") * 15)
-    inc = max(1, min(2 ** ACC_BITS, inc))
+    inc = max(1, min(2 ** (ACC_BITS - 1), inc))
     return tick_mhz * inc / float(2 ** (ACC_BITS + 1))
 
 

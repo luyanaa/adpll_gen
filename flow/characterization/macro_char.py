@@ -982,7 +982,8 @@ def nco_sequence(tick_ns: float = 10.0, acc_bits: int = 16,
         "period_mean_ns": mean,
         "period_pp_ns": max(periods) - min(periods),
         "period_rms_ns": rms,
-        "freq_mhz": 1e6 / mean,
+        # periods are in ns here, so ns -> MHz is 1000 / period_ns.
+        "freq_mhz": 1000.0 / mean,
         "edge_count": len(toggles),
     }
 

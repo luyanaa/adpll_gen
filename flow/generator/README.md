@@ -48,7 +48,25 @@ NEEDS_TICK_FREQUENCY   Core C was selected but no tick_frequency_mhz was
                        supplied; no fixed 1 GHz fallback is applied.
 
 NEEDS_NCO_RANGE        Core C DCO target exceeds the carry-toggle NCO ceiling
-                       TICK/2.
+                       TICK/4.
+
+NEEDS_NCO_FREQUENCY    Core C target is outside the fixed macro's unary
+                       coarse/mid/fine code range; a rebuild or a different
+                       BASE_INC is required.
+
+NEEDS_FCW_WIDTH        FCW does not satisfy 1 <= FCW < 2^FCW_BITS.
+
+NEEDS_ACC_BITS         Core C requested an ACC_BITS other than the currently
+                       implemented 16.
+
+NEEDS_PARAMETER_RANGE  FILTER_BITS/FCW_BITS/CNT_EXTRA_BITS/MEAS_PERIODS is
+                       below its legal minimum.
+
+READY_NEEDS_MACRO_REBUILD
+                       The target is reachable in principle, but the selected
+                       physical macro must be rebuilt with the computed
+                       BASE_INC/parameters; the package includes the rebuild
+                       plan and is not a production claim.
 
 FAIL_FREQUENCY_PLAN    target/REF/FCW violate the integer-N planning relation
                        f_out = FCW * f_REF / out_div.
@@ -279,11 +297,21 @@ different periods for `OUT` (raw DCO), `OUT_DIV`, the internal `MID_OUT`, and
 pins for bring-up, but changing the divisor requires regenerating the wrapper.
 
 Core C requires `tick_frequency_mhz`.  There is no fixed 1 GHz assumption:
-missing tick is `NEEDS_TICK_FREQUENCY`, and a DCO target above `TICK/2` is
+missing tick is `NEEDS_TICK_FREQUENCY`, and a DCO target above `TICK/4` is
 `NEEDS_NCO_RANGE`.  The counter RTL toggles `OUT` once per accumulator carry,
-so the plan uses `f_out = f_tick * increment / 2^(ACC_BITS+1)` and reports
-`increment_for_dco_target`; a `BASE_INC` that disagrees is a warning, not a
-silent frequency assumption.
+so the plan uses `f_out = f_tick * increment / 2^(ACC_BITS+1)`, clamps the
+increment at `2^(ACC_BITS-1)`, and reports `increment_for_dco_target`.
+`spec.py` also evaluates the unary coarse/mid/fine code range:
+`increment_code_min..increment_code_max`, the closest selectable
+`increment_achievable`, and any lattice frequency error.  A fixed macro whose
+code range cannot cover the target is `NEEDS_NCO_FREQUENCY`; a target that is
+covered only by retuning is a warning, and `allow_macro_rebuild=true` produces
+`READY_NEEDS_MACRO_REBUILD` with `macro.suggested_base_inc`.
+
+`DIV_BITS` is derived from `out_div` (`max(8, out_div.bit_length())`) rather
+than fixed at 8, so `out_div=256` uses a 9-bit `DIV_INIT`.  `FCW` must satisfy
+`1 <= FCW < 2^FCW_BITS`; the current `PLL_COUNTER_DCO_PHYS` supports
+`ACC_BITS=16` only.
 
 The delivery command accepts three source-set targets:
 
@@ -293,9 +321,16 @@ python3 flow/generator/delivery.py --spec spec.json --out build/macro --target m
 python3 flow/generator/delivery.py --spec spec.json --out build/top --target top-integration
 ```
 
-`top-integration` copies a generated hard-macro blackbox and does **not**
-copy the physical DCO RTL, so it cannot silently re-synthesize the macro.
-Add `--elaborate` to compile the generated wrapper with Icarus Verilog.
+`top-integration` copies the real digital/control RTL and the selected top
+(`pll_ring_top.v`, `pll_counter_top.v`, or `pll_macro_top.v`) and generates a
+blackbox only for the physical DCO/analog macro (`PLL_RING_DCO_PHYS`,
+`PLL_COUNTER_DCO_PHYS`, or `PLL_ANALOG_MACRO`).  The macro blackbox name and
+ports match the inventory views; `pll_logic`, the FLL, filter, divider, and
+lock FSM remain synthesizable.  `MID_OUT` is a pin of the DCO macro inside the
+top, so the generated SDC/CDC constraints reference it with a hierarchical
+`get_pins`, not a top-level `get_ports`.  Add `--elaborate` to compile the
+generated wrapper with Icarus Verilog; that is connectivity checking, not
+synthesis or OpenSTA signoff.
 
 The example resolves to Core A on ics55 and writes:
 
@@ -371,9 +406,11 @@ remain required.
 - CDC skew values are starter constraints, not post-layout measurements.
 - `--elaborate` checks generated wrapper connectivity with Icarus Verilog; it
   is not synthesis, place-and-route, or OpenSTA signoff.
-- `top-integration` treats the selected top as one hard-macro blackbox; a
-  partition that needs internal Gray-bus constraints must apply the
-  macro-build/simulation constraint set inside that partition.
+- `top-integration` keeps the digital controller as real RTL and blackboxes
+  only the physical DCO/analog macro; the generated CDC constraints use
+  hierarchical pin wildcards and still need an OpenSTA/OpenROAD loaded-netlist
+  audit.  A partition that needs internal Gray-bus constraints must apply
+  the macro-build/simulation constraint set inside that partition.
 
 ## Frequency acquisition research candidates
 

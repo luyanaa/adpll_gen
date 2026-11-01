@@ -199,6 +199,33 @@ def resolve_spec(raw: dict[str, Any],
         if status != "BLOCKED":
             status = "NEEDS_TICK_FREQUENCY"
 
+    # Hard parameter legality.  These are resolver blockers, not warnings:
+    # a truncated FCW or divisor would otherwise be silently decoded by RTL.
+    readyish = ("READY", "READY_EXPERIMENTAL",
+                "READY_PHYSICAL_UNCHARACTERIZED",
+                "READY_NEEDS_MACRO_REBUILD")
+    fcw = int(spec["fcw"])
+    fcw_bits = int(structural.get("FCW_BITS", 8))
+    if not 1 <= fcw < (1 << fcw_bits):
+        blockers.append(
+            f"FCW={fcw} does not fit FCW_BITS={fcw_bits} "
+            f"(valid range 1..{(1 << fcw_bits) - 1})")
+        if status in readyish:
+            status = "NEEDS_FCW_WIDTH"
+    acc_bits = int(structural.get("ACC_BITS", 16))
+    if selected_id == "core_c_counter" and acc_bits != 16:
+        blockers.append(
+            f"PLL_COUNTER_DCO_PHYS currently implements ACC_BITS=16 only "
+            f"(requested {acc_bits})")
+        if status in readyish:
+            status = "NEEDS_ACC_BITS"
+    for name, minimum in (("FILTER_BITS", 8), ("FCW_BITS", 1),
+                          ("CNT_EXTRA_BITS", 0), ("MEAS_PERIODS", 1)):
+        if int(structural.get(name, minimum)) < minimum:
+            blockers.append(f"{name} must be >= {minimum}")
+            if status in readyish:
+                status = "NEEDS_PARAMETER_RANGE"
+
     dco = selection.get("dco_capability") or {}
     if dco.get("status", "").startswith("NEEDS_"):
         if state in ("MODEL_ONLY", "RTL_SYNTHESIZABLE", "UNIMPLEMENTED"):
@@ -233,7 +260,8 @@ def resolve_spec(raw: dict[str, Any],
         blockers.append(
             f"frequency counter has {counter_bits} bits, needs {bits_needed} "
             f"for {max_ratio}:1 max acquisition ratio")
-        if status in ("READY", "READY_EXPERIMENTAL"):
+        if status in ("READY", "READY_EXPERIMENTAL",
+                      "READY_PHYSICAL_UNCHARACTERIZED"):
             status = "NEEDS_COUNTER_RANGE"
 
     acc_bits = int(structural.get("ACC_BITS", 16))
@@ -244,6 +272,38 @@ def resolve_spec(raw: dict[str, Any],
         # The RTL toggles OUT on every accumulator carry.  One output period
         # therefore needs two carries; the /2 factor is intentional.
         denom = float(2 ** (acc_bits + 1))
+        inc_clamp = 2 ** (acc_bits - 1)
+        coarse_max = int(structural.get("COARSE_NDELS", 15))
+        mid_max = int(structural.get("MID_NDELS", 15))
+        fine_max = int(structural.get("FINE_NDELS", 31))
+        coarse_step = int(structural.get("COARSE_STEP", 120))
+        mid_step = int(structural.get("MID_STEP", 60))
+        fine_step = int(structural.get("FINE_STEP", 15))
+        inc_target = max(1, min(
+            inc_clamp,
+            int(round(dco_target_mhz * denom / tick_for_nco))))
+        inc_code_min = max(
+            1, min(inc_clamp, base_inc
+                   - coarse_max * coarse_step
+                   - mid_max * mid_step
+                   - fine_max * fine_step))
+        inc_code_max = min(base_inc, inc_clamp)
+        # Closest increment actually selectable by the unary coarse/mid/fine
+        # codes.  The step lattice can leave a small frequency error; report
+        # it instead of pretending the continuous target is exact.
+        inc_achievable = None
+        for c in range(coarse_max + 1):
+            for m in range(mid_max + 1):
+                for f in range(fine_max + 1):
+                    inc = (base_inc - c * coarse_step
+                           - m * mid_step - f * fine_step)
+                    inc = max(1, min(inc, inc_clamp))
+                    if (inc_achievable is None or
+                            abs(inc - inc_target) <
+                            abs(inc_achievable - inc_target)):
+                        inc_achievable = inc
+        reachable = (dco_target_mhz <= tick_for_nco / 4.0
+                     and inc_code_min <= inc_target <= inc_code_max)
         nco = {
             "tick_mhz": tick_for_nco,
             "acc_bits": acc_bits,
@@ -252,30 +312,59 @@ def resolve_spec(raw: dict[str, Any],
             "increment_min": 1,
             # PLL_COUNTER_DCO_PHYS clamps at half scale to keep the NCO below
             # the TICK Nyquist limit.
-            "increment_max": 2 ** (acc_bits - 1),
-            "f_out_code_0_mhz": tick_for_nco * min(
-                base_inc, 2 ** (acc_bits - 1)) / denom,
-            "increment_for_dco_target": max(1, min(
-                2 ** (acc_bits - 1),
-                int(round(dco_target_mhz * denom / tick_for_nco)))),
-            "max_output_mhz": tick_for_nco / 2.0,
+            "increment_max": inc_clamp,
+            "increment_code_min": inc_code_min,
+            "increment_code_max": inc_code_max,
+            "increment_for_dco_target": inc_target,
+            "increment_achievable": inc_achievable,
+            "f_out_code_0_mhz": tick_for_nco * inc_code_max / denom,
+            "f_out_achievable_mhz": tick_for_nco * inc_achievable / denom,
+            "frequency_error_mhz": (abs(inc_target - inc_achievable)
+                                    * tick_for_nco / denom),
+            # The RTL clamps increment at half scale.  With the carry-toggle
+            # output (two carries per OUT period) the real ceiling is TICK/4,
+            # not TICK/2.
+            "max_output_mhz": tick_for_nco / 4.0,
+            "target_reachable": reachable,
             "note": "carry-toggle NCO: increment is clamped at half scale; "
-                    "maximum output is TICK/2",
-            "kdco_coarse_mhz_per_code": tick_for_nco * int(structural.get("COARSE_STEP", 120)) / denom,
-            "kdco_mid_mhz_per_code": tick_for_nco * int(structural.get("MID_STEP", 60)) / denom,
-            "kdco_fine_mhz_per_code": tick_for_nco * int(structural.get("FINE_STEP", 15)) / denom,
+                    "maximum output is TICK/4",
+            "kdco_coarse_mhz_per_code": tick_for_nco * coarse_step / denom,
+            "kdco_mid_mhz_per_code": tick_for_nco * mid_step / denom,
+            "kdco_fine_mhz_per_code": tick_for_nco * fine_step / denom,
         }
-        if dco_target_mhz > float(nco["max_output_mhz"]):
-            blockers.append(
-                f"DCO target {dco_target_mhz:g} MHz exceeds TICK/2 "
-                f"({nco['max_output_mhz']:g} MHz) for a carry-toggle NCO")
-            if status != "BLOCKED":
-                status = "NEEDS_NCO_RANGE"
-        if (int(structural.get("BASE_INC", 3493)) !=
-                int(nco["increment_for_dco_target"])):
+        if not reachable:
+            if dco_target_mhz > tick_for_nco / 4.0:
+                blockers.append(
+                    f"NCO target {dco_target_mhz:g} MHz is unreachable: "
+                    f"f_TICK/4 = {nco['max_output_mhz']:g} MHz for a "
+                    "carry-toggle NCO")
+                if status in readyish:
+                    status = "NEEDS_NCO_RANGE"
+            else:
+                msg = (f"NCO target {dco_target_mhz:g} MHz is outside the "
+                       f"fixed macro code range [{inc_code_min}, "
+                       f"{inc_code_max}]; required BASE_INC={inc_target}")
+                if spec.get("allow_macro_rebuild"):
+                    warnings.append(msg + "; a macro rebuild is required")
+                    if status in readyish:
+                        status = "READY_NEEDS_MACRO_REBUILD"
+                    if isinstance(macro, dict):
+                        macro["needs_rebuild"] = True
+                        macro["suggested_base_inc"] = inc_target
+                else:
+                    blockers.append(msg + "; the fixed macro cannot reach it")
+                    if status in readyish:
+                        status = "NEEDS_NCO_FREQUENCY"
+        elif base_inc != inc_target:
             warnings.append(
-                "BASE_INC is not the increment implied by the DCO target; "
-                "the NCO will not hit dco_target_mhz without retuning BASE_INC")
+                f"BASE_INC={base_inc} differs from the code-0 target increment "
+                f"{inc_target}; coarse/mid/fine tuning is required")
+        if (reachable and dco_target_mhz > 0
+                and nco["frequency_error_mhz"] > 0.01 * dco_target_mhz):
+            warnings.append(
+                f"NCO code lattice leaves {nco['frequency_error_mhz']:.6g} MHz "
+                f"error at {dco_target_mhz:g} MHz")
+        nco["base_inc_matches_target"] = base_inc == inc_target
     frequency_plan = {
         "target_mhz": float(spec["target_mhz"]),
         "target_semantics": "post_divider_OUT_DIV",
@@ -304,6 +393,7 @@ def resolve_spec(raw: dict[str, Any],
         "frequency_plan": frequency_plan,
         "divider_contract": {
             "out_div": int(spec["out_div"]),
+            "div_bits": max(8, int(spec["out_div"]).bit_length()),
             "initial_divisor_parameter": "DIV_INIT",
             "target": "OUT_DIV",
             "physical_runtime_ports": ["SET_DIV", "LOAD_DIV"],

@@ -71,7 +71,9 @@ def build_clock_ir(resolved: dict[str, Any],
             "target": "pin",
             "divide_by": 1,
             "role": "internal_measurement_clock",
-            "note": "MID_OUT is internal; never use get_ports for it",
+            "note": "MID_OUT is an internal DCO phase tap; its nominal "
+                    "frequency follows DCO_OUT for CDC/max-delay, but phase "
+                    "equality with OUT is not verified; never use get_ports",
         },
     ]
     if not include_internal_mid:
@@ -105,7 +107,8 @@ def build_clock_ir(resolved: dict[str, Any],
         "asynchronous_groups": asynchronous_groups,
         "relationships": (
             "f_DCO = f_REF * fcw; f_OUT_DIV = f_DCO / out_div; "
-            "MID_OUT follows the raw DCO output in this digital contract"
+            "MID_OUT uses the raw DCO nominal period, not a verified "
+            "phase-equivalent relationship to OUT"
         ),
         "status": "PLANNED_NOT_TIMING_SIGNOFF",
     }
