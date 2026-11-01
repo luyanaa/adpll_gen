@@ -40,9 +40,17 @@ adjustment.  One code LSB trims the high pulse by ~15 ps.
   ~50.9%, but the loop drives `DUTY_CODE` to the rail (211) and does not
   assert LOCKED — the bang-bang PD loses its useful early/late sign when
   the error is large, so it runs to saturation rather than settling.
-- Needs a **coarse acquisition** step (binary search / SAR seed, or a
-  real duty quantiser) before bang-bang tracking can hold lock — same
-  capture issue as the ADDLL's fixed-phase target.
-- Physical path reuses `PLL_COUNTER_DCDL_PHYS`; recombine logic
-  (`CLK_IN | ~fall_d`) is model-level and needs a proper edge-combiner
-  cell (e.g. SR latch / symmetric MUX) for silicon.
+- **Fixed**: the PD must compare the *inverted* outputs — `~CLK_OUT` rise
+  (= CLK_OUT fall, code-controlled) vs `~CLK_IN` rise (= CLK_IN fall, the
+  fixed T/2 midpoint).  Comparing the raw rising edges fed a code-
+  independent sign and saturated the loop; with `out_n`/`clk_n` it tracks
+  the high-pulse width.
+- **Added** `duty_sar_search`: on `EN` rising, a binary search on the
+  code (PD sign as comparison) seeds the loop near the 50% point, then
+  bang-bang tracking holds it.  Smoke: 30% input, `LOCKED` in ~268 TICKs,
+  code dithers around the lock point (vs railing at 211 without SAR).
+- **Open (physical)**: the recombine `CLK_IN | ~fall_d` produces short
+  glitches when the code updates mid-cycle (observed <T periods while the
+  code dithers 31..42).  Needs a glitchless edge-combiner (SR-latch /
+  symmetric-MUX cell) and to freeze tap updates at a clean boundary —
+  the same caveat as ADDLL MUX switching.

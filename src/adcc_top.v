@@ -44,17 +44,22 @@ module ADCC_TOP #(
     // Inverted input: its rising edge marks the end of the high pulse.
     wire clk_n = ~CLK_IN;
 
-    // Duty detector: PD compares the (corrected) output high-pulse against
-    // the input reference.  A >50% duty reads as one sign, <50% the other.
+    // Duty detector: the high pulse ends at the falling edge of CLK_OUT,
+    // and the ideal midpoint is the falling edge of CLK_IN (the rising
+    // edge of ~CLK_IN).  Compare the two *inverted* rising edges:
+    //   ~CLK_OUT  rise = CLK_OUT fall  (controlled by the code)
+    //   ~CLK_IN   rise = CLK_IN  fall  (the fixed T/2 reference)
+    // so the PD sign tracks the high-pulse width, not the (fixed) rise.
     wire [1:0] pd_raw;
+    wire out_n = ~CLK_OUT;
 `ifdef SIMULATION
     sim_SSBBPD pd (
-        .CLK_VCO(CLK_OUT), .CLK_REF(clk_n), .SS_BBPD(pd_raw)
+        .CLK_VCO(out_n), .CLK_REF(clk_n), .SS_BBPD(pd_raw)
     );
 `else
     PLL_SSBBPD pd (
         .INJ_EDGE_BALANCED(clk_n),
-        .OSC_BALANCED(CLK_OUT),
+        .OSC_BALANCED(out_n),
         .SS_BBPD(pd_raw)
     );
 `endif
@@ -70,9 +75,34 @@ module ADCC_TOP #(
         .OUT(DLF_OUT), .ILL_P(ILL_P), .ILL_N(ILL_N)
     );
 
-    wire [FILTER_BITS-1:0] sum = DLF_OUT + {{(FILTER_BITS-8){1'b0}}, DUTY_OFFS};
+    // Two-phase acquisition: on EN rising, run a SAR coarse search to the
+    // bracket of the 50% point (bang-bang alone saturates at large error),
+    // then hand the seed to the fine loop.
+    wire [7:0] sar_code;
+    wire sar_busy, sar_done;
+    reg sar_start;
+    reg [FILTER_BITS-1:0] seed;
+
+    duty_sar_search #(.CODE_BITS(8)) sar (
+        .TICK(TICK), .RST_N(RST_N), .START(sar_start),
+        .PD_SIGN(SS_BBPD == 2'b10),          // late -> increase delay
+        .CTRL_CODE(sar_code), .BUSY(sar_busy), .DONE(sar_done)
+    );
+    always @(posedge TICK or negedge RST_N) begin
+        if (!RST_N) begin
+            sar_start <= 0; seed <= 0;
+        end else begin
+            sar_start <= EN && !sar_busy && !sar_done && (DLF_OUT == 0);
+            if (sar_done) seed <= {{(FILTER_BITS-8){1'b0}}, sar_code};
+        end
+    end
+
+    // During SAR: drive the code directly.  After DONE: seed the loop by
+    // offsetting the accumulator so INT=0 maps onto the SAR result.
+    wire [FILTER_BITS-1:0] loop_sum = DLF_OUT + seed;
+    wire [FILTER_BITS-1:0] sum = loop_sum + {{(FILTER_BITS-8){1'b0}}, DUTY_OFFS};
     wire [FILTER_BITS-1:0] sat = (sum > TOTAL_STEPS) ? TOTAL_STEPS[FILTER_BITS-1:0] : sum;
-    assign DUTY_CODE = EN ? sat[7:0] : DUTY_INIT;
+    assign DUTY_CODE = sar_busy ? sar_code : (EN ? sat[7:0] : DUTY_INIT);
     wire [7:0] code = DUTY_CODE;
 
     wire [7:0] fine_n   = (code > FINE_NDELS) ? FINE_NDELS : code;
