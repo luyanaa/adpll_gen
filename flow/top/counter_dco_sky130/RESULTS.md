@@ -44,6 +44,24 @@ overall: 996 power-grid violations, 58 routing DRC errors, 36 Magic DRC
 errors, 15 Magic illegal-overlap errors, and 5 LVS errors. Its final views are
 at `runs/top_pnr6/final`, but `top_pnr4` remains the best completed result.
 
+`top_pnr9` added a custom `PDN_CFG`/`pdn_patch.tcl` (no macro grid; wrap
+`pdngen` to bind the macro met4 power rails to global straps). It completed
+all 80 steps with Magic DRC passed, but the top met5 straps were removed as
+floating by `PDN-0110`/`PDN-0200` before the patch ran, so the patch reported
+no met5 strap for every macro rail. Result: 998 PSM violations, 3 LVS errors,
+5/5 antenna, DRC pass. This did not close LVS.
+
+`top_pnr10` switched to a single-layer met4 PDN and a met4 fallback in the
+patch. DRC passed, but LVS was worse: 4 errors, 2 unmatched pins, 1 unmatched
+net, and antenna 8/8. This confirmed that a horizontal met4 jog can short or
+mis-bind the macro rails; the approach is not used.
+
+Conclusion: the baseline `top_pnr4` (no custom PDN patch) and `top_pnr9`
+(DCR pass, LVS still 3 errors) are the best results. LVS remains open on the
+macro power/PDN topology; the next correct fix is a macro-side power-pin
+extension to the macro boundary or a repaired met4/met5 PDN via, not a
+top-level horizontal met4 jog.
+
 ## Constraints audit
 
 `constraints/top.sdc` defines:
@@ -85,5 +103,6 @@ digital hierarchy; the clock is still defined at the top port.
 - KLayout DRC was not run; only Magic DRC is top-level DRC evidence.
 - The 996/998 deferred PSM violations remain; IR-drop/power integrity is not closed.
 - Antenna is not closed (5/5).
-- Top LVS is not closed; the macro-power/PDN root cause is identified, but the
-  `[20,0]` retry did not produce a clean final DRC.
+- Top LVS is not closed; the macro-power/PDN root cause is identified, but
+  `[20,0]`, `350x350`, custom `PDN_CFG`, and single-layer met4 retries did not
+  produce a clean LVS/DRC combination.
