@@ -131,6 +131,28 @@ Result (`runs/top_pnr17/final`): all signoff counters zero -
   setup/hold WNS=TNS=0, flow__errors__count=0.  This is the clean
   top-level result.
 
+`top_pnr18b` adds signoff coverage on top of the top_pnr17 recipe
+(PDN_VOFFSET=4.52 strap alignment + `_bind_vertical` rail bridge +
+DIODE_CELL).  New: MCSTA at nom_tt/min_ff/max_ss, KLayout DRC via
+`sky130A.lydrc`, and an IR-drop report.  Results:
+  KLayout DRC ......... klayout__drc_error__count=0  (runset now set)
+  IR drop ............. worst 1.58e-05 V on VGND, 0.00 % (PSM clean)
+  MCSTA (flow) ........ setup/hold WNS=TNS=0 at all 3 corners
+  Independent OpenSTA + post-route SPEF worst slack:
+      TT 1.80V 25C   setup +1.01  hold +0.055 ns
+      FF 1.95V -40C  setup +0.83  hold +0.154 ns
+      SS 1.60V -40C  setup +1.50  hold -0.558 ns (RST_N removal check)
+  Residual flags:
+    * LVS reports 2 errors -> 1 net mismatch on `net92` (RST_N fanout
+      re-buffered by antenna-diode insertion; device pin lists are
+      equivalent on both sides, so it is a netgen net-name grouping
+      artefact, not an open/short).  top_pnr17 (no diodes) had clean
+      netlists.
+    * max_ss_n40C_1v60: 60 max-slew + 4 max-cap violations (slow corner
+      not re-buffered - reported, not fixed).
+    * SS corner RST_N removal -0.558 ns (async-reset release timing;
+      needs a hold-path delay or set_false_path -hold decision).
+
 Intermediate steps: top_pnr14 fixed getLocation list unpack;
 top_pnr14b still jogged horizontally -> short (reverted); top_pnr15/15b
 probed the strap-phase formula; top_pnr16 aligned straps but left the

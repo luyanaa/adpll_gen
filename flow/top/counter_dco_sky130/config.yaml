@@ -75,7 +75,14 @@ MACROS:
     lef:
       - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lef
     lib:
+      # Only a TT characterization exists for this macro; reuse it for the
+      # SS/FF corners so MCSTA can link it instead of black-boxing.  The
+      # macro is not re-characterized at ss/ff (documented approximation).
       "*_tt_025C_1v80":
+        - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lib
+      "*_ss_n40C_1v60":
+        - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lib
+      "*_ff_n40C_1v95":
         - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lib
     spice:
       - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.spice
@@ -90,17 +97,38 @@ MACROS:
 LIB:
   "*_tt_025C_1v80":
     - dir::../../../build/pdk_root/sky130_fd_sc_hd/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+  "*_ss_n40C_1v60":
+    - dir::../../../build/pdk_root/sky130_fd_sc_hd/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_n40C_1v60.lib
+  "*_ff_n40C_1v95":
+    - dir::../../../build/pdk_root/sky130_fd_sc_hd/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib
 
 STA_CORNERS:
   - nom_tt_025C_1v80
+  - min_ff_n40C_1v95
+  - max_ss_n40C_1v60
 PNR_CORNERS:
   - nom_tt_025C_1v80
+  - min_ff_n40C_1v95
+  - max_ss_n40C_1v60
 
 RCX_RULESETS:
   "nom_*": dir::rcx/rules.openrcx.sky130A.nom.spef_extractor
+  "min_*": dir::rcx/rules.openrcx.sky130A.min.spef_extractor
+  "max_*": dir::rcx/rules.openrcx.sky130A.max.spef_extractor
 
 RUN_CTS: true
 RUN_SPEF_EXTRACTION: true
-RUN_IRDROP_REPORT: false
-RUN_MCSTA: false
+RUN_IRDROP_REPORT: true
+RUN_MCSTA: true
 RUN_KLAYOUT_XOR: false
+
+# sky130 KLayout DRC: run the sky130A.lydrc deck (LibreLane calls
+# run_sky130 for this PDK, which passes feol/beol/floating_metal/offgrid/
+# seal as -rd defines).  feol+beol=true = full-chip DRC, no seal ring.
+KLAYOUT_DRC_RUNSET: /home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.tech/klayout/drc/sky130A.lydrc
+KLAYOUT_DRC_DEFINES:
+  feol: "true"
+  beol: "true"
+  floating_metal: "false"
+  offgrid: "false"
+  seal: "false"
