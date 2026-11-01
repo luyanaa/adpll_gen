@@ -20,6 +20,7 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 DEST=${1:-"$ROOT/build/pdk_root"}
+DEST=$(realpath -m "$DEST")
 
 find_pdk() {
     if [[ -n "${SKY130A:-}" ]]; then

@@ -1,0 +1,88 @@
+# Top-level LibreLane PnR for sky130 Core C.
+#
+# The digital controller is real RTL; PLL_COUNTER_DCO_PHYS is the hardened
+# counter/NCO macro.  This is a physical-flow integration experiment, not a
+# timing/DRC/LVS/PEX signoff claim.
+meta:
+  version: 3
+  flow: Classic
+
+DESIGN_NAME: PLL_COUNTER_TOP
+
+VERILOG_FILES:
+  - dir::../../../src/pll_logic.v
+  - dir::../../../src/freq_lock.v
+  - dir::../../../src/frequency_counter_frontend.v
+  - dir::../../../src/digital_loop_filter.v
+  - dir::../../../src/lock_detector.v
+  - dir::../../../src/term_decoder.v
+  - dir::../../../src/delta_sigma.v
+  - dir::../../../src/fix_div.v
+  - dir::../../../src/conf_div.v
+  - dir::pll_counter_top_phys.v
+  - dir::PLL_COUNTER_DCO_PHYS_bb.v
+
+PDK: sky130_fd_sc_hd
+STD_CELL_LIBRARY: sky130_fd_sc_hd
+
+VDD_PIN: VPWR
+GND_PIN: VGND
+SCL_POWER_PINS: [VPWR, VPB]
+SCL_GROUND_PINS: [VGND, VNB]
+VDD_NETS: [VPWR]
+GND_NETS: [VGND]
+PDN_CONNECT_MACROS_TO_GRID: true
+PDN_MACRO_CONNECTIONS:
+  - "dco VPWR VGND VPWR VGND"
+
+RT_MIN_LAYER: met1
+RT_MAX_LAYER: met5
+IO_PIN_H_LAYER: met3
+IO_PIN_V_LAYER: met2
+
+DIE_AREA: [0, 0, 300, 300]
+FP_CORE_UTIL: 30
+PL_TARGET_DENSITY_PCT: 45
+
+CLOCK_PORT: REF
+CLOCK_PERIOD: 375.0
+
+PNR_SDC_FILE: dir::constraints/top.sdc
+SIGNOFF_SDC_FILE: dir::constraints/top.sdc
+
+MACROS:
+  PLL_COUNTER_DCO_PHYS:
+    gds:
+      - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.gds
+    lef:
+      - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lef
+    lib:
+      "*_tt_025C_1v80":
+        - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lib
+    spice:
+      - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.spice
+    instances:
+      dco:
+        # Align the macro's met4 power rails with the top PDN straps.  With
+        # the macro at y=20 the VPWR/VGND pins sat above the PDN stubs and
+        # LVS reported dco/VPWR and dco/VGND as unmatched nets.
+        location: [20, 20]
+        orientation: N
+
+LIB:
+  "*_tt_025C_1v80":
+    - dir::../../../build/pdk_root/sky130_fd_sc_hd/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+STA_CORNERS:
+  - nom_tt_025C_1v80
+PNR_CORNERS:
+  - nom_tt_025C_1v80
+
+RCX_RULESETS:
+  "nom_*": dir::rcx/rules.openrcx.sky130A.nom.spef_extractor
+
+RUN_CTS: true
+RUN_SPEF_EXTRACTION: true
+RUN_IRDROP_REPORT: false
+RUN_MCSTA: false
+RUN_KLAYOUT_XOR: false
