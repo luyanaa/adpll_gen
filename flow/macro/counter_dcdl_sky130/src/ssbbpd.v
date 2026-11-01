@@ -1,7 +1,7 @@
 // Analog definition of
 // Sub-Sampling Bang Bang Phase Detector (SS-BBPD)
 
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module PLL_SSBBPD (
 `ifdef WITH_POWER 
     inout VDD, VSS,

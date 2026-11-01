@@ -79,24 +79,34 @@ module ADDLL_TOP #(
     );
 
     // Binary delay code = accumulator + static phase offset, saturated to
-    // the chain's range.  DLY_INIT drives the taps while EN is low so the
-    // loop can be seeded near the expected operating point.
+    // the chain's range.  A pipeline register here breaks the
+    // DLF_OUT -> add/offset -> saturate -> decode -> tap combinational
+    // chain; the extra TICK of loop latency is tolerable for a bang-bang
+    // DLL and removes the setup-critical multi-add/compare path.
     wire [FILTER_BITS-1:0] dly_sum = DLF_OUT + {{(FILTER_BITS-8){1'b0}}, PHASE_OFFS};
     wire [FILTER_BITS-1:0] dly_sat =
         (dly_sum > TOTAL_STEPS) ? TOTAL_STEPS[FILTER_BITS-1:0] : dly_sum;
-    assign DLY_CODE = EN ? dly_sat[7:0] : DLY_INIT;
+    reg [7:0] code_q;
+    always @(posedge TICK or negedge RST_N) begin
+        if (!RST_N) code_q <= 8'd0;
+        else        code_q <= EN ? dly_sat[7:0] : DLY_INIT;
+    end
+    assign DLY_CODE = code_q;
     wire [7:0] code = DLY_CODE;
 
-    // Saturating small-to-large decode (monotonic in fine-LSB units):
-    //   fine_n   = min(code, FINE_NDELS)
-    //   mid_n    = min((code - fine_n) / MID_W, MID_NDELS)
-    //   coarse_n = min((code - fine_n - MID_W*mid_n) / COARSE_W, COARSE_NDELS)
-    // Realised delay = T0 + 15*fine_n + 60*mid_n + 120*coarse_n (ps, model).
-    wire [7:0] fine_n   = (code > FINE_NDELS) ? FINE_NDELS : code;
-    wire [7:0] rem1     = code - fine_n;
-    wire [7:0] mid_n    = (rem1/MID_W > MID_NDELS) ? MID_NDELS : rem1/MID_W;
-    wire [7:0] rem2     = rem1 - mid_n*MID_W;
-    wire [7:0] coarse_n = (rem2/COARSE_W > COARSE_NDELS) ? COARSE_NDELS : rem2/COARSE_W;
+    // Second pipeline stage: register the decoded tap counts so the
+    // decoder expand (COARSE/MID/FINE thermo) is also off the single-cycle
+    // critical path.  Two TICKs of loop latency total.
+    wire [7:0] fine_w   = (code > FINE_NDELS) ? FINE_NDELS : code;
+    wire [7:0] rem1     = code - fine_w;
+    wire [7:0] mid_w    = (rem1[7:2] > MID_NDELS) ? MID_NDELS : rem1[7:2];
+    wire [7:0] rem2     = rem1 - (mid_w << 2);
+    wire [7:0] coarse_w = (rem2[7:3] > COARSE_NDELS) ? COARSE_NDELS : rem2[7:3];
+    reg [7:0] fine_n, mid_n, coarse_n;
+    always @(posedge TICK or negedge RST_N) begin
+        if (!RST_N) {fine_n, mid_n, coarse_n} <= 0;
+        else        {fine_n, mid_n, coarse_n} <= {fine_w, mid_w, coarse_w};
+    end
 
     wire [COARSE_NDELS-1:0] COARSE_MUX;
     wire [MID_NDELS-1:0]    MID_MUX;

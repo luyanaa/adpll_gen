@@ -1,7 +1,7 @@
 // See LICENSE for details
 
 // Netlist for a fine delay single cell
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module FINE_DELAY_CELL(
     inout VDD, VSS,
     input MUX, IN,
@@ -31,7 +31,7 @@ module FINE_DELAY_CELL(
 endmodule
 
 // The fine delay module, buffered
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module FINE_DELAY_BUFFERED # (
     parameter integer NDELS = 31
 ) (
@@ -62,7 +62,7 @@ module FINE_DELAY_BUFFERED # (
 endmodule
 
 // The fine delay module, non-buffered
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module FINE_DELAY # (
     parameter integer NDELS = 31
 ) (

@@ -1,7 +1,7 @@
 // See LICENSE for details
 
 // Netlist for a mid delay single cell
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module MID_DELAY_CELL(
 `ifdef WITH_POWER 
     inout VDD, VSS,
@@ -33,7 +33,7 @@ module MID_DELAY_CELL(
 endmodule
 
 // The mid delay module, buffered
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module MID_DELAY_BUFFERED # (
     parameter integer NDELS = 16
 ) (
@@ -51,7 +51,9 @@ module MID_DELAY_BUFFERED # (
     generate
         for(i = 0; i < NDELS; i = i + 1) begin : stage
             MID_DELAY_CELL impl(
+`ifdef WITH_POWER
                 .VDD(VDD), .VSS(VSS),
+`endif
                 .MUX(MUX[i]), .IN(CHAIN[i]),
                 .OUT(CHAIN[i+1])
             );
@@ -60,7 +62,7 @@ module MID_DELAY_BUFFERED # (
 endmodule
 
 // The mid delay module, non-buffered
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module MID_DELAY # (
     parameter integer NDELS = 15
 ) (

@@ -1,7 +1,7 @@
 // See LICENSE for details
 
 // Netlist for a coarse delay single cell
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module COARSE_DELAY_CELL(
 `ifdef WITH_POWER 
     inout VDD, VSS,
@@ -29,7 +29,7 @@ module COARSE_DELAY_CELL(
 endmodule
 
 // The coarse delay module
-(* keep_hierarchy = "yes" *)
+/* keep removed for synth flatness */
 module COARSE_DELAY # (
     parameter integer NDELS = 15
 ) (

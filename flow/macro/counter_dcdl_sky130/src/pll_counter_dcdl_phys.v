@@ -30,7 +30,6 @@ module PLL_COUNTER_DCDL_PHYS #(
 );
     wire c_out, m_out;
 
-    (* keep_hierarchy = "yes" *)
     COARSE_DELAY #(
         .NDELS(COARSE_NDELS)
     ) u_coarse (
@@ -40,7 +39,7 @@ module PLL_COUNTER_DCDL_PHYS #(
         .MUX(COARSE_MUX), .IN(CLK_IN), .OUT(c_out)
     );
 
-    (* keep_hierarchy = "yes" *)
+
     MID_DELAY_BUFFERED #(
         .NDELS(MID_NDELS)
     ) u_mid (
@@ -50,7 +49,7 @@ module PLL_COUNTER_DCDL_PHYS #(
         .MUX(MID_MUX), .IN(c_out), .OUT(m_out)
     );
 
-    (* keep_hierarchy = "yes" *)
+
     FINE_DELAY_BUFFERED #(
         .NDELS(FINE_NDELS)
     ) u_fine (

@@ -51,7 +51,9 @@ module MID_DELAY_BUFFERED # (
     generate
         for(i = 0; i < NDELS; i = i + 1) begin : stage
             MID_DELAY_CELL impl(
+`ifdef WITH_POWER
                 .VDD(VDD), .VSS(VSS),
+`endif
                 .MUX(MUX[i]), .IN(CHAIN[i]),
                 .OUT(CHAIN[i+1])
             );

@@ -67,8 +67,14 @@ coarse_n = min(rem2 / COARSE_W, 15)
 
 So `DLY_CODE = fine_n + 4·mid_n + 8·coarse_n` exactly equals the realised
 delay in fine LSBs. `TOTAL_STEPS = 31 + 4·15 + 8·15 = 211` codes of range
-(≈3165 ps at the model steps). Division/modulo use constant divisors and
-synthesise to subtractors — no real divider is needed.
+(≈3165 ps at the model steps). `MID_W`/`COARSE_W` are powers of two, so
+the `/`,`%` collapse to shifts and bit-slices — no real divider.
+
+**Pipeline**: the `DLF_OUT → +PHASE_OFFS → saturate → decode → tap` chain
+is split by two TICK registers — `code_q` after saturation, and the
+decoded `fine_n/mid_n/coarse_n` before the thermometer expanders. Two
+TICKs of loop latency; required for the sky130 macro to close setup at
+a 10 ns TICK (validated in `dcdl_pnr06–08`).
 
 **Delay model** (functional): `t_d = T0 + 120·|COARSE| + 60·|MID| + 15·|FINE|`
 with `T0 ≈ 4 ns` insertion delay. Total span ≈ 15·120 + 15·60 + 31·15 =
