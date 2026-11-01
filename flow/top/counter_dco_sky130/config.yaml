@@ -35,6 +35,18 @@ PDN_CONNECT_MACROS_TO_GRID: true
 PDN_MACRO_CONNECTIONS:
   - "dco VPWR VGND VPWR VGND"
 PDN_CFG: dir::pdn_cfg.tcl
+# Align the met4 VPWR strap grid with the DCO macro's met4 power rails.
+# Macro sits at [20,20]; its VPWR rail left edges are master x=10.04/30.04/...
+# -> absolute 30.04/50.04/70.04/90.04/110.04/130.04, i.e. x == 10.04 (mod 20).
+# The stdcell PDN places a VPWR/VGND pair per PDN_VPITCH (20) starting at
+# PDN_VOFFSET, so VOFFSET=10.04 lands a VPWR strap directly on every macro
+# rail and the paired VGND strap (+1.44) on every macro VGND rail.  The macro
+# rails then merge straight into the global grid - no patch bridge needed.
+# Measured in top_pnr15b DEF: internal VPWR strap centre = PDN_VOFFSET + 6.0
+# (mod PDN_VPITCH=20).  Macro VPWR rail centres sit at abs x = 30.52/50.52/
+# .../130.52 == 10.52 (mod 20), so VOFFSET = 10.52 - 6.0 = 4.52.  The paired
+# VGND strap (+1.44) then lands on each VGND rail centre (x1.96 mod 20).
+PDN_VOFFSET: 4.52
 
 RT_MIN_LAYER: met1
 RT_MAX_LAYER: met5
@@ -54,9 +66,9 @@ SIGNOFF_SDC_FILE: dir::constraints/top.sdc
 MACROS:
   PLL_COUNTER_DCO_PHYS:
     gds:
-      - dir::macro/PLL_COUNTER_DCO_PHYS.gds
+      - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.gds
     lef:
-      - dir::macro/PLL_COUNTER_DCO_PHYS.lef
+      - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lef
     lib:
       "*_tt_025C_1v80":
         - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lib

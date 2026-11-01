@@ -68,20 +68,61 @@ No final views.
 
 `top_pnr13` implemented both remaining directions: (1) top-flow macro
 LEF/GDS copies with all 12 met4 power rails extended to the macro boundary
-and (2) a hand-written local met4 bridge around the DCO rails (VGND routed
-below the VPWR strap at y=5, then up at x=31.48; VPWR bridged at x=30.04).
-The PDN patch logs confirmed the local bridge ran and `dco matched with dco`,
-and detailed routing completed, but the final result was worse: Magic DRC
-failed with 111 errors, LVS failed with 4 errors / 2 unmatched pins / 1
-unmatched net, and antenna failed 4/4. Setup/hold remained 0/0. Final views
-were saved under `runs/top_pnr13/final` but this variant is not used.
+and (2) a hand-written local met4 bridge around the DCO rails. Detailed
+routing completed, but the result was worse: Magic DRC failed with 111
+errors, LVS failed with 4 errors / 2 unmatched pins / 1 unmatched net
+( VG ND pin↔VPWR node swap = a short), and antenna failed 4/4.
+Setup/hold remained 0/0.  Post-run review found the failure was two
+implementation bugs, not a wrong direction:
 
-Conclusion: the baseline `top_pnr4` (no custom PDN patch) remains the best
-completed result. The custom macro-extension/local-bridge path fixed the
-macro net identification (`dco matched`) but introduced 111 top-level DRC
-errors and did not close LVS. Further work should treat the macro power
-interface as a macro-level power-grid/LVS problem, not only a top-level PDN
-patch.
+* `_bind_rail` and `_patch_dco_local` read `dbMPin::getGeometry` in the
+  macro MASTER frame and used it as chip coords, so every bridge and rail
+  bind landed 20 µm down-left of the macro (inst at [20,20]).  The
+  hardcoded VGND jog ran through the real VPWR vertical strap →
+  VGND↔VPWR short (the LVS pin swap).  Coordinates now go through the
+  instance origin in `_bind_all`/`_bind_rail_abs`.
+* Extending the macro's met4 rails to y=0 was unnecessary (a vertical
+  rail gains nothing by overlapping a same-layer vertical strap; only a
+  horizontal jog to a same-net strap connects) and made Magic stream-out
+  slice the existing fill-cell met2 band into <28 nm notch slivers — all
+  111 `met2.2` errors sit on those rail edges at y≈30.55–30.8.  Reverted
+  to the original `flow/macro` LEF/GDS.
+* True top straps: VPWR met4 at x = 0/23.62/43.62/…; VGND = VPWR+1.44.
+  Each macro rail (abs x = rel+20) has a clear horizontal met4 channel
+  to its nearest same-net strap (e.g. VGND rail 51.48 → strap 45.06,
+  no VPWR strap in between), so `_bind_rail_abs`'s jog is sufficient;
+  the extra `_patch_dco_local` bridge was removed.
+
+`top_pnr16b` **closes both LVS and DRC** — the first clean top-level run.
+Two changes did it:
+
+1. `PDN_VOFFSET: 4.52` aligns the met4 VPWR/VGND strap grid with the
+   macro's power rails.  Measured in top_pnr15b's DEF, internal VPWR
+   strap centre = `PDN_VOFFSET + 6.0` (mod PDN_VPITCH=20); macro rail
+   centres sit at abs x = 30.52/50.52/../130.52 == 10.52 (mod 20), so
+   VOFFSET=4.52 and the paired VGND strap (+1.44) lands on each VGND
+   rail (x1.96 mod 20).  The straps run the full die height, so they
+   overlap the macro rails directly - no horizontal jog needed.
+2. `pdn_patch.tcl::_bind_vertical` bridges the residual ~0.6 um gap:
+   the aligned strap is trimmed just above each rail top (strap bottom
+   y=151.4, rail top y=150.8).  It draws a same-x vertical met4 stub
+   from each rail top to the overlapping same-net strap - vertical, so
+   it cannot cross an opposite-net strap (unlike the earlier horiz jog
+   that shorted VGND<->VPWR).  Rail binding uses the instance origin to
+   convert master->chip coords.
+
+Result (`runs/top_pnr16b/final`):
+  LVS ......... `Circuits match uniquely` (lvs_error=0, unmatched=0)
+  PSM ......... power_grid_violation=0 (was 998)
+  Magic DRC ... magic__drc_error__count=0
+  Route DRC ... route__drc_errors=0
+  Timing ...... setup/hold WNS=TNS=0
+  Antenna ..... antenna__violating__nets=2 (residual, was 5)
+
+Intermediate steps: top_pnr14 fixed getLocation list unpack;
+top_pnr14b still jogged horizontally -> short (reverted); top_pnr15/15b
+probed the strap-phase formula; top_pnr16 aligned straps but left the
+0.6 um gap; top_pnr16b bridges it and is the keeper.
 
 ## Constraints audit
 
