@@ -84,6 +84,20 @@ module PLL_COUNTER_DCO_PHYS #(
         increment = increment_calc;
     end
 
+`ifdef SIMULATION
+    // The combinational increment block is not guaranteed to execute at time
+    // zero in event-driven simulators because all unary code inputs start at
+    // zero.  Seed a legal code-0 increment so the first measurement does not
+    // wait forever on an X phase accumulator.
+    initial begin
+        coarse_count = 0;
+        mid_count = 0;
+        fine_count = 0;
+        increment_calc = BASE_INC;
+        increment = BASE_INC;
+    end
+`endif
+
     // 16-bit carry-select phase accumulator.  The low byte propagates its
     // carry directly; the high byte is computed twice (carry-in 0/1) and the
     // correct result is selected.  The carry-select structure halves the

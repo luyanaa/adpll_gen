@@ -37,7 +37,7 @@ def main() -> int:
         ]
         subprocess.run(cmd, check=True)
         out = subprocess.run(["vvp", str(exe)], check=True,
-                             text=True, capture_output=True).stdout
+                             text=True, capture_output=True, timeout=60).stdout
     rows = []
     for line in out.splitlines():
         m = re.search(

@@ -9,6 +9,7 @@ module counter_dco_phys_tb;
     wire [1:0] SS_BBPD;
     wire OUT, MID_OUT, INJ_EDGE;
     integer edges;
+    localparam integer N_EDGES = 10;
     realtime first_edge, last_edge, measured_period;
 
     PLL_COUNTER_DCO_PHYS dut(
@@ -27,11 +28,11 @@ module counter_dco_phys_tb;
             last_edge = 0;
             @(posedge TICK);
             DCO_EN = 1;
-            repeat (100) @(posedge OUT);
+            repeat (N_EDGES) @(posedge OUT);
             first_edge = $realtime;
-            repeat (100) @(posedge OUT);
+            repeat (N_EDGES) @(posedge OUT);
             last_edge = $realtime;
-            measured_period = (last_edge - first_edge) / 100.0;
+            measured_period = (last_edge - first_edge) / N_EDGES;
             $display("COARSE=%0d MID=%0d FINE=%0d period_ns=%0.3f freq_mhz=%0.3f",
                      COARSE, MID, FINE, measured_period, 1000.0 / measured_period);
         end
