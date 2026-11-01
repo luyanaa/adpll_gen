@@ -34,6 +34,11 @@ GND_NETS: [VGND]
 PDN_CONNECT_MACROS_TO_GRID: true
 PDN_MACRO_CONNECTIONS:
   - "dco VPWR VGND VPWR VGND"
+
+# top_pnr16b left 2 antenna violations (clkdlybuf4s50_1 gates on INJ_EN and
+# net59, side-area ratio).  repair_antennas was skipped because DIODE_CELL
+# was unset; give it the sky130 antenna diode so post-DRT repair can run.
+DIODE_CELL: "sky130_fd_sc_hd__diode_2/DIODE"
 PDN_CFG: dir::pdn_cfg.tcl
 # Align the met4 VPWR strap grid with the DCO macro's met4 power rails.
 # Macro sits at [20,20]; its VPWR rail left edges are master x=10.04/30.04/...

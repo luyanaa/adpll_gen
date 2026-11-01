@@ -119,6 +119,18 @@ Result (`runs/top_pnr16b/final`):
   Timing ...... setup/hold WNS=TNS=0
   Antenna ..... antenna__violating__nets=2 (residual, was 5)
 
+`top_pnr17` clears the residual antennas.  The 2 violations were
+side-area-ratio on `clkdlybuf4s50_1` gates (INJ_EN/input13/A met3,
+net59/output59/A met1).  Root cause: `DIODE_CELL` was unset, so
+`repair_antennas` ran but skipped post-DRT repair
+("Skipping post-DRT antenna repair: 'DIODE_CELL' not set").  Setting
+`DIODE_CELL: "sky130_fd_sc_hd__diode_2/DIODE"` let repair run; the
+violations cleared via reroute/jumper (antenna_diodes_count=0).
+Result (`runs/top_pnr17/final`): all signoff counters zero -
+  LVS=0 unmatched, Magic DRC=0, Route DRC=0, PSM=0, antenna=0,
+  setup/hold WNS=TNS=0, flow__errors__count=0.  This is the clean
+  top-level result.
+
 Intermediate steps: top_pnr14 fixed getLocation list unpack;
 top_pnr14b still jogged horizontally -> short (reverted); top_pnr15/15b
 probed the strap-phase formula; top_pnr16 aligned straps but left the
