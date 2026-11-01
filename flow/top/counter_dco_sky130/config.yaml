@@ -122,6 +122,17 @@ RUN_IRDROP_REPORT: true
 RUN_MCSTA: true
 RUN_KLAYOUT_XOR: false
 
+# top_pnr18b left 60 max-slew + 4 max-cap violations in the max_ss corner:
+# the only design-repair pass ran post-GPL against the default (nom) corner,
+# so the slow-corner worst-case slews were never fixed.  Enable the
+# post-global-route repair so the resizer re-buffers across RSZ_CORNERS
+# (all 3 STA corners here).
+RUN_POST_GRT_DESIGN_REPAIR: true
+RSZ_CORNERS:
+  - nom_tt_025C_1v80
+  - min_ff_n40C_1v95
+  - max_ss_n40C_1v60
+
 # sky130 KLayout DRC: run the sky130A.lydrc deck (LibreLane calls
 # run_sky130 for this PDK, which passes feol/beol/floating_metal/offgrid/
 # seal as -rd defines).  feol+beol=true = full-chip DRC, no seal ring.
