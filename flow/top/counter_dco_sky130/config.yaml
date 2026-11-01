@@ -133,6 +133,15 @@ RSZ_CORNERS:
   - min_ff_n40C_1v95
   - max_ss_n40C_1v60
 
+# top_pnr19b left 60 max-slew + 4 max-cap violations in max_ss on the
+# u_logic.ENABLE x SS_BBPD decode nets (_0628_/_0629_ etc: x1 drivers
+# feeding ~16-20 loads).  top_pnr20 showed wire-length buffering made it
+# WORSE (slew 60->168, cap 4->11): a 500um wire budget inside a 300um die
+# only adds RC.  Revert that.  The right fix is stronger drivers + a
+# tighter synthesis fanout cap so the high-fanout decode nets get split
+# at elaboration, not post-route.
+MAX_FANOUT_CONSTRAINT: 8
+
 # sky130 KLayout DRC: run the sky130A.lydrc deck (LibreLane calls
 # run_sky130 for this PDK, which passes feol/beol/floating_metal/offgrid/
 # seal as -rd defines).  feol+beol=true = full-chip DRC, no seal ring.

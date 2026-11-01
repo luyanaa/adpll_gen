@@ -153,6 +153,20 @@ DIODE_CELL).  New: MCSTA at nom_tt/min_ff/max_ss, KLayout DRC via
     * SS corner RST_N removal -0.558 ns (async-reset release timing;
       needs a hold-path delay or set_false_path -hold decision).
 
+`top_pnr19b` (RUN_POST_GRT_DESIGN_REPAIR=true, RSZ_CORNERS=3 corners,
+set_false_path -hold on RST_N): LVS back to 0 (the net92 net-name
+grouping artefact disappeared once post-GRT repair re-buffered the
+RST_N fanout), and the SS removal violation is waived by the hold-side
+false path.  SS slew/cap still 60/4 - the resizer ran with the default
++slew_margin 10 and no wire budget, so it never upsized the weak x1
+drivers on the u_logic.ENABLE x SS_BBPD decode nets (16-20 loads).
+
+`top_pnr20` (MAX_WIRE_LENGTH=500, negative slew/cap margins): negative
+margins are rejected (must be 0..100%), and the 500um wire budget made
+things WORSE - slew 60->168, cap 4->11.  A long wire inside a 300um die
+only adds RC.  Reverted; the real fix is a tighter synthesis fanout cap
+so the decode nets are split at elaboration (MAX_FANOUT_CONSTRAINT=8).
+
 Intermediate steps: top_pnr14 fixed getLocation list unpack;
 top_pnr14b still jogged horizontally -> short (reverted); top_pnr15/15b
 probed the strap-phase formula; top_pnr16 aligned straps but left the
