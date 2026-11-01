@@ -34,6 +34,7 @@ GND_NETS: [VGND]
 PDN_CONNECT_MACROS_TO_GRID: true
 PDN_MACRO_CONNECTIONS:
   - "dco VPWR VGND VPWR VGND"
+PDN_CFG: dir::pdn_cfg.tcl
 
 RT_MIN_LAYER: met1
 RT_MAX_LAYER: met5
@@ -53,9 +54,9 @@ SIGNOFF_SDC_FILE: dir::constraints/top.sdc
 MACROS:
   PLL_COUNTER_DCO_PHYS:
     gds:
-      - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.gds
+      - dir::macro/PLL_COUNTER_DCO_PHYS.gds
     lef:
-      - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lef
+      - dir::macro/PLL_COUNTER_DCO_PHYS.lef
     lib:
       "*_tt_025C_1v80":
         - dir::../../macro/counter_dco_sky130/PLL_COUNTER_DCO_PHYS.lib

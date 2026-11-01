@@ -122,3 +122,23 @@ proc _bind_all {inst pinname netname} {
 
 _bind_all dco VPWR VPWR
 _bind_all dco VGND VGND
+
+# Explicit local met4 bridge for the DCO macro at [20,20].
+# The top VGND strap is at x=28.26 and the macro VGND rail at x=31.48;
+# a straight jog would cross the VPWR strap at x=30.04, so route below the
+# top VPWR strap (y=5.0..5.96) and then up at x=31.48.
+proc _patch_dco_local {} {
+    global block
+    set net [$block findNet VGND]
+    if { $net eq "NULL" || $net eq "" } { return }
+    set sw [odb::dbSWire_create $net ROUTED]
+    _box $sw met4 28260 5000 29220 30040
+    _box $sw met4 28260 5000 32440 5960
+    _box $sw met4 31480 5000 32440 30640
+    set net [$block findNet VPWR]
+    if { $net eq "NULL" || $net eq "" } { return }
+    set sw [odb::dbSWire_create $net ROUTED]
+    _box $sw met4 30040 10064 31000 30640
+    puts "pdn_patch: local VGND/VPWR bridge around DCO rails"
+}
+_patch_dco_local

@@ -66,12 +66,22 @@ still unconnected and the flow failed in detailed routing with `DRT-0085`
 (no valid access pattern for `load_slew60/61`, `sky130_fd_sc_hd__probe_p_8`).
 No final views.
 
-Conclusion: the baseline `top_pnr4` (no custom PDN patch) and `top_pnr9`
-(DCR pass, LVS still 3 errors) are the best results. The PDN-via/width
-experiments did not close LVS; `top_pnr12` additionally lost routing
-convergence. LVS remains open on the macro power/PDN topology; the next
-correct fix is a macro-side power-pin extension to the macro boundary or a
-hand-repaired met4/met5 power path, not a top-level horizontal met4 jog.
+`top_pnr13` implemented both remaining directions: (1) top-flow macro
+LEF/GDS copies with all 12 met4 power rails extended to the macro boundary
+and (2) a hand-written local met4 bridge around the DCO rails (VGND routed
+below the VPWR strap at y=5, then up at x=31.48; VPWR bridged at x=30.04).
+The PDN patch logs confirmed the local bridge ran and `dco matched with dco`,
+and detailed routing completed, but the final result was worse: Magic DRC
+failed with 111 errors, LVS failed with 4 errors / 2 unmatched pins / 1
+unmatched net, and antenna failed 4/4. Setup/hold remained 0/0. Final views
+were saved under `runs/top_pnr13/final` but this variant is not used.
+
+Conclusion: the baseline `top_pnr4` (no custom PDN patch) remains the best
+completed result. The custom macro-extension/local-bridge path fixed the
+macro net identification (`dco matched`) but introduced 111 top-level DRC
+errors and did not close LVS. Further work should treat the macro power
+interface as a macro-level power-grid/LVS problem, not only a top-level PDN
+patch.
 
 ## Constraints audit
 
