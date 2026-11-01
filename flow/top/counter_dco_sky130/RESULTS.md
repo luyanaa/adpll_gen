@@ -56,11 +56,22 @@ patch. DRC passed, but LVS was worse: 4 errors, 2 unmatched pins, 1 unmatched
 net, and antenna 8/8. This confirmed that a horizontal met4 jog can short or
 mis-bind the macro rails; the approach is not used.
 
+`top_pnr11` tried wider met4/met5 PDN straps (`PDN_V/HWIDTH=1.6`) with
+`PDN_V/HSPACING=0.5`. It failed immediately with `PDN-0108`: met5 minimum
+spacing is 1.6 µm. No final views.
+
+`top_pnr12` repeated with `PDN_V/HSPACING=1.6`. PDN generation reduced the
+`PDN-0110` no-via count from 592 to 88, but `dco/VPWR` and `dco/VGND` were
+still unconnected and the flow failed in detailed routing with `DRT-0085`
+(no valid access pattern for `load_slew60/61`, `sky130_fd_sc_hd__probe_p_8`).
+No final views.
+
 Conclusion: the baseline `top_pnr4` (no custom PDN patch) and `top_pnr9`
-(DCR pass, LVS still 3 errors) are the best results. LVS remains open on the
-macro power/PDN topology; the next correct fix is a macro-side power-pin
-extension to the macro boundary or a repaired met4/met5 PDN via, not a
-top-level horizontal met4 jog.
+(DCR pass, LVS still 3 errors) are the best results. The PDN-via/width
+experiments did not close LVS; `top_pnr12` additionally lost routing
+convergence. LVS remains open on the macro power/PDN topology; the next
+correct fix is a macro-side power-pin extension to the macro boundary or a
+hand-repaired met4/met5 power path, not a top-level horizontal met4 jog.
 
 ## Constraints audit
 
