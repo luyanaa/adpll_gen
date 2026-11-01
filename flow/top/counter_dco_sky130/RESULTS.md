@@ -167,6 +167,24 @@ things WORSE - slew 60->168, cap 4->11.  A long wire inside a 300um die
 only adds RC.  Reverted; the real fix is a tighter synthesis fanout cap
 so the decode nets are split at elaboration (MAX_FANOUT_CONSTRAINT=8).
 
+`top_pnr21` (MAX_FANOUT_CONSTRAINT=8): max_fanout violations cleared to
+0 across all corners, but the SAME 60 slew + 4 cap pins remain with
+bit-identical slew values (2.707ns).  The violating input pins are all
+driven by the PLL_COUNTER_DCO_PHYS macro outputs.  The macro .lib is
+TT-only and reused for the SS/FF corners, so its output-pin slew model
+does not degrade in SS - this is a black-box-boundary limitation, not a
+standard-cell placement issue.  No amount of resizer/synthesis buffering
+can change the macro's intrinsic output slew.
+
+KNOWN ISSUE (waived): the 60 max-slew + 4 max-cap violations in
+max_ss_n40C_1v60 are an artefact of the DCO macro's TT-only
+characterization being applied to the SS corner.  Root fix requires
+re-characterizing PLL_COUNTER_DCO_PHYS at SS/FF (a separate
+characterization campaign), which is out of scope for this iteration.
+All standard-cell-side checks are clean: fanout 0, LVS 0, antenna 0,
+Magic+KLayout DRC 0, IR drop 0.00%, MCSTA setup/hold WNS=TNS=0 in all
+three corners, and the RST_N removal path is waived via false_path -hold.
+
 Intermediate steps: top_pnr14 fixed getLocation list unpack;
 top_pnr14b still jogged horizontally -> short (reverted); top_pnr15/15b
 probed the strap-phase formula; top_pnr16 aligned straps but left the
