@@ -1,0 +1,144 @@
+`timescale 1ns/1ps
+// ADCC_TOP — all-digital duty-cycle corrector for a DDR PHY clock path.
+// Reuses the same infrastructure as ADDLL:
+//   * PLL_SSBBPD            bang-bang PD (used here as a duty detector)
+//   * pll_digital_loop_filter  degraded to an up/down counter (KP=0)
+//   * pll_term_decoder_with_zero  binary -> thermometer
+//   * PLL_COUNTER_DCDL_PHYS      tapped delay line (one edge path)
+//   * dither-window lock detect (same idea as addll_top)
+//
+// Duty detection: a balanced clock has 50% high time, so the rising edge of
+// CLK and the rising edge of ~CLK are exactly T/2 apart.  Feeding CLK and
+// ~CLK into the two PD inputs makes SS_BBPD report whether the high time is
+// > or < 50% (the "second PD input" becomes a duty-error sign).
+//
+// Correction: only the FALLING edge is moved (rise stays referenced).  The
+// inverted signal passes through the DCDL so its falling edge delay shifts
+// the output's high pulse width.  A single-ended rise-only DCC like this is
+// the standard minimal-area DDR-PHY DCC.
+module ADCC_TOP #(
+    parameter integer COARSE_NDELS = 15,
+    parameter integer MID_NDELS = 15,
+    parameter integer FINE_NDELS = 31,
+    parameter integer FILTER_BITS = 16,
+    parameter integer LOCK_COUNT = 16,
+    parameter integer LOSS_COUNT = 4,
+    parameter integer MID_W = 4,
+    parameter integer COARSE_W = 8
+) (
+    input  CLK_IN,          // input clock with duty error
+    input  RST_N,
+    input  TICK,            // loop sampling clock
+    input  EN,
+    input  [FILTER_BITS-1:0] KI,
+    input  [7:0] DUTY_OFFS, // static offset added to correction code
+    input  [7:0] DUTY_INIT, // preload while EN=0
+    output CLK_OUT,         // duty-corrected clock
+    output LOCKED,
+    output ERR,
+    output [7:0] DUTY_CODE
+);
+    localparam integer TOTAL_STEPS =
+        FINE_NDELS + MID_W*MID_NDELS + COARSE_W*COARSE_NDELS;
+
+    // Inverted input: its rising edge marks the end of the high pulse.
+    wire clk_n = ~CLK_IN;
+
+    // Duty detector: PD compares the (corrected) output high-pulse against
+    // the input reference.  A >50% duty reads as one sign, <50% the other.
+    wire [1:0] pd_raw;
+`ifdef SIMULATION
+    sim_SSBBPD pd (
+        .CLK_VCO(CLK_OUT), .CLK_REF(clk_n), .SS_BBPD(pd_raw)
+    );
+`else
+    PLL_SSBBPD pd (
+        .INJ_EDGE_BALANCED(clk_n),
+        .OSC_BALANCED(CLK_OUT),
+        .SS_BBPD(pd_raw)
+    );
+`endif
+    // Same bit-swap convention as ADDLL: late -> increment.
+    wire [1:0] SS_BBPD = {pd_raw[0], pd_raw[1]};
+
+    wire [FILTER_BITS-1:0] DLF_OUT;
+    wire ILL_P, ILL_N;
+    pll_digital_loop_filter #(.BITS(FILTER_BITS)) dlf (
+        .CLK(TICK), .RST_N(RST_N), .ENABLE(EN),
+        .SS_BBPD(SS_BBPD),
+        .KP({FILTER_BITS{1'b0}}), .KI(KI),
+        .OUT(DLF_OUT), .ILL_P(ILL_P), .ILL_N(ILL_N)
+    );
+
+    wire [FILTER_BITS-1:0] sum = DLF_OUT + {{(FILTER_BITS-8){1'b0}}, DUTY_OFFS};
+    wire [FILTER_BITS-1:0] sat = (sum > TOTAL_STEPS) ? TOTAL_STEPS[FILTER_BITS-1:0] : sum;
+    assign DUTY_CODE = EN ? sat[7:0] : DUTY_INIT;
+    wire [7:0] code = DUTY_CODE;
+
+    wire [7:0] fine_n   = (code > FINE_NDELS) ? FINE_NDELS : code;
+    wire [7:0] rem1     = code - fine_n;
+    wire [7:0] mid_n    = (rem1/MID_W > MID_NDELS) ? MID_NDELS : rem1/MID_W;
+    wire [7:0] rem2     = rem1 - mid_n*MID_W;
+    wire [7:0] coarse_n = (rem2/COARSE_W > COARSE_NDELS) ? COARSE_NDELS : rem2/COARSE_W;
+
+    wire [COARSE_NDELS-1:0] COARSE_MUX;
+    wire [MID_NDELS-1:0]    MID_MUX;
+    wire [FINE_NDELS-1:0]   FINE_MUX;
+    pll_term_decoder_with_zero #(.NDELS(COARSE_NDELS)) dec_c (
+        .IN(coarse_n[$clog2(COARSE_NDELS+1)-1:0]), .OUT(COARSE_MUX));
+    pll_term_decoder_with_zero #(.NDELS(MID_NDELS)) dec_m (
+        .IN(mid_n[$clog2(MID_NDELS+1)-1:0]), .OUT(MID_MUX));
+    pll_term_decoder_with_zero #(.NDELS(FINE_NDELS)) dec_f (
+        .IN(fine_n[$clog2(FINE_NDELS+1)-1:0]), .OUT(FINE_MUX));
+
+    // Single-edge correction: delay only the inverted (falling-edge) path,
+    // then recombine.  func: CLK_OUT rise = CLK_IN rise; CLK_OUT fall =
+    // delayed fall of CLK_IN.  High-pulse width = code-controlled.
+    wire fall_d;
+`ifdef SIMULATION
+    PLL_COUNTER_DCDL #(
+        .COARSE_NDELS(COARSE_NDELS), .MID_NDELS(MID_NDELS), .FINE_NDELS(FINE_NDELS)
+    ) dcdl (
+        .COARSE_MUX(COARSE_MUX), .MID_MUX(MID_MUX), .FINE_MUX(FINE_MUX),
+        .CLK_IN(clk_n), .CLK_OUT(fall_d)
+    );
+    // recombine: output is high while CLK_IN is high, low when delayed fall arrives
+    assign CLK_OUT = CLK_IN ? 1'b1 : ~fall_d;
+`else
+    PLL_COUNTER_DCDL_PHYS #(
+        .COARSE_NDELS(COARSE_NDELS), .MID_NDELS(MID_NDELS), .FINE_NDELS(FINE_NDELS)
+    ) dcdl (
+        .COARSE_MUX(COARSE_MUX), .MID_MUX(MID_MUX), .FINE_MUX(FINE_MUX),
+        .CLK_IN(clk_n), .CLK_OUT(fall_d)
+    );
+    assign CLK_OUT = CLK_IN | ~fall_d;
+`endif
+
+    // Lock = duty code holds inside a +/-DITHER_BAND window for LOCK_COUNT.
+    reg [FILTER_BITS-1:0] dmin, dmax;
+    reg [7:0] win_cnt;
+    reg locked_r, lost_r;
+    localparam integer DITHER_BAND = 4;
+    always @(posedge TICK or negedge RST_N) begin
+        if (!RST_N) begin
+            dmin <= {FILTER_BITS{1'b1}}; dmax <= 0; win_cnt <= 0;
+            locked_r <= 1'b0; lost_r <= 1'b0;
+        end else if (!EN) begin
+            dmin <= {FILTER_BITS{1'b1}}; dmax <= 0; win_cnt <= 0;
+            locked_r <= 1'b0; lost_r <= 1'b0;
+        end else begin
+            if (DLF_OUT < dmin) dmin <= DLF_OUT;
+            if (DLF_OUT > dmax) dmax <= DLF_OUT;
+            if ((dmax - dmin) <= DITHER_BAND) begin
+                if (win_cnt < 8'hff) win_cnt <= win_cnt + 1;
+            end else begin
+                dmin <= DLF_OUT; dmax <= DLF_OUT; win_cnt <= 0;
+                if (locked_r) lost_r <= 1'b1;
+                locked_r <= 1'b0;
+            end
+            if (win_cnt >= LOCK_COUNT[7:0]) locked_r <= 1'b1;
+        end
+    end
+    assign LOCKED = locked_r;
+    assign ERR    = lost_r | ILL_P | ILL_N;
+endmodule
