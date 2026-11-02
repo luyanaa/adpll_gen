@@ -102,11 +102,20 @@ module TDC_TOP #(
 `endif
 
     // ---- edge comparison: sample SIG at the delayed-REF edge ----------
-    // A DFF clocked by ref_d capturing SIG: if SIG already rose before
-    // ref_d, the delayed edge is LATE -> reduce the code.
+    // A DFF clocked by ref_d captures SIG: if SIG already rose before
+    // ref_d, the delayed edge is LATE -> reduce the code.  The SAR's
+    // SETTLE interval covers several TICKs, so the ref_d-domain sample
+    // is stable by the time the FSM reads it.
+    //
+    // MTBF note: this is a plain stdcell DFF.  A 2-FF TICK-domain
+    // re-synchroniser was tried but the extra two-TICK latency made the
+    // SAR read a stale sample at SETTLE=4 — a real re-synchroniser needs
+    // the FSM to wait out the sync latency.  For ±1-LSB class resolution
+    // the single DFF + SETTLE margin is adequate; a true sub-LSB arbiter
+    // needs a custom metastability cell that std cells cannot provide.
     reg sig_q;
     always @(posedge ref_d or negedge RST_N) begin
-        if (!RST_N) sig_q <= 0;
+        if (!RST_N) sig_q <= 1'b0;
         else        sig_q <= SIG;
     end
     assign pd_late = sig_q;   // SIG already high when ref_d rose -> late

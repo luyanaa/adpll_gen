@@ -109,13 +109,15 @@ module CDR_TOP #(
     assign REC_CLK = rec_clk;
 
     // ---- samplers --------------------------------------------------
-    // Functional view: the two Alexander samples are behavioural taps of
-    // DATA (data phase on the recovered clock, edge phase half a UI
-    // later).  Silicon replaces these with matched FFs on two DCDL taps
-    // at a fixed 0.5-UI offset — so they are wrapped in SIMULATION here
-    // and left as a documented hook (SAMPLER_D/SAMPLER_E ports) for the
-    // physical macro, which drives the PD from real sampler outputs.
-`ifdef SIMULATION
+    // Two matched sampler FFs on the two recovered-clock phases:
+    //   data phase -> posedge rec_clk  (eye centre)
+    //   edge phase -> negedge rec_clk  (transition boundary, 0.5 UI)
+    // The negedge FF synthesises to a sky130 falling-edge DFF
+    // (sky130_fd_sc_hd__dfrtn / __dfxtn), so both phases are standard
+    // cells and no behavioural stub is needed.  A finer / more accurate
+    // edge phase would use a second DCDL tap at a fixed 0.5-UI offset;
+    // the half-rate falling edge is the stdcell-only approximation and
+    // is what makes this block synthesisable today.
     reg d_prev, d_cur, d_next, e_cur;
     // 3-deep UI history on the data phase
     always @(posedge rec_clk or negedge RST_N) begin
@@ -133,12 +135,6 @@ module CDR_TOP #(
         else        e_cur <= DATA;
     end
     assign DATA_OUT = d_cur;
-`else
-    // Physical stub: drive the PD from constant samples so the loop
-    // synthesises; the real sampler FFs attach here in the full macro.
-    wire d_prev=1'b0, d_cur=1'b0, d_next=1'b0, e_cur=1'b0;
-    assign DATA_OUT = d_cur;
-`endif
 
     ALEXANDER_PD pd (
         .D_PREV(d_prev), .D(d_cur), .D_NEXT(d_next), .E(e_cur),
