@@ -1,0 +1,45 @@
+# Harness landing the three custom/analog cells
+# (gf180mcuD / gf180mcu_fd_sc_mcu9t5v0, VDD=5.0V).
+DESIGN_NAME: CUSTOM_CELLS_TOP
+VERILOG_FILES:
+  - dir::src/custom_cells_top.v
+  - dir::src/dly_stage_gf180mcu.v
+  - dir::src/arbiter_gf180mcu.v
+  - dir::src/dual_sampler_gf180mcu.v
+PDK: gf180mcu
+STD_CELL_LIBRARY: gf180mcu_fd_sc_mcu9t5v0
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD, VPW]
+SCL_GROUND_PINS: [VSS, VNW]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+RT_MIN_LAYER: Metal1
+RT_MAX_LAYER: Metal5
+IO_PIN_H_LAYER: Metal3
+IO_PIN_V_LAYER: Metal2
+DIE_AREA: [0, 0, 60, 60]
+FP_CORE_UTIL: 30
+PL_TARGET_DENSITY_PCT: 50
+CLOCK_PORT: [REF, CK]
+CLOCK_PERIOD: 10.0
+RUN_CTS: false
+RUN_POST_CTS_RESIZER_TIMING: false
+RUN_SPEF_EXTRACTION: false
+RUN_IRDROP_REPORT: false
+RUN_MCSTA: false
+RUN_KLAYOUT_XOR: false
+RUN_ANTENNA_REPAIR: true
+PNR_SDC_FILE: dir::macro.sdc.tcl
+SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
+LIB:
+  "*_tt_025C_5v00":
+    - /home/yanlu/.ciel/ciel/gf180mcu/versions/792ef67037d74c8c51811eab3ce23cf793491296/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu9t5v0/lib/gf180mcu_fd_sc_mcu9t5v0__tt_025C_5v00.lib
+STA_CORNERS:
+  - nom_tt_025C_5v00
+PNR_CORNERS:
+  - nom_tt_025C_5v00
+RCX_RULESETS: {}
+RUN_KLAYOUT_DRC: false
+RUN_MAGIC_DRC: false
+RUN_LVS: false

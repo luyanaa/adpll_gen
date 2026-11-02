@@ -1,0 +1,44 @@
+# Harness landing the three custom/analog cells (ihp-sg13g2 / sg13g2_stdcell).
+DESIGN_NAME: CUSTOM_CELLS_TOP
+VERILOG_FILES:
+  - dir::src/custom_cells_top.v
+  - dir::src/dly_stage_sg13g2.v
+  - dir::src/arbiter_sg13g2.v
+  - dir::src/dual_sampler_sg13g2.v
+PDK: ihp-sg13g2
+STD_CELL_LIBRARY: sg13g2_stdcell
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD]
+SCL_GROUND_PINS: [VSS]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal5
+IO_PIN_H_LAYER: Metal3
+IO_PIN_V_LAYER: Metal2
+DIE_AREA: [0, 0, 60, 60]
+FP_CORE_UTIL: 30
+PL_TARGET_DENSITY_PCT: 50
+CLOCK_PORT: [REF, CK]
+CLOCK_PERIOD: 10.0
+RUN_CTS: false
+RUN_POST_CTS_RESIZER_TIMING: false
+RUN_SPEF_EXTRACTION: false
+RUN_IRDROP_REPORT: false
+RUN_MCSTA: false
+RUN_KLAYOUT_XOR: false
+RUN_ANTENNA_REPAIR: true
+PNR_SDC_FILE: dir::macro.sdc.tcl
+SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
+LIB:
+  "*_typ_1p20V_25C":
+    - /home/yanlu/.ciel/ciel/ihp-sg13/versions/89d42ee6d2fd9b50b86a1aada6fee6673c3e6008/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+STA_CORNERS:
+  - nom_typ_1p20V_25C
+PNR_CORNERS:
+  - nom_typ_1p20V_25C
+RCX_RULESETS: {}
+RUN_MAGIC_DRC: false
+RUN_KLAYOUT_DRC: false
+RUN_LVS: false

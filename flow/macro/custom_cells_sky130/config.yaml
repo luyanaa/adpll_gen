@@ -1,0 +1,41 @@
+# Harness landing the three custom/analog cells (sky130_fd_sc_hd).
+DESIGN_NAME: CUSTOM_CELLS_TOP
+VERILOG_FILES:
+  - dir::src/custom_cells_top.v
+  - dir::src/dly_stage_sky130.v
+  - dir::src/arbiter_sky130.v
+  - dir::src/dual_sampler_sky130.v
+PDK: sky130_fd_sc_hd
+STD_CELL_LIBRARY: sky130_fd_sc_hd
+VDD_PIN: VPWR
+GND_PIN: VGND
+SCL_POWER_PINS: [VPWR, VPB]
+SCL_GROUND_PINS: [VGND, VNB]
+VDD_NETS: [VPWR]
+GND_NETS: [VGND]
+RT_MIN_LAYER: met1
+RT_MAX_LAYER: met5
+IO_PIN_H_LAYER: met3
+IO_PIN_V_LAYER: met2
+DIE_AREA: [0, 0, 60, 60]
+FP_CORE_UTIL: 30
+PL_TARGET_DENSITY_PCT: 50
+CLOCK_PORT: [REF, CK]
+CLOCK_PERIOD: 10.0
+RUN_CTS: false
+RUN_POST_CTS_RESIZER_TIMING: false
+RUN_SPEF_EXTRACTION: false
+RUN_IRDROP_REPORT: false
+RUN_MCSTA: false
+RUN_KLAYOUT_XOR: false
+RUN_ANTENNA_REPAIR: true
+PNR_SDC_FILE: dir::macro.sdc.tcl
+SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
+LIB:
+  "*_tt_025C_1v80":
+    - /home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+STA_CORNERS:
+  - nom_tt_025C_1v80
+PNR_CORNERS:
+  - nom_tt_025C_1v80
+RCX_RULESETS: {}
