@@ -1,0 +1,68 @@
+# LibreLane physical macro for ADDLL_TOP on sky130_fd_sc_hd.
+# All-digital DLL reusing the ADPLL infra (SSBBPD + degraded DLF + the
+# COARSE/MID/FINE delay cells cascaded as a real tapped delay line).
+DESIGN_NAME: ADDLL_TOP
+
+VERILOG_FILES:
+  - dir::src/addll_top.v
+  - dir::src/pll_counter_dcdl_phys.v
+  - dir::src/coarse_delay.v
+  - dir::src/mid_delay.v
+  - dir::src/dly_stage_sky130.v
+  - dir::src/fine_delay.v
+  - dir::src/ssbbpd.v
+  - dir::src/digital_loop_filter.v
+  - dir::src/term_decoder.v
+  - dir::src/lock_detector.v
+  - dir::src/pll_cells_sky130_fd_sc_hd.v
+
+PDK: sky130_fd_sc_hd
+STD_CELL_LIBRARY: sky130_fd_sc_hd
+
+VDD_PIN: VPWR
+GND_PIN: VGND
+SCL_POWER_PINS: [VPWR, VPB]
+SCL_GROUND_PINS: [VGND, VNB]
+VDD_NETS: [VPWR]
+GND_NETS: [VGND]
+
+RT_MIN_LAYER: met1
+RT_MAX_LAYER: met5
+IO_PIN_H_LAYER: met3
+IO_PIN_V_LAYER: met2
+
+DIE_AREA: [0, 0, 180, 160]
+FP_CORE_UTIL: 20
+PL_TARGET_DENSITY_PCT: 40
+
+CLOCK_PORT: [TICK, CLK_IN]
+CLOCK_PERIOD: 10.0
+
+# OpenROAD 2026-02-17's CTS pass segfaults in separateMacroRegSinks on this
+# two-clock macro.  The macro is small and the timing signoff is gate-level
+# OpenSTA with ideal clocks, so skip CTS rather than fabricate a clock tree.
+RUN_CTS: false
+RUN_POST_CTS_RESIZER_TIMING: false
+
+# This experiment has no RCX ruleset; the dedicated characterization uses
+# gate-level OpenSTA and the macro SPICE view, so skip the flow's SPEF/IR-drop
+# and post-PnR multi-corner STA steps.
+RUN_SPEF_EXTRACTION: false
+RUN_IRDROP_REPORT: false
+RUN_MCSTA: false
+# The counter LVS closure uses the hierarchy-preserving Magic GDS (the
+# KLayout streamout loses the decap-cell hierarchy on this macro).  The
+# flow's Magic-vs-KLayout XOR check is not used by the dedicated DRC/LVS
+# driver.
+RUN_KLAYOUT_XOR: false
+PNR_SDC_FILE: dir::macro.sdc.tcl
+SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
+
+LIB:
+  "*_tt_025C_1v80":
+    - /home/yanlu/.ciel/ciel/sky130/versions/8afc8346a57fe1ab7934ba5a6056ea8b43078e71/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+STA_CORNERS:
+  - nom_tt_025C_1v80
+PNR_CORNERS:
+  - nom_tt_025C_1v80
+RCX_RULESETS: {}
