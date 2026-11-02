@@ -26,6 +26,7 @@ module TDC_TOP #(
     input  TICK,
     input  START,                    // begin a conversion
     output reg [CODE_BITS-1:0] TDC_CODE,
+    output reg TDC_HALF,                 // sub-LSB interpolation bit
     output reg DONE,
     output reg BUSY
 );
@@ -41,7 +42,7 @@ module TDC_TOP #(
     always @(posedge TICK or negedge RST_N) begin
         if (!RST_N) begin
             lo<=0; hi<=STEPS_C; mid<=0; settle<=0;
-            TDC_CODE<=0; DONE<=0; BUSY<=0;
+            TDC_CODE<=0; TDC_HALF<=0; DONE<=0; BUSY<=0;
         end else if (START && !BUSY && !DONE) begin
             lo<=0; hi<=STEPS_C;
             mid<=STEPS_C >> 1;
@@ -53,6 +54,9 @@ module TDC_TOP #(
                 if (pd_late) hi <= mid - 1; else lo <= mid + 1;
                 if (lo >= hi - 1 || mid == 0) begin
                     TDC_CODE <= mid;
+                    // sub-LSB: edge inside the multi-threshold window
+                    // (early sampler saw it, late one didn't) -> +1/2 LSB
+                    TDC_HALF <= half_bit;
                     BUSY <= 0; DONE <= 1;
                 end else begin
                     mid <= (lo + hi) >> 1;
@@ -101,22 +105,46 @@ module TDC_TOP #(
     );
 `endif
 
-    // ---- edge comparison: sample SIG at the delayed-REF edge ----------
-    // A DFF clocked by ref_d captures SIG: if SIG already rose before
-    // ref_d, the delayed edge is LATE -> reduce the code.  The SAR's
-    // SETTLE interval covers several TICKs, so the ref_d-domain sample
-    // is stable by the time the FSM reads it.
+    // ---- edge comparison: multi-threshold sampling -------------------
+    // Single arbiter DFF -> a 1-bit late/early verdict with no sub-LSB
+    // information: the metastability window is a single razor edge.
     //
-    // MTBF note: this is a plain stdcell DFF.  A 2-FF TICK-domain
-    // re-synchroniser was tried but the extra two-TICK latency made the
-    // SAR read a stale sample at SETTLE=4 — a real re-synchroniser needs
-    // the FSM to wait out the sync latency.  For ±1-LSB class resolution
-    // the single DFF + SETTLE margin is adequate; a true sub-LSB arbiter
-    // needs a custom metastability cell that std cells cannot provide.
-    reg sig_q;
+    // INSTEAD, *manufacture* the uncertainty:  fan ref_d out through two
+    // deliberately UNEQUAL clock stubs so the two samplers see the same
+    // REF edge at different effective times (offset delta = one delay
+    // stage).  This is an intentional, *designed* setup/hold violation
+    // window: SIG edges that land between the two sampling instants make
+    // the two samplers DISAGREE, which interpolates the edge position to
+    // ~1/2 LSB.  All standard cells: 2 DFFs + a fixed `inv_4` clock stub
+    // on the late tap.  (Versus a true arbiter, which needs a custom
+    // metastability-resolution cell; versus a 2-FF TICK re-sync, which
+    // adds latency that makes the SAR read a stale sample.)
+    //
+    //   ref_d_early --+--> [DFF early] q_e      q_e=1 & q_l=0 : edge is
+    //   ref_d ----[inv_4]--> [DFF late] q_l      inside the window -> 1/2
+    wire ref_d_late;
+`ifdef SIMULATION
+    // behavioural delay stub standing in for the matched inv_4 clock
+    // buffer (the physical macro uses a real clocked buffer stage)
+    assign #(15) ref_d_late = ref_d;
+`else
+    // a matched clock-buffer stub = one delay stage on the late sampler
+    // clock pin; sky130 clock buffer cell, no logic.
+    sky130_fd_sc_hd__clkbuf_4 u_interp_delay (.A(ref_d), .X(ref_d_late));
+`endif
+    reg sig_e, sig_l;
     always @(posedge ref_d or negedge RST_N) begin
-        if (!RST_N) sig_q <= 1'b0;
-        else        sig_q <= SIG;
+        if (!RST_N) sig_e <= 1'b0;
+        else        sig_e <= SIG;
     end
-    assign pd_late = sig_q;   // SIG already high when ref_d rose -> late
+    always @(posedge ref_d_late or negedge RST_N) begin
+        if (!RST_N) sig_l <= 1'b0;
+        else        sig_l <= SIG;
+    end
+    // The SAR verdict keeps using the MAIN sampler (sig_e on ref_d); the
+    // delayed sampler only supplies the half-LSB refinement.  sig_e=1
+    // while sig_l=0 means the SIG edge fell between the two sampling
+    // instants -> it is inside the interpolation window -> +1/2 LSB.
+    assign pd_late  = sig_e;              // coarse late/early verdict
+    wire   half_bit = sig_e & ~sig_l;     // inside the window -> +1/2 LSB
 endmodule
