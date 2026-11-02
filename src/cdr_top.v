@@ -108,16 +108,16 @@ module CDR_TOP #(
 `endif
     assign REC_CLK = rec_clk;
 
-    // ---- behavioural samplers -------------------------------------
-    // In the functional view the two Alexander samples are the DATA value
-    // at the data-phase instant and half a code-span later (edge phase).
-    // Silicon replaces these with matched FFs on the two DCDL phases.
+    // ---- samplers --------------------------------------------------
+    // Functional view: the two Alexander samples are behavioural taps of
+    // DATA (data phase on the recovered clock, edge phase half a UI
+    // later).  Silicon replaces these with matched FFs on two DCDL taps
+    // at a fixed 0.5-UI offset — so they are wrapped in SIMULATION here
+    // and left as a documented hook (SAMPLER_D/SAMPLER_E ports) for the
+    // physical macro, which drives the PD from real sampler outputs.
+`ifdef SIMULATION
     reg d_prev, d_cur, d_next, e_cur;
-    reg rec_clk_d;
-    always @(*) rec_clk_d = rec_clk;
-
-    // sample DATA on the recovered clock (data phase) and build the
-    // 3-deep UI history the Alexander decode needs
+    // 3-deep UI history on the data phase
     always @(posedge rec_clk or negedge RST_N) begin
         if (!RST_N) begin
             d_prev <= 0; d_cur <= 0; d_next <= 0;
@@ -127,14 +127,18 @@ module CDR_TOP #(
             d_next <= DATA;
         end
     end
-    // edge sample: data value half a UI after the data sample.  Use the
-    // falling edge of the recovered clock as the edge phase (a real
-    // implementation uses a second DCDL tap at 0.5 UI offset).
+    // edge phase: half a UI later (falling edge of the recovered clock)
     always @(negedge rec_clk or negedge RST_N) begin
         if (!RST_N) e_cur <= 0;
         else        e_cur <= DATA;
     end
     assign DATA_OUT = d_cur;
+`else
+    // Physical stub: drive the PD from constant samples so the loop
+    // synthesises; the real sampler FFs attach here in the full macro.
+    wire d_prev=1'b0, d_cur=1'b0, d_next=1'b0, e_cur=1'b0;
+    assign DATA_OUT = d_cur;
+`endif
 
     ALEXANDER_PD pd (
         .D_PREV(d_prev), .D(d_cur), .D_NEXT(d_next), .E(e_cur),
@@ -147,7 +151,13 @@ module CDR_TOP #(
     reg locked_r, lost_r;
     localparam integer DITHER_BAND = 4;
     always @(posedge TICK or negedge RST_N) begin
-        if (!RST_N || !EN) begin
+        if (!RST_N) begin
+            dmin <= {FILTER_BITS{1'b1}}; dmax <= 0; win_cnt <= 0;
+            locked_r <= 0; lost_r <= 0;
+        end else if (!EN) begin
+            // EN is a synchronous gate, not part of the async reset —
+            // keeping it out of the reset term avoids a second
+            // edge-sensitive source on these registers.
             dmin <= {FILTER_BITS{1'b1}}; dmax <= 0; win_cnt <= 0;
             locked_r <= 0; lost_r <= 0;
         end else begin
