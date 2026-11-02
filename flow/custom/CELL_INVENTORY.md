@@ -31,5 +31,20 @@
   FF negedge: gf180mcu_fd_sc_mcu9t5v0__dffnq_1 (.D,.CKN,.Q)
   FF w/rst  : gf180mcu_fd_sc_mcu9t5v0__dffrsnq_* (R,S), dffrnq_* (R)
 
+## OR1 / OpenRule1um  (SCL = or1_fd_sc)  VDD=5.0V   [minimal SCL]
+  buf       : BUFX2 (.A,.Y) ;  CLKBUFX2 (.A,.Y)
+  inv       : INVX1 (.A,.Y)
+  nand      : NAND2X1 (.A,.B,.Y) ;  NOR2X1 (.A,.B,.Y)
+  FF posedge: DFFPOSX1 (.D,.CLK,.Q,.QB)         -- no reset
+  FF w/rst  : DFFRX1 / DFFRX2 (.D,.CLK,.RESET,.Q,.QB)  -- active-HIGH reset
+  tie       : TIEHI (.Y) / TIELO (.Y)
+  fill      : FILL_*, DECAPX1, ENDCAPX1, ANTENNAX1, TAP
+  -- NO delay cell, mux2, latch, or negedge FF.  Rebuild from primitives:
+     DLY_STAGE = INVX1 legs + 3-NAND mux; ARB latch = NAND SR latch;
+     negedge sampler = DFFRX1 on inverted clock.
+  power pins: verilog models have NO VDD/VSS ports (flow injects);
+     config uses VDD_PIN=vdd / SCL_POWER_PINS=VDD (LEF pins uppercase).
+  lib       : or1_fd_sc_TT_5P0_25C.lib  (single corner, 5.0V)
+
 # NOTE: exact pin names must be confirmed from each .lib before
 # instantiation (e.g. mux2 order A0/A1 vs I0/I1, latch gate pin name).
