@@ -1,17 +1,20 @@
 # ADCC (All-Digital Duty-Cycle Corrector) — interface spec
 
-Shares the ADDLL infrastructure: `PLL_SSBBPD` as a **duty detector**,
-`pll_digital_loop_filter` degraded to an up/down counter (KP=0),
-`pll_term_decoder_with_zero`, `PLL_COUNTER_DCDL`/`_PHYS` as the
-single-edge delay, and a dither-window lock detector.
+Shares the ADDLL infrastructure: `pll_digital_loop_filter` degraded to an
+up/down counter (KP=0), `pll_term_decoder_with_zero`,
+`PLL_COUNTER_DCDL`/`_PHYS` as the single-edge delay, and a dither-window
+lock detector.  The duty detector is an **asynchronous averaging
+sampler**, not the edge bang-bang PD (see "Detector" below).
 
 ## Concept
 
-A 50%-duty clock has its rising edge exactly T/2 before the rising edge
-of its own inverse.  Feeding `~CLK_IN` and `CLK_OUT` into the SSBBPD
-turns the PD into a signed duty-error detector (>50% / <50%).  The loop
-then delays only the **falling** edge through the DCDL until the output
-high time equals T/2.
+The loop delays only the **falling** edge of `CLK_IN` through the DCDL
+(`CLK_OUT = CLK_IN | ~fall_d`) until the output high time equals T/2.
+Duty is measured by sampling `CLK_OUT` on a clock `SAMP` that is
+asynchronous to `CLK_IN`: statistically the fraction of `1` samples
+equals the duty.  Each sample is a 1-bit vote — `1` = high pulse too
+long → shrink it (decrease fall delay), `0` = too short → increase.
+The DLF integrator averages votes until the vote rate is 50%.
 
 ## Ports (`ADCC_TOP`)
 
@@ -20,6 +23,7 @@ high time equals T/2.
 | `CLK_IN` | in | 1 | Input clock with duty error. |
 | `RST_N` | in | 1 | Async reset. |
 | `TICK` | in | 1 | Loop sampling clock. |
+| `SAMP` | in | 1 | Async duty-sampling clock — **must be incommensurate** with `CLK_IN` (a spare ring oscillator or divided reference). |
 | `EN` | in | 1 | Loop enable; `0` = open-loop at `DUTY_INIT`. |
 | `KI` | in | `FILTER_BITS` | Step per PD update (1 = min). |
 | `DUTY_OFFS` | in | 8 | Static duty-code offset (fine LSBs). |
@@ -34,42 +38,40 @@ Identical decode to ADDLL — `code = fine_n + 4·mid_n + 8·coarse_n` in
 fine LSBs (~15 ps/step model), total 211 codes ≈ 3165 ps of falling-edge
 adjustment.  One code LSB trims the high pulse by ~15 ps.
 
+## Detector — averaging sampler (why not edge bang-bang)
+
+A BBPD comparing `~CLK_OUT` (corrected fall) against `~CLK_IN` (input
+fall) measures the fall against the **input's own duty point** (e.g.
+30%), not T/2 — so its sign is permanently "late" and the loop
+parasitic-locks (the earlier "50.9% lock" was an artefact of the fake
+`T0_PS=4000` making `fall_d` in-phase).  A rising-edge PD needs a T/2
+quadrature reference, which a single BBPD cannot supply.
+
+The fix: **integrate the output level instead of comparing edges**.
+Sample `CLK_OUT` on a clock `SAMP` asynchronous to `CLK_IN`; the
+fraction of `1` samples equals the duty.  `SAMP` must be
+*incommensurate* with `CLK_IN` — a coherent sampler aliases to a single
+point on the waveform.  Each sample is a 1-bit vote encoded onto the
+DLF symbol set (`01`=+code, `11`=−code); the integrator averages to
+50%.  This is the standard digital-DCC detector — no second DLL, no
+quadrature reference, and it is *monotonic* so no SAR seed is needed.
+
 ## Status / open items
 
-- RTL smoke (`adcc_top_tb`, 30% input duty): the loop converges to a
-  *wrong* equilibrium — `DUTY_CODE` settles at a parasitic-lock value
-  and `CLK_OUT` shows sub-period pulses (period < T).  **The PD
-  reference is architecturally wrong** (see below); the earlier
-  "50.9% lock" was an artefact of the unrealistic `T0_PS=4000`
-  insertion delay making `fall_d` in-phase with `~CLK_IN`.
-- **Architecture issue (root cause)**: a bang-bang PD comparing
-  `~CLK_OUT` rise (corrected falling edge) against `~CLK_IN` rise
-  (input falling edge) measures the corrected fall against the
-  *uncorrected* input fall — which sits at the input's own duty point
-  (e.g. 30%), **not** at T/2.  The corrected fall should land at T/2,
-  which is `clk_in fall + (T - 2·t_high)/2` — always *after* the input
-  fall for any under-50% input, so the PD sign is permanently "late"
-  and the loop rails.  A rising-edge PD needs a **quadrature (T/2)
-  reference**, which the single BBPD cannot supply.
-- **What does work / reuse**: the delay path is correct —
-  `CLK_OUT = CLK_IN | ~fall_d` with `fall_d = ~CLK_IN` delayed by `d`
-  places the output fall at `clk_in rise + t_high + d`; setting `d`
-  so that sum hits T/2 corrects the duty (verified analytically:
-  30% input needs `d ≈ 0.8 ns` ≈ code 40 at 15 ps/LSB + 200 ps T0).
-  The two-stage decode pipeline and `duty_sar_search` are kept and
-  are reusable once the PD is fixed.
-- **Real fix (next lane)**: give the duty detector a true T/2
-  reference.  Options: (a) a second half-DLL generating `clk_in + T/2`
-  (quadrature) and compare `~CLK_OUT` against *that*; (b) an
-  integrator/averaging PD (charge-pump style duty-to-voltage, then a
-  comparator) instead of edge-bang-bang; (c) measure `CLK_OUT` vs
-  `CLK_OUT` delayed T/2 — still needs a T/2 element.  All three need
-  one more delay element, i.e. real DCCs invariably use a quadrature
-  reference or an RC/averaging PD, not a bare BBPD on the two edges.
+- **Verified** (`adcc_top_tb`, 30% input): `SAMP` = 1.11 ns async clock;
+  the loop climbs monotonically to `DUTY_CODE=40` and the output
+  settles at **49.6% duty, clean 4.000 ns period, no glitches**.  This
+  matches the analytic prediction (0.8 ns fall shift = code 40 at
+  15 ps/LSB + 200 ps T0).  PASS.
+- `CLK_OUT = CLK_IN | ~fall_d` with `fall_d = ~CLK_IN` delayed by `d`:
+  output fall lands at `clk_in rise + t_high + d`; `d` chosen so the
+  sum hits T/2.  Delay path and decode pipeline unchanged and correct.
+- The level-integrating detector replaced the earlier `duty_sar_search`
+  acquisition path — convergence is monotonic, no seed needed.
 - **Open (physical)**: parasitic second pulse when `fall_d`'s delay is
   comparable to the low period — the OR recombine re-exposes the
   previous high pulse if `fall_d` hasn't settled within the low window.
-  A pulse-swallow / SR-latch combiner gated by `~CLK_IN` is needed, and
-  tap updates must be frozen to a quiet boundary (`fall_d` settled).
-  `T0_PS` was dropped to 200 for the corrector's falling-edge path so
-  the delay range actually covers the low half-period.
+  A pulse-swallow / SR-latch combiner gated by `~CLK_IN` plus freezing
+  tap updates to a quiet boundary (`fall_d` settled) is still the
+  silicon requirement.  `T0_PS=200` keeps the corrector's falling-edge
+  delay range covering the low half-period.
