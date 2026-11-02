@@ -36,21 +36,40 @@ adjustment.  One code LSB trims the high pulse by ~15 ps.
 
 ## Status / open items
 
-- RTL smoke (`adcc_top_tb`, 30% input duty): output duty corrects to
-  ~50.9%, but the loop drives `DUTY_CODE` to the rail (211) and does not
-  assert LOCKED — the bang-bang PD loses its useful early/late sign when
-  the error is large, so it runs to saturation rather than settling.
-- **Fixed**: the PD must compare the *inverted* outputs — `~CLK_OUT` rise
-  (= CLK_OUT fall, code-controlled) vs `~CLK_IN` rise (= CLK_IN fall, the
-  fixed T/2 midpoint).  Comparing the raw rising edges fed a code-
-  independent sign and saturated the loop; with `out_n`/`clk_n` it tracks
-  the high-pulse width.
-- **Added** `duty_sar_search`: on `EN` rising, a binary search on the
-  code (PD sign as comparison) seeds the loop near the 50% point, then
-  bang-bang tracking holds it.  Smoke: 30% input, `LOCKED` in ~268 TICKs,
-  code dithers around the lock point (vs railing at 211 without SAR).
-- **Open (physical)**: the recombine `CLK_IN | ~fall_d` produces short
-  glitches when the code updates mid-cycle (observed <T periods while the
-  code dithers 31..42).  Needs a glitchless edge-combiner (SR-latch /
-  symmetric-MUX cell) and to freeze tap updates at a clean boundary —
-  the same caveat as ADDLL MUX switching.
+- RTL smoke (`adcc_top_tb`, 30% input duty): the loop converges to a
+  *wrong* equilibrium — `DUTY_CODE` settles at a parasitic-lock value
+  and `CLK_OUT` shows sub-period pulses (period < T).  **The PD
+  reference is architecturally wrong** (see below); the earlier
+  "50.9% lock" was an artefact of the unrealistic `T0_PS=4000`
+  insertion delay making `fall_d` in-phase with `~CLK_IN`.
+- **Architecture issue (root cause)**: a bang-bang PD comparing
+  `~CLK_OUT` rise (corrected falling edge) against `~CLK_IN` rise
+  (input falling edge) measures the corrected fall against the
+  *uncorrected* input fall — which sits at the input's own duty point
+  (e.g. 30%), **not** at T/2.  The corrected fall should land at T/2,
+  which is `clk_in fall + (T - 2·t_high)/2` — always *after* the input
+  fall for any under-50% input, so the PD sign is permanently "late"
+  and the loop rails.  A rising-edge PD needs a **quadrature (T/2)
+  reference**, which the single BBPD cannot supply.
+- **What does work / reuse**: the delay path is correct —
+  `CLK_OUT = CLK_IN | ~fall_d` with `fall_d = ~CLK_IN` delayed by `d`
+  places the output fall at `clk_in rise + t_high + d`; setting `d`
+  so that sum hits T/2 corrects the duty (verified analytically:
+  30% input needs `d ≈ 0.8 ns` ≈ code 40 at 15 ps/LSB + 200 ps T0).
+  The two-stage decode pipeline and `duty_sar_search` are kept and
+  are reusable once the PD is fixed.
+- **Real fix (next lane)**: give the duty detector a true T/2
+  reference.  Options: (a) a second half-DLL generating `clk_in + T/2`
+  (quadrature) and compare `~CLK_OUT` against *that*; (b) an
+  integrator/averaging PD (charge-pump style duty-to-voltage, then a
+  comparator) instead of edge-bang-bang; (c) measure `CLK_OUT` vs
+  `CLK_OUT` delayed T/2 — still needs a T/2 element.  All three need
+  one more delay element, i.e. real DCCs invariably use a quadrature
+  reference or an RC/averaging PD, not a bare BBPD on the two edges.
+- **Open (physical)**: parasitic second pulse when `fall_d`'s delay is
+  comparable to the low period — the OR recombine re-exposes the
+  previous high pulse if `fall_d` hasn't settled within the low window.
+  A pulse-swallow / SR-latch combiner gated by `~CLK_IN` is needed, and
+  tap updates must be frozen to a quiet boundary (`fall_d` settled).
+  `T0_PS` was dropped to 200 for the corrector's falling-edge path so
+  the delay range actually covers the low half-period.

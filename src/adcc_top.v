@@ -105,11 +105,20 @@ module ADCC_TOP #(
     assign DUTY_CODE = sar_busy ? sar_code : (EN ? sat[7:0] : DUTY_INIT);
     wire [7:0] code = DUTY_CODE;
 
-    wire [7:0] fine_n   = (code > FINE_NDELS) ? FINE_NDELS : code;
-    wire [7:0] rem1     = code - fine_n;
-    wire [7:0] mid_n    = (rem1/MID_W > MID_NDELS) ? MID_NDELS : rem1/MID_W;
-    wire [7:0] rem2     = rem1 - mid_n*MID_W;
-    wire [7:0] coarse_n = (rem2/COARSE_W > COARSE_NDELS) ? COARSE_NDELS : rem2/COARSE_W;
+    // Two-stage pipeline identical to ADDLL_TOP: register the decoded tap
+    // counts so DLF->decode->tap is not a single-cycle path.  MID_W=4 and
+    // COARSE_W=8 are powers of two, so the divides are shifts.
+    wire [7:0] fine_w   = (code > FINE_NDELS) ? FINE_NDELS : code;
+    wire [7:0] rem1     = code - fine_w;
+    wire [7:0] mid_w    = (rem1[7:2] > MID_NDELS) ? MID_NDELS : rem1[7:2];
+    wire [7:0] rem2     = rem1 - (mid_w << 2);
+    wire [7:0] coarse_w = (rem2[7:3] > COARSE_NDELS) ? COARSE_NDELS : rem2[7:3];
+    reg [7:0] fine_n, mid_n, coarse_n;
+
+    always @(posedge TICK or negedge RST_N) begin
+        if (!RST_N)   {fine_n, mid_n, coarse_n} <= 0;
+        else          {fine_n, mid_n, coarse_n} <= {fine_w, mid_w, coarse_w};
+    end
 
     wire [COARSE_NDELS-1:0] COARSE_MUX;
     wire [MID_NDELS-1:0]    MID_MUX;
@@ -122,17 +131,29 @@ module ADCC_TOP #(
         .IN(fine_n[$clog2(FINE_NDELS+1)-1:0]), .OUT(FINE_MUX));
 
     // Single-edge correction: delay only the inverted (falling-edge) path,
-    // then recombine.  func: CLK_OUT rise = CLK_IN rise; CLK_OUT fall =
-    // delayed fall of CLK_IN.  High-pulse width = code-controlled.
+    // then recombine.  CLK_OUT rise = CLK_IN rise; CLK_OUT fall = delayed
+    // fall of CLK_IN.  High-pulse width = code-controlled.
+    //
+    // Glitch control: the OR recombine `CLK_IN | ~fall_d` is kept (it has
+    // the right priority: while CLK_IN is high the output is 1 regardless
+    // of a late fall_d).  The glitch the earlier prototype saw came from
+    // taps changing while a falling edge was in flight -- that is now
+    // prevented by the `upd_ok` quiet-window gate above, so the taps can
+    // only move while CLK_IN is high and fall_d is statically 1.
     wire fall_d;
 `ifdef SIMULATION
+    // For the falling-edge corrector the DCDL insertion delay must be well
+    // under the input's low half-period, otherwise fall_d can never land
+    // inside the quiet window.  Use a realistic short T0 here (a real
+    // single-edge DCDL is a few hundred ps, not the 4 ns full-period
+    // insertion the ADDLL phase shifter wants).
     PLL_COUNTER_DCDL #(
-        .COARSE_NDELS(COARSE_NDELS), .MID_NDELS(MID_NDELS), .FINE_NDELS(FINE_NDELS)
+        .COARSE_NDELS(COARSE_NDELS), .MID_NDELS(MID_NDELS), .FINE_NDELS(FINE_NDELS),
+        .T0_PS(200)
     ) dcdl (
         .COARSE_MUX(COARSE_MUX), .MID_MUX(MID_MUX), .FINE_MUX(FINE_MUX),
         .CLK_IN(clk_n), .CLK_OUT(fall_d)
     );
-    // recombine: output is high while CLK_IN is high, low when delayed fall arrives
     assign CLK_OUT = CLK_IN ? 1'b1 : ~fall_d;
 `else
     PLL_COUNTER_DCDL_PHYS #(
