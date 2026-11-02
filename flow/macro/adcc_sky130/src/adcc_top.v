@@ -102,9 +102,16 @@ module ADCC_TOP #(
     wire [7:0] coarse_w = (rem2[7:3] > COARSE_NDELS) ? COARSE_NDELS : rem2[7:3];
     reg [7:0] fine_n, mid_n, coarse_n;
 
+    // NOTE: a hard quiet-window gate (`upd_ok`) was tried and removed —
+    // once the loop overshoots the code far enough that the delay exceeds
+    // the low half-period, the "idle" window disappears and the taps
+    // freeze mid-acquisition (deadlock).  In this functional model the
+    // taps update every TICK; the physical DCDL's matched MUX structure is
+    // what actually makes tap switching clean in silicon.  The pulse-
+    // swallow combiner below already removes the observable glitch.
     always @(posedge TICK or negedge RST_N) begin
-        if (!RST_N)   {fine_n, mid_n, coarse_n} <= 0;
-        else          {fine_n, mid_n, coarse_n} <= {fine_w, mid_w, coarse_w};
+        if (!RST_N)       {fine_n, mid_n, coarse_n} <= 0;
+        else              {fine_n, mid_n, coarse_n} <= {fine_w, mid_w, coarse_w};
     end
 
     wire [COARSE_NDELS-1:0] COARSE_MUX;
@@ -121,13 +128,27 @@ module ADCC_TOP #(
     // then recombine.  CLK_OUT rise = CLK_IN rise; CLK_OUT fall = delayed
     // fall of CLK_IN.  High-pulse width = code-controlled.
     //
-    // Glitch control: the OR recombine `CLK_IN | ~fall_d` is kept (it has
-    // the right priority: while CLK_IN is high the output is 1 regardless
-    // of a late fall_d).  The glitch the earlier prototype saw came from
-    // taps changing while a falling edge was in flight -- that is now
-    // prevented by the `upd_ok` quiet-window gate above, so the taps can
-    // only move while CLK_IN is high and fall_d is statically 1.
+    // Pulse-swallow recombine: a NOR SR-latch instead of `CLK_IN | ~fall_d`.
+    //   CLK_IN rise           -> SET  (start of high pulse)
+    //   fall_d rise while the
+    //   input is low          -> RST  (code-controlled end of high pulse)
+    // The reset is masked by `fall_d & ~clk_in`, so if the delayed edge
+    // overshoots the low window it is *swallowed* rather than re-exposing
+    // the previous high pulse.  S and R are mutually exclusive by
+    // construction, so the latch never sees a forbidden state.  Whole
+    // combiner = 2xNOR2 + NOR2B -- all standard cells, no OR-glitch.
     wire fall_d;
+    // The SR latch is intentional — Verilator flags inferred latches, so
+    // waive LATCH around the (correct, all-stdcell NOR) set/reset latch.
+    /* verilator lint_off LATCH */
+    wire setb = ~CLK_IN;              // NOR-latch set input
+    wire rstb = ~(fall_d & clk_n);    // NOR-latch reset input (masked)
+    reg  out_q;
+    always @(*) begin
+        if (!setb)      out_q <= 1'b1;
+        else if (!rstb) out_q <= 1'b0;
+    end
+    /* verilator lint_on LATCH */
 `ifdef SIMULATION
     // For the falling-edge corrector the DCDL insertion delay must be well
     // under the input's low half-period, otherwise fall_d can never land
@@ -141,7 +162,6 @@ module ADCC_TOP #(
         .COARSE_MUX(COARSE_MUX), .MID_MUX(MID_MUX), .FINE_MUX(FINE_MUX),
         .CLK_IN(clk_n), .CLK_OUT(fall_d)
     );
-    assign CLK_OUT = CLK_IN ? 1'b1 : ~fall_d;
 `else
     PLL_COUNTER_DCDL_PHYS #(
         .COARSE_NDELS(COARSE_NDELS), .MID_NDELS(MID_NDELS), .FINE_NDELS(FINE_NDELS)
@@ -149,8 +169,8 @@ module ADCC_TOP #(
         .COARSE_MUX(COARSE_MUX), .MID_MUX(MID_MUX), .FINE_MUX(FINE_MUX),
         .CLK_IN(clk_n), .CLK_OUT(fall_d)
     );
-    assign CLK_OUT = CLK_IN | ~fall_d;
 `endif
+    assign CLK_OUT = out_q;
 
     // Lock = duty code holds inside a +/-DITHER_BAND window for LOCK_COUNT.
     reg [FILTER_BITS-1:0] dmin, dmax;

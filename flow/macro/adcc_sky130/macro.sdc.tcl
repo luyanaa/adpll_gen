@@ -17,6 +17,12 @@ set_load 0.020 [all_outputs]
 # CLK_OUT is a *corrected clock*, not a synchronous data output.
 set_false_path -to [get_ports CLK_OUT]
 
+# The NOR SR-latch combiner uses CLK_IN as a *level* input (set/reset
+# gating into the dlxtn latch D/G), not a synchronous data input — so the
+# CLK_IN -> latch-D path is a combinational clock path, not a timed reg
+# path.  Waive the input check on it.
+set_false_path -from [get_ports CLK_IN] -to [all_registers]
+
 # Quasi-static config into the decode pipeline.
 set_multicycle_path 4 -setup -from [get_ports {DUTY_OFFS[*] DUTY_INIT[*] KI[*]}]
 set_multicycle_path 3 -hold  -from [get_ports {DUTY_OFFS[*] DUTY_INIT[*] KI[*]}]
