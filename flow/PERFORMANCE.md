@@ -9,9 +9,9 @@ characterization report。完整 top-level `pll` 还没有和硬宏一起集成�
 | 指标 | 值 | 来源 / 性质 |
 |---|---|---|
 | 参考时钟 `REF` | 100 MHz | `src/dlf_design.py`、数字 testbench |
-| 标称分频比 `N` | RTL 为 `N=FCW`；`FCW=15` 即 15×，`FCW=16` 才 16×。`dlf_design.py` 写的是 `FCW+1+alpha`，与 RTL 不一致 | `src/pll_freq_lock.v` / `src/dlf_design.py` |
-| 标称输出频率 | RTL `FCW=15` 时 1.5 GHz，`FCW=16` 时 1.6 GHz；`alpha=0.0875` 的 1.609 GHz 是设计脚本口径 | 设计目标，不是实测 |
-| 参考/输出关系 | RTL：`F_MID=FCW·F_REF`；设计脚本：`(FCW+1+alpha)·F_REF` | 需统一 |
+| 标称分频比 `N` | RTL 为 `N=FCW`；`FCW=15` 即 15×，`FCW=16` 才 16×。`dlf_design.py` 用同一个 `FCW * F_REF` | `src/freq_lock.v` / `src/dlf_design.py` |
+| 标称输出频率 | RTL 和 `dlf_design.py`：`FCW=15` 时 1.5 GHz，`FCW=16` 时 1.6 GHz | 设计目标，不是实测 |
+| 参考/输出关系 | RTL 和 `dlf_design.py`：`F_MID = FCW·F_REF` | 已对齐 |
 | DCO 调谐 | 4-bit coarse / 4-bit mid / 5-bit fine，15/15/31 个延迟单元 | `src/pll.v` |
 | 注入锁定 | 4 级 injection delay | `src/pll_analog.v` |
 | 数字环路滤波器 | 目标截止频率 1 MHz | `src/dlf_design.py` |

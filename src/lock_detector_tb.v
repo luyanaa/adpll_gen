@@ -6,7 +6,7 @@ module lock_detector_tb;
     always #5 CLK = ~CLK;
     reg RST_N = 1'b0;
     reg ENABLE = 1'b0;
-    reg [1:0] SS_BBPD = 2'b01;
+    reg [1:0] SS_BBPD = 2'b00;
     reg ILL_P = 1'b0, ILL_N = 1'b0;
     wire PHASE_LOCK, LOCK_LOST;
 
@@ -20,6 +20,7 @@ module lock_detector_tb;
     );
 
     integer errors = 0;
+    integer k;
 
     task check_lock;
         input p;
@@ -36,23 +37,54 @@ module lock_detector_tb;
         end
     endtask
 
-    initial begin
-        #25 RST_N = 1'b1;
-        #20 ENABLE = 1'b1;
-        #60;
-        check_lock(1'b1, 1'b0, "lock after 4 no-symbol");
+    // Change the code away from the sampling edge, then let the detector
+    // see exactly n rising edges of it.
+    task drive_code;
+        input [1:0] code;
+        input integer n;
+        begin
+            @(negedge CLK);
+            SS_BBPD = code;
+            for (k = 0; k < n; k = k + 1)
+                @(posedge CLK);
+            @(negedge CLK);
+        end
+    endtask
 
-        SS_BBPD = 2'b10;
-        #30;
+    initial begin
+        @(negedge CLK);
+        RST_N = 1'b1;
+        @(negedge CLK);
+        ENABLE = 1'b1;
+
+        // A stuck quiet code never presents either correction symbol.
+        drive_code(2'b00, 8);
+        check_lock(1'b0, 1'b0, "stuck quiet code");
+
+        // Default polarity: 2'b01 positive, 2'b11 negative, 2'b00 quiet.
+        // Both symbols, then a quiet run of LOCK_COUNT.
+        drive_code(2'b01, 1);
+        drive_code(2'b11, 1);
+        drive_code(2'b00, 4);
+        check_lock(1'b1, 1'b0, "lock after both sides");
+
+        drive_code(2'b01, 2);
         check_lock(1'b0, 1'b1, "loss after 2 symbols");
 
-        SS_BBPD = 2'b01;
-        #60;
+        // The unlock cleared both sides.  One symbol is not enough.
+        drive_code(2'b01, 1);
+        drive_code(2'b00, 6);
+        // LOCK_LOST stays set until a qualified relock.  The one symbol
+        // must not clear it or raise PHASE_LOCK.
+        check_lock(1'b0, 1'b1, "one side does not relock");
+
+        drive_code(2'b11, 1);
+        drive_code(2'b00, 4);
         check_lock(1'b1, 1'b0, "relock");
 
-        ILL_P = 1'b1;
-        #30;
-        check_lock(1'b0, 1'b1, "saturation loss");
+        // 2'b10 is the alternate-polarity positive code, not a quiet code.
+        drive_code(2'b10, 2);
+        check_lock(1'b0, 1'b1, "10 is not quiet");
 
         if (errors != 0) $fatal(1, "lock_detector_tb failed");
         $display("lock_detector_tb: PASS");

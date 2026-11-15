@@ -8,15 +8,18 @@ from scipy import signal
 import matplotlib.pyplot as plt
 
 #------------------------------------------------
-# Create a signal for demonstration.
+# Loop model.  The RTL compares the measured count with FCW itself
+# (src/freq_lock.v: the lock window is cnt_filt within FCW +/- LOCK_TOL).
+# F_VCO is therefore FCW * F_REF.  The old (FCW + 1 + alpha) expression was
+# a different numbering and is not what the loop locks to.  The square wave
+# below is the integer reference, with no fractional offset.
 #------------------------------------------------
 
-FCW = 15
-alpha = 0.0875
-F_REF = 100000000  # 100 MHz
-F_VCO = (FCW + 1 + alpha) * F_REF
+FCW = 16
+F_REF = 100_000_000  # 100 MHz
+F_VCO = FCW * F_REF
 FILTER_BITS = 16
-F_CUT = 1000000 # 1 MHz cutoff
+F_CUT = 1_000_000  # 1 MHz cutoff
 
 sample_rate = F_VCO  # Sample rate is the VCO
 nsamples = 10000

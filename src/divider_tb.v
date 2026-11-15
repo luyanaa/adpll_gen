@@ -75,6 +75,41 @@ module divider_tb;
         #100;
         check_period(pm, 10, "mod DIV=1 bypass");
 
+        // A load that lands in the middle of a phase must not finish that
+        // phase short.  /4 high is 2 clocks; loading /2 one clock into the
+        // high phase still has to complete those 2 clocks before /2 starts.
+        @(negedge clk); set_div = 8'd4; load_div = 1'b1;
+        @(negedge clk); load_div = 1'b0;
+        #80;
+        begin : switch_check
+            integer rose_at, high_w, low_w;
+            // /4 high is two input clocks.  Record it from the rising edge,
+            // and request /2 one clock into that high phase.  Both halves of
+            // the period already open have to keep the /4 width.
+            @(posedge outm);
+            rose_at = $time;
+            @(negedge clk);
+            set_div = 8'd2;
+            load_div = 1'b1;
+            @(posedge clk);
+            @(negedge clk);
+            load_div = 1'b0;
+            @(negedge outm);
+            high_w = $time - rose_at;
+            rose_at = $time;
+            @(posedge outm);
+            low_w = $time - rose_at;
+            if (high_w < 20 || low_w < 20) begin
+                $display("FAIL: runt pulse high=%0d low=%0d", high_w, low_w);
+                errors = errors + 1;
+            end else begin
+                $display("PASS: no runt pulse high=%0d low=%0d", high_w, low_w);
+            end
+            // The next rising edge starts the new /2 period: 20 time units.
+            @(posedge outm);
+            check_period(pm, 20, "settled DIV=2 after switch");
+        end
+
         if (errors != 0) $fatal(1, "divider_tb failed");
         $display("divider_tb: PASS");
         $finish;

@@ -22,10 +22,9 @@ locked jitter, full-top power) has not been completed.
 | Digital loop-filter target | 1 MHz cutoff |
 | `LOCKED` wait | 64 `INJ_EDGE` cycles (0.64 µs at 100 MHz REF) |
 
-Important: the RTL locks to `FCW` directly, while the deprecated
-`src/dlf_design.py` uses `(FCW + 1 + alpha)`.  The RTL behavior is authoritative:
-`FCW=15` is 15× and `FCW=16` is 16×.  This discrepancy must be resolved before
-frequency planning.
+Important: the RTL locks to `FCW` directly, and `src/dlf_design.py` now uses
+the same integer target (`F_VCO = FCW * F_REF`).  `FCW=15` is 15× and `FCW=16`
+is 16×.  The old `(FCW + 1 + alpha)` numbering is gone.
 
 The hard macro (`PLL_ANALOG_MACRO`) does **not** expose `FCW`, `SET_DIV`,
 `OUT_DIV`, or `PLL_LOGIC`; it contains only the DCO/PDN/injection analog views.
@@ -55,10 +54,10 @@ The first P0-A RTL batch is implemented and regression-tested:
 DSM saturation/width        PASS
 divider /2,/3,/4 + clamp    PASS
 SS-BBPD lock/loss detector  PASS
-LOCKED / PHASE_LOCK / LOCK_LOST FSM PASS
+LOCKED / PHASE_LOCK / LOCK_LOST FSM PASS (quiet BBPD outside the FCW window does not lock)
 frequency-lock acquisition and FCW reacquisition PASS (stub DCO)
 frequency-count CDC (independent clocks) PASS
-pll_macro_top behavioral lock smoke PASS (LOCKED=1, FCW=16)
+pll_macro_top behavioral frequency lock PASS (FREQ_LOCKED=1, FCW=16, 534 MID_OUT edges / 32 REF). PHASE_LOCK stays 0 on the sim_* BBPD, so LOCKED stays 0. Not a PEX or jitter result.
 ```
 
 Run:

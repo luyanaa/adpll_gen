@@ -254,13 +254,23 @@ $(SIM_OUT)/freq_lock_cdc_tb.vcd: $(SRC_DIR)/freq_lock_cdc_tb.v $(SRC_DIR)/freq_l
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
 
+# Live FCW window, separate from sticky FREQ_LOCKED
+test_freq_ok: $(SIM_OUT)/freq_ok_tb.vcd
+
+view_test_freq_ok: $(SIM_OUT)/freq_ok_tb.vcd
+	gtkwave $(SIM_OUT)/freq_ok_tb.vcd
+
+$(SIM_OUT)/freq_ok_tb.vcd: $(SRC_DIR)/freq_ok_tb.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/frequency_counter_frontend.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
 # Lock FSM / LOCKED semantics
 test_lock_fsm: $(SIM_OUT)/lock_fsm_tb.vcd
 
 view_test_lock_fsm: $(SIM_OUT)/lock_fsm_tb.vcd
 	gtkwave $(SIM_OUT)/lock_fsm_tb.vcd
 
-$(SIM_OUT)/lock_fsm_tb.vcd: $(SRC_DIR)/lock_fsm_tb.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/frequency_counter_frontend.v
+$(SIM_OUT)/lock_fsm_tb.vcd: $(SRC_DIR)/lock_fsm_tb.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/ref_watchdog.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/frequency_counter_frontend.v
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
 
@@ -334,14 +344,14 @@ show_delay_overlap_digital: $(SIM_OUT)/test_mid_delay.vcd $(SIM_OUT)/test_fine_d
 .SECONDARY:
 
 # P0-A correctness gate (fast RTL regressions)
-test_p0: test_delta_sigma_sat test_divider test_lock_detector test_lock_fsm test_freq_lock_cdc test_freq_lock_stub test_pll_macro_smoke
+test_p0: test_delta_sigma_sat test_divider test_lock_detector test_lock_fsm test_freq_ok test_freq_lock_cdc test_freq_lock_stub test_pll_macro_smoke
 .PHONY: test_p0
 
 # Closed-loop smoke with the macro wrapper and behavioral sim_* models.
 # This is an elaboration/connectivity smoke; it does not yet claim lock.
 test_pll_macro_smoke: $(SIM_OUT)/pll_macro_top.out
 
-$(SIM_OUT)/pll_macro_top.out: $(SRC_DIR)/pll_macro_top_tb.v $(SRC_DIR)/pll_macro_top.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(ROOT_DIR)/flow/macro/ics55_h7cr/pll_analog_macro.v $(SRC_DIR)/pll_analog.v $(SRC_DIR)/il_dco.v $(SRC_DIR)/sim_dco.v $(SRC_DIR)/sim_injection.v $(SRC_DIR)/sim_sym.v $(SRC_DIR)/sim_mux.v $(SRC_DIR)/sim_SSBBPD.v $(SRC_DIR)/frequency_counter_frontend.v
+$(SIM_OUT)/pll_macro_top.out: $(SRC_DIR)/pll_macro_top_tb.v $(SRC_DIR)/pll_macro_top.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/ref_watchdog.v $(SRC_DIR)/ddr_ck.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(ROOT_DIR)/flow/macro/ics55_h7cr/pll_analog_macro.v $(SRC_DIR)/pll_analog.v $(SRC_DIR)/il_dco.v $(SRC_DIR)/sim_dco.v $(SRC_DIR)/sim_injection.v $(SRC_DIR)/sim_sym.v $(SRC_DIR)/sim_mux.v $(SRC_DIR)/sim_SSBBPD.v $(SRC_DIR)/frequency_counter_frontend.v
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o pll_macro_top.out -D SIMULATION  $^
 	cd $(SIM_OUT) && timeout 180s $(VVP) pll_macro_top.out

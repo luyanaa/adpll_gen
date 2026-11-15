@@ -10,8 +10,10 @@
 // divisors are outside the DDR tCH/tCL window used here (0.45-0.55)
 // for the small ratios that reach 100 MHz, so CK stays quiet.
 //
-// ck_en is sampled on the divided clock's falling edge, so the pad
-// clock starts and stops on a full low phase instead of a runt pulse.
+// ck_en is sampled on the divided clock's falling edge, so a normal
+// unlock finishes the low phase already open instead of starting a new
+// high.  CK is also AND-gated by locked, so a DCO that sticks high still
+// forces the pad low: the falling edge that would clear ck_en never comes.
 module ddr_ck_gate #(parameter integer W = 8) (
     input  wire             clk_div,
     input  wire             locked,
@@ -30,5 +32,5 @@ module ddr_ck_gate #(parameter integer W = 8) (
             ck_en <= (locked === 1'b1) && even_ok;
     end
 
-    assign ck = ck_en & clk_div;
+    assign ck = ck_en & locked & clk_div;
 endmodule

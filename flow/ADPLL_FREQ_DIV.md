@@ -42,10 +42,8 @@ N_fb = f_MID_OUT / f_REF = FCW
 f_MID_OUT = FCW · f_REF
 ```
 
-**注意：`src/dlf_design.py` 写的是 `F_VCO=(FCW+1+alpha)·F_REF`，和 RTL 的
-`FCW` 作为整数比较目标不一致。** 目前以 RTL 为准：`FCW=16` 才表示 16 倍；
-`FCW=15` 是 15 倍。若设计意图是 `FCW+1`，应在 `pll_freq_lock` 里改成
-`FCW+1`，或者在顶层把 `FCW` 加一；这两种不能混用。
+**`src/dlf_design.py` 的整数目标是 `F_VCO = FCW * F_REF`，和 RTL 一致。**
+旧的 `(FCW + 1 + alpha)` 已经去掉。`FCW=16` 是 16 倍，`FCW=15` 是 15 倍。
 
 ### 1.2 输出分频
 
@@ -246,14 +244,15 @@ FCW, SET_DIV, LOAD_DIV, OUT_DIV, LOCKED, ERR
 
 ## 6. 建议
 
-1. **先统一 FCW 语义**：RTL 是 `N=FCW`，设计脚本是 `N=FCW+1+alpha`；
-   在仿真/硅前选择一种，修正 `pll_freq_lock` 或顶层。
+1. **FCW 语义已经对齐**：RTL 和 `src/dlf_design.py` 都是 `N=FCW`。
+   不要再把 `FCW+1` 加回去。
 2. **1.6 GHz 不作为当前 ics55 数字控制的已收敛指标**；若要保留，需做
    流水/重定时或换更快库，并重新跑 post-route STA。
 3. **宽分频比**：8-bit `FCW/DIV_BITS` 最大 255；需要更大 N 时先把
    `FCW_BITS`/`DIV_BITS` 加到 10-12，但必须重跑 STA。
-4. **输出分频器边界**：把 `SET_DIV=0/1` 的 /2 行为修成明确的语义；
-   当前有效范围按 2..255 使用。
+4. **输出分频器**：`SET_DIV=0` 按 /1 处理。`/1` 是旁路，在当前输出
+   周期结束、且输出为低时切入。其它比值也只在这个周期边界生效，
+   不截断已经开始的高/低相位。DDR `CK` 仍然只放行 ≥2 的偶数比。
 5. **硬宏重新生成**：改 `COARSE/MID/FINE_NDELS` 必须重新生成宏的
    LEF/Liberty/GDS，不可只改顶层参数。
 6. **下一步实测**：硬宏 DCO 频率/调谐、REF 注入锁定范围、完整 PLL 的

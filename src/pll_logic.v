@@ -13,6 +13,19 @@ module pll_logic#(
     parameter integer LOCK_TOL = 1,
     parameter integer LOCK_COUNT = 16,
     parameter integer LOSS_COUNT = 4,
+    // Simulation hook.  When 1, PHASE_LOCK / LOCK_LOST / FREQ_LOCKED /
+    // FREQ_ERR come from the *_TB regs below instead of the detectors.
+    // Synthesis leaves this at 0.  Forcing those nets is not used: they
+    // are wires driven by module instances, and Icarus segfaults on force.
+    parameter integer TB_OVERRIDE = 0,
+    // DCO cycles without a REF edge before the watchdog drops REF_OK.
+    // Must be larger than the legal FCW: one REF edge is expected every
+    // FCW DCO cycles while the loop is in range.
+    parameter integer REF_TIMEOUT = 512,
+    // REF cycles without a DCO edge, checked only while locked.  A stopped,
+    // stuck-high or stuck-low DCO cannot be seen by the REF watchdog,
+    // because that counter is clocked by OUT.
+    parameter integer DCO_TIMEOUT = 4,
     parameter integer CNT_EXTRA_BITS = 8,
     parameter integer MEAS_PERIODS = 1,
 `ifndef PLL_WITHOUT_DIVIDER
@@ -40,20 +53,43 @@ module pll_logic#(
     output reg [COARSE_NDELS-1:0] COARSE_MUX,
     output reg [MID_NDELS-1:0] MID_MUX,
     output reg [FINE_NDELS-1:0] FINE_MUX,
-    output reg DCO_EN, LOCKED, ERR
+    output reg DCO_EN, ERR,
+    // LOCKED is gated by the DCO-domain reference watchdog.  It is not a
+    // flop in the INJ_EDGE domain: that clock stops when REF stops.
+    output LOCKED
 );
     localparam integer FINE_CODE_BITS = $clog2(FINE_NDELS + 1);
 
     // Explicit single-bit status nets: with `default_nettype none these must
     // not be implicit wires.
-    wire PHASE_LOCK;
-    wire LOCK_LOST;
+    wire PHASE_LOCK_W;
+    wire LOCK_LOST_W;
+    wire FREQ_LOCKED_W, FREQ_ERR_W, FREQ_OK_W;
+    reg PHASE_LOCK_TB;
+    reg LOCK_LOST_TB;
+    reg FREQ_LOCKED_TB;
+    reg FREQ_ERR_TB;
+    reg FREQ_OK_TB;
+    wire PHASE_LOCK = TB_OVERRIDE ? PHASE_LOCK_TB : PHASE_LOCK_W;
+    wire LOCK_LOST = TB_OVERRIDE ? LOCK_LOST_TB : LOCK_LOST_W;
+    wire FREQ_LOCKED = TB_OVERRIDE ? FREQ_LOCKED_TB : FREQ_LOCKED_W;
+    wire FREQ_ERR = TB_OVERRIDE ? FREQ_ERR_TB : FREQ_ERR_W;
+    // FREQ_OK is the live FCW window, not the sticky acquisition flag.
+    // A quiet BBPD must not enter or hold the locked state without it.
+    wire FREQ_OK = TB_OVERRIDE ? FREQ_OK_TB : FREQ_OK_W;
 
     wire [COARSE_NDELS-1:0] COARSE_MUX_D;
     wire [MID_NDELS-1:0] MID_MUX_D;
     wire [FINE_NDELS-1:0] FINE_MUX_D;
 
-    // Update logic according to the paper
+    // CKR is a derived clock, not a data enable.  It is REF sampled on
+    // the falling edge of MID_OUT, so a high pulse lasts an integer number
+    // of MID_OUT periods: from the falling edge that samples REF=1 until
+    // the next falling edge that samples REF=0.  It is not one MID_OUT
+    // high time.  Coarse and mid codes are registered on its rising edge;
+    // that write does not toggle OUT.  CKR exists only while MID_OUT
+    // toggles.  A static-timing run has to treat it as a generated clock
+    // of MID_OUT gated by REF, not as a free-running clock.
     reg CKR;
     always @(negedge MID_OUT or negedge RST_N) if(!RST_N) CKR <= 1'b0; else CKR <= REF;
     //always @(posedge CKR or negedge RST_N) if(!RST_N) FINE_MUX <= 'd0; else FINE_MUX <= FINE_MUX_D; // Done afterwards
@@ -122,12 +158,101 @@ module pll_logic#(
     );
 
     // Freq locking stage
-    wire FREQ_LOCKED, FREQ_ERR;
     reg START;
     // PHASE_LOCK is driven by the fine-stage phase detector.  It must not be
-    // inferred from LOCKED_WAIT.  LOCK_LOST is the independent loss-of-lock
-    // indication (frequency error, phase error, DCO saturation or REF loss).
+    // inferred from LOCKED_WAIT, and it is not accepted while FREQ_OK is low:
+    // a quiet BBPD with the raw per-REF count outside FCW +/- LOCK_TOL is a
+    // false lock.  LOCK_LOST covers a phase-detector symbol run or filter
+    // saturation.  REF loss is separate: the FSM is clocked by INJ_EDGE,
+    // which dies with REF, so a watchdog on the free-running DCO is what
+    // clears LOCKED.  A stopped DCO is the complementary case and is counted
+    // on REF, armed only after locked_q is set.
     wire LOCK = PHASE_LOCK;
+    wire REF_OK;
+    wire DCO_OK;
+    pll_ref_watchdog #(.TIMEOUT(REF_TIMEOUT)) ref_wd (
+        .clk_count(OUT), .clk_watch(REF), .enable(1'b1),
+        .rst_n(RST_N), .alive(REF_OK)
+    );
+    // REF is the only clock still running if OUT sticks.  OUT edges
+    // increment a counter; each REF edge checks that the counter moved.
+    // A stuck-high, stuck-low or stopped DCO stops incrementing it.
+    // While locked_q is 0 the check stays healthy: acquisition may
+    // legally run the DCO slower than REF.  The counter is wide enough
+    // that a fast DCO cannot wrap back to the same value inside one
+    // REF period of the timeout window.
+    localparam integer DCO_ACT_W = 8;
+    localparam integer DCO_MISS_MAX = (DCO_TIMEOUT < 1) ? 1 :
+        (DCO_TIMEOUT > 7) ? 7 : DCO_TIMEOUT;
+    reg [DCO_ACT_W-1:0] out_edges;
+    reg [DCO_ACT_W-1:0] out_edges_ref;
+    reg [2:0] dco_miss_cnt;
+    always @(posedge OUT or negedge RST_N) begin
+        if (!RST_N)
+            out_edges <= 'd0;
+        else
+            out_edges <= out_edges + 1'b1;
+    end
+    always @(posedge REF or negedge RST_N) begin
+        if (!RST_N) begin
+            out_edges_ref <= 'd0;
+            dco_miss_cnt <= 'd0;
+        end else begin
+            out_edges_ref <= out_edges;
+            if (!locked_q || (out_edges != out_edges_ref)) begin
+                dco_miss_cnt <= 'd0;
+            end else if (dco_miss_cnt < DCO_MISS_MAX) begin
+                dco_miss_cnt <= dco_miss_cnt + 1'b1;
+            end
+        end
+    end
+    assign DCO_OK = (dco_miss_cnt < DCO_MISS_MAX);
+    // ref_fail sticks until the FSM, which only runs while INJ_EDGE runs,
+    // has dropped the lock flop and acknowledged.  Gating with the live
+    // REF_OK level would reassert LOCKED on the first REF edge after an
+    // outage, before the FSM had re-acquired.  dco_fail is the same sticky
+    // for a stopped DCO; it is cleared by the same acknowledgement.
+    reg ref_fail;
+    reg dco_fail;
+    reg clr_q, clr_qq;
+    reg locked_q;
+    reg clr_toggle;
+    reg fail_q, fail_qq;
+    assign LOCKED = locked_q & ~ref_fail & ~dco_fail;
+    always @(posedge OUT or negedge RST_N) begin
+        if (!RST_N) begin
+            ref_fail <= 1'b0;
+            clr_q <= 1'b0;
+            clr_qq <= 1'b0;
+        end else begin
+            clr_q <= clr_toggle;
+            clr_qq <= clr_q;
+            if (!REF_OK)
+                ref_fail <= 1'b1;
+            else if (clr_q ^ clr_qq)
+                ref_fail <= 1'b0;
+        end
+    end
+    // DCO_OK is already a REF-domain level, and it is held healthy
+    // whenever the check is disarmed.  Follow it directly.  Clearing
+    // through clr_toggle races the sampler: the toggle is an INJ_EDGE
+    // event, and a REF edge can set the sticky again before the FSM has
+    // dropped locked_q.
+    always @(posedge REF or negedge RST_N) begin
+        if (!RST_N)
+            dco_fail <= 1'b0;
+        else
+            dco_fail <= ~DCO_OK;
+    end
+    always @(negedge INJ_EDGE or negedge RST_N) begin
+        if (!RST_N) begin
+            fail_q <= 1'b0;
+            fail_qq <= 1'b0;
+        end else begin
+            fail_q <= ref_fail | dco_fail;
+            fail_qq <= fail_q;
+        end
+    end
     reg FORCE_P, FORCE_N;
 
     pll_lock_detector #(
@@ -136,7 +261,7 @@ module pll_logic#(
     ) lock_detector (
         .CLK(INJ_EDGE), .RST_N(RST_N), .ENABLE(ENABLE),
         .SS_BBPD(SS_BBPD), .ILL_P(ILL_P), .ILL_N(ILL_N),
-        .PHASE_LOCK(PHASE_LOCK), .LOCK_LOST(LOCK_LOST)
+        .PHASE_LOCK(PHASE_LOCK_W), .LOCK_LOST(LOCK_LOST_W)
     );
     pll_freq_lock #(
         .COARSE_NDELS(COARSE_NDELS),
@@ -151,7 +276,7 @@ module pll_logic#(
         .FCW(FCW), .START(START),
         .LOCK(LOCK),
         .FORCE_P(FORCE_P), .FORCE_N(FORCE_N),
-        .LOCKED(FREQ_LOCKED), .ERR(FREQ_ERR),
+        .LOCKED(FREQ_LOCKED_W), .ERR(FREQ_ERR_W), .FREQ_OK(FREQ_OK_W),
         .COARSE_MUX(COARSE_MUX_D),
         .MID_MUX(MID_MUX_D)
     );
@@ -166,7 +291,8 @@ module pll_logic#(
             START <= 1'b0;
             cnt <= 'd0;
             cntf <= 'd0;
-            LOCKED <= 1'b0;
+            locked_q <= 1'b0;
+            clr_toggle <= 1'b0;
             ERR <= 1'b0;
             DCO_EN <= 1'b0;
             ENABLE <= 1'b0;
@@ -187,7 +313,10 @@ module pll_logic#(
                 3'b001: begin  // Waiting for the freq locking
                     START <= 1'b0;
                     if(!START) begin
-                        if(FREQ_LOCKED) begin 
+                        // FREQ_LOCKED is sticky.  FREQ_OK is the live
+                        // window, and it is what keeps a stale acquisition
+                        // result from opening the phase-lock wait.
+                        if(FREQ_LOCKED && FREQ_OK) begin
                             state <= 3'b010;
                         end
                         else if(FREQ_ERR) state <= 3'b100;
@@ -196,17 +325,25 @@ module pll_logic#(
                 3'b010: begin  // Wait for phase locking
                     FORCE_P <= 1'b0;
                     FORCE_N <= 1'b0;
-                    if(LOCK_LOST) begin
-                        // Frequency/phase/REF/DCO failure: go back to
-                        // frequency acquisition, not to a fake locked state.
-                        state <= 3'b001;
+                    if(LOCK_LOST || fail_qq || !FREQ_OK) begin
+                        // Phase failure, the watchdog sticky, or a count
+                        // that has left the FCW window.  fail_qq is the
+                        // DCO-domain flag after two INJ_EDGE flops, so it
+                        // is only visible once REF (and therefore INJ_EDGE)
+                        // is running again.  While REF is stopped, LOCKED is
+                        // already low because of ref_fail.  A phase-detector
+                        // event stays in phase acquisition; a frequency or
+                        // watchdog failure goes back to frequency acquisition.
+                        state <= (LOCK_LOST && !fail_qq && FREQ_OK) ? 3'b010 : 3'b001;
                         cnt <= 'd0;
                         cntf <= 'd0;
-                        LOCKED <= 1'b0;
-                    end else if((cnt == LOCKED_WAIT) && PHASE_LOCK) begin
+                        locked_q <= 1'b0;
+                        if (fail_qq)
+                            clr_toggle <= ~clr_toggle;
+                    end else if((cnt == LOCKED_WAIT) && PHASE_LOCK && !fail_qq) begin
                         state <= 3'b011;
                         cnt <= 'd0;
-                        LOCKED <= 1'b0; // asserted only in the LOCKED state
+                        locked_q <= 1'b0; // asserted only in the LOCKED state
                     end else begin  // Logic for force count up/down whenever the illegal positive/negative is triggered
                         if(ILL_P || ILL_N) begin
                             cntf <= cntf + 1;
@@ -224,14 +361,30 @@ module pll_logic#(
                     end
                 end
                 3'b011: begin  // Locked state, but only while the phase detector agrees
-                    if(LOCK_LOST || !PHASE_LOCK) begin
+                    // REF loss drops straight out.  The FSM cannot notice
+                    // this on its own once INJ_EDGE has stopped, so the
+                    // watchdog output is the input that still toggles.
+                    if(fail_qq) begin
+                        state <= 3'b001;
+                        cnt <= 'd0;
+                        cntf <= 'd0;
+                        locked_q <= 1'b0;
+                        clr_toggle <= ~clr_toggle;
+                    end else if(!FREQ_OK) begin
+                        // Quiet BBPD with the count outside the FCW window
+                        // is not a lock.  Re-enter frequency acquisition.
+                        state <= 3'b001;
+                        cnt <= 'd0;
+                        cntf <= 'd0;
+                        locked_q <= 1'b0;
+                    end else if(LOCK_LOST || !PHASE_LOCK) begin
                         state <= 3'b010;
                         cnt <= 'd0;
                         cntf <= 'd0;
-                        LOCKED <= 1'b0;
+                        locked_q <= 1'b0;
                     end else begin
                         state <= 3'b011;
-                        LOCKED <= 1'b1;
+                        locked_q <= 1'b1;
                     end
                 end
                 3'b100: begin  // Error state

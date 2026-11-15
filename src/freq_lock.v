@@ -20,6 +20,9 @@ module pll_freq_lock #(
     parameter integer LOCK_LIMIT = 64,      // If CNT is inside the locking tolerance for this many cycles, lock
     parameter integer ERR_LIMIT = 64,       // If COARSE and MID cannot increase/decrease for this many cycles, err
     parameter integer LOCK_TOL = 0,         // Tolerance for the FCW for locking. 0 for exact (CNT = FCW +/- LOCK_TOL)
+    // Consecutive out-of-window filtered samples before the live
+    // FREQ_OK flag falls.  Sticky LOCKED is not cleared by this.
+    parameter integer FREQ_LOSS = 4,
     parameter integer TOL_COARSE_WAIT = 1,  // Wait REF cycles for changing the COARSE once the MID is in the limit, 1 for always change
     // Counter frontend selection. 0 = synchronous (default), 1 = async ripple,
     // 2 = Johnson prescaler.  Ripple/Johnson require an explicit CDC review.
@@ -33,6 +36,10 @@ module pll_freq_lock #(
     input LOCK,
     input FORCE_P, FORCE_N,                 // Force count up or down
     output reg LOCKED, ERR,
+    // Live window: filtered count is inside FCW +/- LOCK_TOL.  Unlike
+    // LOCKED, this falls again after FREQ_LOSS consecutive misses, so a
+    // phase detector cannot keep a lock the frequency counter disagrees with.
+    output reg FREQ_OK,
     output reg [COARSE_NDELS-1:0] COARSE_MUX,
     output reg [MID_NDELS-1:0] MID_MUX,
     // Measurement interface (separate from acquisition control).  CNT_EXTRA_BITS
@@ -182,10 +189,15 @@ module pll_freq_lock #(
     reg [CNT_TOL_BITS-1:0] cnt_err;
     reg [CNT_TOL_BITS-1:0] cnt_coarse_wait;
     reg started;
+    localparam integer FREQ_LOSS_LIM = (FREQ_LOSS < 1) ? 1 :
+        (FREQ_LOSS > 7) ? 7 : FREQ_LOSS;
+    reg [2:0] freq_miss;
     always @(posedge CLK_REF or negedge RST_N) begin
         if(!RST_N) begin
             ERR <= 1'b0;
             LOCKED <= 1'b0;
+            FREQ_OK <= 1'b0;
+            freq_miss <= 3'd0;
             COARSE_MUX <= 'd0;
             MID_MUX <= 'd0;
             cnt_done <= 'd0;
@@ -264,6 +276,25 @@ module pll_freq_lock #(
                 end
             end else begin
                 cnt_coarse_wait <= TOL_COARSE_WAIT-1;
+            end
+
+                    // Live window, on the raw per-REF delta rather than cnt_filt.
+            // The IIR settles a code or two above or below the same raw
+            // count depending on which side it came from, so a LOCK_TOL
+            // of 1 around cnt_filt false-unlocks an exact integer ratio.
+            // One raw sample outside the window must not drop FREQ_OK;
+            // FREQ_LOSS consecutive misses do.  Sticky LOCKED stays set
+            // either way; only START restarts that search.
+            if (!cap_valid) begin
+                FREQ_OK <= 1'b0;
+                freq_miss <= 3'd0;
+            end else if ((cnt_cap >= FCW_NA) && (cnt_cap <= FCW_PA)) begin
+                FREQ_OK <= 1'b1;
+                freq_miss <= 3'd0;
+            end else if (freq_miss >= FREQ_LOSS_LIM - 1) begin
+                FREQ_OK <= 1'b0;
+            end else begin
+                freq_miss <= freq_miss + 3'd1;
             end
         end
     end
