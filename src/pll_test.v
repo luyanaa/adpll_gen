@@ -64,6 +64,7 @@ module pll_test();
         .SET_DIV(SET_DIV),
         .LOAD_DIV(LOAD_DIV),
         .OUT_DIV(OUT_DIV),
+        .CK(),
 `endif
         .LOCKED(LOCKED), .ERR(ERR), .OUT(OUT)
     );

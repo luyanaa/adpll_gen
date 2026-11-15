@@ -49,7 +49,7 @@ module lock_fsm_tb;
         .SS_BBPD(SS_BBPD),
         .KP(KP), .KI(KI), .FCW(FCW),
         .DSM_EN_DT(DSM_EN_DT), .DSM_EN_SHDT(DSM_EN_SHDT), .DSM_ORDER(DSM_ORDER),
-        .SET_DIV(SET_DIV), .LOAD_DIV(LOAD_DIV), .OUT_DIV(OUT_DIV),
+        .SET_DIV(SET_DIV), .LOAD_DIV(LOAD_DIV), .OUT_DIV(OUT_DIV), .CK(),
         .COARSE_MUX(COARSE_MUX), .MID_MUX(MID_MUX), .FINE_MUX(FINE_MUX),
         .DCO_EN(DCO_EN), .LOCKED(LOCKED), .ERR(ERR)
     );

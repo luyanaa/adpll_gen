@@ -39,7 +39,7 @@ module pll_macro_top_tb;
         .REF(REF), .RST_N(RST_N), .INJ_EN(INJ_EN),
         .KP(KP), .KI(KI), .FCW(FCW),
         .DSM_EN_DT(DSM_EN_DT), .DSM_EN_SHDT(DSM_EN_SHDT), .DSM_ORDER(DSM_ORDER),
-        .SET_DIV(SET_DIV), .LOAD_DIV(LOAD_DIV), .OUT_DIV(OUT_DIV),
+        .SET_DIV(SET_DIV), .LOAD_DIV(LOAD_DIV), .OUT_DIV(OUT_DIV), .CK(),
         .LOCKED(LOCKED), .ERR(ERR), .OUT(OUT)
     );
 

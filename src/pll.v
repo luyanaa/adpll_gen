@@ -33,6 +33,7 @@ module pll #(
     input [DIV_BITS-1:0] SET_DIV,
     input LOAD_DIV,
     output OUT_DIV,
+    output CK,
 `endif
     output LOCKED, ERR, OUT
 );
@@ -80,6 +81,7 @@ module pll #(
         .SET_DIV(SET_DIV),
         .LOAD_DIV(LOAD_DIV),
         .OUT_DIV(OUT_DIV),
+        .CK(CK),
 `endif
         .COARSE_MUX(COARSE_MUX),
         .MID_MUX(MID_MUX),

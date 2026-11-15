@@ -25,6 +25,7 @@ module pll_logic #(
     input [DIV_BITS-1:0] SET_DIV,
     input LOAD_DIV,
     output OUT_DIV,
+    output CK,
 `endif
     output reg [COARSE_NDELS-1:0] COARSE_MUX,
     output reg [MID_NDELS-1:0] MID_MUX,

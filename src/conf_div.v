@@ -12,7 +12,8 @@ module pll_mod_divider #(
     input  wire             rst_n,     // active low reset
     input  wire [W-1:0]     set_div,   // new division value (>=1)
     input  wire             load_div,  // pulse to latch set_div into active divisor (synchronous)
-    output wire             out        // divided clock output (/1 bypass)
+    output wire             out,       // divided clock output (/1 bypass)
+    output wire [W-1:0]     div_q      // active divisor (for the DDR CK gate)
 );
 
     // active divisor
@@ -26,6 +27,7 @@ module pll_mod_divider #(
     // A true /1 output is a bypass, not a toggle.  This keeps OUT_DIV equal
     // to the DCO output when the specification requests out_div=1.
     assign out = (div == 1) ? clk : out_reg;
+    assign div_q = div;
 
     // compute counts when div changes (synchronous)
     // high_count = ceil(div/2), low_count = floor(div/2)

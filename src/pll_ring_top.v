@@ -28,7 +28,7 @@ module PLL_RING_TOP #(
     input [1:0] DSM_ORDER,
     input [DIV_BITS-1:0] SET_DIV,
     input LOAD_DIV,
-    output OUT_DIV, LOCKED, ERR, OUT
+    output OUT_DIV, CK, LOCKED, ERR, OUT
 );
     wire [COARSE_NDELS-1:0] COARSE_MUX;
     wire [MID_NDELS-1:0] MID_MUX;
@@ -59,7 +59,7 @@ module PLL_RING_TOP #(
         .KP(KP), .KI(KI), .FCW(FCW),
         .DSM_EN_DT(DSM_EN_DT), .DSM_EN_SHDT(DSM_EN_SHDT),
         .DSM_ORDER(DSM_ORDER),
-        .SET_DIV(SET_DIV), .LOAD_DIV(LOAD_DIV), .OUT_DIV(OUT_DIV),
+        .SET_DIV(SET_DIV), .LOAD_DIV(LOAD_DIV), .OUT_DIV(OUT_DIV), .CK(CK),
         .COARSE_MUX(COARSE_MUX), .MID_MUX(MID_MUX), .FINE_MUX(FINE_MUX),
         .DCO_EN(DCO_EN), .LOCKED(LOCKED), .ERR(ERR)
     );

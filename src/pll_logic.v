@@ -35,6 +35,7 @@ module pll_logic#(
     input [DIV_BITS-1:0] SET_DIV,
     input LOAD_DIV,
     output OUT_DIV,
+    output CK,
 `endif
     output reg [COARSE_NDELS-1:0] COARSE_MUX,
     output reg [MID_NDELS-1:0] MID_MUX,
@@ -244,12 +245,25 @@ module pll_logic#(
     end
     
 `ifndef PLL_WITHOUT_DIVIDER
+    // OUT_DIV is the raw integer divider (loop observability).
+    // CK is the DDR pad clock: quiet until lock, even divisors only.
+    wire div_raw;
+    wire [DIV_BITS-1:0] div_q;
     pll_mod_divider #(.W(DIV_BITS), .DIV_INIT(DIV_INIT)) div(
         .clk(OUT),
         .rst_n(RST_N),
         .set_div(SET_DIV),
         .load_div(LOAD_DIV),
-        .out(OUT_DIV)
+        .out(div_raw),
+        .div_q(div_q)
+    );
+    assign OUT_DIV = div_raw;
+    ddr_ck_gate #(.W(DIV_BITS)) u_ddr_ck (
+        .clk_div(div_raw),
+        .locked(LOCKED),
+        .rst_n(RST_N),
+        .div(div_q),
+        .ck(CK)
     );
 `endif
 

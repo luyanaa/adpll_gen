@@ -36,6 +36,7 @@ module pll_macro_top #(
     input [DIV_BITS-1:0] SET_DIV,
     input LOAD_DIV,
     output OUT_DIV,
+    output CK,
 `endif
     output LOCKED, ERR, OUT
 );
@@ -71,7 +72,7 @@ module pll_macro_top #(
         .KP(KP), .KI(KI), .FCW(FCW),
         .DSM_EN_DT(DSM_EN_DT), .DSM_EN_SHDT(DSM_EN_SHDT), .DSM_ORDER(DSM_ORDER),
 `ifndef PLL_WITHOUT_DIVIDER
-        .SET_DIV(SET_DIV), .LOAD_DIV(LOAD_DIV), .OUT_DIV(OUT_DIV),
+        .SET_DIV(SET_DIV), .LOAD_DIV(LOAD_DIV), .OUT_DIV(OUT_DIV), .CK(CK),
 `endif
         .COARSE_MUX(COARSE_MUX), .MID_MUX(MID_MUX), .FINE_MUX(FINE_MUX),
         .DCO_EN(DCO_EN), .LOCKED(LOCKED), .ERR(ERR)
