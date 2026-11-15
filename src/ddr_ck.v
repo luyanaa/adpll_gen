@@ -11,9 +11,22 @@
 // for the small ratios that reach 100 MHz, so CK stays quiet.
 //
 // ck_en is sampled on the divided clock's falling edge, so a normal
-// unlock finishes the low phase already open instead of starting a new
-// high.  CK is also AND-gated by locked, so a DCO that sticks high still
-// forces the pad low: the falling edge that would clear ck_en never comes.
+// ratio change or disable lets the high pulse already open finish with its
+// old width.  The next period starts with the new ratio: if the new divisor
+// is odd, its first high is emitted at the odd width and ck_en drops at
+// that falling edge, so no second odd pulse starts.  That single
+// transition pulse is a shutdown artifact, not a steady-state DDR tCH/tCL
+// pulse.
+//
+// CK is also combinationally AND-gated by locked.  That is fail-closed,
+// not glitchless shutdown: if LOCKED falls while CK is high, CK goes low
+// at once and that last high phase is shorter than tCH.  The gate is what
+// stops the pad when the DCO sticks high and the divided falling edge
+// that would clear ck_en never arrives, so it must not wait for a low
+// window.  A DDR timing claim therefore covers normal operation and the
+// steady state after a ratio change only; after a lock fault, or on the
+// single odd-ratio transition pulse, the last high is reported as
+// truncated or off-duty, not as a compliant tCH/tCL clock.
 module ddr_ck_gate #(parameter integer W = 8) (
     input  wire             clk_div,
     input  wire             locked,

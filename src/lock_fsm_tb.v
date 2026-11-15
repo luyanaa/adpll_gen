@@ -179,13 +179,16 @@ module lock_fsm_tb;
         // DCO stuck high, stuck low, and stopped.  REF keeps running, so the
         // REF-domain watchdog is the one that can still see it.  The first
         // case is armed from the lock reached above.
+        // The Gray word needs up to three REF edges to flush through the
+        // synchronizer before the first miss is counted, so the budget is
+        // DCO_TIMEOUT plus that latency.
         // Stop between REF edges.  Stopping on a REF edge races the
         // activity counter and can hide the stall for one more sample.
         @(negedge REF);
         out_run = 1'b0;
         OUT = 1'b1;
         MID_OUT = 1'b1;
-        #60;
+        #100;
         expect_locked(1'b0, "dco stuck high");
         if (CK !== 1'b0) begin
             $display("FAIL: CK high while DCO stuck high");
@@ -202,7 +205,7 @@ module lock_fsm_tb;
         out_run = 1'b0;
         OUT = 1'b0;
         MID_OUT = 1'b0;
-        #60;
+        #100;
         expect_locked(1'b0, "dco stuck low");
         if (CK !== 1'b0) begin
             $display("FAIL: CK high while DCO stuck low");
@@ -219,7 +222,7 @@ module lock_fsm_tb;
         // out the same REF-cycle budget.
         @(negedge REF);
         out_run = 1'b0;
-        #60;
+        #100;
         expect_locked(1'b0, "dco stopped");
         out_run = 1'b1;
 

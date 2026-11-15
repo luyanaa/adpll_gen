@@ -230,6 +230,10 @@ def main():
                 assert "pll_counter_dco_phys.v" not in srcs, srcs
                 assert "pll_counter_top.v" in srcs, srcs
                 assert "pll_logic.v" in srcs, srcs
+                # pll_logic instantiates the REF watchdog and the DDR CK
+                # gate.  Missing either leaves the delivery unelaborable.
+                assert "ref_watchdog.v" in srcs, srcs
+                assert "ddr_ck.v" in srcs, srcs
                 bb = (pkg / "rtl" / "src" / "hardmacro_blackbox.v").read_text()
                 assert "module PLL_COUNTER_DCO_PHYS" in bb, bb
                 assert "module PLL_COUNTER_TOP" not in bb, bb

@@ -44,6 +44,8 @@ COMMON_SOURCES = (
     "src/frequency_counter_frontend.v",
     "src/digital_loop_filter.v",
     "src/lock_detector.v",
+    "src/ref_watchdog.v",
+    "src/ddr_ck.v",
     "src/term_decoder.v",
     "src/delta_sigma.v",
     "src/fix_div.v",

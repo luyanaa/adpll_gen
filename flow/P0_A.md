@@ -86,13 +86,56 @@ src/pll_macro_top_tb.v (behavioral smoke only)
   `WITH_REF_TRIG_OUT`.  A build that defines that macro has to override
   `NO_SYMBOL_CODE`, `SYMBOL_P_CODE` and `SYMBOL_N_CODE` together.  A quiet
   run locks only after both correction symbols have been seen.
+- The first high phase after a runtime ratio change was one input clock
+  wide, because `conf_div` pre-loaded `fresh_high-1` and the next edge then
+  satisfied `cnt+1 >= limit`.  It now starts at `cnt=0`, so the first high
+  and the following low are the new ratio's full halves.  `divider_tb`
+  covers `/2->/8`, `/8->/4`, `/4->/8`, `/8->/1` and `/1->/8`.  `/4->/2`
+  could not see the bug: its new high is one clock wide either way.
+- The DCO activity check in `pll_logic` no longer samples an 8-bit binary
+  counter in the REF domain.  It counts in Gray, passes through two
+  `ASYNC_REG` flops, and treats any change of the synchronized word as
+  activity.  That removes the multi-bit incoherent sample; the cost is up
+  to three REF cycles before the first miss, so the effective window is
+  `DCO_TIMEOUT + 3`.  `pll_ref_watchdog` also samples REF through two flops
+  and compares the second and third stages, instead of XORing the raw pin.
+  Both are still sampled liveness checks: an exact alias or both clocks
+  stopping needs an independent always-on monitor.
+- `ddr_ck` keeps the combinational `locked` gate.  A ratio change or normal
+  disable finishes the open high pulse because `ck_en` is sampled on the
+  divided falling edge; a switch to an odd ratio emits one final high at
+  that odd width before `ck_en` drops, so that transition pulse is not a
+  50% DDR pulse.  A lock fault is fail-closed and truncates the last high;
+  that is reported as a fault truncation, not as a tCH/tCL-compliant last
+  pulse.  `ddr_ck_tb` checks both.
+- The generator's `COMMON_SOURCES` now carries `ref_watchdog.v` and
+  `ddr_ck.v`; `pll_logic` instantiates both, so the top-integration package
+  elaborated only because those files were absent from the manifest.  All
+  three cores elaborate in `test_delivery` and `test_elaboration`.
 - `pll.v` still needs a full closed-loop elaboration / simulation with the
   actual `PLL_ANALOG` model.
 - No full STA/CDC signoff or P&R rerun is claimed from this batch.
 
+## Lock verification layers
+
+| Layer | Status |
+|---|---|
+| FSM with injected `PHASE_LOCK` / `FREQ_OK` | covered by `lock_fsm_tb` |
+| Real FLL + behavioral DCO + real BBPD | frequency reaches FCW, but the behavioral SS-BBPD emits only the positive symbol, so `PHASE_LOCK` stays 0 and full `LOCKED` is not reached without an override |
+| Real macro + digital control + PEX/PVT | not started |
+
+`pll_lock_detector` is still a quiet-run detector with a both-sides
+requirement.  `seen_p`/`seen_n` have no age limit, so a detector that goes
+stuck quiet after both symbols were seen can still be reported as locked.
+A real phase-detector health check needs a dither or symbol-timeout
+mechanism; that is not in this pass.  Layer 2 (lock, unlock and relock with
+no injected detector outputs) is the next gate before any PEX/PVT claim.
+
 ## Next P0-A items
 
-1. Formal CDC test: REF/MID_OUT arbitrary phase, Gray snapshot consistency.
-2. `pll_macro_top` integration with unified parameters and the real macro.
-3. Negative tests: DCO freeze, counter off-by-one, SS-BBPD polarity inversion,
+1. Closed-loop layer 2: a BBPD model that can emit both correction symbols,
+   then lock, forced unlock and relock without `TB_OVERRIDE`.
+2. Formal CDC test: REF/MID_OUT arbitrary phase, Gray snapshot consistency.
+3. `pll_macro_top` integration with unified parameters and the real macro.
+4. Negative tests: counter off-by-one, SS-BBPD polarity inversion,
    frequency step and reacquisition.

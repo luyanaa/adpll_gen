@@ -3,9 +3,9 @@
 // LOAD_DIV is captured immediately and applied only at the end of the
 // output period already in progress (the end of its low phase).  The open
 // high phase and the open low phase therefore keep the old width, and the
-// new ratio starts from a low phase.  A load that arrives on the boundary
-// edge itself waits for the next period: div_pend is read from the value
-// it already holds.
+// new ratio starts at its high phase with the phase counter at zero.  A
+// load that arrives on the boundary edge itself waits for the next period:
+// div_pend is read from the value it already holds.
 //
 // /1 is a bypass.  The bypass is armed at that same period boundary while
 // the counted output is low, and it is dropped on the following falling
@@ -51,10 +51,6 @@ module pll_mod_divider #(
     wire apply_pend = pend && cycle_end && !load_div;
     wire [W-1:0] div_for_counts = (!use_clk && leave_req) ? div_pend :
                                   apply_pend ? div_pend : div;
-    // Width of the high phase that starts on this edge.  The registered
-    // high_count still describes the previous ratio.
-    wire [W-1:0] fresh_high = (div_for_counts <= 1) ? 1 :
-        div_for_counts[0] ? ((div_for_counts >> 1) + 1'b1) : (div_for_counts >> 1);
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -107,7 +103,12 @@ module pll_mod_divider #(
                 // another low phase.
                 div <= div_pend;
                 leave_req <= 1'b0;
-                cnt <= fresh_high - 1'b1;
+                // The high phase starts on this edge.  It must last the
+                // new ratio's full high width, so the counter starts at
+                // zero: pre-loading one less than the high width makes the
+                // next edge satisfy cnt+1 >= limit and emits a one-cycle
+                // high.
+                cnt <= 'd0;
                 out_reg <= 1'b1;
                 high_phase <= 1'b1;
             end else if (apply_pend && (div_pend == 1)) begin
@@ -121,7 +122,7 @@ module pll_mod_divider #(
                 // Start the new ratio on its high phase; restarting another
                 // low phase would stretch the low pulse.
                 div <= div_pend;
-                cnt <= fresh_high - 1'b1;
+                cnt <= 'd0;
                 out_reg <= 1'b1;
                 high_phase <= 1'b1;
             end else if (cnt + 1'b1 >= limit) begin

@@ -24,7 +24,9 @@ module pll_logic#(
     parameter integer REF_TIMEOUT = 512,
     // REF cycles without a DCO edge, checked only while locked.  A stopped,
     // stuck-high or stuck-low DCO cannot be seen by the REF watchdog,
-    // because that counter is clocked by OUT.
+    // because that counter is clocked by OUT.  The Gray word spends up to
+    // three REF cycles in the synchronizer before the first miss is
+    // counted, so the effective detection window is DCO_TIMEOUT + 3.
     parameter integer DCO_TIMEOUT = 4,
     parameter integer CNT_EXTRA_BITS = 8,
     parameter integer MEAS_PERIODS = 1,
@@ -174,32 +176,48 @@ module pll_logic#(
         .clk_count(OUT), .clk_watch(REF), .enable(1'b1),
         .rst_n(RST_N), .alive(REF_OK)
     );
-    // REF is the only clock still running if OUT sticks.  OUT edges
-    // increment a counter; each REF edge checks that the counter moved.
-    // A stuck-high, stuck-low or stopped DCO stops incrementing it.
+    // REF is the only clock still running if OUT sticks.  OUT edges are
+    // counted in a Gray code and sampled through two flops in REF.  A
+    // binary counter would let REF sample a mixture of several changing
+    // bits; Gray changes one bit per OUT edge, so every sample is a valid
+    // word.  Any change of the sampled word means at least one OUT edge
+    // happened, so no conversion or subtraction is needed.
+    //
+    // A stuck-high, stuck-low or stopped DCO leaves the word unchanged.
     // While locked_q is 0 the check stays healthy: acquisition may
-    // legally run the DCO slower than REF.  The counter is wide enough
-    // that a fast DCO cannot wrap back to the same value inside one
-    // REF period of the timeout window.
-    localparam integer DCO_ACT_W = 8;
+    // legally run the DCO slower than REF.  10 bits hold 1024 edges
+    // between REF samples, well above the 8-bit FCW range; an exact
+    // 1024-edge alias would be needed to hide activity.
+    localparam integer DCO_ACT_W = 10;
     localparam integer DCO_MISS_MAX = (DCO_TIMEOUT < 1) ? 1 :
         (DCO_TIMEOUT > 7) ? 7 : DCO_TIMEOUT;
     reg [DCO_ACT_W-1:0] out_edges;
-    reg [DCO_ACT_W-1:0] out_edges_ref;
+    reg [DCO_ACT_W-1:0] out_edges_gray;
+    (* ASYNC_REG = "TRUE" *) reg [DCO_ACT_W-1:0] out_edges_g1;
+    (* ASYNC_REG = "TRUE" *) reg [DCO_ACT_W-1:0] out_edges_g2;
+    reg [DCO_ACT_W-1:0] out_edges_g2_q;
     reg [2:0] dco_miss_cnt;
+    wire [DCO_ACT_W-1:0] out_edges_next = out_edges + 1'b1;
     always @(posedge OUT or negedge RST_N) begin
-        if (!RST_N)
+        if (!RST_N) begin
             out_edges <= 'd0;
-        else
-            out_edges <= out_edges + 1'b1;
+            out_edges_gray <= 'd0;
+        end else begin
+            out_edges <= out_edges_next;
+            out_edges_gray <= out_edges_next ^ (out_edges_next >> 1);
+        end
     end
     always @(posedge REF or negedge RST_N) begin
         if (!RST_N) begin
-            out_edges_ref <= 'd0;
+            out_edges_g1 <= 'd0;
+            out_edges_g2 <= 'd0;
+            out_edges_g2_q <= 'd0;
             dco_miss_cnt <= 'd0;
         end else begin
-            out_edges_ref <= out_edges;
-            if (!locked_q || (out_edges != out_edges_ref)) begin
+            out_edges_g1 <= out_edges_gray;
+            out_edges_g2 <= out_edges_g1;
+            out_edges_g2_q <= out_edges_g2;
+            if (!locked_q || (out_edges_g2 != out_edges_g2_q)) begin
                 dco_miss_cnt <= 'd0;
             end else if (dco_miss_cnt < DCO_MISS_MAX) begin
                 dco_miss_cnt <= dco_miss_cnt + 1'b1;

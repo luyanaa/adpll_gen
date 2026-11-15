@@ -77,6 +77,41 @@ module ddr_ck_tb;
         end else
             $display("PASS duty avg=%0.3f inside 0.45-0.55", duty_sum / duty_n);
 
+        // Fault shutdown: LOCKED falls in the middle of a high phase.
+        // CK must be fail-closed, i.e. low at once, and the truncated
+        // high is the reported contract, not a DDR tCH result.  Keep
+        // LOCKED low across one divided falling edge so ck_en re-arms
+        // only at a safe boundary.
+        @(posedge ck);
+        #1.0 locked = 0;
+        #0.2;
+        if (ck !== 1'b0) begin
+            $display("FAIL: CK did not fail closed mid-high");
+            fail = fail + 1;
+        end else
+            $display("PASS: CK failed closed mid-high (last high truncated)");
+        #4.0;
+        if (ck !== 1'b0) begin
+            $display("FAIL: CK returned inside the same high phase");
+            fail = fail + 1;
+        end
+        edges = 0;
+        #10;
+        if (edges != 0) begin
+            $display("FAIL: CK toggled with LOCKED low, edges=%0d", edges);
+            fail = fail + 1;
+        end else
+            $display("PASS: CK held low while LOCKED is low");
+        locked = 1;
+        #10;
+        edges = 0;
+        #40;
+        if (edges < 4) begin
+            $display("FAIL: CK did not resume after relock, edges=%0d", edges);
+            fail = fail + 1;
+        end else
+            $display("PASS: CK resumed after relock, %0d edges", edges);
+
         // Odd divisor. Allow the one high pulse already enabled.
         phase = 3;
         edges = 0;
