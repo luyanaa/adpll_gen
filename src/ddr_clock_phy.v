@@ -38,11 +38,13 @@ module DDR_CLOCK_PHY #(
     parameter integer DLL_MID_NDELS = 15,
     parameter integer DLL_FINE_NDELS = 31,
     parameter integer DLL_T0_PS = 2930,
-    parameter integer DLL_STEP_PS = 35,
+    parameter integer DLL_CELL_PS = 30,
+    parameter integer DLL_EXTRA_PS = 62,
     parameter integer DLL_CODE_MIN = 20,
     parameter integer DLL_CODE_MAX = 170,
     parameter integer DLL_CODE_INIT = 55,
     parameter integer DLL_PERIOD_TICKS = 50,
+    parameter integer DLL_COMMIT_GUARD_PS = 1800,
     parameter integer FILTER_BITS = 16,
     parameter integer DCC_LOCK_COUNT = 16,
     parameter integer DLL_LOCK_COUNT = 16,
@@ -108,10 +110,12 @@ module DDR_CLOCK_PHY #(
     localparam [8:0] DLL_CODE_START = DLL_CODE_INIT;
 
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(DLL_T0_PS), .STEP_PS(DLL_STEP_PS),
+        .TAPS(280), .T0_PS(DLL_T0_PS), .CELL_PS(DLL_CELL_PS),
+        .EXTRA_PS(DLL_EXTRA_PS),
         .CODE_MIN(DLL_CODE_MIN), .CODE_MAX(DLL_CODE_MAX),
         .PERIOD_TICKS(DLL_PERIOD_TICKS),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(DLL_LOCK_COUNT)
+        .LOCK_COUNT(DLL_LOCK_COUNT),
+        .COMMIT_GUARD_PS(DLL_COMMIT_GUARD_PS)
     ) u_dll (
         .REF(CK_DCC), .RST_N(RST_N), .EN(dll_en), .TICK(DLL_TICK),
         .CODE_START(DLL_CODE_START),

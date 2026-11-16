@@ -1,36 +1,43 @@
 `timescale 1ps/1ps
-// Route B: full-period DLL with a startup absolute-range detector, an
-// edge-time phase detector and a valid-edge phase window.
+// Route B: full-period DLL with an absolute-range acquisition, a TDC phase
+// detector, a monitor line for continuous range revalidation and a
+// target/active code commit that only changes the line in a proven window.
 //
-// Delay line: 4-segment bypass + 56 fine taps (the ics55 STA structure):
-//   delay(code) = T0 + code * STEP,  code = coarse*56 + fine, 0..279
-// Each tap is a transport-delayed copy of the line input; changing CODE
-// selects a tap and does not re-time an already scheduled event.  The code is
-// only committed in the low phase of the measurement clock (safe window).
+// Delay line: DLL_DCDL (4 segments x 56 cells, coarse=code/56, fine=code%56).
+// The simulation backend exposes the coarse-boundary steps; the physical
+// backend instantiates PLL_SEGMENTED_DELAY_PHYS.
 //
-// Startup range detector: the line is driven by REF/16 (80 ns) so one edge is
-// in flight at a time and the absolute delay can be measured with a
-// free-running TICK counter.  A binary search over the code finds the tap
-// whose measured delay is ~1 REF period.  0T/0.5T/2T have absolute delays of
-// ~0/~T/2, so they cannot pass the check even though their phase modulo T is
-// the same as 1T.
+// Clock domains:
+//   TICK  : TDC counter only (DLL_TDC)
+//   OUT   : TDC timestamp capture and toggle only
+//   REF   : all DLL control, lock terms, code_target
+//   commit: delayed-REF strobe, writes code_active only
+// No register is written from two clock domains.  The TDC crosses the
+// timestamp with a Gray snapshot and a toggle handshake; code_target is
+// stable before the delayed-REF commit strobe samples it.
 //
-// Tracking: REF-to-OUT delay in TICK counts modulo one period; > half period
-// is early, < half period is late.  PHASE_OK counts consecutive REF windows
-// with a valid OUT edge and |delay - period| within PHASE_EPS.
+// Acquisition drives the line from REF/16 and measures the absolute delay,
+// so 0T/0.5T/2T cannot pass.  Tracking measures the REF-to-OUT phase modulo
+// the measured period.  The monitor line runs from REF/16 with the same
+// active code and is revalidated continuously; an out-of-range monitor
+// measurement drops RANGE_OK and restarts acquisition.
 //
 // LOCKED = RANGE_OK & PHASE_OK & !CODE_RAILED & ALIVE.
 module DLL_FULL_PERIOD_TOP #(
     parameter integer TAPS = 280,
     parameter integer CODE_BITS = 9,
     parameter integer T0_PS = 2930,
-    parameter integer STEP_PS = 35,
+    parameter integer CELL_PS = 30,
+    parameter integer EXTRA_PS = 62,
+    parameter integer DLL_IMPL = 0,
     parameter integer CODE_MIN = 45,
     parameter integer CODE_MAX = 116,
-    parameter integer PERIOD_TICKS = 50,  // fallback; measured at startup
-    parameter integer ACQ_EPS = 4,
-    parameter integer PHASE_EPS = 1,
-    parameter integer LOCK_COUNT = 16
+    parameter integer PERIOD_TICKS = 50,
+    parameter integer LOCK_COUNT = 16,
+    // Commit guard: must exceed the fine-tap span and stay below the REF
+    // low phase.  At SS the fine span is larger than the low phase, so the
+    // commit is refused and the acquired code is held.
+    parameter integer COMMIT_GUARD_PS = 1800
 ) (
     input  wire                  REF,
     input  wire                  RST_N,
@@ -50,230 +57,325 @@ module DLL_FULL_PERIOD_TOP #(
     output wire                  ACQ_OK,
     output wire                  ACQ_FAIL
 );
-    // ---------------------------------------------------------------- line
-    // ACQ: line driven by REF/16, with an unarmed flush window.
-    // CODE is committed at div==4, after the previous delayed falling edge
-    // and before the next rising edge, so the mux never re-times an edge.
+    // ---------------------------------------------------------------- lines
     reg        acq_mode;
     reg        acq_armed;
     reg  [3:0] div;
     wire       acq_clk = div[3];
     wire       line_in = acq_mode ? (acq_armed ? acq_clk : 1'b0) : REF;
 
-    reg [TAPS-1:0] tap_r;
-    genvar g;
-    generate
-        for (g = 0; g < TAPS; g = g + 1) begin : taps
-            always @(line_in) tap_r[g] <= #(T0_PS + g * STEP_PS) line_in;
+    reg [CODE_BITS-1:0] code_target;
+    reg [CODE_BITS-1:0] code_active;
+    reg [CODE_BITS-1:0] code_target_q;
+    reg                 commit_tog;
+    wire [CODE_BITS-1:0] code = code_active;
+    assign CODE = code_active;
+
+    wire main_out;
+    wire mon_out;
+    DLL_DCDL #(
+        .IMPL(DLL_IMPL), .CODE_BITS(CODE_BITS),
+        .T0_PS(T0_PS), .CELL_PS(CELL_PS), .EXTRA_PS(EXTRA_PS)
+    ) u_line (
+        .CLK_IN(line_in), .CODE(code), .CLK_OUT(main_out)
+    );
+    DLL_DCDL #(
+        .IMPL(DLL_IMPL), .CODE_BITS(CODE_BITS),
+        .T0_PS(T0_PS), .CELL_PS(CELL_PS), .EXTRA_PS(EXTRA_PS)
+    ) u_mon (
+        .CLK_IN(acq_clk), .CODE(code), .CLK_OUT(mon_out)
+    );
+    assign OUT = main_out;
+
+    // Delayed-REF commit strobe.  The delay is a matched path in the
+    // physical implementation; the behavioral cell exposes the same timing.
+    wire commit_strobe;
+    DLL_DELAY_CELL #(.DLY_PS(COMMIT_GUARD_PS)) u_commit_dly (
+        .I(REF), .O(commit_strobe)
+    );
+
+    // ------------------------------------------------------------------ TDC
+    wire [15:0] ref_stamp, period_ticks, main_stamp, mon_stamp, acq_stamp;
+    wire        main_tog, mon_tog;
+    wire        acq_latch = (div == 4'd7);
+    DLL_TDC u_tdc (
+        .TICK(TICK), .REF(REF), .OUT(main_out), .MON_OUT(mon_out),
+        .RST_N(RST_N), .ACQ_LATCH(acq_latch),
+        .ref_stamp(ref_stamp), .period_ticks(period_ticks),
+        .main_stamp(main_stamp), .main_tog(main_tog),
+        .mon_stamp(mon_stamp), .mon_tog(mon_tog),
+        .acq_stamp(acq_stamp)
+    );
+    reg  [15:0] acq_delay;
+    wire [15:0] acq_period = (period_ticks << 4);
+    integer ad, md;
+    always @* begin
+        ad = main_stamp - acq_stamp;
+        if (period_ticks != 0) begin
+            if (ad < 0) ad = ad + acq_period;
+            else if (ad >= acq_period) ad = ad - acq_period;
         end
-    endgenerate
-
-    reg [CODE_BITS-1:0] code;
-    assign CODE = code;
-    wire [CODE_BITS-1:0] sel = (code >= TAPS) ? (TAPS - 1) : code;
-    assign OUT = tap_r[sel];
-
-    // ------------------------------------------------- absolute time base
-    reg [15:0] tcnt;
-    always @(posedge TICK or negedge RST_N) begin
-        if (!RST_N) tcnt <= 16'd0;
-        else        tcnt <= tcnt + 1'b1;
-    end
-
-    reg [15:0] t_ref, t_out;
-    reg        acq_seen;
-    always @(posedge OUT or negedge RST_N) begin
-        if (!RST_N) begin
-            t_out    <= 16'd0;
-            acq_seen <= 1'b0;
-        end else if (acq_mode && acq_armed && !acq_seen) begin
-            t_out    <= tcnt;
-            acq_seen <= 1'b1;
-        end
-    end
-    wire [15:0] acq_delay = t_out - t_ref;
-
-    // ------------------------------------------------- tracking phase TDC
-    reg [7:0] cnt;
-    reg [7:0] delay_ticks;
-    reg       out_seen;
-    always @(posedge TICK or negedge RST_N) begin
-        if (!RST_N) cnt <= 8'd0;
-        else        cnt <= cnt + 1'b1;
-    end
-    always @(posedge OUT or negedge RST_N) begin
-        if (!RST_N) begin
-            delay_ticks <= 8'd0;
-            out_seen    <= 1'b0;
-        end else if (!acq_mode) begin
-            delay_ticks <= cnt;
-            out_seen    <= 1'b1;
-        end
-    end
-
-    // ---------------------------------------------------------- liveness
-    reg [7:0] out_edges, out_edges_q;
-    reg [2:0] alive_miss;
-    always @(posedge OUT or negedge RST_N) begin
-        if (!RST_N) out_edges <= 8'd0;
-        else        out_edges <= out_edges + 1'b1;
-    end
-    always @(posedge REF or negedge RST_N) begin
-        if (!RST_N) begin
-            out_edges_q <= 8'd0;
-            alive_miss  <= 3'd0;
-        end else begin
-            out_edges_q <= out_edges;
-            if (out_edges == out_edges_q) begin
-                if (alive_miss < 3'd4) alive_miss <= alive_miss + 1'b1;
-            end else begin
-                alive_miss <= 3'd0;
-            end
+        md = mon_stamp - acq_stamp;
+        if (period_ticks != 0) begin
+            if (md < 0) md = md + acq_period;
+            else if (md >= acq_period) md = md - acq_period;
         end
     end
-    assign ALIVE = (alive_miss < 3'd4);
 
-    // ------------------------------------------------------ lock terms
+    // ------------------------------------------------------- REF controller
+    reg        main_tog_seen, mon_tog_seen;
+    reg        main_evt, mon_evt;
+    reg [2:0]  alive_cnt;
+    reg [1:0]  acq_settle;
+    reg [7:0]  phase_good;
+    reg        phase_ok_r;
     reg        acq_ok, acq_fail, acq_busy;
     reg  [3:0] flush;
     reg [CODE_BITS-1:0] lo, hi;
-    reg  [7:0] phase_good;
-    reg        phase_ok_r;
-    // Measured REF period in TICK counts.  The acquisition target is one
-    // period of the actual input, not a hardcoded 5 ns.
-    reg [15:0] t_p0, period_ticks;
-    reg [1:0]  per_state;
-    wire [7:0] per8 = period_ticks[7:0];
+    reg [15:0] phase_delta;
+    reg [15:0] mon_delta_r;
+    reg        range_live;
+    reg [1:0]  mon_bad;
+    integer    dd;
+    integer    pd;
 
-    assign ACQ_BUSY  = acq_busy;
-    assign ACQ_OK    = acq_ok;
-    assign ACQ_FAIL  = acq_fail;
-    assign RANGE_OK  = acq_ok && (code >= CODE_MIN) && (code <= CODE_MAX);
-    assign CODE_RAILED = (code == 0) || (code == TAPS - 1);
+    wire [2:0] active_coarse = code_active / 56;
+    wire [15:0] phase_tol = (period_ticks >> 5) + 1;   // ~3% + 1 tick
+    wire [15:0] acq_tol   = (period_ticks >> 4) + 1;   // ~6% + 1 tick
+    wire [15:0] mon_tol   = (period_ticks >> 3) + 1;   // ~12.5% + 1 tick
+
+    assign ACQ_BUSY = acq_busy;
+    assign ACQ_OK   = acq_ok;
+    assign ACQ_FAIL = acq_fail;
+    assign RANGE_OK = acq_ok && range_live &&
+                      (code_active >= CODE_MIN) && (code_active <= CODE_MAX);
+    assign CODE_RAILED = (code_active == 0) || (code_active == TAPS - 1);
+    assign PHASE_OK = phase_ok_r;
+    assign ALIVE = (alive_cnt < 3'd4);
+    assign LOCKED = PHASE_OK && RANGE_OK && !CODE_RAILED && ALIVE;
+
+    // Phase modulo the measured period.  The tracking event is within one
+    // period of the latest REF edge; the sign bit selects the wrap.
+    always @* begin
+        pd = main_stamp - ref_stamp;
+        if (pd < 0) pd = pd + period_ticks;
+        else if (pd >= period_ticks) pd = pd - period_ticks;
+    end
+    assign PFD_UP = (pd > phase_tol) && (pd < period_ticks / 2);
+    assign PFD_DN = (pd >= period_ticks / 2) &&
+                    (pd < period_ticks - phase_tol);
 
     always @(posedge REF or negedge RST_N) begin
         if (!RST_N) begin
             div <= 4'd0; acq_mode <= 1'b0; acq_armed <= 1'b0; flush <= 4'd0;
             acq_ok <= 1'b0; acq_fail <= 1'b0; acq_busy <= 1'b0;
-            acq_seen <= 1'b0; code <= CODE_START; lo <= CODE_MIN; hi <= CODE_MAX;
-            t_ref <= 16'd0; cnt <= 8'd0; out_seen <= 1'b0;
+            code_target <= CODE_START; code_target_q <= CODE_START;
+            commit_tog <= 1'b0;
+            lo <= CODE_MIN; hi <= CODE_MAX;
+            main_tog_seen <= 1'b0; mon_tog_seen <= 1'b0;
+            main_evt <= 1'b0; mon_evt <= 1'b0;
+            alive_cnt <= 3'd0; acq_settle <= 2'd0;
             phase_good <= 8'd0; phase_ok_r <= 1'b0;
-            period_ticks <= PERIOD_TICKS; t_p0 <= 16'd0; per_state <= 2'd0;
+            phase_delta <= 16'd0; mon_delta_r <= 16'd0;
+            range_live <= 1'b0; mon_bad <= 2'd0;
         end else if (!EN) begin
             div <= 4'd0; acq_mode <= 1'b0; acq_armed <= 1'b0; flush <= 4'd0;
             acq_ok <= 1'b0; acq_fail <= 1'b0; acq_busy <= 1'b0;
-            acq_seen <= 1'b0; code <= CODE_START; lo <= CODE_MIN; hi <= CODE_MAX;
-            t_ref <= 16'd0; cnt <= 8'd0; out_seen <= 1'b0;
+            code_target <= CODE_START; code_target_q <= CODE_START;
+            commit_tog <= 1'b0;
+            lo <= CODE_MIN; hi <= CODE_MAX;
+            main_tog_seen <= 1'b0; mon_tog_seen <= 1'b0;
+            main_evt <= 1'b0; mon_evt <= 1'b0;
+            alive_cnt <= 3'd0; acq_settle <= 2'd0;
             phase_good <= 8'd0; phase_ok_r <= 1'b0;
-            period_ticks <= PERIOD_TICKS; t_p0 <= 16'd0; per_state <= 2'd0;
+            phase_delta <= 16'd0; mon_delta_r <= 16'd0;
+            range_live <= 1'b0; mon_bad <= 2'd0;
         end else begin
             div <= div + 1'b1;
 
-            if (!acq_mode) begin
+            // Event detection from the synchronized TDC toggles.
+            if (main_tog != main_tog_seen) begin
+                main_tog_seen <= main_tog;
+                alive_cnt <= 3'd0;
                 if (acq_ok) begin
-                    // ------------------------------------- tracking
-                    if (out_seen) begin
-                        if ((delay_ticks <= per8) &&
-                            (delay_ticks > PHASE_EPS) &&
-                            (delay_ticks < per8 / 2) &&
-                            (code > CODE_MIN))
-                            code <= code - 1'b1;          // output late
-                        else if ((delay_ticks <= per8) &&
-                                 (delay_ticks >= per8 / 2) &&
-                                 (delay_ticks < per8 - PHASE_EPS) &&
-                                 (code < CODE_MAX))
-                            code <= code + 1'b1;          // output early
-
-                        if (RANGE_OK && !CODE_RAILED &&
-                            (delay_ticks <= per8) &&
-                            ((delay_ticks <= PHASE_EPS) ||
-                             (delay_ticks >= per8 - PHASE_EPS))) begin
-                            if (phase_good < LOCK_COUNT[7:0])
-                                phase_good <= phase_good + 1'b1;
-                            if (phase_good + 1 >= LOCK_COUNT[7:0])
-                                phase_ok_r <= 1'b1;
-                        end else begin
-                            phase_good <= 8'd0;
-                            phase_ok_r <= 1'b0;
-                        end
+                    // tracking event; consume immediately
+                    phase_delta <= pd[15:0];
+                    if ((pd <= phase_tol) ||
+                        (pd >= period_ticks - phase_tol)) begin
+                        if (phase_good < LOCK_COUNT[7:0])
+                            phase_good <= phase_good + 1'b1;
+                        if (phase_good + 1 >= LOCK_COUNT[7:0])
+                            phase_ok_r <= 1'b1;
                     end else begin
-                        // no valid OUT edge in this REF window
+                        phase_good <= 8'd0;
+                        phase_ok_r <= 1'b0;
+                        // Fine-only tracking: hold the acquired coarse.
+                        if ((pd > phase_tol) && (pd < period_ticks / 2)) begin
+                            if (code_target > active_coarse * 56)
+                                code_target <= code_target - 1'b1;
+                        end else if ((pd >= period_ticks / 2) &&
+                                     (pd < period_ticks - phase_tol)) begin
+                            if (code_target < active_coarse * 56 + 55)
+                                code_target <= code_target + 1'b1;
+                        end
+                    end
+                end else begin
+                    main_evt <= 1'b1;   // acquisition consumes it at div==4
+                end
+            end else begin
+                if (alive_cnt < 3'd4) alive_cnt <= alive_cnt + 1'b1;
+                if (acq_ok) begin
+                    // no valid output edge in this REF window
+                    phase_good <= 8'd0;
+                    phase_ok_r <= 1'b0;
+                end
+            end
+
+            // Monitor event: continuous absolute-range revalidation.
+            if (mon_tog != mon_tog_seen) begin
+                mon_tog_seen <= mon_tog;
+                mon_delta_r <= md[15:0];
+                if (acq_ok && (period_ticks != 0)) begin
+                    if ((md >= period_ticks - mon_tol) &&
+                        (md <= period_ticks + mon_tol)) begin
+                        mon_bad <= 2'd0;
+                        range_live <= 1'b1;
+                    end else if (mon_bad == 2'd0) begin
+                        // One stale sample is possible around a commit;
+                        // require two consecutive out-of-range samples.
+                        mon_bad <= 2'd1;
+                    end else begin
+                        // Code no longer in the 1T range at the measured
+                        // period: drop the lock and re-acquire.
+                        mon_bad <= 2'd0;
+                        range_live <= 1'b0;
+                        acq_ok <= 1'b0;
+                        acq_fail <= 1'b0;
+                        acq_mode <= 1'b0;
+                        acq_armed <= 1'b0;
+                        flush <= 4'd0;
                         phase_good <= 8'd0;
                         phase_ok_r <= 1'b0;
                     end
-                    cnt <= 8'd0;
-                    out_seen <= 1'b0;
-                end else if (!acq_fail) begin
-                    // start acquisition; flush the line for 8 REF cycles
-                    acq_mode  <= 1'b1;
+                end
+            end
+
+            if (!acq_mode) begin
+                if (acq_ok) begin
+                    // tracking (handled on events above)
+                end else if (!acq_fail && (period_ticks != 0)) begin
+                    acq_mode <= 1'b1;
                     acq_armed <= 1'b0;
-                    flush     <= 4'd0;
-                    acq_busy  <= 1'b1;
-                    lo        <= CODE_MIN;
-                    hi        <= CODE_MAX;
-                    code      <= (CODE_MIN + CODE_MAX) >> 1;
-                    t_p0      <= tcnt;
-                    per_state <= 2'd1;
+                    flush <= 4'd0;
+                    acq_busy <= 1'b1;
+                    range_live <= 1'b0;
+                    lo <= CODE_MIN;
+                    hi <= CODE_MAX;
+                    code_target <= (CODE_MIN + CODE_MAX) >> 1;
                 end
             end else if (!acq_armed) begin
-                // Measure the actual REF period once, in TICK counts.
-                if (per_state == 2'd1) begin
-                    period_ticks <= tcnt - t_p0;
-                    per_state    <= 2'd2;
-                end
                 if (flush < 4'd8) flush <= flush + 1'b1;
-                else if (!acq_clk) acq_armed <= 1'b1;
+                else if (!acq_clk) begin
+                    acq_armed <= 1'b1;
+                    acq_settle <= 2'd2;
+                end
             end else begin
-                // ----------------------------- absolute range acquisition
-                // Process at div==4: the previous delayed falling edge has
-                // passed, the line is low, and the next rising edge is 20 ns
-                // away.  Commit the new code here (safe mux window).
-                if (div == 4'd4 && acq_seen) begin
-                    acq_seen <= 1'b0;
-                    if (acq_delay < period_ticks) begin
-                        if (code >= hi) begin
-                            if (acq_delay + ACQ_EPS >= period_ticks)
+                // Process at div==4, after the delayed falling edge and
+                // before the next rising edge.
+                if ((div == 4'd0) && main_evt && (period_ticks != 0) &&
+                    (acq_settle == 2'd0)) begin
+                    main_evt <= 1'b0;
+                    dd = ad;
+                    acq_delay <= ad[15:0];
+                    if (dd < period_ticks) begin
+                        if (code_target >= hi) begin
+                            if (dd >= period_ticks - acq_tol) begin
                                 acq_ok <= 1'b1;
-                            else
+                                range_live <= 1'b1;
+                                mon_bad <= 2'd0;
+                            end else begin
                                 acq_fail <= 1'b1;
+                            end
                             acq_busy <= 1'b0;
                         end else begin
-                            lo   <= code + 1'b1;
-                            // keep the midpoint arithmetic inside CODE_BITS:
-                            // (code + hi + 1) can overflow 9 bits at 280+279
-                            code <= code + ((hi - code + 1'b1) >> 1);
+                            lo <= code_target + 1'b1;
+                            code_target <= code_target +
+                                ((hi - code_target + 1'b1) >> 1);
                         end
                     end else begin
-                        if (code <= lo) begin
-                            if (acq_delay <= period_ticks + ACQ_EPS)
+                        if (code_target <= lo) begin
+                            if (dd <= period_ticks + acq_tol) begin
                                 acq_ok <= 1'b1;
-                            else
+                                range_live <= 1'b1;
+                                mon_bad <= 2'd0;
+                            end else begin
                                 acq_fail <= 1'b1;
+                            end
                             acq_busy <= 1'b0;
                         end else begin
-                            hi   <= code - 1'b1;
-                            code <= lo + ((code - lo) >> 1);
+                            hi <= code_target - 1'b1;
+                            code_target <= lo +
+                                ((code_target - lo) >> 1);
                         end
                     end
+                end else if ((div == 4'd0) && (acq_settle != 2'd0)) begin
+                    acq_settle <= acq_settle - 1'b1;
+                    main_evt <= 1'b0;
                 end
-                // Start one measurement per REF/16 period.
-                if (div == 4'd7) begin
-                    t_ref    <= tcnt;
-                    acq_seen <= 1'b0;
-                end
-                // Leave acquisition at the falling edge of the measurement
-                // clock, while both acq_clk and REF are high (no runt).
-                if ((acq_ok || acq_fail) && div == 4'd15)
-                    acq_mode <= 1'b0;
+                if (acq_ok && (div == 4'd15)) acq_mode <= 1'b0;
+                if (acq_fail && (div == 4'd15)) acq_mode <= 1'b0;
+            end
+
+            // Request a commit when the target changes.  The actual code
+            // write happens only in the delayed-REF commit block.
+            if (code_target != code_target_q) begin
+                code_target_q <= code_target;
+                commit_tog <= ~commit_tog;
             end
         end
     end
 
-    assign PHASE_OK = phase_ok_r;
-    assign LOCKED   = PHASE_OK && RANGE_OK && !CODE_RAILED && ALIVE;
+    // ------------------------------------------------------- safe commit
+    // Single writer for code_active.  commit_tog crosses into the delayed
+    // REF strobe domain with a 2FF synchronizer; the write is allowed only
+    // while REF is low, so a tracking update lands inside the low phase
+    // after COMMIT_GUARD_PS.  At a corner where the fine span exceeds the
+    // low phase the strobe sees REF high and the acquired code is held.
+    // During acquisition the target changes at div==4, i.e. after 20 ns of
+    // the 40 ns REF/16 low phase, so the next low-phase strobe is safe for
+    // the measured 18.13 ns maximum tap delay.
+    reg [1:0] ct_sync;
+    reg       commit_done;
+    reg [3:0] acq_low_cnt;
+    always @(negedge commit_strobe or negedge RST_N) begin
+        ct_sync <= {ct_sync[0], commit_tog};
+        if (!RST_N || !EN) begin
+            code_active <= CODE_START;
+            commit_done <= 1'b0;
+            acq_low_cnt <= 4'd0;
+        end else begin
+            if (acq_mode && acq_armed && !acq_clk) begin
+                if (acq_low_cnt < 4'd4) acq_low_cnt <= acq_low_cnt + 1'b1;
+            end else begin
+                acq_low_cnt <= 4'd0;
+            end
 
-    assign PFD_UP = !acq_mode && out_seen && (delay_ticks > PHASE_EPS) &&
-                    (delay_ticks < per8 / 2);
-    assign PFD_DN = !acq_mode && out_seen && (delay_ticks >= per8 / 2) &&
-                    (delay_ticks < per8 - PHASE_EPS);
+            if (ct_sync[1] != commit_done) begin
+                if (acq_mode) begin
+                    // Slow acquisition line: 20 ns of low covers the
+                    // measured 18.13 ns maximum tap delay.
+                    if (acq_armed && !acq_clk && (acq_low_cnt >= 4'd4)) begin
+                        code_active <= code_target;
+                        commit_done <= ct_sync[1];
+                    end
+                end else if (!REF) begin
+                    // Tracking: only inside the REF low phase after the
+                    // fine-settling guard.  REF high means the guard is
+                    // longer than the low phase, so the code is held.
+                    code_active <= code_target;
+                    commit_done <= ct_sync[1];
+                end
+            end
+        end
+    end
 endmodule

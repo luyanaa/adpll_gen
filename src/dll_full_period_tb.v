@@ -2,9 +2,11 @@
 //
 // The lock DUTs use the 4-segment DCDL delays measured by OpenSTA, as a
 // linear surrogate of the real code->delay map:
-//   TT: T0=2930 ps, STEP=35 ps, 5 ns code ~59
-//   SS: T0=3320 ps, STEP=61 ps, 5 ns code ~27
-//   FF: T0=2780 ps, STEP=24 ps, 5 ns code ~93
+//   TT: T0=2930 ps, CELL=30 ps, EXTRA=62 ps, 5 ns code ~67
+//   SS: T0=3320 ps, CELL=52 ps, EXTRA=75 ps, 5 ns code ~31
+//   FF: T0=2780 ps, CELL=20 ps, EXTRA=70 ps, 5 ns code ~108
+// The line is the segmented DLL_DCDL, so coarse=code/56 and fine=code%56;
+// the boundary step is CELL+EXTRA rather than a hidden linear fit.
 // These are behavioral numbers from the STA range, not silicon.
 //
 // Rejection DUTs:
@@ -55,9 +57,9 @@ module dll_full_period_tb;
     wire acq_ok_2t, acq_fail_2t;
 
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(2930), .STEP_PS(35),
+        .TAPS(280), .T0_PS(2930), .CELL_PS(30), .EXTRA_PS(62),
         .CODE_MIN(45), .CODE_MAX(116), .PERIOD_TICKS(50),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(16)
+        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
     ) u_tt (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd88),
@@ -68,9 +70,9 @@ module dll_full_period_tb;
     );
 
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(3320), .STEP_PS(61),
+        .TAPS(280), .T0_PS(3320), .CELL_PS(52), .EXTRA_PS(75),
         .CODE_MIN(20), .CODE_MAX(61), .PERIOD_TICKS(50),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(16)
+        .LOCK_COUNT(16), .COMMIT_GUARD_PS(3000)
     ) u_ss (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd44),
@@ -81,9 +83,9 @@ module dll_full_period_tb;
     );
 
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(2780), .STEP_PS(24),
+        .TAPS(280), .T0_PS(2780), .CELL_PS(20), .EXTRA_PS(70),
         .CODE_MIN(72), .CODE_MAX(176), .PERIOD_TICKS(50),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(16)
+        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
     ) u_ff (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd134),
@@ -95,9 +97,9 @@ module dll_full_period_tb;
 
     // Starts at 2T (10.6 ns), can reach 1T.
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(0), .STEP_PS(76),
+        .TAPS(280), .T0_PS(0), .CELL_PS(75), .EXTRA_PS(0),
         .CODE_MIN(0), .CODE_MAX(279), .PERIOD_TICKS(50),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(16)
+        .LOCK_COUNT(16), .COMMIT_GUARD_PS(3000)
     ) u_2s (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd139),
@@ -109,9 +111,9 @@ module dll_full_period_tb;
 
     // 4 ns input: TT line covers it; the target is the measured REF period.
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(2930), .STEP_PS(35),
+        .TAPS(280), .T0_PS(2930), .CELL_PS(30), .EXTRA_PS(62),
         .CODE_MIN(0), .CODE_MAX(116), .PERIOD_TICKS(50),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(16)
+        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
     ) u_4n (
         .REF(REF4), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd31),
@@ -123,9 +125,9 @@ module dll_full_period_tb;
 
     // 0T: max delay 0.28 ns.
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(0), .STEP_PS(1),
+        .TAPS(280), .T0_PS(0), .CELL_PS(1), .EXTRA_PS(0),
         .CODE_MIN(0), .CODE_MAX(279), .PERIOD_TICKS(50),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(16)
+        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
     ) u_0t (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd10),
@@ -137,9 +139,9 @@ module dll_full_period_tb;
 
     // 0.5T: max delay 2.51 ns.
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(0), .STEP_PS(9),
+        .TAPS(280), .T0_PS(0), .CELL_PS(9), .EXTRA_PS(0),
         .CODE_MIN(0), .CODE_MAX(279), .PERIOD_TICKS(50),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(16)
+        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
     ) u_half (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd139),
@@ -151,9 +153,9 @@ module dll_full_period_tb;
 
     // 2T: min delay 8.5 ns, never reaches 1T.
     DLL_FULL_PERIOD_TOP #(
-        .TAPS(280), .T0_PS(8500), .STEP_PS(30),
+        .TAPS(280), .T0_PS(8500), .CELL_PS(30), .EXTRA_PS(0),
         .CODE_MIN(0), .CODE_MAX(279), .PERIOD_TICKS(50),
-        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(16)
+        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
     ) u_2t (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd139),
@@ -236,7 +238,7 @@ module dll_full_period_tb;
         input [8*16-1:0] name;
         reg locked;
         begin
-            for (k = 0; k < 4000; k = k + 1) begin
+            for (k = 0; k < 3000; k = k + 1) begin
                 @(posedge REF);
                 case (which)
                     0: locked = locked_tt;

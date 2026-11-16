@@ -14,6 +14,7 @@
 module PLL_SEGMENTED_DELAY_PHYS #(
     parameter integer NSEG = 8,
     parameter integer SEG_TAPS = 28,
+    parameter integer SEG_EXTRA_CELLS = 0,
     parameter integer FINE_TAPS = 28,
     parameter integer COARSE_BITS = 4,
     parameter integer FINE_BITS = 5
@@ -29,7 +30,7 @@ module PLL_SEGMENTED_DELAY_PHYS #(
     genvar g, i;
     generate
         for (g = 0; g < NSEG; g = g + 1) begin : seg
-            wire [SEG_TAPS:0] chain;
+            wire [SEG_TAPS+SEG_EXTRA_CELLS:0] chain;
             assign chain[0] = seg_node[g];
             for (i = 0; i < SEG_TAPS; i = i + 1) begin : cell
                 FINE_DELAY_CELL u_cell (
@@ -38,9 +39,21 @@ module PLL_SEGMENTED_DELAY_PHYS #(
                     .OUT(chain[i+1])
                 );
             end
-            // 1 = bypass this segment, 0 = use all its cells.
+            // Per-segment buffer: makes the segment path slower than the
+            // bypass path plus the previous fine tap, so the code->delay map
+            // stays monotonic across every coarse x 56 boundary.
+            for (i = SEG_TAPS; i < SEG_TAPS + SEG_EXTRA_CELLS; i = i + 1)
+                begin : extra
+                FINE_DELAY_CELL u_extra (
+                    .MUX(1'b1),
+                    .IN(chain[i]),
+                    .OUT(chain[i+1])
+                );
+            end
+            // 1 = bypass this segment, 0 = use all its cells + buffer.
             wire bypass = (g >= COARSE);
-            assign seg_node[g+1] = bypass ? chain[0] : chain[SEG_TAPS];
+            assign seg_node[g+1] = bypass ? chain[0] :
+                chain[SEG_TAPS+SEG_EXTRA_CELLS];
         end
     endgenerate
 

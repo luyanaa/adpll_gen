@@ -162,23 +162,40 @@ src/pll_macro_top_tb.v (behavioral smoke only)
   full-period DLL reference; the Route B DLL correctly refuses to lock it.
   The old `ADDLL_TOP` `DLL_LOCKED=1` / 843 ps offset / 41.4% duty false
   lock is removed from the PHY.
-- Route B full-period DLL (`src/dll_full_period_top.v`) is implemented and
-  verified behaviorally at TT/SS/FF: 5 ns lock at -40/-94/-60 ps residual,
-  a 4 ns input locks at its measured 40-tick period, and a 2T-start DUT
-  converges to 1T.  0T/0.5T/2T DUTs assert `ACQ_FAIL`, rail the code, and
-  never assert `LOCKED`/`PHASE_OK`/`RANGE_OK`.  `LOCKED = RANGE_OK &
-  PHASE_OK & !CODE_RAILED & ALIVE`; `PHASE_OK` counts consecutive valid
-  edge comparisons.  The `src/ddr_clock_phy_dll_tb.v` PHY test with a
-  uniform 200 MHz input gives `DLL_LOCKED=1`, code 58, 4.960 ns delay and
-  50.0% `CK_PHY` duty.
-- The old COARSE-only ics55 DCDL is blocked at 5 ns: TT 4.71-5.55 ns,
-  SS 6.43-7.98 ns, FF 3.97-4.52 ns.  The 4-segment bypass + 56-tap
-  structure (`src/pll_segmented_delay_phys.v`) covers 4.5-5.5 ns at all
-  corners: TT 2.93-11.55, SS 3.32-18.13, FF 2.78-8.64 ns.  The 8-segment
-  version failed SS (5.12 ns minimum).  The real PD sign is confirmed: at
-  negedge INJ the ics55 latch gives only P=01 / N=11, matching the model.
-  The selector-only path remains the verified fallback; the remaining DLL
-  blocker is gate-level/PEX/PVT, not the DCDL range.
+- Route B full-period DLL (`src/dll_full_period_top.v`) now uses the
+  unified `DLL_DCDL` interface (`src/dll_dcdl.v`): `coarse=code/56`,
+  `fine=code%56`, behavioral segmented backend or
+  `PLL_SEGMENTED_DELAY_PHYS` physical backend.  The first physical 4-seg
+  line was **non-monotonic at every coarse boundary** (55->56: TT -260,
+  SS -470, FF -170 ps).  Adding 10 `FINE_DELAY_CELL` buffer cells per used
+  segment made it monotonic; real ics55 OpenSTA now gives TT 2.930-12.730,
+  SS 3.320-20.150, FF 2.780-9.440 ns with boundary steps 40/110/80/70,
+  30/180/110/110, 30/90/60/60 ps and max adjacent steps 130/250/90 ps.
+- The DLL measurement is split into `src/dll_tdc.v` (TICK-domain timestamp
+  capture + Gray/toggle crossings) and a REF-only controller.  No register
+  is written from two clock domains; the controller does not assume a
+  10 GHz clock, only timestamp units and the measured period.  `code_target`
+  and `code_active` are separate; the delayed-REF commit block writes
+  `code_active` only in a proven low-phase window (SS holds the acquired
+  code when its fine span exceeds the low phase).  A monitor line
+  revalidates the absolute delay every measurement period and restarts
+  acquisition after two out-of-window samples.
+- Behavioral DLL regression: 5 ns lock at TT/SS/FF (codes 66/31/104,
+  -28/-68/-70 ps residual), 4 ns lock at its 40-tick period, 2T-start
+  converges to 1T, and 0T/0.5T/2T assert `ACQ_FAIL`, rail the code and
+  never assert `LOCKED`/`PHASE_OK`/`RANGE_OK`.  A 5->6 ns reference step
+  drops and re-acquires (period 60, code 99, phase 5.962 ns); a forced
+  missing output edge drops ALIVE/PHASE_OK/LOCKED and the DLL re-locks
+  after restore.  The uniform-clock PHY test gives `DLL_LOCKED=1`, code 66,
+  4.972 ns delay and 50.0% `CK_PHY` duty.
+- The old COARSE-only ics55 DCDL remains BLOCKED at 5 ns (TT 4.71-5.55,
+  SS 6.43-7.98, FF 3.97-4.52 ns).  `make test_ddr_phy` now runs it as
+  `test_ddr_phy_legacy_blocked`, which passes only while the old gate is
+  BLOCKED; the new design is gated by `test_segmented_dcdl`.  The real PD
+  sign is confirmed: at negedge INJ the ics55 latch gives only P=01 / N=11,
+  matching the model.  The selector-only path remains the verified
+  fallback; the remaining DLL blocker is gate-level/PEX/PVT and a uniform
+  integer-divided reference, not the DCDL range.
 - The differential CK_T/CK_C crossing, package/board load, SI and
   PVT/jitter are not measured.  The IO corner spread (1.77/2.57/4.22 ns at
   FF/TT/SS for a 5 ns period) means a static tap cannot hold the pad phase

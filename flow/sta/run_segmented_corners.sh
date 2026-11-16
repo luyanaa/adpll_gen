@@ -21,7 +21,11 @@ STD_FF=$STD/liberty/ics55_LLSC_H7CR_ff_rcbest_1p32_m40_nldm.lib
 test -f "$STD_TT"
 mkdir -p "$OUT"
 
-echo "== Yosys 4-seg DCDL =="
+echo "== Yosys DLL_DCDL physical backend =="
+$YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/fine_delay.v $ROOT/src/pll_segmented_delay_phys.v $ROOT/src/dll_dcdl.v $ROOT/flow/sta/dll_dcdl_phys_meas.v; synth -top DLL_DCDL_PHYS_MEAS -flatten; stat" \
+  > "$OUT/dll_dcdl_phys.yosys.log"
+
+echo "== Yosys 4-seg DCDL =="")"
 $YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/fine_delay.v $ROOT/src/pll_segmented_delay_phys.v $ROOT/flow/sta/segmented_delay4_meas.v; synth -top SEGMENTED_DELAY4_MEAS -flatten; abc -liberty $STD_TT; write_verilog $OUT/segmented_delay4_net.v; stat" \
   > "$OUT/segmented_delay4.yosys.log"
 
@@ -38,6 +42,15 @@ for corner in TT SS FF; do
     > "$OUT/segmented_delay4_$corner.log"
   if ! python3 "$ROOT/flow/sta/segmented_delay_check.py" \
       "$OUT/segmented_delay4_$corner.log" "$corner" --min=4.5 --max=5.5; then
+    fail=1
+  fi
+
+  echo "== $corner 4-seg boundary continuity =="
+  STD_LIB=$lib NETLIST=$OUT/segmented_delay4_net.v \
+    $STA -no_init -exit "$ROOT/flow/sta/segmented_boundary.sta.tcl" \
+    > "$OUT/segmented_boundary_$corner.log"
+  if ! python3 "$ROOT/flow/sta/segmented_boundary_check.py" \
+      "$OUT/segmented_boundary_$corner.log" "$corner" --max-step=300; then
     fail=1
   fi
 done

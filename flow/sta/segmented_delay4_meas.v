@@ -5,7 +5,7 @@ module SEGMENTED_DELAY4_MEAS (
     output wire       CLK_OUT
 );
     PLL_SEGMENTED_DELAY_PHYS #(
-        .NSEG(4), .SEG_TAPS(56), .FINE_TAPS(56),
+        .NSEG(4), .SEG_TAPS(56), .SEG_EXTRA_CELLS(10), .FINE_TAPS(56),
         .COARSE_BITS(3), .FINE_BITS(6)
     ) u_delay (
         .CLK_IN(CLK_IN), .COARSE(COARSE), .FINE(FINE), .CLK_OUT(CLK_OUT)

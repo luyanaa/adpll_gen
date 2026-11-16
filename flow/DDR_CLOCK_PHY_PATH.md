@@ -158,64 +158,94 @@ claimed.  The pad-stage phase budget is dominated by the IO cell, not the
 The old `ADDLL_TOP` `LOCKED` was an accumulator-stability window, not a
 phase check.  Route B replaces it with `src/dll_full_period_top.v`:
 
-- **DCDL**: 4 coarse segments (56 `FINE_DELAY_CELL` each) plus a 56-tap fine
-  mux.  `COARSE=0/FINE=0` bypasses the segments.  Real ics55 OpenSTA:
+- **DCDL interface**: `src/dll_dcdl.v` has one interface and two backends.
+  CODE 0..279 maps explicitly to `COARSE = CODE / 56` (0..4 segments used)
+  and `FINE = CODE % 56` (tap in the final fine segment).  `IMPL=0` is the
+  segmented behavioral backend with the same 4x56 + 56 topology; `IMPL=1`
+  instantiates `PLL_SEGMENTED_DELAY_PHYS`.  The behavioral boundary steps
+  are fitted to the measured physical steps instead of hiding the coarse
+  handoff in a linear T0 + code*STEP fit.
+- **Physical boundary finding**: the first 4-segment line was
+  **non-monotonic at every coarse boundary**.  Code 55 -> 56 measured
+  TT -260 ps, SS -470 ps, FF -170 ps: the used segment path was faster than
+  the bypass path plus the previous fine tap.  Adding 10
+  `FINE_DELAY_CELL` buffer cells per used segment (`SEG_EXTRA_CELLS`) made
+  the map monotonic.  Real ics55 OpenSTA:
 
-  | Corner | 4-seg DCDL min-max | 4.5-5.5 ns |
-  |---|---:|---|
-  | TT | 2.93-11.55 ns | covered |
-  | SS | 3.32-18.13 ns | covered |
-  | FF | 2.78-8.64 ns | covered |
+  | Corner | 4-seg min-max | boundary steps 56/112/168/224 | max adjacent step |
+  |---|---:|---:|---:|
+  | TT | 2.930-12.730 ns | 40/110/80/70 ps | 130 ps |
+  | SS | 3.320-20.150 ns | 30/180/110/110 ps | 250 ps |
+  | FF | 2.780-9.440 ns | 30/90/60/60 ps | 90 ps |
 
-  An 8-segment version had SS `t_min` = 5.12 ns, so the 4-segment bypass is
-  what brings SS below 4.5 ns.  This is a Liberty-corner structural check,
-  not placed/PEX/PVT.
-- **Startup range**: the line is driven by REF/16 while a free-running TDC
-  measures the absolute delay, and a binary search finds the tap at one
-  measured REF period.  The period is measured at startup, so a 4 ns input
-  locks at 40 ticks and a 5 ns input at 50 ticks (10 GHz TDC).
-- **Tracking**: REF-to-OUT delay in TICK counts modulo the period; the code
-  window is the cycle/range detector, and `PHASE_OK` counts consecutive
-  REF windows with a valid OUT edge and |delay - period| <= 1 tick.
-- **LOCKED = RANGE_OK & PHASE_OK & !CODE_RAILED & ALIVE.**  The TDC samples
-  the output edge; ALIVE requires one output edge per REF window.
-- The behavioral line is a tapped transport-delay array.  The code is
-  committed only in the low phase of the measurement clock, so a code change
-  selects a different tap instead of re-timing an event.
+  All three corners cover 4.5-5.5 ns and pass the monotonic/step-bounded
+  gate.  This is a Liberty-corner structural check, not placed/PEX/PVT.
+- **Startup range**: the line is driven by REF/16 while the TDC measures
+  the absolute delay; a binary search finds the tap at the measured REF
+  period.  The measured period also makes the controller frequency-adaptive:
+  4 ns -> 40 ticks, 5 ns -> 50 ticks, 6 ns -> 60 ticks at the 10 GHz
+  simulation TDC.
+- **TDC/controller split**: `src/dll_tdc.v` timestamps REF, OUT and MON_OUT
+  in the TICK domain; the asynchronous edges are 2FF-synchronized into
+  TICK, and the timestamps cross to REF with toggle handshakes.  The
+  controller is REF-only and consumes timestamps plus the measured period;
+  it does not assume a 10 GHz binary counter.  A physical TDC can replace
+  the simulation front end with the same interface.
+- **Safe commit**: `code_target` is REF-domain; `code_active` is written
+  only by the delayed-REF commit block.  The commit strobe is REF delayed
+  by `COMMIT_GUARD_PS`; tracking writes only in the REF low phase after the
+  fine-settling guard and only inside the acquired coarse.  At SS the fine
+  span exceeds the low phase, so the commit is refused and the acquired
+  code is held; the lock still uses that code.
+- **Continuous range revalidation**: a monitor line runs from REF/16 with
+  the same active code.  Its absolute delay is checked every measurement
+  period; two consecutive out-of-window samples drop RANGE_OK and restart
+  acquisition.
+- **LOCKED = RANGE_OK & PHASE_OK & !CODE_RAILED & ALIVE.**  PHASE_OK counts
+  consecutive REF windows with a valid output timestamp and a phase inside
+  the measured-period window; ALIVE requires a main output edge.
 
-`src/dll_full_period_tb.v` (behavioral 4-seg surrogate, T0/STEP from the
-STA endpoints, 10 GHz TICK):
+`src/dll_full_period_tb.v` (segmented behavioral line, 10 GHz TICK):
 
 ```text
-TT 5 ns : LOCKED=1 CODE=58 phase=-40 ps
-SS 5 ns : LOCKED=1 CODE=26 phase=-94 ps
-FF 5 ns : LOCKED=1 CODE=90 phase=-60 ps
-4 ns    : LOCKED=1 CODE=30 period=40 ticks phase=-20 ps
-2T start: LOCKED=1 CODE=65 acq_delay=49 ticks phase=-60 ps  (1T, not 2T)
+TT 5 ns : LOCKED=1 CODE=66 phase=-28 ps
+SS 5 ns : LOCKED=1 CODE=31 phase=-68 ps
+FF 5 ns : LOCKED=1 CODE=104 phase=-70 ps
+4 ns    : LOCKED=1 CODE=34 period=40 ticks phase=-50 ps
+2T start: LOCKED=1 CODE=65 acq_delay=49 ticks phase=-125 ps  (1T, not 2T)
 0T      : ACQ_FAIL=1 CODE=279 (railed) delay=3 ticks  (0.3 ns)
 0.5T    : ACQ_FAIL=1 CODE=279 (railed) delay=25 ticks (2.5 ns)
 2T      : ACQ_FAIL=1 CODE=0   (railed) delay=85 ticks (8.5 ns)
 ```
 
 The 0T/0.5T/2T DUTs assert no `LOCKED`, `PHASE_OK` or `RANGE_OK` at any
-time.  The 2T-start DUT starts at 10.6 ns absolute delay and must converge
-to the 1T tap; it does, with `acq_delay` ~49 ticks.
+time.  The 2T-start DUT starts at 10.6 ns and must converge to the 1T tap;
+it does.  `src/dll_range_reval_tb.v` steps the reference from 5 ns to 6 ns
+and forces a missing output edge:
+
+```text
+5ns: LOCKED=1 PERIOD=50 CODE=66 phase=4.972
+6ns: LOCKED=1 PERIOD=60 CODE=99 phase=5.962 RANGE=1   (after drop/re-acquire)
+PASS: missing output edge dropped ALIVE/PHASE_OK/LOCKED
+restore: LOCKED=1 PERIOD=60 CODE=99 phase=5.962
+```
 
 PHY integration (`src/ddr_clock_phy_dll_tb.v`, uniform 200 MHz, 30% input
 duty, `USE_DLL=1`):
 
 ```text
-DCC_LOCKED=1 DLL_LOCKED=1 DLY_CODE=58 DLL_ERR=0
-DLL delay=4.960 ns period=5.000 ns mod=4.960 ns
+DCC_LOCKED=1 DLL_LOCKED=1 DLY_CODE=66 DLL_ERR=0
+DLL delay=4.972 ns period=5.000 ns mod=4.972 ns
 CK_PHY high=2.500 low=2.500 period=5.000 duty=50.0%
 PASS (fail-closed on PLL_LOCKED drop)
 ```
 
-The production blockers are now the real-cell (gate-level/SDF), placed/PEX
-and PVT/jitter verification of this DLL.  The TT/SS/FF numbers above use a
-linearized T0/STEP map, not the full nonlinear code-to-delay surface, and
-the DLL reference must be a uniform clock.  `USE_DLL=0` remains the verified
-fallback.
+`make test_ddr_phy` treats the legacy COARSE-only DCDL as
+`test_ddr_phy_legacy_blocked` (passes only while it is BLOCKED) and gates
+the new design with `test_segmented_dcdl`.  The remaining production
+blockers are gate-level/SDF and placed/PEX/PVT verification of the new
+DLL, and a uniform integer-divided reference.  `USE_DLL=0` remains the
+verified fallback.
 
 ## 8. Not done
 
