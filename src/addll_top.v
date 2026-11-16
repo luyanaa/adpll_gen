@@ -49,30 +49,41 @@ module ADDLL_TOP #(
         FINE_NDELS + MID_W*MID_NDELS + COARSE_W*COARSE_NDELS;
 
     wire [1:0] pd_raw;
-    // Swap only for the filter: "delayed clock late" must mean increment
-    // for the DLL.  The lock detector keeps the ADPLL convention where
-    // 2'b01 is the balanced / no-correction state.
-    wire [1:0] SS_BBPD = {pd_raw[0], pd_raw[1]};
+    // Capture the latch on the PD decision edge.  The DLF is clocked by
+    // !CLK_IN too, so sampling pd_raw directly races the latch update;
+    // capturing one cycle earlier makes the loop deterministic.
+    reg [1:0] pd_sync;
+    always @(negedge CLK_IN or negedge RST_N) begin
+        if (!RST_N) pd_sync <= 2'b00;
+        else        pd_sync <= pd_raw;
+    end
+    // Balanced PD inputs, same as sym.v: the latch sees !REF and !OSC.
+    // The filter uses the raw P/N decode; the DCO delay increases with the
+    // code, so the DLL sign is correct without the old bit swap.
+    wire [1:0] SS_BBPD = pd_sync;
     wire [FILTER_BITS-1:0] DLF_OUT;
     wire ILL_P, ILL_N;
 
 `ifdef SIMULATION
     sim_SSBBPD bbpd (
-        .CLK_VCO(CLK_OUT), .CLK_REF(CLK_IN), .SS_BBPD(pd_raw)
+        .CLK_VCO(~CLK_OUT), .CLK_REF(~CLK_IN), .SS_BBPD(pd_raw)
     );
 `else
     PLL_SSBBPD bbpd (
-        .INJ_EDGE_BALANCED(CLK_IN),
-        .OSC_BALANCED(CLK_OUT),
+        .INJ_EDGE_BALANCED(~CLK_IN),
+        .OSC_BALANCED(~CLK_OUT),
         .SS_BBPD(pd_raw)
     );
 `endif
 
-    // First-order loop: KP = 0 makes OUT = INT, the up/down accumulator.
+    // The PD decision is valid on negedge CLK_IN (posedge !CLK_IN).  The
+    // old TICK clock sampled the level asynchronously and could lock to the
+    // half-period boundary instead of a full period.  TICK remains the
+    // lock-detector observation clock.
     pll_digital_loop_filter #(
         .BITS(FILTER_BITS)
     ) dlf (
-        .CLK(TICK), .RST_N(RST_N), .ENABLE(EN),
+        .CLK(!CLK_IN), .RST_N(RST_N), .ENABLE(EN),
         .SS_BBPD(SS_BBPD),
         .KP({FILTER_BITS{1'b0}}), .KI(KI),
         .OUT(DLF_OUT), .ILL_P(ILL_P), .ILL_N(ILL_N)

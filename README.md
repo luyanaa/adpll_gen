@@ -54,11 +54,21 @@ The first P0-A RTL batch is implemented and regression-tested:
 DSM saturation/width        PASS
 divider /2,/3,/4 + first-high after a ratio change PASS
 DDR CK gate: pre-lock quiet, even-ratio duty, fail-closed fault PASS
-SS-BBPD lock/loss detector  PASS
-LOCKED / PHASE_LOCK / LOCK_LOST FSM PASS (quiet BBPD outside the FCW window does not lock)
-frequency-lock acquisition and FCW reacquisition PASS (stub DCO)
+DDR clock PHY path (DCC -> selector, 200 MHz): duty 50.0%, tap 240 ps, pad duty 50.0% / phase 375 ps, fail-closed PASS
+DDR clock PHY real ics55 cells: elaboration + Yosys PASS; tap step 35.3/60.7/24.0 ps TT/SS/FF
+DDR clock PHY real ics55 IO pad: IO model 50.0% / 240 ps; OpenSTA TT/SS/FF single-ended duty 47.4/52.6, 50/50, 48.0/52.0%
+ADPLL divider -> DCC -> DLL -> selector smoke: full LOCKED=1, DLL_LOCKED=1, but DLL phase 0.843 ns/4.870 ns and CK_PHY duty 41.4% -> DLL path FAIL (level PD false-locks)
+ADPLL full LOCKED: macro P=200/N=200, ILL=0, steady 16.5/REF (+3.1%)
+ics55 real DCDL range: TT 4.71-5.55 ns, SS 6.43-7.98 ns, FF 3.97-4.52 ns; 5 ns blocked at SS/FF
+SS-BBPD lock detector (P/N window, no unreachable quiet code) PASS
+SS-BBPD four-state contract (00 unreachable, DLF edge P/N only) PASS
+LOCKED / PHASE_LOCK / LOCK_LOST FSM PASS (P/N window and live FCW window both required)
+frequency-lock acquisition and FCW reacquisition PASS (stub DCO; acquisition range, not SoC accuracy)
 frequency-count CDC (independent clocks) PASS
-pll_macro_top behavioral frequency lock PASS (FREQ_LOCKED=1, FCW=16, 534 MID_OUT edges / 32 REF). PHASE_LOCK stays 0 on the sim_* BBPD, so LOCKED stays 0. Not a PEX or jitter result.
+CDC generator: per-channel Gray/level contracts PASS
+ref_watchdog: normal/stop/non-integer PASS; exact 1:1 alias documented
+clock IR: DSM_CK / CK / INJ_EDGE / CKR relationships PASS
+pll_macro_top behavioral full lock PASS (LOCKED=1, PHASE_LOCK=1, FCW=16, 528 MID_OUT edges / 32 REF; steady state 16.5/REF, ~+3.1%; P=200/N=200, ILL=0). Not a PEX or jitter result.
 ```
 
 Run:
@@ -68,8 +78,9 @@ cd sim
 make test_p0 PDK=ihp-sg13g2 USE_DOCKER=0
 ```
 
-Details and open items are in `flow/P0_A.md`.  The lock is still a behavioral
-SS-BBPD/no-symbol result, not a PEX/transistor-level or jitter signoff.
+Details and open items are in `flow/P0_A.md`; the symbol table and measured
+stream are in `flow/SSBBPD_SYMBOL_CONTRACT.md`.  The lock result is still
+behavioral, not a PEX/transistor-level or jitter signoff.
 
 DCO characterization status:
 

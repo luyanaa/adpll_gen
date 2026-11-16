@@ -244,6 +244,26 @@ $(SIM_OUT)/lock_detector_tb.vcd: $(SRC_DIR)/lock_detector_tb.v $(SRC_DIR)/lock_d
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
 
+# REF watchdog liveness and the FCW=1 integer-ratio limitation
+test_ref_watchdog: $(SIM_OUT)/ref_watchdog_tb.vcd
+
+view_test_ref_watchdog: $(SIM_OUT)/ref_watchdog_tb.vcd
+	gtkwave $(SIM_OUT)/ref_watchdog_tb.vcd
+
+$(SIM_OUT)/ref_watchdog_tb.vcd: $(SRC_DIR)/ref_watchdog_tb.v $(SRC_DIR)/ref_watchdog.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
+# SS-BBPD four-state contract at both sampling edges
+test_ssbbpd_contract: $(SIM_OUT)/ssbbpd_contract_tb.vcd
+
+view_test_ssbbpd_contract: $(SIM_OUT)/ssbbpd_contract_tb.vcd
+	gtkwave $(SIM_OUT)/ssbbpd_contract_tb.vcd
+
+$(SIM_OUT)/ssbbpd_contract_tb.vcd: $(SRC_DIR)/ssbbpd_contract_tb.v $(SRC_DIR)/sim_SSBBPD.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
 # Frequency-count CDC smoke
 test_freq_lock_cdc: $(SIM_OUT)/freq_lock_cdc_tb.vcd
 
@@ -353,18 +373,71 @@ show_delay_overlap_digital: $(SIM_OUT)/test_mid_delay.vcd $(SIM_OUT)/test_fine_d
 
 .SECONDARY:
 
+# DDR clock PHY path: DCC -> static phase selector, fixed 200 MHz
+test_ddr_clock_phy: $(SIM_OUT)/ddr_clock_phy_tb.vcd
+
+view_test_ddr_clock_phy: $(SIM_OUT)/ddr_clock_phy_tb.vcd
+	gtkwave $(SIM_OUT)/ddr_clock_phy_tb.vcd
+
+$(SIM_OUT)/ddr_clock_phy_tb.vcd: $(SRC_DIR)/ddr_clock_phy_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/ddr_ck_pad_model.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/sim_SSBBPD.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
+# ADPLL divider -> DCC -> selector connectivity/frequency smoke
+test_ddr_clock_phy_integration: $(SIM_OUT)/ddr_clock_phy_integration.out
+	cd $(SIM_OUT) && timeout 240s $(VVP) ddr_clock_phy_integration.out
+.PHONY: test_ddr_clock_phy_integration
+
+view_test_ddr_clock_phy_integration: $(SIM_OUT)/ddr_clock_phy_integration.vcd
+	gtkwave $(SIM_OUT)/ddr_clock_phy_integration.vcd
+
+$(SIM_OUT)/ddr_clock_phy_integration.out: $(SRC_DIR)/ddr_clock_phy_integration_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/pll_macro_top.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/ref_watchdog.v $(SRC_DIR)/ddr_ck.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/frequency_counter_frontend.v $(ROOT_DIR)/flow/macro/ics55_h7cr/pll_analog_macro.v $(SRC_DIR)/pll_analog.v $(SRC_DIR)/il_dco.v $(SRC_DIR)/sim_dco.v $(SRC_DIR)/sim_injection.v $(SRC_DIR)/sim_sym.v $(SRC_DIR)/sim_mux.v $(SRC_DIR)/sim_SSBBPD.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o ddr_clock_phy_integration.out -D SIMULATION  $^
+
+# Non-SIMULATION structural check: phase-selector tap bus is driven by a
+# real fine-delay chain, not an undriven placeholder.  The cell stubs are
+# PDK-independent structural models, not timing/signoff views.
+test_ddr_phy_non_sim:
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -s PHASE_SELECTOR_TOP -o phase_selector_non_sim.vvp $(SRC_DIR)/pll_cells_elab_stub.v $(SRC_DIR)/fine_delay.v $(SRC_DIR)/pll_dcdl_tap_bus_phys.v $(SRC_DIR)/phase_selector_top.v
+	cd $(SIM_OUT) && $(YOSYS) -p "read_verilog $(SRC_DIR)/pll_cells_elab_stub.v $(SRC_DIR)/fine_delay.v $(SRC_DIR)/pll_dcdl_tap_bus_phys.v $(SRC_DIR)/phase_selector_top.v; synth -top PHASE_SELECTOR_TOP; stat" > phase_selector_non_sim.yosys.log
+.PHONY: test_ddr_phy_non_sim
+
+# Real ics55 cells: non-SIMULATION elaboration, Yosys synthesis, and
+# OpenSTA tap-step measurement.  The default PDK path can be overridden.
+ICS55_REAL_ROOT ?= /grid/icsprout55-pdk
+FLOW_STA_DIR = $(ROOT_DIR)/flow/sta
+STA ?= sta
+
+test_ddr_phy_ics55_io:
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o ddr_phy_io.out -D SIMULATION=1 -D ICS55_IO $(SRC_DIR)/ddr_clock_phy_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/ddr_ck_pad_model.v $(SRC_DIR)/ics55_ddr_ck_pad.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/sim_SSBBPD.v $(ICS55_REAL_ROOT)/libs.ref/ICsprout_55LLULP1233_IO_251013/verilog/icsIOA_N55_3P3.v
+	cd $(SIM_OUT) && $(VVP) ddr_phy_io.out
+.PHONY: test_ddr_phy_ics55_io
+
+test_ddr_phy_real_cells:
+	ROOT=$(ROOT_DIR) ICS55_REAL_ROOT=$(ICS55_REAL_ROOT) SIM_OUT=$(SIM_OUT) \
+	  IVERILOG='$(IVERILOG)' YOSYS='$(YOSYS)' STA='$(STA)' \
+	  sh $(FLOW_STA_DIR)/run_ddr_phy_corners.sh
+.PHONY: test_ddr_phy_real_cells
+
+test_ddr_phy: test_ddr_clock_phy test_ddr_clock_phy_integration test_ddr_phy_non_sim test_ddr_phy_ics55_io test_ddr_phy_real_cells
+.PHONY: test_ddr_phy
+
 # P0-A correctness gate (fast RTL regressions)
-test_p0: test_delta_sigma_sat test_divider test_lock_detector test_lock_fsm test_freq_ok test_freq_lock_cdc test_freq_lock_stub test_ddr_ck test_pll_macro_smoke
+test_p0: test_delta_sigma_sat test_divider test_lock_detector test_ssbbpd_contract test_ref_watchdog test_lock_fsm test_freq_ok test_freq_lock_cdc test_freq_lock_stub test_ddr_ck test_ddr_clock_phy test_ddr_clock_phy_integration test_pll_macro_smoke
 .PHONY: test_p0
 
 # Closed-loop smoke with the macro wrapper and behavioral sim_* models.
 # This is an elaboration/connectivity smoke; it does not yet claim lock.
 test_pll_macro_smoke: $(SIM_OUT)/pll_macro_top.out
+	cd $(SIM_OUT) && timeout 180s $(VVP) pll_macro_top.out
+.PHONY: test_pll_macro_smoke
 
 $(SIM_OUT)/pll_macro_top.out: $(SRC_DIR)/pll_macro_top_tb.v $(SRC_DIR)/pll_macro_top.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/ref_watchdog.v $(SRC_DIR)/ddr_ck.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(ROOT_DIR)/flow/macro/ics55_h7cr/pll_analog_macro.v $(SRC_DIR)/pll_analog.v $(SRC_DIR)/il_dco.v $(SRC_DIR)/sim_dco.v $(SRC_DIR)/sim_injection.v $(SRC_DIR)/sim_sym.v $(SRC_DIR)/sim_mux.v $(SRC_DIR)/sim_SSBBPD.v $(SRC_DIR)/frequency_counter_frontend.v
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o pll_macro_top.out -D SIMULATION  $^
-	cd $(SIM_OUT) && timeout 180s $(VVP) pll_macro_top.out
 
 # Behavioral Core B/C architecture models
 test_arch_models: $(SIM_OUT)/arch_models.out

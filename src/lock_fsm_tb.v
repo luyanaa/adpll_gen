@@ -226,15 +226,15 @@ module lock_fsm_tb;
         expect_locked(1'b0, "dco stopped");
         out_run = 1'b1;
 
-        // False lock: the phase detector stays quiet and reports lock,
-        // but the frequency counter has left the FCW window.  That must
-        // not enter the locked state, and must not hold one already taken.
+        // False lock: the phase detector reports lock, but the frequency
+        // counter has left the FCW window.  That must not enter the locked
+        // state, and must not hold one already taken.
         dut.FREQ_LOCKED_TB = 1'b1;
         dut.FREQ_OK_TB = 1'b0;
         dut.PHASE_LOCK_TB = 1'b1;
         dut.LOCK_LOST_TB = 1'b0;
         #500;
-        expect_locked(1'b0, "quiet bbpd, frequency out of window");
+        expect_locked(1'b0, "phase lock, frequency out of window");
         if (dut.state === 3'b011) begin
             $display("FAIL: entered locked state without FREQ_OK");
             errors = errors + 1;

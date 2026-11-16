@@ -241,10 +241,25 @@ def main():
                 sdc = (pkg / "constraints" / "adpll.sdc").read_text()
                 assert "get_ports MID_OUT" not in sdc, sdc
                 assert "get_pins -hierarchical *u_pll*MID_OUT" in sdc, sdc
+                assert "create_generated_clock -name CK" in sdc, sdc
+                assert "create_generated_clock -name DSM_CK" in sdc, sdc
+                # CKR is a REF-sampled enable, not a fixed-period clock.
+                assert "# CKR:" in sdc and "create_clock -name CKR" not in sdc, sdc
                 cdc = (pkg / "constraints" / "freq_lock_cdc.sdc").read_text()
                 assert "get_ports MID_OUT" not in cdc, cdc
                 assert "*u_pll*MID_OUT" in cdc, cdc
                 assert "*counter_frontend*gray_q*" in cdc, cdc
+                assert "*out_edges_gray*" in cdc, cdc
+                assert "*watch_s1*" in cdc, cdc
+                assert "\nset_false_path" not in cdc, cdc
+                lock = json.loads((pkg / "design.lock.json").read_text())
+                channels = lock["cdc"]["channels"]
+                assert {c["name"] for c in channels} == {
+                    "freq_count", "dco_activity", "ref_level"}, channels
+                for channel in channels:
+                    assert channel["verification"], channel
+                    if not channel["constraints"]:
+                        assert channel["waiver"], channel
             else:
                 assert "pll_counter_dco_phys.v" in srcs, srcs
 

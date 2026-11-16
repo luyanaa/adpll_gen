@@ -1,4 +1,9 @@
 // Fine-stage SS-BBPD lock detector regression.
+//
+// Contract at the sampled edge: 01 = P, 11 = N, 00/10 = invalid.  The
+// detector qualifies a window of LOCK_COUNT valid samples only when both
+// signs occur, and drops an existing lock on a one-sided window or on
+// LOSS_COUNT consecutive invalid samples.
 `timescale 1ns/1ps
 
 module lock_detector_tb;
@@ -25,7 +30,7 @@ module lock_detector_tb;
     task check_lock;
         input p;
         input l;
-        input [8*24-1:0] name;
+        input [8*32-1:0] name;
         begin
             if (PHASE_LOCK !== p || LOCK_LOST !== l) begin
                 $display("FAIL: %0s PHASE_LOCK=%b LOCK_LOST=%b expected=%b/%b",
@@ -37,17 +42,26 @@ module lock_detector_tb;
         end
     endtask
 
-    // Change the code away from the sampling edge, then let the detector
-    // see exactly n rising edges of it.
+    // Drive a code for exactly n sampling edges.  The task is entered at a
+    // falling edge and returns at the next falling edge, so chained calls
+    // do not insert an extra sample between sequences.
     task drive_code;
         input [1:0] code;
         input integer n;
         begin
-            @(negedge CLK);
             SS_BBPD = code;
             for (k = 0; k < n; k = k + 1)
                 @(posedge CLK);
             @(negedge CLK);
+        end
+    endtask
+
+    task drive_window;   // P, N, P, N for LOCK_COUNT=4
+        begin
+            drive_code(2'b01, 1);
+            drive_code(2'b11, 1);
+            drive_code(2'b01, 1);
+            drive_code(2'b11, 1);
         end
     endtask
 
@@ -57,34 +71,53 @@ module lock_detector_tb;
         @(negedge CLK);
         ENABLE = 1'b1;
 
-        // A stuck quiet code never presents either correction symbol.
+        // 00 is not a stable latch state and 10 is not a quiet code.
         drive_code(2'b00, 8);
-        check_lock(1'b0, 1'b0, "stuck quiet code");
+        check_lock(1'b0, 1'b0, "stuck 00 never locks");
+        drive_code(2'b10, 8);
+        check_lock(1'b0, 1'b0, "stuck 10 never locks");
 
-        // Default polarity: 2'b01 positive, 2'b11 negative, 2'b00 quiet.
-        // Both symbols, then a quiet run of LOCK_COUNT.
-        drive_code(2'b01, 1);
-        drive_code(2'b11, 1);
-        drive_code(2'b00, 4);
+        // One sign only, however long, is not phase lock.
+        drive_code(2'b01, 8);
+        check_lock(1'b0, 1'b0, "stuck P never locks");
+        drive_code(2'b11, 8);
+        check_lock(1'b0, 1'b0, "stuck N never locks");
+
+        // Both signs in one window.
+        drive_window;
         check_lock(1'b1, 1'b0, "lock after both sides");
 
-        drive_code(2'b01, 2);
-        check_lock(1'b0, 1'b1, "loss after 2 symbols");
+        // A full one-sided window drops an existing lock.
+        drive_code(2'b01, 4);
+        check_lock(1'b0, 1'b1, "one-sided window drops lock");
 
-        // The unlock cleared both sides.  One symbol is not enough.
-        drive_code(2'b01, 1);
-        drive_code(2'b00, 6);
-        // LOCK_LOST stays set until a qualified relock.  The one symbol
-        // must not clear it or raise PHASE_LOCK.
+        // One-sided windows while unlocked do not clear LOCK_LOST.
+        drive_code(2'b11, 6);
         check_lock(1'b0, 1'b1, "one side does not relock");
 
-        drive_code(2'b11, 1);
-        drive_code(2'b00, 4);
+        drive_window;
         check_lock(1'b1, 1'b0, "relock");
 
-        // 2'b10 is the alternate-polarity positive code, not a quiet code.
+        // Invalid samples drop a lock after LOSS_COUNT.
         drive_code(2'b10, 2);
-        check_lock(1'b0, 1'b1, "10 is not quiet");
+        check_lock(1'b0, 1'b1, "10 drops lock");
+
+        drive_window;
+        check_lock(1'b1, 1'b0, "relock after 10");
+
+        drive_code(2'b00, 2);
+        check_lock(1'b0, 1'b1, "00 drops lock");
+
+        drive_window;
+        check_lock(1'b1, 1'b0, "relock after 00");
+
+        // Filter saturation makes every sample invalid.
+        ILL_P = 1'b1;
+        drive_code(2'b01, 2);
+        check_lock(1'b0, 1'b1, "ILL_P drops lock");
+        ILL_P = 1'b0;
+        drive_window;
+        check_lock(1'b1, 1'b0, "relock after ILL_P");
 
         if (errors != 0) $fatal(1, "lock_detector_tb failed");
         $display("lock_detector_tb: PASS");

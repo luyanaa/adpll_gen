@@ -41,10 +41,17 @@ module PHASE_SELECTOR_TOP #(
         end
     endgenerate
 `else
-    // Physical view: these taps come from a DCDL tap-out bus.
-    wire [NTAPS-1:0] tap;   // driven by the delay-line tap bus
+    // Physical view: drive the selector from the fine-delay tap-out.
+    // TAP[0] is undelayed; TAP[g] is g FINE_DELAY_CELL stages.  The step is
+    // the physical fine-cell delay, not the 60 ps SIMULATION model.
+    wire [NTAPS-1:0] tap;
+    PLL_DCDL_TAP_BUS_PHYS #(
+        .NTAPS(NTAPS)
+    ) u_tap_bus (
+        .CLK_IN(CLK_IN),
+        .TAP(tap)
+    );
 `endif
-
     // Glitch-managed select: deselect (park out low) for DEAD_TICKS, then
     // connect the new tap.  sel_act is only changed while BUSY, i.e. while
     // the output is held low, so the MUX never switches under a live edge.

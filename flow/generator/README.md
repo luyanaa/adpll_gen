@@ -394,9 +394,15 @@ window.  `spec.py` also computes the maximum acquisition ratio from the PDK
 architecture ceiling and REF, and blocks generation (`NEEDS_COUNTER_RANGE`) if
 `FCW_BITS + CNT_EXTRA_BITS` is too small.  Gray-bus skew/reset requirements
 and starter SDC constraints are in `cdc.py` and are emitted as
-`constraints/freq_lock_cdc.sdc`.  This is still a
-template: a placed CDC extraction/rule check and a multi-corner timing review
-remain required.
+`constraints/freq_lock_cdc.sdc`.  The file now carries three per-channel
+contracts: `freq_count` (MID_OUT->REF Gray), `dco_activity` (OUT->REF Gray)
+and `ref_level` (REF->OUT single-bit level).  The level channel has an
+explicit waiver for integer-ratio aliasing (including `FCW=1`); each channel
+also records its verification.  This is still a template: a placed CDC
+extraction/rule check and a multi-corner timing review remain required.
+`clock_ir.py` also declares `DSM_CK`, `CK`, Core A `INJ_EDGE` and `CKR`;
+`CKR` is a REF-sampled enable on MID_OUT and is not emitted as a
+fixed-period clock.
 
 ## Residual limits
 

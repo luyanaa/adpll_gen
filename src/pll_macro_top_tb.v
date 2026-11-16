@@ -46,9 +46,23 @@ module pll_macro_top_tb;
     integer cycles = 0;
     integer out_edges = 0;
     integer mid_edges = 0;
+    integer mid_ss0 = 0, mid_ss1 = 0;
+    integer p_cnt = 0, n_cnt = 0, bad_cnt = 0, ill_cnt = 0;
+    real ss_per_ref, ss_err_ppm;
+    reg count_syms = 1'b0;
     always @(posedge REF) cycles = cycles + 1;
     always @(posedge OUT) out_edges = out_edges + 1;
     always @(posedge dut.MID_OUT) mid_edges = mid_edges + 1;
+    // Actual SS-BBPD stream at the detector/DLF sampling edge.
+    always @(negedge dut.INJ_EDGE) if (count_syms) begin
+        if (dut.pll_dig.ILL_P || dut.pll_dig.ILL_N)
+            ill_cnt = ill_cnt + 1;
+        case (dut.SS_BBPD)
+            2'b01: p_cnt = p_cnt + 1;
+            2'b11: n_cnt = n_cnt + 1;
+            default: bad_cnt = bad_cnt + 1;
+        endcase
+    end
 
     initial begin
         #1 RST_N = 1'b0;
@@ -56,15 +70,19 @@ module pll_macro_top_tb;
         #20000000 INJ_EN = 1'b1;
 
         // Frequency acquisition settles in a few hundred REF cycles.
-        // Phase lock is a separate indication: the behavioral SS-BBPD in
-        // this sim_* netlist does not produce both correction symbols, so
-        // PHASE_LOCK stays 0 here.  The ratio below is taken once the
-        // frequency counter has been inside tolerance, which is what
-        // FREQ_LOCKED reports.
+        // Phase lock is a separate indication.  The behavioral SS-BBPD
+        // does emit both P and N, but in this netlist every N sample also
+        // asserts ILL_N: the 16-bit filter output sits at 257 and KP=3967,
+        // so the N correction rails the fine code at 0.  The stream is
+        // counted below instead of being treated as a ratio failure.
         fork : wait_freq
             begin
                 wait (dut.pll_dig.FREQ_LOCKED === 1'b1);
-                repeat (64) @(posedge REF);
+                count_syms = 1'b1;
+                mid_ss0 = mid_edges;
+                repeat (400) @(posedge REF);
+                mid_ss1 = mid_edges;
+                count_syms = 1'b0;
             end
             begin
                 #20000000000; // 2000 REF cycles
@@ -89,10 +107,28 @@ module pll_macro_top_tb;
             $display("FAIL: FREQ_LOCKED did not rise");
             $fatal(1);
         end
-        // Full LOCKED also needs PHASE_LOCK.  Record it; do not treat a
-        // stuck behavioral BBPD as a frequency-ratio failure.
+        // Full LOCKED also needs a qualified phase window.  Record the
+        // measured stream; a railed fine filter is not a frequency failure.
         $display("note: LOCKED=%b PHASE_LOCK=%b (phase lock is not the ratio check)",
                  LOCKED, dut.pll_dig.PHASE_LOCK);
+        $display("pll_macro_top_tb: SS_BBPD stream P=%0d N=%0d invalid=%0d ILL=%0d win_cnt=%0d seen_p=%b seen_n=%b bad_cnt=%0d",
+                 p_cnt, n_cnt, bad_cnt, ill_cnt,
+                 dut.pll_dig.lock_detector.win_cnt,
+                 dut.pll_dig.lock_detector.seen_p,
+                 dut.pll_dig.lock_detector.seen_n,
+                 dut.pll_dig.lock_detector.bad_cnt);
+        $display("pll_macro_top_tb: ILL_P=%b ILL_N=%b DLF_INT=%0d",
+                 dut.pll_dig.ILL_P, dut.pll_dig.ILL_N,
+                 dut.pll_dig.dlf.INT);
+
+        // Steady-state frequency is a separate metric from FREQ_LOCKED.
+        // FREQ_LOCKED only says the filtered count entered FCW +/- LOCK_TOL
+        // (default 1 count per REF), not that the output meets a SoC ppm
+        // budget.  Report the average over the 400-cycle window above.
+        ss_per_ref = (mid_ss1 - mid_ss0) / 400.0;
+        ss_err_ppm = (ss_per_ref - FCW) * 1000000.0 / FCW;
+        $display("pll_macro_top_tb: steady-state %0d MID_OUT / 400 REF = %0.3f per REF, error %0.0f ppm (FREQ_LOCKED is acquisition range, not SoC accuracy)",
+                 mid_ss1 - mid_ss0, ss_per_ref, ss_err_ppm);
 
         // freq_lock counts MID_OUT edges per REF and compares them with
         // FCW.  32 periods after FREQ_LOCKED must land on FCW, not on

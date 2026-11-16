@@ -32,6 +32,9 @@ def build_clock_ir(resolved: dict[str, Any],
     out_div = int(plan.get("out_div", spec.get("out_div", 1)))
     dco_mhz = float(plan.get("dco_target_mhz", out_mhz * out_div))
     tick_mhz = spec.get("tick_frequency_mhz")
+    dsm_div = int(resolved.get("structural_parameters", {}).get("DSM_DIV", 2))
+    if dsm_div < 1:
+        dsm_div = 1
     is_counter = selected.get("core") == "core_c_counter" or selected.get("id") == "core_c_counter"
 
     clocks: list[dict[str, Any]] = [
@@ -75,9 +78,69 @@ def build_clock_ir(resolved: dict[str, Any],
                     "frequency follows DCO_OUT for CDC/max-delay, but phase "
                     "equality with OUT is not verified; never use get_ports",
         },
+        {
+            "name": "DSM_CK",
+            "period_ns": _period_ns(dco_mhz / dsm_div),
+            "source": "pin:*u_pll*DSM_CK",
+            "kind": "generated",
+            "source_clock": "MID_OUT",
+            "source_pin": "*u_pll*MID_OUT",
+            "target": "pin",
+            "divide_by": dsm_div,
+            "role": "dsm_clock",
+            "note": "pll_fix_divider DSM_DIV from MID_OUT; starts only after "
+                    "DCO_EN, so treat the gated start as an enable",
+        },
+        {
+            "name": "CKR",
+            "period_ns": _period_ns(ref_mhz),
+            "source": "pin:*u_pll*CKR",
+            "kind": "generated_enable",
+            "source_clock": "MID_OUT",
+            "target": "pin",
+            "divide_by": 1,
+            "emit": False,
+            "role": "ref_sampled_enable",
+            "note": "CKR is REF sampled on the falling MID_OUT edge, not a "
+                    "fixed-period clock; its high time is an integer number "
+                    "of MID_OUT periods.  Do not create an independent clock; "
+                    "time the coarse/mid registers against MID_OUT.",
+        },
+        {
+            "name": "CK",
+            "period_ns": _period_ns(out_mhz),
+            "source": "port:CK",
+            "kind": "generated",
+            "source_clock": "DCO_OUT",
+            "source_port": "OUT",
+            "target": "port",
+            "divide_by": out_div,
+            "role": "ddr_pad_clock",
+            "note": "CK is the nominal out_div pad clock, gated by LOCKED.  "
+                    "A lock fault is fail-closed and may truncate the last "
+                    "high pulse; the runtime SET_DIV is not modeled here.",
+        },
     ]
+    if selected.get("core") == "core_a_il_dco":
+        clocks.append({
+            "name": "INJ_EDGE",
+            "period_ns": _period_ns(ref_mhz),
+            "source": "pin:*u_pll*INJ_EDGE",
+            "kind": "generated",
+            "source_clock": "REF",
+            "source_port": "REF",
+            "target": "pin",
+            "divide_by": 1,
+            "role": "injection_edge",
+            "note": "Core A only: delayed copy of REF from PLL_INJECTION.  "
+                    "Core B/C tie INJ_EDGE to REF.  The delay/phase shift is "
+                    "not modeled by this generated clock.",
+        })
     if not include_internal_mid:
-        clocks = [c for c in clocks if c["name"] != "MID_OUT"]
+        # DSM_CK and CKR are described relative to MID_OUT, so they go with
+        # it.  INJ_EDGE is a REF copy and can stay.
+        clocks = [c for c in clocks
+                  if c["name"] not in ("MID_OUT", "DSM_CK", "CKR")]
     if is_counter:
         if tick_mhz is None:
             raise ValueError("Core C requires tick_frequency_mhz for the clock IR")
@@ -97,18 +160,22 @@ def build_clock_ir(resolved: dict[str, Any],
         asynchronous_groups = []
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "target_mhz": out_mhz,
         "dco_target_mhz": dco_mhz,
         "out_div": out_div,
         "ref_mhz": ref_mhz,
+        "dsm_div": dsm_div,
         "tick_mhz": float(tick_mhz) if tick_mhz is not None else None,
         "clocks": clocks,
         "asynchronous_groups": asynchronous_groups,
         "relationships": (
             "f_DCO = f_REF * fcw; f_OUT_DIV = f_DCO / out_div; "
-            "MID_OUT uses the raw DCO nominal period, not a verified "
-            "phase-equivalent relationship to OUT"
+            "f_CK = f_OUT_DIV (gated by LOCKED, nominal); "
+            "f_DSM_CK = f_MID_OUT / DSM_DIV; f_INJ_EDGE = f_REF (Core A "
+            "delayed copy); CKR is a REF-sampled enable on MID_OUT, not a "
+            "fixed-period clock; MID_OUT uses the raw DCO nominal period, "
+            "not a verified phase-equivalent relationship to OUT"
         ),
         "status": "PLANNED_NOT_TIMING_SIGNOFF",
     }
@@ -120,15 +187,22 @@ def sdc_lines(ir: dict[str, Any]) -> list[str]:
     for clock in ir["clocks"]:
         name = clock["name"]
         period = float(clock["period_ns"])
+        if not clock.get("emit", True):
+            note = clock.get("note", "not a fixed-period clock")
+            lines.append(f"# {name}: {note}")
+            continue
         if clock["kind"] == "primary":
             lines.append(
                 f"create_clock -name {name} -period {period:.6f} "
                 f"[get_ports {clock['source'].split(':', 1)[1]}]"
             )
         else:
-            source_port = clock.get("source_port", "OUT")
+            if clock.get("source_pin"):
+                source = f"[get_pins -hierarchical {clock['source_pin']}]"
+            else:
+                source_port = clock.get("source_port", "OUT")
+                source = f"[get_ports {source_port}]"
             target_name = clock["source"].split(":", 1)[1]
-            source = f"[get_ports {source_port}]"
             if clock.get("target") == "pin":
                 target = f"[get_pins -hierarchical {target_name}]"
             else:
@@ -168,6 +242,14 @@ def validate_clock_ir(ir: dict[str, Any],
                 problems.append("OUT_DIV period does not match target")
         if "MID_OUT" in str(clock.get("source", "")) and clock.get("kind") == "primary":
             problems.append("MID_OUT must be constrained as an internal/generated clock")
+        if clock["name"] == "CK" and int(clock.get("divide_by", 1)) != int(ir.get("out_div", 1)):
+            problems.append("CK divider does not match out_div")
+        if clock["name"] == "DSM_CK" and int(clock.get("divide_by", 1)) != int(ir.get("dsm_div", 1)):
+            problems.append("DSM_CK divider does not match DSM_DIV")
+        if clock["name"] == "INJ_EDGE" and int(clock.get("divide_by", 1)) != 1:
+            problems.append("INJ_EDGE must be a divide-by-1 REF copy")
+        if clock["name"] == "CKR" and clock.get("emit", True):
+            problems.append("CKR is a REF-sampled enable, not a fixed-period clock")
     return problems
 
 
@@ -204,4 +286,15 @@ def audit_sdc_text(text: str, ir: dict[str, Any],
             problems.append(f"{name} period missing/mismatched")
     if "set_false_path" in text:
         problems.append("broad set_false_path is present in generated top SDC")
+    # Every emitted generated clock must appear; a non-emitted entry such as
+    # CKR must not be promoted to a fixed-period clock.
+    for clock in ir.get("clocks", []):
+        name = clock["name"]
+        if not clock.get("emit", True):
+            if re.search(rf"create_(?:generated_)?clock\s+-name\s+{name}\b", text):
+                problems.append(f"{name} is not a fixed clock but was emitted")
+            continue
+        if clock["kind"] == "generated":
+            if not re.search(rf"create_generated_clock\s+-name\s+{name}\b", text):
+                problems.append(f"{name} generated clock missing")
     return problems

@@ -2,7 +2,15 @@
 `timescale 1fs/1fs
 
 module pll_digital_loop_filter #(
-    parameter integer BITS = 16
+    parameter integer BITS = 16,
+    // Integrator preload.  The phase loop in pll_logic starts at mid-scale so
+    // both P and N corrections have range; the ADCC/ADDLL up/down loops keep
+    // the default zero.
+    parameter integer INT_INIT = 0,
+    // Swap the P/N correction direction.  The DCO delay increases with the
+    // fine code, so the phase loop needs the opposite sign from the default
+    // filter decode; the ADCC/ADDLL keep the default.
+    parameter integer INVERT_PN = 0
 ) (
     input CLK, RST_N, ENABLE,
     input [1:0] SS_BBPD,
@@ -41,21 +49,25 @@ module pll_digital_loop_filter #(
     WIN ________________^^^^^^^^^________________ (injecting rising)
     WIN ________________________________^^^^^^^^^ (injecting falling)
     */
+    wire SYMBOL_P_RAW;
+    wire SYMBOL_N_RAW;
 `ifdef WITH_REF_TRIG_OUT
     // SS_BBPD symbols:
     // REF,OUT = 1,0: -1
     // REF,OUT = 0,1: +1
     // Otherwise    :  0 (Possibly an error)
-    wire SYMBOL_P = !SS_BBPD_REF && SS_BBPD_OUT;
-    wire SYMBOL_N = SS_BBPD_REF && !SS_BBPD_OUT;
+    assign SYMBOL_P_RAW = !SS_BBPD_REF && SS_BBPD_OUT;
+    assign SYMBOL_N_RAW = SS_BBPD_REF && !SS_BBPD_OUT;
 `else
     // SS_BBPD symbols:
     // REF,OUT = 1,0: +1
     // REF,OUT = 1,1: -1
     // Otherwise    :  0 (Possibly an error)
-    wire SYMBOL_P = SS_BBPD_REF && !SS_BBPD_OUT;
-    wire SYMBOL_N = SS_BBPD_REF && SS_BBPD_OUT;
+    assign SYMBOL_P_RAW = SS_BBPD_REF && !SS_BBPD_OUT;
+    assign SYMBOL_N_RAW = SS_BBPD_REF && SS_BBPD_OUT;
 `endif
+    wire SYMBOL_P = INVERT_PN ? SYMBOL_N_RAW : SYMBOL_P_RAW;
+    wire SYMBOL_N = INVERT_PN ? SYMBOL_P_RAW : SYMBOL_N_RAW;
 
     // The filter is H_DLF = KP + KI/s
 
@@ -71,7 +83,7 @@ module pll_digital_loop_filter #(
 
     always @(posedge CLK or negedge RST_N) begin
         if(!RST_N) begin
-            INT <= 'd0;
+            INT <= INT_INIT;
         end else begin
             if(INT_EN_P) begin
                 if(INT_P[BITS]) INT <= {BITS{1'b1}}; // Illegal. Put to maxium

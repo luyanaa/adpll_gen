@@ -389,7 +389,8 @@ def _validation_plan(resolved: dict[str, Any]) -> dict[str, Any]:
             "DCO characterization is bound to the selected architecture/implementation",
             "frequency plan target/REF/FCW/out_div consistency",
             "out_div is bound to DIV_INIT and OUT_DIV SDC; runtime override is explicit",
-            "Gray-bus CDC skew/synchronizer review",
+            "Gray-bus CDC skew/synchronizer review for freq_count and "
+            "dco_activity, plus the ref_level waiver entry",
             "post-layout DRC/LVS/antenna and PVT/lock/jitter evidence",
         ],
         "blocking_checks": {

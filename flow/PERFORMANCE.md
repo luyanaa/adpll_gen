@@ -47,6 +47,24 @@ characterization report。完整 top-level `pll` 还没有和硬宏一起集成�
 IHP 的 5.62 mW 是 **Core A 数字控制 canary** 的 TT 功耗，不是硬宏或完整
 ADPLL 的功耗。
 
+### 3.1 本轮锁路径 RTL 后的口径
+
+上表的 ics55/IHP `OUT`、`MID_OUT`、`INJ_EDGE` Fmax 是**本轮审计之前**的
+post-route canary 结果。参考丢失看门狗、DCO 活动 Gray CDC、分频器首高
+和 `PHASE_LOCK` 窗口改动之后，尚未重跑综合/P&R/STA，因此不能把这些
+数字当作新 RTL 的 Fmax。
+
+同样：
+
+- ics55 约 335 MHz、IHP 约 179 MHz 的 PEX 结果是**单一调谐码**，不能外推
+  成完整调谐范围；IHP fine bank 的非单调步进仍未解决。
+- 完整 PLL 的 RMS jitter / integrated phase noise 仍没有可签核流程。
+- `FREQ_LOCKED` 是**捕获范围**标志：`cnt_filt` 进入 `FCW ± LOCK_TOL`
+  （默认 ±1 计数/REF），不是 SoC 频率精度。行为级 400 个 REF 的平均
+  是 16.5/REF，相对 `FCW=16` 约 +3.1%；这只说明进入宽窗口。相位环
+  修正后 full `LOCKED=1` 可以在行为级仿真置位，但真实 ics55 DCDL 的
+  5 ns 范围在 SS/FF 不可达（见 `flow/DDR_CLOCK_PHY_PATH.md`）。
+
 ## 4. Post-PnR smoke simulation（ics55 宏）
 
 `sim/post_pnr` 用 ics55 P&R gate netlist + SDF，200 ns，REF 5 ps 翻转用于

@@ -77,7 +77,8 @@ module pll_logic#(
     wire FREQ_LOCKED = TB_OVERRIDE ? FREQ_LOCKED_TB : FREQ_LOCKED_W;
     wire FREQ_ERR = TB_OVERRIDE ? FREQ_ERR_TB : FREQ_ERR_W;
     // FREQ_OK is the live FCW window, not the sticky acquisition flag.
-    // A quiet BBPD must not enter or hold the locked state without it.
+    // A phase-lock indication must not enter or hold the locked state
+    // without it.
     wire FREQ_OK = TB_OVERRIDE ? FREQ_OK_TB : FREQ_OK_W;
 
     wire [COARSE_NDELS-1:0] COARSE_MUX_D;
@@ -103,7 +104,9 @@ module pll_logic#(
     wire ILL_P, ILL_N;
     reg ENABLE;
     pll_digital_loop_filter #(
-        .BITS(FILTER_BITS)
+        .BITS(FILTER_BITS),
+        .INT_INIT(1 << (FILTER_BITS - 1)),
+        .INVERT_PN(1)
     ) dlf (
         .CLK(!INJ_EDGE),
         .RST_N(RST_N), .ENABLE(ENABLE),
@@ -162,14 +165,15 @@ module pll_logic#(
     // Freq locking stage
     reg START;
     // PHASE_LOCK is driven by the fine-stage phase detector.  It must not be
-    // inferred from LOCKED_WAIT, and it is not accepted while FREQ_OK is low:
-    // a quiet BBPD with the raw per-REF count outside FCW +/- LOCK_TOL is a
-    // false lock.  LOCK_LOST covers a phase-detector symbol run or filter
-    // saturation.  REF loss is separate: the FSM is clocked by INJ_EDGE,
-    // which dies with REF, so a watchdog on the free-running DCO is what
-    // clears LOCKED.  A stopped DCO is the complementary case and is counted
-    // on REF, armed only after locked_q is set.
-    wire LOCK = PHASE_LOCK;
+    // inferred from LOCKED_WAIT.  The detector samples the same edge as the
+    // DLF and qualifies a window that contains both P and N; a stream that
+    // stays one-sided, or a saturated fine filter, does not lock.  LOCK_LOST
+    // covers a failed qualification window or filter saturation.  REF loss
+    // is separate: the FSM is clocked by INJ_EDGE, which dies with REF, so a
+    // watchdog on the free-running DCO is what clears LOCKED.  A stopped DCO
+    // is the complementary case and is counted on REF, armed only after
+    // locked_q is set.
+    wire LOCK = PHASE_LOCK & FREQ_OK;
     wire REF_OK;
     wire DCO_OK;
     pll_ref_watchdog #(.TIMEOUT(REF_TIMEOUT)) ref_wd (
@@ -277,7 +281,11 @@ module pll_logic#(
         .LOCK_COUNT(LOCK_COUNT),
         .LOSS_COUNT(LOSS_COUNT)
     ) lock_detector (
-        .CLK(INJ_EDGE), .RST_N(RST_N), .ENABLE(ENABLE),
+        // Same edge as pll_digital_loop_filter: the latch is transparent
+        // during INJ_EDGE high, so its outputs are the phase decision
+        // before INJ_EDGE falls.  Sampling on the other edge sees the
+        // latch resolution state, not the decision.
+        .CLK(!INJ_EDGE), .RST_N(RST_N), .ENABLE(ENABLE),
         .SS_BBPD(SS_BBPD), .ILL_P(ILL_P), .ILL_N(ILL_N),
         .PHASE_LOCK(PHASE_LOCK_W), .LOCK_LOST(LOCK_LOST_W)
     );
@@ -338,6 +346,12 @@ module pll_logic#(
                             state <= 3'b010;
                         end
                         else if(FREQ_ERR) state <= 3'b100;
+                        else if(FREQ_LOCKED && !FREQ_OK) begin
+                            // The count left the window after the FLL had
+                            // latched.  Restart the frequency search; the
+                            // sticky flag alone would wait forever.
+                            START <= 1'b1;
+                        end
                     end
                 end
                 3'b010: begin  // Wait for phase locking
@@ -418,11 +432,30 @@ module pll_logic#(
 `ifndef PLL_WITHOUT_DIVIDER
     // OUT_DIV is the raw integer divider (loop observability).
     // CK is the DDR pad clock: quiet until lock, even divisors only.
+    //
+    // The divider and the CK gate are clocked by OUT, which only starts
+    // after the FSM releases DCO_EN.  The external RST_N is already high by
+    // then, so an async reset alone never sees a clock edge while reset is
+    // low and the registers stay X.  Hold a local reset for 16 OUT edges
+    // after RST_N deasserts so the first edges initialize both blocks.
+    reg [3:0] div_rst_cnt;
+    reg div_rst_n;
+    always @(posedge OUT or negedge RST_N) begin
+        if (!RST_N) begin
+            div_rst_cnt <= 'd0;
+            div_rst_n <= 1'b0;
+        end else if (!div_rst_n) begin
+            if (div_rst_cnt == 4'hf)
+                div_rst_n <= 1'b1;
+            else
+                div_rst_cnt <= div_rst_cnt + 1'b1;
+        end
+    end
     wire div_raw;
     wire [DIV_BITS-1:0] div_q;
     pll_mod_divider #(.W(DIV_BITS), .DIV_INIT(DIV_INIT)) div(
         .clk(OUT),
-        .rst_n(RST_N),
+        .rst_n(div_rst_n),
         .set_div(SET_DIV),
         .load_div(LOAD_DIV),
         .out(div_raw),
@@ -432,7 +465,7 @@ module pll_logic#(
     ddr_ck_gate #(.W(DIV_BITS)) u_ddr_ck (
         .clk_div(div_raw),
         .locked(LOCKED),
-        .rst_n(RST_N),
+        .rst_n(div_rst_n),
         .div(div_q),
         .ck(CK)
     );
