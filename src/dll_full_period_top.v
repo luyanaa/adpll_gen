@@ -111,29 +111,10 @@ module DLL_FULL_PERIOD_TOP #(
     wire [15:0] ref_stamp, period_ticks, main_stamp, mon_stamp, acq_stamp;
     wire        main_tog, mon_tog;
     wire        acq_latch = (div == 4'd7);
-    // Physical-TDC ACQ period is computed here, outside the TDC module, so
-    // Yosys/ABC cannot fold the sampler pipeline to a constant.
     wire [319:0] tdc_acq_therm;
     wire [4:0]   tdc_acq_dly;
     wire [15:0]  tdc_period_unused;
-    (* keep *) reg [319:0] t_th0, t_th1, t_first;
-    (* keep *) reg [15:0]  t_period;
-    wire [8:0] t_enc;
-    DLL_PRIO320_HI u_t_enc (.T(t_first), .C(t_enc));
-    always @(posedge REF) begin
-        if (!RST_N) begin
-            t_th0 <= {320{1'b0}};
-            t_th1 <= {320{1'b0}};
-            t_first <= {320{1'b0}};
-            t_period <= 16'd0;
-        end else begin
-            t_th0 <= tdc_acq_therm;
-            t_th1 <= t_th0;
-            t_first <= t_th1;
-            if (tdc_acq_dly[3])
-                t_period <= {7'b0, t_enc};
-        end
-    end
+
     generate
         if (TDC_IMPL == 0) begin : tdc_sim
             DLL_TDC u_tdc (
@@ -159,7 +140,11 @@ module DLL_FULL_PERIOD_TOP #(
                 .acq_therm_ref_out(tdc_acq_therm),
                 .acq_dly_out(tdc_acq_dly)
             );
-            assign period_ticks = t_period;
+            DLL_ACQ_PERIOD u_acq_period (
+                .REF(REF), .RST_N(RST_N),
+                .ACQ_THERM(tdc_acq_therm), .ACQ_DLY(tdc_acq_dly),
+                .PERIOD(period_ticks)
+            );
         end
     endgenerate
     reg  [15:0] acq_delay;  // exposed for the testbench range check
