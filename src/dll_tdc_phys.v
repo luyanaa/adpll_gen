@@ -283,35 +283,73 @@ module DLL_TDC_PHYS #(
     );
 
     // ------------------------------------------------------ samplers
+    // The 320-flop sampler banks are clocked through a one-level buffer
+    // tree.  Wiring OUT/REF/MON_OUT directly to 320 clock pins gives each
+    // driver a 320-flop load; in the ics55 gate netlist that is a ~6 ns
+    // clock-path delay and corrupts the measured phase.
+    localparam integer NSLICE = 16;
+    localparam integer SLICE = (NTAP + NSLICE - 1) / NSLICE;
+    wire [NSLICE-1:0] phase_clk, ref_clk, mon_clk;
+    genvar s;
+    generate
+        for (s = 0; s < NSLICE; s = s + 1) begin : clkbuf
+            (* keep *) FINE_DELAY_CELL u_pclk (
+                .MUX(1'b1), .IN(OUT), .OUT(phase_clk[s])
+            );
+            (* keep *) FINE_DELAY_CELL u_rclk (
+                .MUX(1'b1), .IN(REF), .OUT(ref_clk[s])
+            );
+            (* keep *) FINE_DELAY_CELL u_mclk (
+                .MUX(1'b1), .IN(MON_OUT), .OUT(mon_clk[s])
+            );
+        end
+    endgenerate
+
     reg [NTAP-1:0] phase_therm;
     reg [NTAP-1:0] acq_therm_ref;
     reg [NTAP-1:0] acq_therm_mon;
-    always @(posedge OUT or negedge RST_N) begin
-        if (!RST_N) phase_therm <= {NTAP{1'b0}};
-        else        phase_therm <= phase_tap[NTAP-1:0];
-    end
+    generate
+        for (s = 0; s < NSLICE; s = s + 1) begin : samp
+            localparam integer LO = s * SLICE;
+            localparam integer HI = (LO + SLICE > NTAP) ? NTAP : LO + SLICE;
+            always @(posedge phase_clk[s] or negedge RST_N) begin
+                if (!RST_N) phase_therm[HI-1:LO] <= {((HI-LO)){1'b0}};
+                else        phase_therm[HI-1:LO] <= phase_tap[HI-1:LO];
+            end
+            always @(posedge ref_clk[s] or negedge RST_N) begin
+                if (!RST_N) acq_therm_ref[HI-1:LO] <= {((HI-LO)){1'b0}};
+                else        acq_therm_ref[HI-1:LO] <= acq_tap[HI-1:LO];
+            end
+            always @(posedge mon_clk[s] or negedge RST_N) begin
+                if (!RST_N) acq_therm_mon[HI-1:LO] <= {((HI-LO)){1'b0}};
+                else        acq_therm_mon[HI-1:LO] <= acq_tap[HI-1:LO];
+            end
+        end
+    endgenerate
+    // The sliced REF bank updates through 16 buffers.  Clock the period
+    // pipeline from a two-buffer delayed REF so it samples the settled bank
+    // instead of a mix of old and new slices.
+    wire ref_pipe_mid, ref_pipe_clk;
+    (* keep *) FINE_DELAY_CELL u_pipe0 (
+        .MUX(1'b1), .IN(REF), .OUT(ref_pipe_mid)
+    );
+    (* keep *) FINE_DELAY_CELL u_pipe1 (
+        .MUX(1'b1), .IN(ref_pipe_mid), .OUT(ref_pipe_clk)
+    );
     (* keep *) reg [319:0] th0, th1;
-    always @(posedge REF or negedge RST_N) begin
+    always @(posedge ref_pipe_clk or negedge RST_N) begin
         if (!RST_N) begin
-            acq_therm_ref <= {NTAP{1'b0}};
-            th0           <= {320{1'b0}};
-            th1           <= {320{1'b0}};
-            first_therm   <= {320{1'b0}};
+            th0         <= {320{1'b0}};
+            th1         <= {320{1'b0}};
+            first_therm <= {320{1'b0}};
         end else begin
-            acq_therm_ref <= acq_tap[NTAP-1:0];
-            // Unconditional sampler pipeline.  The Yosys opt otherwise
-            // dead-code-eliminates a conditional first_therm capture and
-            // ties the whole REF sampler path to zero.
+            // The REF-sampled bank is clocked through ref_clk[] above; this
+            // pipeline only delays its Q so the 1T sample can be captured.
             th0 <= acq_therm_ref;
             th1 <= th0;
             first_therm <= th1;
         end
     end
-    always @(posedge MON_OUT or negedge RST_N) begin
-        if (!RST_N) acq_therm_mon <= {NTAP{1'b0}};
-        else        acq_therm_mon <= acq_tap[NTAP-1:0];
-    end
-
     wire [CODE_BITS-1:0] phase_code;
     wire [CODE_BITS-1:0] acq_code_ref;
     wire [CODE_BITS-1:0] acq_code_mon;

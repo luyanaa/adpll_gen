@@ -45,7 +45,17 @@ module DLL_FULL_PERIOD_TOP #(
     // Commit guard: must exceed the fine-tap span and stay below the REF
     // low phase.  At SS the fine span is larger than the low phase, so the
     // commit is refused and the acquired code is held.
-    parameter integer COMMIT_GUARD_PS = 1800
+    parameter integer COMMIT_GUARD_PS = 1800,
+    // Controller tolerances: the default values are the behavioral
+    // architecture settings; the gate-level/SDF flow overrides them for the
+    // real delay line (wider acquisition/monitor windows, isolated-miss
+    // tolerance, early phase acceptance).
+    parameter integer PHASE_TOL_DIV = 4,   // phase_tol = period>>DIV + 1
+    parameter integer ACQ_TOL_DIV = 3,
+    parameter integer MON_TOL_NUM = 3,     // mon_tol = period*NUM/DEN + 1
+    parameter integer MON_TOL_DEN = 8,
+    parameter integer PHASE_MISS_MAX = 8,  // drop PHASE_OK on this many misses
+    parameter integer ACQ_EARLY = 1        // 1 = accept an in-window phase
 ) (
     input  wire                  REF,
     input  wire                  RST_N,
@@ -154,19 +164,19 @@ module DLL_FULL_PERIOD_TOP #(
     endgenerate
     reg  [15:0] acq_delay;  // exposed for the testbench range check
     wire [15:0] acq_period = (period_ticks << 4);
-    integer ad, md;
-    always @* begin
-        ad = main_stamp - acq_stamp;
-        if (period_ticks != 0) begin
-            if (ad < 0) ad = ad + acq_period;
-            else if (ad >= acq_period) ad = ad - acq_period;
-        end
-        md = mon_stamp - acq_stamp;
-        if (period_ticks != 0) begin
-            if (md < 0) md = md + acq_period;
-            else if (md >= acq_period) md = md - acq_period;
-        end
-    end
+    // Signed modulo differences.  These were integer-based self-referencing
+    // always blocks, which Yosys dropped ("No latch inferred") leaving ad/md/pd
+    // undriven in the gate netlist.
+    wire signed [17:0] ad_x = $signed({2'b00, main_stamp}) -
+                              $signed({2'b00, acq_stamp});
+    wire signed [17:0] md_x = $signed({2'b00, mon_stamp}) -
+                              $signed({2'b00, acq_stamp});
+    wire [15:0] ad = (period_ticks == 0) ? 16'd0 :
+                     (ad_x < 0)           ? ad_x + acq_period :
+                     (ad_x >= acq_period) ? ad_x - acq_period : ad_x[15:0];
+    wire [15:0] md = (period_ticks == 0) ? 16'd0 :
+                     (md_x < 0)           ? md_x + acq_period :
+                     (md_x >= acq_period) ? md_x - acq_period : md_x[15:0];
 
     // ------------------------------------------------------- REF controller
     reg        main_tog_seen, mon_tog_seen;
@@ -174,18 +184,18 @@ module DLL_FULL_PERIOD_TOP #(
     reg [2:0]  alive_cnt;
     reg [1:0]  acq_settle;
     reg [7:0]  phase_good;
+    reg [2:0]  phase_miss;
     reg        phase_ok_r;
     reg        acq_ok, acq_fail, acq_busy;
     reg  [3:0] flush;
     reg [CODE_BITS-1:0] lo, hi;
     reg        range_live;
     reg [1:0]  mon_bad;
-    integer    pd;
 
     wire [2:0] active_coarse = code_active / 56;
-    wire [15:0] phase_tol = (period_ticks >> 5) + 1;   // ~3% + 1 tick
-    wire [15:0] acq_tol   = (period_ticks >> 4) + 1;   // ~6% + 1 tick
-    wire [15:0] mon_tol   = (period_ticks >> 3) + 1;   // ~12.5% + 1 tick
+    wire [15:0] phase_tol = (period_ticks >> PHASE_TOL_DIV) + 1;
+    wire [15:0] acq_tol   = (period_ticks >> ACQ_TOL_DIV) + 1;
+    wire [15:0] mon_tol   = ((period_ticks * MON_TOL_NUM) / MON_TOL_DEN) + 1;
 
     assign ACQ_BUSY = acq_busy;
     assign ACQ_OK   = acq_ok;
@@ -199,11 +209,11 @@ module DLL_FULL_PERIOD_TOP #(
 
     // Phase modulo the measured period.  The tracking event is within one
     // period of the latest REF edge; the sign bit selects the wrap.
-    always @* begin
-        pd = main_stamp - ref_stamp;
-        if (pd < 0) pd = pd + period_ticks;
-        else if (pd >= period_ticks) pd = pd - period_ticks;
-    end
+    wire signed [17:0] pd_x = $signed({2'b00, main_stamp}) -
+                              $signed({2'b00, ref_stamp});
+    wire [15:0] pd = (period_ticks == 0) ? 16'd0 :
+                     (pd_x < 0)           ? pd_x + period_ticks :
+                     (pd_x >= period_ticks) ? pd_x - period_ticks : pd_x[15:0];
     assign PFD_UP = (pd > phase_tol) && (pd < period_ticks / 2);
     assign PFD_DN = (pd >= period_ticks / 2) &&
                     (pd < period_ticks - phase_tol);
@@ -218,7 +228,7 @@ module DLL_FULL_PERIOD_TOP #(
             main_tog_seen <= 1'b0; mon_tog_seen <= 1'b0;
             main_evt <= 1'b0;
             alive_cnt <= 3'd0; acq_settle <= 2'd0;
-            phase_good <= 8'd0; phase_ok_r <= 1'b0;
+            phase_good <= 8'd0; phase_miss <= 3'd0; phase_ok_r <= 1'b0;
             range_live <= 1'b0; mon_bad <= 2'd0;
         end else if (!EN) begin
             div <= 4'd0; acq_mode <= 1'b0; acq_armed <= 1'b0; flush <= 4'd0;
@@ -229,7 +239,7 @@ module DLL_FULL_PERIOD_TOP #(
             main_tog_seen <= 1'b0; mon_tog_seen <= 1'b0;
             main_evt <= 1'b0;
             alive_cnt <= 3'd0; acq_settle <= 2'd0;
-            phase_good <= 8'd0; phase_ok_r <= 1'b0;
+            phase_good <= 8'd0; phase_miss <= 3'd0; phase_ok_r <= 1'b0;
             range_live <= 1'b0; mon_bad <= 2'd0;
         end else begin
             div <= div + 1'b1;
@@ -238,6 +248,7 @@ module DLL_FULL_PERIOD_TOP #(
             if (main_tog != main_tog_seen) begin
                 main_tog_seen <= main_tog;
                 alive_cnt <= 3'd0;
+                phase_miss <= 3'd0;
                 if (acq_ok) begin
                     // tracking event; consume immediately
                     if ((pd <= phase_tol) ||
@@ -265,9 +276,16 @@ module DLL_FULL_PERIOD_TOP #(
             end else begin
                 if (alive_cnt < 3'd4) alive_cnt <= alive_cnt + 1'b1;
                 if (acq_ok) begin
-                    // no valid output edge in this REF window
-                    phase_good <= 8'd0;
-                    phase_ok_r <= 1'b0;
+                    // At a full-period phase the OUT edge is coincident with
+                    // the next REF edge, so the OUT->REF toggle can miss an
+                    // occasional sample.  Tolerate isolated misses; ALIVE and
+                    // the monitor check still catch a stopped/wrong output.
+                    if (phase_miss < PHASE_MISS_MAX - 1)
+                        phase_miss <= phase_miss + 1'b1;
+                    if (phase_miss == PHASE_MISS_MAX - 1) begin
+                        phase_good <= 8'd0;
+                        phase_ok_r <= 1'b0;
+                    end
                 end
             end
 
@@ -325,15 +343,20 @@ module DLL_FULL_PERIOD_TOP #(
                     (acq_settle == 2'd0)) begin
                     main_evt <= 1'b0;
                     acq_delay <= ad[15:0];
-                    if (ad < period_ticks) begin
+                    // Accept as soon as the measured phase is a full period.
+                    // At FF the phase code can step from just-below-period to
+                    // the 0 wrap in one binary-search step, so accepting only
+                    // at the range boundary would miss the crossing.
+                    if ((ACQ_EARLY != 0) &&
+                        (ad >= period_ticks - phase_tol) &&
+                        (ad <= period_ticks + phase_tol)) begin
+                        acq_ok <= 1'b1;
+                        range_live <= 1'b1;
+                        mon_bad <= 2'd0;
+                        acq_busy <= 1'b0;
+                    end else if (ad < period_ticks) begin
                         if (code_target >= hi) begin
-                            if (ad >= period_ticks - acq_tol) begin
-                                acq_ok <= 1'b1;
-                                range_live <= 1'b1;
-                                mon_bad <= 2'd0;
-                            end else begin
-                                acq_fail <= 1'b1;
-                            end
+                            acq_fail <= 1'b1;
                             acq_busy <= 1'b0;
                         end else begin
                             lo <= code_target + 1'b1;
@@ -342,13 +365,7 @@ module DLL_FULL_PERIOD_TOP #(
                         end
                     end else begin
                         if (code_target <= lo) begin
-                            if (ad <= period_ticks + acq_tol) begin
-                                acq_ok <= 1'b1;
-                                range_live <= 1'b1;
-                                mon_bad <= 2'd0;
-                            end else begin
-                                acq_fail <= 1'b1;
-                            end
+                            acq_fail <= 1'b1;
                             acq_busy <= 1'b0;
                         end else begin
                             hi <= code_target - 1'b1;

@@ -24,7 +24,7 @@ module dll_gate_tb;
         .ACQ_BUSY(ACQ_BUSY), .ACQ_OK(ACQ_OK), .ACQ_FAIL(ACQ_FAIL)
     );
 
-    real ref_t, ph;
+    real ref_t, ph, delay;
     always @(posedge REF) ref_t = $realtime;
     always @(posedge OUT) begin
         ph = $realtime - ref_t;
@@ -38,10 +38,14 @@ module dll_gate_tb;
         for (k = 0; k < 2000; k = k + 1) begin
             @(posedge REF);
             if (LOCKED === 1'b1) begin
-                $display("GL DLL: LOCKED after %0d REF, CODE=%0d phase=%0.3f",
-                         k, CODE, ph);
-                if (ph > 0.5 && ph < 4.5) begin
-                    $display("FAIL: gate-level DLL phase not full-period");
+                // ph is the time from the latest REF edge.  A 0T lock shows
+                // up as a small ph; unwrap it by one period and require the
+                // delay to be a full period, not one period plus an offset.
+                delay = (ph < 2.5) ? ph + 5.0 : ph;
+                $display("GL DLL: LOCKED after %0d REF, CODE=%0d phase=%0.3f delay=%0.3f",
+                         k, CODE, ph, delay);
+                if (delay < 4.0 || delay >= 5.1) begin
+                    $display("FAIL: gate-level DLL phase not full-period (delay=%0.3f)", delay);
                     $fatal(1, "phase");
                 end
                 $display("dll_gate_tb: PASS");

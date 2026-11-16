@@ -10,7 +10,7 @@ module DLL_ACQ_PERIOD (
     output wire [8:0]   DBG_FIRST,
     output wire [15:0]  DBG_PERIOD
 );
-    reg [319:0] th0, th1, first;
+    reg [319:0] th0, first;
     reg [15:0]  period_r;
 
     function [8:0] count_ones;
@@ -26,13 +26,14 @@ module DLL_ACQ_PERIOD (
     always @(posedge REF) begin
         if (!RST_N) begin
             th0      <= {320{1'b0}};
-            th1      <= {320{1'b0}};
             first    <= {320{1'b0}};
             period_r <= 16'd0;
         end else begin
+            // Two-stage pipeline: the TDC sampler Q is valid at ACQ_DLY[1],
+            // th0 at [2], first at [3].  Latching on [3] captures the first
+            // REF sample after the ACQ edge (~1T, 148 taps at TT).
             th0   <= ACQ_THERM;
-            th1   <= th0;
-            first <= th1;
+            first <= th0;
             if (ACQ_DLY[3])
                 period_r <= {7'b0, count_ones(first)};
         end

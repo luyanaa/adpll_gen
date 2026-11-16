@@ -51,9 +51,16 @@ module PLL_SEGMENTED_DELAY_PHYS #(
                 );
             end
             // 1 = bypass this segment, 0 = use all its cells + buffer.
+            // Buffer the mux output so the bypass mux does not drive the
+            // next 56-cell segment directly; without this the mux sees the
+            // whole segment as load and the minimum code delay is >1 REF
+            // period, making a 5 ns lock unreachable.
             wire bypass = (g >= COARSE);
-            assign seg_node[g+1] = bypass ? chain[0] :
+            wire mux_out = bypass ? chain[0] :
                 chain[SEG_TAPS+SEG_EXTRA_CELLS];
+            FINE_DELAY_CELL u_seg_buf (
+                .MUX(1'b1), .IN(mux_out), .OUT(seg_node[g+1])
+            );
         end
     endgenerate
 
