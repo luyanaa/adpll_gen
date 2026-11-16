@@ -34,6 +34,11 @@ module DLL_FULL_PERIOD_TOP #(
     parameter integer CELL_PS = 30,
     parameter integer EXTRA_PS = 62,
     parameter integer DLL_IMPL = 0,
+    // 0 = 10 GHz simulation timestamp TDC, 1 = physical delay-line TDC.
+    parameter integer TDC_IMPL = 0,
+    parameter integer TDC_LINE_IMPL = 0,
+    parameter integer TDC_NTAP = 320,
+    parameter integer TDC_CELL_PS = 35,
     parameter integer CODE_MIN = 45,
     parameter integer CODE_MAX = 116,
     parameter integer LOCK_COUNT = 16,
@@ -96,7 +101,9 @@ module DLL_FULL_PERIOD_TOP #(
     // Delayed-REF commit strobe.  The delay is a matched path in the
     // physical implementation; the behavioral cell exposes the same timing.
     wire commit_strobe;
-    DLL_DELAY_CELL #(.DLY_PS(COMMIT_GUARD_PS)) u_commit_dly (
+    DLL_COMMIT_DELAY #(
+        .DLY_PS(COMMIT_GUARD_PS), .CELL_PS(CELL_PS), .IMPL(DLL_IMPL)
+    ) u_commit_dly (
         .I(REF), .O(commit_strobe)
     );
 
@@ -104,14 +111,31 @@ module DLL_FULL_PERIOD_TOP #(
     wire [15:0] ref_stamp, period_ticks, main_stamp, mon_stamp, acq_stamp;
     wire        main_tog, mon_tog;
     wire        acq_latch = (div == 4'd7);
-    DLL_TDC u_tdc (
-        .TICK(TICK), .REF(REF), .OUT(main_out), .MON_OUT(mon_out),
-        .RST_N(RST_N), .ACQ_LATCH(acq_latch),
-        .ref_stamp(ref_stamp), .period_ticks(period_ticks),
-        .main_stamp(main_stamp), .main_tog(main_tog),
-        .mon_stamp(mon_stamp), .mon_tog(mon_tog),
-        .acq_stamp(acq_stamp)
-    );
+    generate
+        if (TDC_IMPL == 0) begin : tdc_sim
+            DLL_TDC u_tdc (
+                .TICK(TICK), .REF(REF), .OUT(main_out), .MON_OUT(mon_out),
+                .RST_N(RST_N), .ACQ_LATCH(acq_latch),
+                .ref_stamp(ref_stamp), .period_ticks(period_ticks),
+                .main_stamp(main_stamp), .main_tog(main_tog),
+                .mon_stamp(mon_stamp), .mon_tog(mon_tog),
+                .acq_stamp(acq_stamp)
+            );
+        end else begin : tdc_phys
+            DLL_TDC_PHYS #(
+                .NTAP(TDC_NTAP), .CELL_PS(TDC_CELL_PS),
+                .IMPL(TDC_LINE_IMPL)
+            ) u_tdc (
+                .REF(REF), .ACQ_CLK(acq_clk), .PHASE_IN(line_in),
+                .OUT(main_out), .MON_OUT(mon_out),
+                .RST_N(RST_N), .ACQ_LATCH(acq_latch),
+                .ref_stamp(ref_stamp), .period_ticks(period_ticks),
+                .main_stamp(main_stamp), .main_tog(main_tog),
+                .mon_stamp(mon_stamp), .mon_tog(mon_tog),
+                .acq_stamp(acq_stamp)
+            );
+        end
+    endgenerate
     reg  [15:0] acq_delay;  // exposed for the testbench range check
     wire [15:0] acq_period = (period_ticks << 4);
     integer ad, md;
@@ -168,7 +192,7 @@ module DLL_FULL_PERIOD_TOP #(
     assign PFD_DN = (pd >= period_ticks / 2) &&
                     (pd < period_ticks - phase_tol);
 
-    always @(posedge REF or negedge RST_N) begin
+    always @(posedge REF) begin
         if (!RST_N) begin
             div <= 4'd0; acq_mode <= 1'b0; acq_armed <= 1'b0; flush <= 4'd0;
             acq_ok <= 1'b0; acq_fail <= 1'b0; acq_busy <= 1'b0;
@@ -345,7 +369,7 @@ module DLL_FULL_PERIOD_TOP #(
     reg [1:0] ct_sync;
     reg       commit_done;
     reg [3:0] acq_low_cnt;
-    always @(negedge commit_strobe or negedge RST_N) begin
+    always @(negedge commit_strobe) begin
         ct_sync <= {ct_sync[0], commit_tog};
         if (!RST_N || !EN) begin
             code_active <= CODE_START;

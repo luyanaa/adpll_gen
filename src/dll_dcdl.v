@@ -161,3 +161,32 @@ module DLL_DCDL #(
         end
     endgenerate
 endmodule
+
+// Matched commit-delay strobe.  IMPL=0 is the behavioral delay; IMPL=1 uses
+// the same FINE_DELAY_CELL chain as the physical DCDL/TDC so the code commit
+// window is a real timed path in gate-level/SDF.
+module DLL_COMMIT_DELAY #(
+    parameter integer DLY_PS = 1800,
+    parameter integer CELL_PS = 30,
+    parameter integer IMPL = 0
+) (
+    input  wire I,
+    output wire O
+);
+    localparam integer NCELL = (DLY_PS + CELL_PS - 1) / CELL_PS;
+    generate
+        if (IMPL == 0) begin : sim
+            DLL_DELAY_CELL #(.DLY_PS(DLY_PS)) u_dly (.I(I), .O(O));
+        end else begin : phys
+            wire [NCELL:0] chain;
+            assign chain[0] = I;
+            genvar i;
+            for (i = 0; i < NCELL; i = i + 1) begin : stage
+                FINE_DELAY_CELL u_cell (
+                    .MUX(1'b1), .IN(chain[i]), .OUT(chain[i+1])
+                );
+            end
+            assign O = chain[NCELL];
+        end
+    endgenerate
+endmodule

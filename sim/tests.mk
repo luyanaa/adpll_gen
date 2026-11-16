@@ -401,6 +401,15 @@ $(SIM_OUT)/dll_full_period.out: $(SRC_DIR)/dll_full_period_tb.v $(SRC_DIR)/dll_f
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o dll_full_period.out $^
 
+# Physical delay-line TDC (behavioral cell delays) with the DLL controller.
+test_dll_phys_tdc: $(SIM_OUT)/dll_phys_tdc.out
+	cd $(SIM_OUT) && timeout 1200s $(VVP) dll_phys_tdc.out
+.PHONY: test_dll_phys_tdc
+
+$(SIM_OUT)/dll_phys_tdc.out: $(SRC_DIR)/dll_phys_tdc_tb.v $(SRC_DIR)/dll_full_period_top.v $(SRC_DIR)/dll_dcdl.v $(SRC_DIR)/dll_tdc.v $(SRC_DIR)/dll_tdc_phys.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o dll_phys_tdc.out $^
+
 # Route B range revalidation (period step) and missing-edge ALIVE.
 test_dll_range_reval: $(SIM_OUT)/dll_range_reval.out
 	cd $(SIM_OUT) && timeout 180s $(VVP) dll_range_reval.out
@@ -480,7 +489,39 @@ test_segmented_dcdl:
 	  sh $(FLOW_STA_DIR)/run_segmented_corners.sh
 .PHONY: test_segmented_dcdl
 
-test_ddr_phy: test_ddr_clock_phy test_dll_dcdl test_dll_full_period test_dll_range_reval test_ddr_phy_dll test_ddr_clock_phy_integration test_ddr_phy_non_sim test_ddr_phy_ics55_io test_segmented_dcdl test_ddr_phy_legacy_blocked
+# Physical TDC line STA + gate-level/SDF smoke (currently BLOCKED by the
+# gate-level ACQ-line pulse; the line STA itself passes).
+test_dll_phys_tdc_gl:
+	ROOT=$(ROOT_DIR) ICS55_REAL_ROOT=$(ICS55_REAL_ROOT) SIM_OUT=$(SIM_OUT) \
+	  YOSYS='$(YOSYS)' STA='$(STA)' IVERILOG='$(IVERILOG)' VVP='$(VVP)' \
+	  sh $(FLOW_STA_DIR)/run_tdc_phys_gl.sh
+.PHONY: test_dll_phys_tdc_gl
+
+# Full gate-level/SDF DLL closure attempt (currently BLOCKED).
+test_dll_gate:
+	ROOT=$(ROOT_DIR) ICS55_REAL_ROOT=$(ICS55_REAL_ROOT) SIM_OUT=$(SIM_OUT) \
+	  YOSYS='$(YOSYS)' STA='$(STA)' IVERILOG='$(IVERILOG)' VVP='$(VVP)' \
+	  sh $(FLOW_STA_DIR)/run_dll_gate.sh
+.PHONY: test_dll_gate
+
+# Interim blockers: pass only while the named gate-level item is BLOCKED.
+test_dll_phys_tdc_gl_blocked:
+	@if ROOT=$(ROOT_DIR) ICS55_REAL_ROOT=$(ICS55_REAL_ROOT) SIM_OUT=$(SIM_OUT) \
+	    YOSYS='$(YOSYS)' STA='$(STA)' IVERILOG='$(IVERILOG)' VVP='$(VVP)' \
+	    sh $(FLOW_STA_DIR)/run_tdc_phys_gl.sh; then \
+	  echo "FAIL: physical TDC gate-level unexpectedly passed"; exit 1; \
+	else echo "PASS: physical TDC gate-level is still BLOCKED (expected)"; fi
+.PHONY: test_dll_phys_tdc_gl_blocked
+
+test_dll_gate_blocked:
+	@if ROOT=$(ROOT_DIR) ICS55_REAL_ROOT=$(ICS55_REAL_ROOT) SIM_OUT=$(SIM_OUT) \
+	    YOSYS='$(YOSYS)' STA='$(STA)' IVERILOG='$(IVERILOG)' VVP='$(VVP)' \
+	    sh $(FLOW_STA_DIR)/run_dll_gate.sh; then \
+	  echo "FAIL: gate-level DLL unexpectedly passed"; exit 1; \
+	else echo "PASS: gate-level DLL is still BLOCKED (expected)"; fi
+.PHONY: test_dll_gate_blocked
+
+test_ddr_phy: test_ddr_clock_phy test_dll_dcdl test_dll_full_period test_dll_range_reval test_dll_phys_tdc test_ddr_phy_dll test_ddr_clock_phy_integration test_ddr_phy_non_sim test_ddr_phy_ics55_io test_segmented_dcdl test_ddr_phy_legacy_blocked test_dll_phys_tdc_gl_blocked test_dll_gate_blocked
 .PHONY: test_ddr_phy
 
 # P0-A correctness gate (fast RTL regressions)
