@@ -28,8 +28,10 @@ module ddr_clock_phy_tb;
     end
 
     reg TICK = 1'b0;
+    reg DLL_TICK = 1'b0;
     reg SAMP = 1'b0;
-    always #0.5 TICK = ~TICK;          // 1 GHz loop clock
+    always #0.5 TICK = ~TICK;
+    always #0.05 DLL_TICK = ~DLL_TICK;   // 10 GHz DLL TDC
     always #0.555 SAMP = ~SAMP;        // incommensurate duty sampler
 
     reg RST_N = 1'b0;
@@ -45,7 +47,8 @@ module ddr_clock_phy_tb;
     wire PAD_CK_T, PAD_CK_C;
     wire DCC_LOCKED, DLL_LOCKED, PHY_LOCKED;
     wire DCC_ERR, DLL_ERR, ERR;
-    wire [7:0] DUTY_CODE, DLY_CODE;
+    wire [7:0] DUTY_CODE;
+    wire [8:0] DLY_CODE;
     wire [3:0] SEL_CUR;
     wire BUSY;
 
@@ -58,7 +61,7 @@ module ddr_clock_phy_tb;
         .USE_DLL(USE_DLL)
     ) dut (
         .CK_IN(CK_IN), .PLL_LOCKED(PLL_LOCKED), .RST_N(RST_N),
-        .TICK(TICK), .SAMP(SAMP),
+        .TICK(TICK), .DLL_TICK(DLL_TICK), .SAMP(SAMP),
         .DCC_EN(DCC_EN), .DLL_EN(DLL_EN),
         .DCC_KI(DCC_KI), .DLL_KI(DLL_KI),
         .DUTY_OFFS(DUTY_OFFS), .DUTY_INIT(DUTY_INIT),

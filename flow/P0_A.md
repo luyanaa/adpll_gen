@@ -155,22 +155,30 @@ src/pll_macro_top_tb.v (behavioral smoke only)
   OpenSTA with the real IO Liberty (2 pF load) gives TT/SS/FF rise/fall
   2.57/2.44, 4.22/4.22, 1.77/1.67 ns and single-ended duties 47.4/52.6,
   50.0/50.0, 48.0/52.0%.
-- The ADPLL divider + DCC + DLL + selector integration uses full
-  `LOCKED` (not `FREQ_LOCKED`) and `USE_DLL=1`: `LOCKED=1` after 202 REF,
-  `DCC_LOCKED=1`, and `DLL_LOCKED=1` with `DLY_CODE=34`.  The DLL phase
-  check, however, measures a 0.843 ns edge offset in a 4.870 ns period and
-  `CK_PHY` duty 41.4%; the level PD false-locks at an offset.  The ADPLL
-  full lock is real; the DLL full-period phase lock is not.  The ADDLL
-  changes (balanced PD, raw P/N, DLF on `!CLK_IN`, captured PD) improved
-  the sampling but do not replace a full-period phase detector.
-- Real ics55 DCDL range is the next hard blocker: TT 4.71-5.55 ns,
-  SS 6.43-7.98 ns, FF 3.97-4.52 ns at a 5 ns target.  TT covers 5 ns;
-  SS cannot reach it (minimum above 5 ns) and FF cannot reach it (maximum
-  below 5 ns).  The real PD sign is confirmed: at negedge INJ the ics55
-  latch gives only P=01 / N=11, matching the model.  A full-period DLL at
-  5 ns is therefore not verifiable at SS/FF without a wider/different
-  DCDL and a real phase detector; the selector-only path remains the
-  verified fallback.
+- The ADPLL divider + DCC + selector integration (`USE_DLL=0`) passes:
+  full `LOCKED` after 202 REF, `DCC_LOCKED=1`, `CK_PHY` period 4.870 ns
+  and duty 50.0%, tap 4 phase 240 ps.  The raw `OUT_DIV` is a fractional
+  divider clock with non-uniform edge spacing, so it is not a valid
+  full-period DLL reference; the Route B DLL correctly refuses to lock it.
+  The old `ADDLL_TOP` `DLL_LOCKED=1` / 843 ps offset / 41.4% duty false
+  lock is removed from the PHY.
+- Route B full-period DLL (`src/dll_full_period_top.v`) is implemented and
+  verified behaviorally at TT/SS/FF: 5 ns lock at -40/-94/-60 ps residual,
+  a 4 ns input locks at its measured 40-tick period, and a 2T-start DUT
+  converges to 1T.  0T/0.5T/2T DUTs assert `ACQ_FAIL`, rail the code, and
+  never assert `LOCKED`/`PHASE_OK`/`RANGE_OK`.  `LOCKED = RANGE_OK &
+  PHASE_OK & !CODE_RAILED & ALIVE`; `PHASE_OK` counts consecutive valid
+  edge comparisons.  The `src/ddr_clock_phy_dll_tb.v` PHY test with a
+  uniform 200 MHz input gives `DLL_LOCKED=1`, code 58, 4.960 ns delay and
+  50.0% `CK_PHY` duty.
+- The old COARSE-only ics55 DCDL is blocked at 5 ns: TT 4.71-5.55 ns,
+  SS 6.43-7.98 ns, FF 3.97-4.52 ns.  The 4-segment bypass + 56-tap
+  structure (`src/pll_segmented_delay_phys.v`) covers 4.5-5.5 ns at all
+  corners: TT 2.93-11.55, SS 3.32-18.13, FF 2.78-8.64 ns.  The 8-segment
+  version failed SS (5.12 ns minimum).  The real PD sign is confirmed: at
+  negedge INJ the ics55 latch gives only P=01 / N=11, matching the model.
+  The selector-only path remains the verified fallback; the remaining DLL
+  blocker is gate-level/PEX/PVT, not the DCDL range.
 - The differential CK_T/CK_C crossing, package/board load, SI and
   PVT/jitter are not measured.  The IO corner spread (1.77/2.57/4.22 ns at
   FF/TT/SS for a 5 ns period) means a static tap cannot hold the pad phase
@@ -203,7 +211,8 @@ src/pll_macro_top_tb.v (behavioral smoke only)
 |---|---|
 | FSM with injected `PHASE_LOCK` / `FREQ_OK` | covered by `lock_fsm_tb` |
 | Real FLL + behavioral DCO + real BBPD | full `LOCKED=1` reached; P/N balanced, no ILL; phase-loop sign/init/FLL-gating fixes applied |
-| Real macro + digital control + PEX/PVT | not started; real ics55 DCDL range blocks a 5 ns DLL at SS/FF |
+| Route B DLL, behavioral TT/SS/FF | 5 ns lock, 4 ns adaptive lock, 0T/0.5T/2T rejection, PHY uniform-clock test pass |
+| Real macro + digital control + PEX/PVT | not started; DLL gate-level/PEX/PVT and pad SI remain |
 
 `pll_lock_detector` is an activity/balance window, not a quiet-run
 detector.  It cannot detect a detector that toggles P/N artificially;
@@ -212,12 +221,11 @@ real DCDL range, not the phase detector.
 
 ## Next P0-A items
 
-1. Decide the DCDL/architecture for a full-period DLL: the real ics55
-   range is TT 4.71-5.55 ns, SS 6.43-7.98 ns, FF 3.97-4.52 ns, so 5 ns is
-   not covered at SS/FF.  Options are a wider DCDL, a different tap/coarse
-   structure, or a different period/architecture.
-2. After that, verify the DLL path at TT/SS/FF with full `LOCKED` and the
-   real IO pad, including the differential CK_T/CK_C crossing and SI.
+1. Take the Route B DLL through gate-level/SDF and placed/PEX at TT/SS/FF;
+   the behavioral T0/STEP map is a linear surrogate of the 4-seg STA
+   endpoints, not the full nonlinear code-to-delay surface.
+2. Feed the DLL a uniform integer-divided reference and verify the PHY path
+   with the real IO pad, differential CK_T/CK_C crossing and SI.
 3. Formal CDC test: REF/MID_OUT arbitrary phase, Gray snapshot consistency,
    and a per-channel OpenSTA audit of the new `dco_activity` path.
 4. `pll_macro_top` integration with unified parameters and the real macro.

@@ -13,7 +13,11 @@ module ddr_clock_phy_integration_tb;
     localparam integer DIV_BITS = 8;
     localparam integer SEL_TAP = 4;
     localparam real TAP_PS = 60.0;
-    localparam integer USE_DLL = 1;   // phase-tracking path bring-up
+    // The raw OUT_DIV is a fractional-divider clock: its edge spacing is not
+    // uniform, so a one-period DLL has no valid code and correctly refuses to
+    // lock.  This test therefore checks the selector path.  The DLL PHY path
+    // is verified in ddr_clock_phy_dll_tb with a uniform 200 MHz reference.
+    localparam integer USE_DLL = 0;
 
     reg REF = 1'b0;
     always #5 REF = ~REF;            // 100 MHz
@@ -46,8 +50,10 @@ module ddr_clock_phy_integration_tb;
     );
 
     reg TICK = 1'b0;
+    reg DLL_TICK = 1'b0;
     reg SAMP = 1'b0;
     always #0.5 TICK = ~TICK;
+    always #0.05 DLL_TICK = ~DLL_TICK;   // 10 GHz DLL TDC
     always #0.850 SAMP = ~SAMP;
 
     reg [3:0] SEL_REQ = SEL_TAP;
@@ -57,7 +63,8 @@ module ddr_clock_phy_integration_tb;
     wire CK_DCC, CK_DLL, CK_PATH, CK_SEL, CK_PHY, CK_PHY_N;
     wire DCC_LOCKED, DLL_LOCKED, PHY_LOCKED;
     wire DCC_ERR, DLL_ERR, PHY_ERR;
-    wire [7:0] DUTY_CODE, DLY_CODE;
+    wire [7:0] DUTY_CODE;
+    wire [8:0] DLY_CODE;
     wire [3:0] SEL_CUR;
     wire BUSY;
 
@@ -70,7 +77,7 @@ module ddr_clock_phy_integration_tb;
     ) u_phy (
         .CK_IN(OUT_DIV),
         .PLL_LOCKED(u_pll.LOCKED),
-        .RST_N(RST_N), .TICK(TICK), .SAMP(SAMP),
+        .RST_N(RST_N), .TICK(TICK), .DLL_TICK(DLL_TICK), .SAMP(SAMP),
         .DCC_EN(DCC_EN), .DLL_EN(USE_DLL != 0),
         .DCC_KI(16'd1), .DLL_KI(16'd1),
         .DUTY_OFFS(8'd0), .DUTY_INIT(8'd0),

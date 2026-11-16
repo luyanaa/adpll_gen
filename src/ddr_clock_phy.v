@@ -23,11 +23,13 @@
 // diagnostics.  The gate uses the lock deassertion, not ERR, because a
 // transient excursion during acquisition can leave ERR set while the loop
 // has re-locked.
-// The default first-version path is DCC -> phase selector.  The DLL is an
-// optional full-period deskew block (USE_DLL=1).  Its behavioral DCDL has a
-// 4 ns fixed insertion delay, so it only reaches a full period when the
-// input period is near 4 ns; at 5 ns it settles at T0 and does not cover the
-// period.  The selector path is the one used for the fixed 200 MHz bring-up.
+// USE_DLL=0 is the selector-only bring-up path.  USE_DLL=1 inserts the Route B
+// full-period DLL: a 4-segment bypass + 56-tap DCDL, a startup absolute-range
+// detector that measures the actual REF period, an edge-time phase detector,
+// and LOCKED = RANGE_OK & PHASE_OK & !CODE_RAILED & ALIVE.  The DLL TDC needs
+// a fast clock (DLL_TICK), separate from the 1 GHz loop update clock.  The
+// DLL is enabled only after PLL_LOCKED so its period measurement is taken on
+// the final ADPLL frequency.
 module DDR_CLOCK_PHY #(
     parameter integer DCC_COARSE_NDELS = 15,
     parameter integer DCC_MID_NDELS = 15,
@@ -35,6 +37,12 @@ module DDR_CLOCK_PHY #(
     parameter integer DLL_COARSE_NDELS = 15,
     parameter integer DLL_MID_NDELS = 15,
     parameter integer DLL_FINE_NDELS = 31,
+    parameter integer DLL_T0_PS = 2930,
+    parameter integer DLL_STEP_PS = 35,
+    parameter integer DLL_CODE_MIN = 20,
+    parameter integer DLL_CODE_MAX = 170,
+    parameter integer DLL_CODE_INIT = 55,
+    parameter integer DLL_PERIOD_TICKS = 50,
     parameter integer FILTER_BITS = 16,
     parameter integer DCC_LOCK_COUNT = 16,
     parameter integer DLL_LOCK_COUNT = 16,
@@ -49,6 +57,7 @@ module DDR_CLOCK_PHY #(
     input  wire                    PLL_LOCKED,
     input  wire                    RST_N,
     input  wire                    TICK,
+    input  wire                    DLL_TICK,
     input  wire                    SAMP,
     input  wire                    DCC_EN,
     input  wire                    DLL_EN,
@@ -73,7 +82,7 @@ module DDR_CLOCK_PHY #(
     output wire                    DLL_ERR,
     output wire                    ERR,
     output wire [7:0]              DUTY_CODE,
-    output wire [7:0]              DLY_CODE,
+    output wire [8:0]              DLY_CODE,
     output wire [SEL_BITS-1:0]     SEL_CUR,
     output wire                    BUSY
 );
@@ -93,19 +102,23 @@ module DDR_CLOCK_PHY #(
         .DUTY_CODE(DUTY_CODE)
     );
 
-    ADDLL_TOP #(
-        .COARSE_NDELS(DLL_COARSE_NDELS),
-        .MID_NDELS(DLL_MID_NDELS),
-        .FINE_NDELS(DLL_FINE_NDELS),
-        .FILTER_BITS(FILTER_BITS),
-        .LOCK_COUNT(DLL_LOCK_COUNT),
-        .MID_W(MID_W),
-        .COARSE_W(COARSE_W)
+    // The DLL only runs on a locked ADPLL frequency; otherwise its one-time
+    // period measurement would capture an acquisition-time frequency.
+    wire dll_en = DLL_EN & PLL_LOCKED;
+    localparam [8:0] DLL_CODE_START = DLL_CODE_INIT;
+
+    DLL_FULL_PERIOD_TOP #(
+        .TAPS(280), .T0_PS(DLL_T0_PS), .STEP_PS(DLL_STEP_PS),
+        .CODE_MIN(DLL_CODE_MIN), .CODE_MAX(DLL_CODE_MAX),
+        .PERIOD_TICKS(DLL_PERIOD_TICKS),
+        .ACQ_EPS(4), .PHASE_EPS(1), .LOCK_COUNT(DLL_LOCK_COUNT)
     ) u_dll (
-        .CLK_IN(CK_DCC), .RST_N(RST_N), .TICK(TICK), .EN(DLL_EN),
-        .KI(DLL_KI), .PHASE_OFFS(DLL_PHASE_OFFS), .DLY_INIT(DLY_INIT),
-        .CLK_OUT(CK_DLL), .LOCKED(DLL_LOCKED), .ERR(DLL_ERR),
-        .DLY_CODE(DLY_CODE)
+        .REF(CK_DCC), .RST_N(RST_N), .EN(dll_en), .TICK(DLL_TICK),
+        .CODE_START(DLL_CODE_START),
+        .OUT(CK_DLL), .LOCKED(DLL_LOCKED), .PHASE_OK(), .RANGE_OK(),
+        .CODE_RAILED(), .ALIVE(), .CODE(DLY_CODE),
+        .PFD_UP(), .PFD_DN(),
+        .ACQ_BUSY(), .ACQ_OK(), .ACQ_FAIL(DLL_ERR)
     );
 
     PHASE_SELECTOR_TOP #(

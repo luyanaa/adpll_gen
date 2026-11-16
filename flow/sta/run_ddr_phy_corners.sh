@@ -52,6 +52,7 @@ echo "== Yosys real DCDL range =="
 $YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/coarse_delay.v $ROOT/src/mid_delay.v $ROOT/src/fine_delay.v $ROOT/src/pll_counter_dcdl_phys.v $ROOT/flow/sta/dcdl_range_meas.v; setattr -mod -unset keep_hierarchy; setattr -mod -unset keep; synth -top DCDL_RANGE_MEAS -flatten; abc -liberty $STD_TT; write_verilog $OUT/dcdl_range_net.v; stat" \
   > "$OUT/dcdl_range.yosys.log"
 
+fail=0
 for corner in TT SS FF; do
   case $corner in
     TT) std_lib=$STD_TT; io_lib=$IO_TT ;;
@@ -75,8 +76,24 @@ for corner in TT SS FF; do
   STD_LIB=$std_lib NETLIST=$OUT/dcdl_range_net.v \
     $STA -no_init -exit "$ROOT/flow/sta/dcdl_range.sta.tcl" \
     > "$OUT/dcdl_range_$corner.log"
-  python3 "$ROOT/flow/sta/dcdl_range_check.py" \
-    "$OUT/dcdl_range_$corner.log" "$corner" 5.0
+  if ! python3 "$ROOT/flow/sta/dcdl_range_check.py" \
+      "$OUT/dcdl_range_$corner.log" "$corner" \
+      --require-coverage --period=5.0 --guardband=0.5; then
+    fail=1
+  fi
+
+  echo "== $corner DCDL bank sensitivity =="
+  STD_LIB=$std_lib NETLIST=$OUT/dcdl_range_net.v \
+    $STA -no_init -exit "$ROOT/flow/sta/dcdl_bank.sta.tcl" \
+    > "$OUT/dcdl_bank_$corner.log"
+  if ! python3 "$ROOT/flow/sta/dcdl_bank_check.py" \
+      "$OUT/dcdl_bank_$corner.log" "$corner"; then
+    fail=1
+  fi
 done
 
-echo "PASS: ics55 real-cell tap/pad TT/SS/FF checks"
+if [ "$fail" != 0 ]; then
+  echo "BLOCKED: ics55 DCDL does not cover 5 ns +/- 0.5 ns and/or a bank has no real sensitivity"
+  exit 2
+fi
+echo "PASS: ics55 real-cell tap/pad/DCDL TT/SS/FF checks"

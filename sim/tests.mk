@@ -379,9 +379,27 @@ test_ddr_clock_phy: $(SIM_OUT)/ddr_clock_phy_tb.vcd
 view_test_ddr_clock_phy: $(SIM_OUT)/ddr_clock_phy_tb.vcd
 	gtkwave $(SIM_OUT)/ddr_clock_phy_tb.vcd
 
-$(SIM_OUT)/ddr_clock_phy_tb.vcd: $(SRC_DIR)/ddr_clock_phy_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/ddr_ck_pad_model.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/sim_SSBBPD.v
+$(SIM_OUT)/ddr_clock_phy_tb.vcd: $(SRC_DIR)/ddr_clock_phy_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/ddr_ck_pad_model.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/dll_full_period_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/sim_SSBBPD.v
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
+# Route B full-period DLL: absolute range acquisition + valid-edge lock.
+test_dll_full_period: $(SIM_OUT)/dll_full_period.out
+	cd $(SIM_OUT) && timeout 180s $(VVP) dll_full_period.out
+.PHONY: test_dll_full_period
+
+$(SIM_OUT)/dll_full_period.out: $(SRC_DIR)/dll_full_period_tb.v $(SRC_DIR)/dll_full_period_top.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o dll_full_period.out $^
+
+# Route B PHY integration with a uniform 200 MHz reference.
+test_ddr_phy_dll: $(SIM_OUT)/ddr_clock_phy_dll.out
+	cd $(SIM_OUT) && timeout 180s $(VVP) ddr_clock_phy_dll.out
+.PHONY: test_ddr_phy_dll
+
+$(SIM_OUT)/ddr_clock_phy_dll.out: $(SRC_DIR)/ddr_clock_phy_dll_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/dll_full_period_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/sim_SSBBPD.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o ddr_clock_phy_dll.out -D SIMULATION=1 $^
 
 # ADPLL divider -> DCC -> selector connectivity/frequency smoke
 test_ddr_clock_phy_integration: $(SIM_OUT)/ddr_clock_phy_integration.out
@@ -391,7 +409,7 @@ test_ddr_clock_phy_integration: $(SIM_OUT)/ddr_clock_phy_integration.out
 view_test_ddr_clock_phy_integration: $(SIM_OUT)/ddr_clock_phy_integration.vcd
 	gtkwave $(SIM_OUT)/ddr_clock_phy_integration.vcd
 
-$(SIM_OUT)/ddr_clock_phy_integration.out: $(SRC_DIR)/ddr_clock_phy_integration_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/pll_macro_top.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/ref_watchdog.v $(SRC_DIR)/ddr_ck.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/frequency_counter_frontend.v $(ROOT_DIR)/flow/macro/ics55_h7cr/pll_analog_macro.v $(SRC_DIR)/pll_analog.v $(SRC_DIR)/il_dco.v $(SRC_DIR)/sim_dco.v $(SRC_DIR)/sim_injection.v $(SRC_DIR)/sim_sym.v $(SRC_DIR)/sim_mux.v $(SRC_DIR)/sim_SSBBPD.v
+$(SIM_OUT)/ddr_clock_phy_integration.out: $(SRC_DIR)/ddr_clock_phy_integration_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/dll_full_period_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/pll_macro_top.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/ref_watchdog.v $(SRC_DIR)/ddr_ck.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/frequency_counter_frontend.v $(ROOT_DIR)/flow/macro/ics55_h7cr/pll_analog_macro.v $(SRC_DIR)/pll_analog.v $(SRC_DIR)/il_dco.v $(SRC_DIR)/sim_dco.v $(SRC_DIR)/sim_injection.v $(SRC_DIR)/sim_sym.v $(SRC_DIR)/sim_mux.v $(SRC_DIR)/sim_SSBBPD.v
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o ddr_clock_phy_integration.out -D SIMULATION  $^
 
@@ -412,7 +430,7 @@ STA ?= sta
 
 test_ddr_phy_ics55_io:
 	mkdir -p $(SIM_OUT)
-	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o ddr_phy_io.out -D SIMULATION=1 -D ICS55_IO $(SRC_DIR)/ddr_clock_phy_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/ddr_ck_pad_model.v $(SRC_DIR)/ics55_ddr_ck_pad.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/sim_SSBBPD.v $(ICS55_REAL_ROOT)/libs.ref/ICsprout_55LLULP1233_IO_251013/verilog/icsIOA_N55_3P3.v
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o ddr_phy_io.out -D SIMULATION=1 -D ICS55_IO $(SRC_DIR)/ddr_clock_phy_tb.v $(SRC_DIR)/ddr_clock_phy.v $(SRC_DIR)/ddr_ck_pad_model.v $(SRC_DIR)/ics55_ddr_ck_pad.v $(SRC_DIR)/adcc_top.v $(SRC_DIR)/addll_top.v $(SRC_DIR)/dll_full_period_top.v $(SRC_DIR)/phase_selector_top.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/pll_counter_dcdl.v $(SRC_DIR)/sim_SSBBPD.v $(ICS55_REAL_ROOT)/libs.ref/ICsprout_55LLULP1233_IO_251013/verilog/icsIOA_N55_3P3.v
 	cd $(SIM_OUT) && $(VVP) ddr_phy_io.out
 .PHONY: test_ddr_phy_ics55_io
 
@@ -422,11 +440,18 @@ test_ddr_phy_real_cells:
 	  sh $(FLOW_STA_DIR)/run_ddr_phy_corners.sh
 .PHONY: test_ddr_phy_real_cells
 
-test_ddr_phy: test_ddr_clock_phy test_ddr_clock_phy_integration test_ddr_phy_non_sim test_ddr_phy_ics55_io test_ddr_phy_real_cells
+# 4-segment bypass DCDL coverage gate: 4.5-5.5 ns at TT/SS/FF.
+test_segmented_dcdl:
+	ROOT=$(ROOT_DIR) ICS55_REAL_ROOT=$(ICS55_REAL_ROOT) SIM_OUT=$(SIM_OUT) \
+	  YOSYS='$(YOSYS)' STA='$(STA)' \
+	  sh $(FLOW_STA_DIR)/run_segmented_corners.sh
+.PHONY: test_segmented_dcdl
+
+test_ddr_phy: test_ddr_clock_phy test_dll_full_period test_ddr_phy_dll test_ddr_clock_phy_integration test_ddr_phy_non_sim test_ddr_phy_ics55_io test_segmented_dcdl test_ddr_phy_real_cells
 .PHONY: test_ddr_phy
 
 # P0-A correctness gate (fast RTL regressions)
-test_p0: test_delta_sigma_sat test_divider test_lock_detector test_ssbbpd_contract test_ref_watchdog test_lock_fsm test_freq_ok test_freq_lock_cdc test_freq_lock_stub test_ddr_ck test_ddr_clock_phy test_ddr_clock_phy_integration test_pll_macro_smoke
+test_p0: test_delta_sigma_sat test_divider test_lock_detector test_ssbbpd_contract test_ref_watchdog test_lock_fsm test_freq_ok test_freq_lock_cdc test_freq_lock_stub test_ddr_ck test_dll_full_period test_ddr_clock_phy test_ddr_phy_dll test_ddr_clock_phy_integration test_pll_macro_smoke
 .PHONY: test_p0
 
 # Closed-loop smoke with the macro wrapper and behavioral sim_* models.

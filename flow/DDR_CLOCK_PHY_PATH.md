@@ -9,15 +9,15 @@ ADPLL CK / divider
   -> CK_PHY / CK_PHY_N
 ```
 
-`ADDLL_TOP` is instantiated as an optional full-period deskew block
-(`USE_DLL=1`).  The default first version uses the selector path
-(`USE_DLL=0`).
+`DLL_FULL_PERIOD_TOP` is the optional Route B full-period deskew block
+(`USE_DLL=1`); it replaces the old `ADDLL_TOP` path in the PHY.  The default
+fixed RTL bring-up still uses the selector path (`USE_DLL=0`).
 
 ## 1. Interface
 
-`DDR_CLOCK_PHY` takes `CK_IN` and `PLL_LOCKED` from the ADPLL, plus
-`TICK`, `SAMP`, DCC/DLL enables, gains, static trims and the selector
-request.  It exposes `CK_DCC`, `CK_DLL`, `CK_PATH`, `CK_SEL`, `CK_PHY`,
+`DDR_CLOCK_PHY` takes `CK_IN` and `PLL_LOCKED` from the ADPLL, plus the
+1 GHz loop `TICK`, the fast DLL TDC clock `DLL_TICK`, `SAMP`, DCC/DLL
+enables, gains, static trims and the selector request.  It exposes `CK_DCC`, `CK_DLL`, `CK_PATH`, `CK_SEL`, `CK_PHY`,
 `CK_PHY_N`, the DCC/DLL lock flags and the control words.
 
 `PHY_LOCKED = PLL_LOCKED & DCC_LOCKED & (USE_DLL ? DLL_LOCKED : 1) & ~BUSY`.
@@ -41,26 +41,28 @@ dropping `PLL_LOCKED` mid-high forces both PHY and pad outputs low, no
 further edges, and the output resumes after relock.  The pad model is a
 matched functional load, not SI/IBIS/PVT.
 
-ADPLL integration with full `LOCKED` and `USE_DLL=1`
-(`src/ddr_clock_phy_integration_tb.v`):
+ADPLL -> divider -> DCC -> selector (`src/ddr_clock_phy_integration_tb.v`,
+`USE_DLL=0`):
 
 ```text
 LOCKED after 202 REF, FREQ_LOCKED=1
 OUT_DIV 212 edges / 100 REF = 2.12 per REF
 DCC_LOCKED after 19 TICK, DUTY_CODE=1
-DLL_LOCKED=1, DLY_CODE=34
-DLL delay=0.843 ns, period=4.870 ns, mod=0.843 ns
-CK_PHY period=4.157 ns duty=41.4%
-FAIL: DLL_LOCKED but CK_DLL is not at a full-period phase
-FAIL: CK_PHY duty outside 45-55%
+CK_PHY high=2.435 low=2.435 period=4.870 duty=50.0%
+tap 4 phase=240.0 ps
+PASS
 ```
 
-The ADPLL full lock required the phase-filter integrator preload
-(mid-scale), the phase-loop P/N swap for the delay-increasing DCO, and
-stopping the FLL only when `PHASE_LOCK & FREQ_OK`.  The DLL `LOCKED` flag
-is not a phase check: it asserts code stability while the delayed edge is
-0.843 ns away from the full-period position.  This is a false DLL lock and
-the current level-sampling PD is not sufficient for a full-period DLL.
+The raw `OUT_DIV` is a fractional-divider clock: its edge spacing is not
+uniform.  A one-period DLL has no valid code for it, and the Route B DLL
+correctly refuses to lock.  The integration test therefore uses the
+selector path; the DLL PHY path is verified separately with a uniform
+reference (section 7).
+
+The old `ADDLL_TOP` false lock is gone: it reported `LOCKED=1` with a
+0.843 ns edge offset and 41.4% output duty.  `ADDLL_TOP` remains in the
+source tree for its legacy regressions but is no longer instantiated by
+`DDR_CLOCK_PHY`.
 
 ## 3. Block limitations found
 
@@ -151,33 +153,69 @@ figures; the differential crossing/duty needs an SI/IBIS model and is not
 claimed.  The pad-stage phase budget is dominated by the IO cell, not the
 35-61 ps tap.
 
-## 7. DLL decision and real DCDL range
+## 7. Route B full-period DLL
 
-The behavioral DLL `LOCKED` flag is not a full-period phase lock: at
-4.87 ns it asserts with a 0.843 ns edge offset and the output duty drops
-to 41.4%.  The level-sampling PD/lock detector needs a real edge/PFD
-phase detector before the DLL path can be verified.  The ADPLL full
-`LOCKED` itself does work (202 REF, P/N balanced, no ILL).
+The old `ADDLL_TOP` `LOCKED` was an accumulator-stability window, not a
+phase check.  Route B replaces it with `src/dll_full_period_top.v`:
 
-The production blocker is the real ics55 DCDL range at a 5 ns target:
+- **DCDL**: 4 coarse segments (56 `FINE_DELAY_CELL` each) plus a 56-tap fine
+  mux.  `COARSE=0/FINE=0` bypasses the segments.  Real ics55 OpenSTA:
 
-| Corner | DCDL min-max | 5 ns |
-|---|---:|---|
-| TT | 4.71-5.55 ns | covered |
-| SS | 6.43-7.98 ns | **blocked** (minimum above 5 ns) |
-| FF | 3.97-4.52 ns | **blocked** (maximum below 5 ns) |
+  | Corner | 4-seg DCDL min-max | 4.5-5.5 ns |
+  |---|---:|---|
+  | TT | 2.93-11.55 ns | covered |
+  | SS | 3.32-18.13 ns | covered |
+  | FF | 2.78-8.64 ns | covered |
 
-A full-period DLL at 5 ns cannot be verified at SS/FF with this DCDL.  The
-options are a wider/different DCDL, a different period/architecture, or
-accepting the selector-only path with PVT calibration.  The DLL also needs
-a phase detector that can distinguish the full period; the current level
-PD cannot.  That is a design decision; `USE_DLL=0` stays the default for
-the fixed RTL bring-up.
+  An 8-segment version had SS `t_min` = 5.12 ns, so the 4-segment bypass is
+  what brings SS below 4.5 ns.  This is a Liberty-corner structural check,
+  not placed/PEX/PVT.
+- **Startup range**: the line is driven by REF/16 while a free-running TDC
+  measures the absolute delay, and a binary search finds the tap at one
+  measured REF period.  The period is measured at startup, so a 4 ns input
+  locks at 40 ticks and a 5 ns input at 50 ticks (10 GHz TDC).
+- **Tracking**: REF-to-OUT delay in TICK counts modulo the period; the code
+  window is the cycle/range detector, and `PHASE_OK` counts consecutive
+  REF windows with a valid OUT edge and |delay - period| <= 1 tick.
+- **LOCKED = RANGE_OK & PHASE_OK & !CODE_RAILED & ALIVE.**  The TDC samples
+  the output edge; ALIVE requires one output edge per REF window.
+- The behavioral line is a tapped transport-delay array.  The code is
+  committed only in the low phase of the measurement clock, so a code change
+  selects a different tap instead of re-timing an event.
 
-The real IO corner spread (1.77/2.57/4.22 ns at FF/TT/SS for a 5 ns
-period) still means a static selector tap cannot hold pad phase across
-PVT; the DLL/phase-tracking path is required, but its real DCDL range and
-PD architecture are the blockers above.
+`src/dll_full_period_tb.v` (behavioral 4-seg surrogate, T0/STEP from the
+STA endpoints, 10 GHz TICK):
+
+```text
+TT 5 ns : LOCKED=1 CODE=58 phase=-40 ps
+SS 5 ns : LOCKED=1 CODE=26 phase=-94 ps
+FF 5 ns : LOCKED=1 CODE=90 phase=-60 ps
+4 ns    : LOCKED=1 CODE=30 period=40 ticks phase=-20 ps
+2T start: LOCKED=1 CODE=65 acq_delay=49 ticks phase=-60 ps  (1T, not 2T)
+0T      : ACQ_FAIL=1 CODE=279 (railed) delay=3 ticks  (0.3 ns)
+0.5T    : ACQ_FAIL=1 CODE=279 (railed) delay=25 ticks (2.5 ns)
+2T      : ACQ_FAIL=1 CODE=0   (railed) delay=85 ticks (8.5 ns)
+```
+
+The 0T/0.5T/2T DUTs assert no `LOCKED`, `PHASE_OK` or `RANGE_OK` at any
+time.  The 2T-start DUT starts at 10.6 ns absolute delay and must converge
+to the 1T tap; it does, with `acq_delay` ~49 ticks.
+
+PHY integration (`src/ddr_clock_phy_dll_tb.v`, uniform 200 MHz, 30% input
+duty, `USE_DLL=1`):
+
+```text
+DCC_LOCKED=1 DLL_LOCKED=1 DLY_CODE=58 DLL_ERR=0
+DLL delay=4.960 ns period=5.000 ns mod=4.960 ns
+CK_PHY high=2.500 low=2.500 period=5.000 duty=50.0%
+PASS (fail-closed on PLL_LOCKED drop)
+```
+
+The production blockers are now the real-cell (gate-level/SDF), placed/PEX
+and PVT/jitter verification of this DLL.  The TT/SS/FF numbers above use a
+linearized T0/STEP map, not the full nonlinear code-to-delay surface, and
+the DLL reference must be a uniform clock.  `USE_DLL=0` remains the verified
+fallback.
 
 ## 8. Not done
 
@@ -188,6 +226,13 @@ PD architecture are the blockers above.
   scope for this fixed first version.
 - The real-cell check is a Liberty-corner structural/timing measurement,
   not a placed/parasitic timing signoff.
+- The Route B DLL is verified behaviorally at TT/SS/FF.  There is no
+  gate-level/SDF or placed/PEX run of the new DLL, and no PVT/jitter
+  signoff.  The code-to-delay map is a linear surrogate of the 4-seg STA
+  endpoints.
+- The raw ADPLL `OUT_DIV` is a fractional-divider clock with non-uniform
+  edge spacing; a full-period DLL cannot lock it.  The PHY DLL path requires
+  a uniform integer-divided reference.
 
 ## 9. SoC PLL scope
 
