@@ -344,9 +344,9 @@ module DLL_TDC_PHYS #(
     // ------------------------------------------------------ period code
     // LINE_ACQ starts at the ACQ_CLK edge.  The REF sampler at the next edge
     // sees one REF period; the encoder output is available one REF later.
-    reg [3:0]  acq_dly;
-    reg [15:0] period_r;
-    reg [319:0] first_therm;
+    (* keep *) reg [3:0]  acq_dly;
+    (* keep *) reg [15:0] period_r;
+    (* keep *) reg [319:0] first_therm;
     wire [8:0] first_enc;
     DLL_PRIO320_HI u_first_enc (.T(first_therm), .C(first_enc));
     always @(posedge REF or negedge RST_N) begin
