@@ -168,6 +168,78 @@ module DLL_PRIO320 (
     end
 endmodule
 
+module DLL_PRIO320_HI (
+    input  wire [319:0] T,
+    output reg  [8:0]   C
+);
+    wire [9:0] any;
+    reg  [5:0] hi0, hi1, hi2, hi3, hi4, hi5, hi6, hi7, hi8, hi9;
+    integer i;
+    assign any[0] = |T[31:0];
+    assign any[1] = |T[63:32];
+    assign any[2] = |T[95:64];
+    assign any[3] = |T[127:96];
+    assign any[4] = |T[159:128];
+    assign any[5] = |T[191:160];
+    assign any[6] = |T[223:192];
+    assign any[7] = |T[255:224];
+    assign any[8] = |T[287:256];
+    assign any[9] = |T[319:288];
+    always @* begin
+        hi0 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[i]) hi0 = i + 1;
+    end
+    always @* begin
+        hi1 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[32+i]) hi1 = i + 1;
+    end
+    always @* begin
+        hi2 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[64+i]) hi2 = i + 1;
+    end
+    always @* begin
+        hi3 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[96+i]) hi3 = i + 1;
+    end
+    always @* begin
+        hi4 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[128+i]) hi4 = i + 1;
+    end
+    always @* begin
+        hi5 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[160+i]) hi5 = i + 1;
+    end
+    always @* begin
+        hi6 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[192+i]) hi6 = i + 1;
+    end
+    always @* begin
+        hi7 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[224+i]) hi7 = i + 1;
+    end
+    always @* begin
+        hi8 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[256+i]) hi8 = i + 1;
+    end
+    always @* begin
+        hi9 = 0;
+        for (i = 0; i < 32; i = i + 1) if (T[288+i]) hi9 = i + 1;
+    end
+    always @* begin
+        if (any[9])      C = 288 + hi9;
+        else if (any[8]) C = 256 + hi8;
+        else if (any[7]) C = 224 + hi7;
+        else if (any[6]) C = 192 + hi6;
+        else if (any[5]) C = 160 + hi5;
+        else if (any[4]) C = 128 + hi4;
+        else if (any[3]) C = 96 + hi3;
+        else if (any[2]) C = 64 + hi2;
+        else if (any[1]) C = 32 + hi1;
+        else if (any[0]) C = hi0;
+        else             C = 0;
+    end
+endmodule
+
 module DLL_TDC_PHYS #(
     parameter integer NTAP = 320,
     parameter integer CELL_PS = 35,
@@ -203,7 +275,7 @@ module DLL_TDC_PHYS #(
         .IN(phase_start), .TAP(phase_tap)
     );
     DLL_TDC_LINE #(.NTAP(NTAP), .CELL_PS(CELL_PS), .IMPL(IMPL)) u_acq (
-        .IN(acq_start), .TAP(acq_tap)
+        .IN(ACQ_CLK), .TAP(acq_tap)
     );
 
     // ------------------------------------------------------ samplers
@@ -215,8 +287,16 @@ module DLL_TDC_PHYS #(
         else        phase_therm <= phase_tap[NTAP-1:0];
     end
     always @(posedge REF or negedge RST_N) begin
-        if (!RST_N) acq_therm_ref <= {NTAP{1'b0}};
-        else        acq_therm_ref <= acq_tap[NTAP-1:0];
+        if (!RST_N) begin
+            acq_therm_ref <= {NTAP{1'b0}};
+            first_therm   <= {320{1'b0}};
+        end else begin
+            acq_therm_ref <= acq_tap[NTAP-1:0];
+            // Capture the sampler Q of the first REF after the ACQ edge in
+            // the same always as the sampler, so the next 2T wavefront cannot
+            // overwrite it.
+            if (acq_dly[1]) first_therm <= acq_therm_ref;
+        end
     end
     always @(posedge MON_OUT or negedge RST_N) begin
         if (!RST_N) acq_therm_mon <= {NTAP{1'b0}};
@@ -227,8 +307,8 @@ module DLL_TDC_PHYS #(
     wire [CODE_BITS-1:0] acq_code_ref;
     wire [CODE_BITS-1:0] acq_code_mon;
     DLL_PRIO320 u_phase_enc (.T(phase_therm), .C(phase_code));
-    DLL_PRIO320 u_acq_ref_enc (.T(acq_therm_ref), .C(acq_code_ref));
-    DLL_PRIO320 u_acq_mon_enc (.T(acq_therm_mon), .C(acq_code_mon));
+    DLL_PRIO320_HI u_acq_ref_enc (.T(acq_therm_ref), .C(acq_code_ref));
+    DLL_PRIO320_HI u_acq_mon_enc (.T(acq_therm_mon), .C(acq_code_mon));
 
     // ------------------------------------------------ event handshakes
     // The phase/monitor codes are captured in their sampler domains and
@@ -264,21 +344,24 @@ module DLL_TDC_PHYS #(
     // ------------------------------------------------------ period code
     // LINE_ACQ starts at the ACQ_CLK edge.  The REF sampler at the next edge
     // sees one REF period; the encoder output is available one REF later.
-    reg [2:0]  acq_dly;
+    reg [3:0]  acq_dly;
     reg [15:0] period_r;
-    reg [15:0] acq_code_q;
+    reg [319:0] first_therm;
+    wire [8:0] first_enc;
+    DLL_PRIO320_HI u_first_enc (.T(first_therm), .C(first_enc));
     always @(posedge REF or negedge RST_N) begin
         if (!RST_N) begin
-            acq_dly   <= 3'd0;
-            period_r  <= 16'd0;
-            acq_code_q <= 16'd0;
+            acq_dly     <= 4'd0;
+            period_r    <= 16'd0;
+            first_therm <= {320{1'b0}};
         end else begin
-            acq_dly <= {acq_dly[1:0], ACQ_LATCH};
-            acq_code_q <= {7'b0, acq_code_ref};
-            // One REF after the first REF sample: acq_code_q holds the period
-            // code captured at that first sample, not the later 2T wavefront.
-            if (acq_dly[2])
-                period_r <= acq_code_q;
+            acq_dly <= {acq_dly[2:0], ACQ_LATCH};
+            // ACQ_LATCH is one REF before the ACQ edge.  The first REF sample
+            // after the edge is acq_dly[1]; capture that sampler Q (not the
+            // encoder output, which can see the next 2T wavefront) at
+            // acq_dly[2], and register its code at acq_dly[3].
+            if (acq_dly[3])
+                period_r <= {7'b0, first_enc};
         end
     end
     assign period_ticks = period_r;
