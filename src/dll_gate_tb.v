@@ -42,8 +42,9 @@ module dll_gate_tb;
                 // up as a small ph; unwrap it by one period and require the
                 // delay to be a full period, not one period plus an offset.
                 delay = (ph < 2.5) ? ph + 5.0 : ph;
-                $display("GL DLL: LOCKED after %0d REF, CODE=%0d phase=%0.3f delay=%0.3f",
-                         k, CODE, ph, delay);
+                $display("GL DLL: LOCKED after %0d REF, CODE=%0d phase=%0.3f delay=%0.3f per=%0d main=%0d mon=%0d",
+                         k, CODE, ph, delay, dut.period_ticks, dut.main_stamp,
+                         dut.mon_stamp);
                 if (delay < 4.0 || delay >= 5.1) begin
                     $display("FAIL: gate-level DLL phase not full-period (delay=%0.3f)", delay);
                     $fatal(1, "phase");

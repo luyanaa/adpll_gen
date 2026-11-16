@@ -285,25 +285,35 @@ FF: period_ext=230 main=212 mon=207
 PASS: physical TDC line + gate-level/SDF smoke at TT/SS/FF
 ```
 
-Full DLL gate-level/SDF (`dll_gate_tb`, full-period delay, all corners):
+Full DLL gate-level/SDF (`dll_gate_tb`, full-period phase, all corners):
 
 ```text
-TT: LOCKED after 132 REF, CODE=98, delay=4.526 ns
-SS: LOCKED after 132 REF, CODE=46, delay=5.005 ns
-FF: LOCKED after 116 REF, CODE=178, delay=4.961 ns
+TT: LOCKED after 146 REF, CODE=111, delay=4.696 ns, per=142 main=142 mon=143
+SS: LOCKED after 130 REF, CODE=46,  delay=4.729 ns, per=82  main=83  mon=88
+FF: LOCKED after 115 REF, CODE=178, delay=4.777 ns, per=222 main=222 mon=212
 dll_gate_tb: PASS (TT/SS/FF)
 ```
+
+The captured period and the tracking phase code are equal at every corner
+(142/142, 82/83, 222/222); the external ns delay is ~94% of the nominal REF
+period because the phase-sampler clock buffer shifts the measured edge by
+~0.3 ns.  The DLL is locked to exactly one measured period, not to 0T or 2T.
 
 Closure fixes that were required for the gate netlist:
 
 - 16-slice buffered sampler clock trees for the 320-flop phase/ACQ/monitor
   banks; wiring OUT/REF/MON_OUT directly to 320 clock pins produced a ~6 ns
   clock-path delay in the ics55 netlist.
-- `DLL_ACQ_PERIOD` blackboxed for Yosys (ports-only stub) with the RTL body
-  compiled only by Icarus; the ACQ period is computed outside the folded TDC.
+- `DLL_ACQ_PERIOD` is synthesized as real gates (flops plus a self-contained
+  320-input priority encoder); there is no blackbox instance, and
+  `assign period_ticks = {7'h00, period_r[8:0]}` keeps the full period bus.
+  The OpenSTA SDF includes the period flops (CK->Q 0.129-0.141 ns at TT).
 - `ad`/`md`/`pd` rewritten as signed combinational wires; the previous
   self-referencing `integer` always blocks were dropped by Yosys and left
   `pd=z` in the netlist.
+- SDF `COND` blocks are unwrapped rather than deleted; OpenSTA writes flop
+  CK->Q/RN->Q arcs under COND, and deleting them left the flop CELLs empty
+  and dropped the period-capture timing.
 - Buffered bypass in `PLL_SEGMENTED_DELAY_PHYS`; the bypass mux was driving
   the next 56-cell segment and the minimum code delay was ~6.18 ns (>1 REF
   period).

@@ -260,6 +260,9 @@ module DLL_TDC_PHYS #(
     output wire [15:0]           mon_stamp,
     output wire                  mon_tog,
     output wire [15:0]           acq_stamp,
+    // Buffered REF used by the sampler banks; the ACQ period capture must use
+    // the same clock so it samples the bank Q in the same domain.
+    output wire                  REF_CLK,
     // Exposed ACQ sampler pipeline; the top/TB computes the period code
     // outside this module so Yosys/ABC cannot fold it away.
     output wire [319:0]          acq_therm_ref_out,
@@ -422,4 +425,18 @@ module DLL_TDC_PHYS #(
     assign mon_tog    = mt2;
     assign acq_therm_ref_out = acq_therm_ref;
     assign acq_dly_out       = acq_dly;
+    // Dedicated 4-buffer capture clock.  The sampler bank uses one buffer
+    // with a 20-flop load; this light 4-buffer chain is later at every corner
+    // so the period capture sees the bank Q after it updates.
+    wire [4:0] ref_cap;
+    assign ref_cap[0] = REF;
+    genvar gcap;
+    generate
+        for (gcap = 0; gcap < 4; gcap = gcap + 1) begin : ref_cap_buf
+            (* keep *) FINE_DELAY_CELL u_rc (
+                .MUX(1'b1), .IN(ref_cap[gcap]), .OUT(ref_cap[gcap+1])
+            );
+        end
+    endgenerate
+    assign REF_CLK           = ref_cap[4];
 endmodule

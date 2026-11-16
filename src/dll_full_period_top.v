@@ -87,6 +87,27 @@ module DLL_FULL_PERIOD_TOP #(
     // intentionally uses a clock as data; Verilator flags this as
     // SYNCASYNCNET in addition to its legitimate clock use.
     wire       line_in = acq_mode ? (acq_armed ? acq_clk : 1'b0) : REF;
+    // Matched launch buffers.  div[3] has a large load (TDC ACQ line +
+    // monitor DCDL) and its launch delay otherwise appears as a short
+    // measured period.  The phase-line input gets the same buffer so the
+    // period and phase comparisons see the same launch delay.
+    wire acq_clk_buf, mon_clk_buf, line_in_buf;
+    wire acq_clk_b1, acq_clk_b2;
+    FINE_DELAY_CELL u_acq_clk_buf (
+        .MUX(1'b1), .IN(acq_clk), .OUT(acq_clk_buf)
+    );
+    FINE_DELAY_CELL u_acq_clk_b1 (
+        .MUX(1'b1), .IN(acq_clk_buf), .OUT(acq_clk_b1)
+    );
+    FINE_DELAY_CELL u_acq_clk_b2 (
+        .MUX(1'b1), .IN(acq_clk_b1), .OUT(acq_clk_b2)
+    );
+    FINE_DELAY_CELL u_mon_clk_buf (
+        .MUX(1'b1), .IN(acq_clk), .OUT(mon_clk_buf)
+    );
+    FINE_DELAY_CELL u_line_in_buf (
+        .MUX(1'b1), .IN(line_in), .OUT(line_in_buf)
+    );
 
     reg [CODE_BITS-1:0] code_target;
     reg [CODE_BITS-1:0] code_active;
@@ -107,7 +128,7 @@ module DLL_FULL_PERIOD_TOP #(
         .IMPL(DLL_IMPL), .CODE_BITS(CODE_BITS),
         .T0_PS(T0_PS), .CELL_PS(CELL_PS), .EXTRA_PS(EXTRA_PS)
     ) u_mon (
-        .CLK_IN(acq_clk), .CODE(code), .CLK_OUT(mon_out)
+        .CLK_IN(mon_clk_buf), .CODE(code), .CLK_OUT(mon_out)
     );
     assign OUT = main_out;
 
@@ -121,12 +142,24 @@ module DLL_FULL_PERIOD_TOP #(
     );
 
     // ------------------------------------------------------------------ TDC
-    wire [15:0] ref_stamp, period_ticks, main_stamp, mon_stamp, acq_stamp;
+    wire [15:0] ref_stamp, main_stamp, mon_stamp, acq_stamp;
+    (* keep *) wire [15:0] period_ticks;
     wire        main_tog, mon_tog;
-    wire        acq_latch = (div == 4'd7);
+    // Registered one-cycle pulse, matching the physical-TDC ACQ timing in
+    // the verified TDC-only flow.  The previous combinational (div==7)
+    // shifted the ACQ period pipeline one REF early and sampled the period
+    // before the first REF edge after the ACQ launch.
+    reg         acq_latch_r;
+    always @(posedge REF) begin
+        if (!RST_N) acq_latch_r <= 1'b0;
+        else        acq_latch_r <= (div == 4'd7);
+    end
+    wire        acq_latch = (TDC_IMPL == 0) ? (div == 4'd7) : acq_latch_r;
     wire [319:0] tdc_acq_therm;
     wire [4:0]   tdc_acq_dly;
+    wire         tdc_ref_clk;
     wire [15:0]  tdc_period_unused;
+    (* keep *) wire [15:0] period_unused;
 
     generate
         if (TDC_IMPL == 0) begin : tdc_sim
@@ -143,7 +176,7 @@ module DLL_FULL_PERIOD_TOP #(
                 .NTAP(TDC_NTAP), .CELL_PS(TDC_CELL_PS),
                 .IMPL(TDC_LINE_IMPL)
             ) u_tdc (
-                .REF(REF), .ACQ_CLK(acq_clk), .PHASE_IN(line_in),
+                .REF(REF), .ACQ_CLK(acq_clk_b2), .PHASE_IN(line_in_buf),
                 .OUT(main_out), .MON_OUT(mon_out),
                 .RST_N(RST_N), .ACQ_LATCH(acq_latch),
                 .ref_stamp(ref_stamp), .period_ticks(tdc_period_unused),
@@ -151,14 +184,18 @@ module DLL_FULL_PERIOD_TOP #(
                 .mon_stamp(mon_stamp), .mon_tog(mon_tog),
                 .acq_stamp(acq_stamp),
                 .acq_therm_ref_out(tdc_acq_therm),
-                .acq_dly_out(tdc_acq_dly)
+                .acq_dly_out(tdc_acq_dly),
+                .REF_CLK(tdc_ref_clk)
             );
             DLL_ACQ_PERIOD u_acq_period (
-                .REF(REF), .RST_N(RST_N),
+                .REF(REF), .RST_N(RST_N), .ACQ_CLK(acq_clk_buf),
                 .ACQ_THERM(tdc_acq_therm), .ACQ_DLY(tdc_acq_dly),
-                .PERIOD(period_ticks),
+                // Use the DBG_PERIOD output (the full period_r bus); the
+                // PERIOD port is aliased to period_r[0] by Yosys's width
+                // optimization in this flattened context.
+                .PERIOD(period_unused),
                 .DBG_DLY(DBG_ACQ_DLY), .DBG_FIRST(DBG_FIRST),
-                .DBG_PERIOD(DBG_PERIOD)
+                .DBG_PERIOD(period_ticks)
             );
         end
     endgenerate
@@ -197,6 +234,7 @@ module DLL_FULL_PERIOD_TOP #(
     wire [15:0] acq_tol   = (period_ticks >> ACQ_TOL_DIV) + 1;
     wire [15:0] mon_tol   = ((period_ticks * MON_TOL_NUM) / MON_TOL_DEN) + 1;
 
+    assign DBG_PERIOD = period_ticks;
     assign ACQ_BUSY = acq_busy;
     assign ACQ_OK   = acq_ok;
     assign ACQ_FAIL = acq_fail;
