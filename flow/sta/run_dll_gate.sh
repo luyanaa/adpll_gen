@@ -12,7 +12,7 @@ STD=$PDK/libs.ref/ics55_LLSC_H7CR
 LIB=$STD/liberty/ics55_LLSC_H7CR_typ_tt_1p2_25_nldm.lib
 CELLS_V=$STD/verilog/ics55_LLSC_H7CR.v
 mkdir -p "$OUT"
-$YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/fine_delay.v $ROOT/src/dll_dcdl.v $ROOT/src/pll_segmented_delay_phys.v $ROOT/src/dll_tdc.v $ROOT/src/dll_tdc_phys.v $ROOT/src/dll_full_period_top.v; setattr -mod -unset keep_hierarchy; setattr -mod -unset keep; chparam -set TDC_IMPL 1 -set TDC_LINE_IMPL 1 -set DLL_IMPL 1 DLL_FULL_PERIOD_TOP; synth -top DLL_FULL_PERIOD_TOP -flatten; dfflibmap -liberty $LIB; abc -liberty $LIB; write_verilog -noattr $OUT/dll_gate_net.v; stat" \
+$YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/fine_delay.v $ROOT/src/dll_dcdl.v $ROOT/src/pll_segmented_delay_phys.v $ROOT/src/dll_tdc.v $ROOT/src/dll_tdc_phys.v $ROOT/src/dll_full_period_top.v; setattr -mod -unset keep_hierarchy; setattr -mod -unset keep; setattr -set keep 1 w:DLL_TDC_PHYS/th0 w:DLL_TDC_PHYS/th1 w:DLL_TDC_PHYS/first_therm w:DLL_TDC_PHYS/acq_dly w:DLL_TDC_PHYS/period_r; chparam -set TDC_IMPL 1 -set TDC_LINE_IMPL 1 -set DLL_IMPL 1 DLL_FULL_PERIOD_TOP; synth -top DLL_FULL_PERIOD_TOP -flatten; dfflibmap -liberty $LIB; abc -liberty $LIB; write_verilog -noattr $OUT/dll_gate_net.v; stat" \
   > "$OUT/dll_gate.yosys.log"
 STD_LIB=$LIB NETLIST=$OUT/dll_gate_net.v SDF_OUT=$OUT/dll_gate_tt.sdf \
   $STA -no_init -exit "$ROOT/flow/sta/dll_gate.sta.tcl" > "$OUT/dll_gate_tt.sta.log"

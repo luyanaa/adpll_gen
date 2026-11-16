@@ -16,7 +16,7 @@ CELLS_V=$STD/verilog/ics55_LLSC_H7CR.v
 mkdir -p "$OUT"
 
 echo "== Yosys physical TDC =="
-$YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/fine_delay.v $ROOT/src/dll_dcdl.v $ROOT/src/pll_segmented_delay_phys.v $ROOT/src/dll_tdc_phys.v $ROOT/flow/sta/dll_tdc_phys_meas.v; setattr -mod -unset keep_hierarchy; setattr -mod -unset keep; synth -top DLL_TDC_PHYS_MEAS -flatten; dfflibmap -liberty $STD_TT; abc -liberty $STD_TT; write_verilog -noattr $OUT/tdc_phys_net.v; stat" \
+$YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/fine_delay.v $ROOT/src/dll_dcdl.v $ROOT/src/pll_segmented_delay_phys.v $ROOT/src/dll_tdc_phys.v $ROOT/flow/sta/dll_tdc_phys_meas.v; setattr -mod -unset keep_hierarchy; setattr -mod -unset keep; setattr -set keep 1 w:DLL_TDC_PHYS/th0 w:DLL_TDC_PHYS/th1 w:DLL_TDC_PHYS/first_therm w:DLL_TDC_PHYS/acq_dly w:DLL_TDC_PHYS/period_r; synth -top DLL_TDC_PHYS_MEAS -flatten; dfflibmap -liberty $STD_TT; abc -liberty $STD_TT; write_verilog -noattr $OUT/tdc_phys_net.v; stat" \
   > "$OUT/tdc_phys.yosys.log"
 
 echo "== Yosys TDC line =="

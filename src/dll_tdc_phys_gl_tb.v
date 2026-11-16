@@ -24,7 +24,7 @@ module dll_tdc_phys_gl_tb;
     always @(posedge ACQ) MON_OUT <= #(4.5) 1'b1;
     always @(negedge ACQ) MON_OUT <= #(4.5) 1'b0;
 
-    reg RST_N = 1'b0;
+    reg RST_N = 1'b1;
     wire [15:0] ref_stamp, period_ticks, main_stamp, mon_stamp, acq_stamp;
     wire main_tog, mon_tog;
 
@@ -42,7 +42,8 @@ module dll_tdc_phys_gl_tb;
 
     integer k;
     initial begin
-        #2 RST_N = 1'b1;
+        #1 RST_N = 1'b0;
+        #20 RST_N = 1'b1;
         repeat (40) @(posedge REF);
         $display("GL TDC: period=%0d main=%0d mon=%0d", period_ticks,
                  main_stamp, mon_stamp);
