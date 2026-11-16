@@ -63,7 +63,10 @@ module DLL_FULL_PERIOD_TOP #(
     output wire                  PFD_DN,
     output wire                  ACQ_BUSY,
     output wire                  ACQ_OK,
-    output wire                  ACQ_FAIL
+    output wire                  ACQ_FAIL,
+    output wire [4:0]            DBG_ACQ_DLY,
+    output wire [8:0]            DBG_FIRST,
+    output wire [15:0]           DBG_PERIOD
 );
     // ---------------------------------------------------------------- lines
     reg        acq_mode;
@@ -143,7 +146,9 @@ module DLL_FULL_PERIOD_TOP #(
             DLL_ACQ_PERIOD u_acq_period (
                 .REF(REF), .RST_N(RST_N),
                 .ACQ_THERM(tdc_acq_therm), .ACQ_DLY(tdc_acq_dly),
-                .PERIOD(period_ticks)
+                .PERIOD(period_ticks),
+                .DBG_DLY(DBG_ACQ_DLY), .DBG_FIRST(DBG_FIRST),
+                .DBG_PERIOD(DBG_PERIOD)
             );
         end
     endgenerate

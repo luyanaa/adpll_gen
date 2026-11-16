@@ -5,7 +5,10 @@ module DLL_ACQ_PERIOD (
     input  wire         RST_N,
     input  wire [319:0] ACQ_THERM,
     input  wire [4:0]   ACQ_DLY,
-    output wire [15:0]  PERIOD
+    output wire [15:0]  PERIOD,
+    output wire [4:0]   DBG_DLY,
+    output wire [8:0]   DBG_FIRST,
+    output wire [15:0]  DBG_PERIOD
 );
     reg [319:0] th0, th1, first;
     reg [15:0]  period_r;
@@ -35,4 +38,7 @@ module DLL_ACQ_PERIOD (
         end
     end
     assign PERIOD = period_r;
+    assign DBG_DLY = ACQ_DLY;
+    assign DBG_FIRST = count_ones(first);
+    assign DBG_PERIOD = period_r;
 endmodule
