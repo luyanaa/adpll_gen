@@ -33,6 +33,8 @@ def main() -> int:
     text = open(sys.argv[1], encoding="utf-8").read()
     text = strip_group(text, "(COND")
     text = strip_group(text, "(TIMINGCHECK")
+    text = strip_group(text, '(CELL\n  (CELLTYPE "DLL_FULL_PERIOD_TOP")')
+    text = strip_group(text, '(CELL\n  (CELLTYPE "DLL_ACQ_PERIOD")')
     open(sys.argv[2], "w", encoding="utf-8").write(text)
     print(f"wrote {sys.argv[2]}")
     return 0

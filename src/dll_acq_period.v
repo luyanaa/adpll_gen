@@ -1,6 +1,5 @@
 // ACQ period capture, blackboxed for Yosys/ABC so the sampler pipeline is
 // never constant-folded.  Icarus uses this RTL body in gate-level/SDF runs.
-(* blackbox *)
 module DLL_ACQ_PERIOD (
     input  wire         REF,
     input  wire         RST_N,
