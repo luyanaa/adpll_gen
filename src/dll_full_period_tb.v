@@ -58,8 +58,7 @@ module dll_full_period_tb;
 
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(2930), .CELL_PS(30), .EXTRA_PS(62),
-        .CODE_MIN(45), .CODE_MAX(116), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
+        .CODE_MIN(45), .CODE_MAX(116),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
     ) u_tt (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd88),
@@ -71,8 +70,7 @@ module dll_full_period_tb;
 
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(3320), .CELL_PS(52), .EXTRA_PS(75),
-        .CODE_MIN(20), .CODE_MAX(61), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(3000)
+        .CODE_MIN(20), .CODE_MAX(61),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(3000)
     ) u_ss (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd44),
@@ -84,8 +82,7 @@ module dll_full_period_tb;
 
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(2780), .CELL_PS(20), .EXTRA_PS(70),
-        .CODE_MIN(72), .CODE_MAX(176), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
+        .CODE_MIN(72), .CODE_MAX(176),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
     ) u_ff (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd134),
@@ -98,8 +95,7 @@ module dll_full_period_tb;
     // Starts at 2T (10.6 ns), can reach 1T.
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(0), .CELL_PS(75), .EXTRA_PS(0),
-        .CODE_MIN(0), .CODE_MAX(279), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(3000)
+        .CODE_MIN(0), .CODE_MAX(279),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(3000)
     ) u_2s (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd139),
@@ -112,8 +108,7 @@ module dll_full_period_tb;
     // 4 ns input: TT line covers it; the target is the measured REF period.
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(2930), .CELL_PS(30), .EXTRA_PS(62),
-        .CODE_MIN(0), .CODE_MAX(116), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
+        .CODE_MIN(0), .CODE_MAX(116),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
     ) u_4n (
         .REF(REF4), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd31),
@@ -126,8 +121,7 @@ module dll_full_period_tb;
     // 0T: max delay 0.28 ns.
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(0), .CELL_PS(1), .EXTRA_PS(0),
-        .CODE_MIN(0), .CODE_MAX(279), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
+        .CODE_MIN(0), .CODE_MAX(279),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
     ) u_0t (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd10),
@@ -140,8 +134,7 @@ module dll_full_period_tb;
     // 0.5T: max delay 2.51 ns.
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(0), .CELL_PS(9), .EXTRA_PS(0),
-        .CODE_MIN(0), .CODE_MAX(279), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
+        .CODE_MIN(0), .CODE_MAX(279),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(1200)
     ) u_half (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd139),
@@ -154,8 +147,7 @@ module dll_full_period_tb;
     // 2T: min delay 8.5 ns, never reaches 1T.
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(8500), .CELL_PS(30), .EXTRA_PS(0),
-        .CODE_MIN(0), .CODE_MAX(279), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
+        .CODE_MIN(0), .CODE_MAX(279),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
     ) u_2t (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd139),

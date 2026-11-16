@@ -23,6 +23,10 @@
 // measurement drops RANGE_OK and restarts acquisition.
 //
 // LOCKED = RANGE_OK & PHASE_OK & !CODE_RAILED & ALIVE.
+/* verilator lint_off SYNCASYNCNET */
+/* verilator lint_off UNUSEDSIGNAL */
+// REF/acq_clk are clocks and also the delay-line data input; a clock-delay
+// line intentionally uses a clock as data.  acq_delay is read by the TB.
 module DLL_FULL_PERIOD_TOP #(
     parameter integer TAPS = 280,
     parameter integer CODE_BITS = 9,
@@ -32,7 +36,6 @@ module DLL_FULL_PERIOD_TOP #(
     parameter integer DLL_IMPL = 0,
     parameter integer CODE_MIN = 45,
     parameter integer CODE_MAX = 116,
-    parameter integer PERIOD_TICKS = 50,
     parameter integer LOCK_COUNT = 16,
     // Commit guard: must exceed the fine-tap span and stay below the REF
     // low phase.  At SS the fine span is larger than the low phase, so the
@@ -62,6 +65,9 @@ module DLL_FULL_PERIOD_TOP #(
     reg        acq_armed;
     reg  [3:0] div;
     wire       acq_clk = div[3];
+    // REF/acq_clk are also the delay-line data input.  A clock-delay line
+    // intentionally uses a clock as data; Verilator flags this as
+    // SYNCASYNCNET in addition to its legitimate clock use.
     wire       line_in = acq_mode ? (acq_armed ? acq_clk : 1'b0) : REF;
 
     reg [CODE_BITS-1:0] code_target;
@@ -106,7 +112,7 @@ module DLL_FULL_PERIOD_TOP #(
         .mon_stamp(mon_stamp), .mon_tog(mon_tog),
         .acq_stamp(acq_stamp)
     );
-    reg  [15:0] acq_delay;
+    reg  [15:0] acq_delay;  // exposed for the testbench range check
     wire [15:0] acq_period = (period_ticks << 4);
     integer ad, md;
     always @* begin
@@ -124,7 +130,7 @@ module DLL_FULL_PERIOD_TOP #(
 
     // ------------------------------------------------------- REF controller
     reg        main_tog_seen, mon_tog_seen;
-    reg        main_evt, mon_evt;
+    reg        main_evt;
     reg [2:0]  alive_cnt;
     reg [1:0]  acq_settle;
     reg [7:0]  phase_good;
@@ -132,11 +138,8 @@ module DLL_FULL_PERIOD_TOP #(
     reg        acq_ok, acq_fail, acq_busy;
     reg  [3:0] flush;
     reg [CODE_BITS-1:0] lo, hi;
-    reg [15:0] phase_delta;
-    reg [15:0] mon_delta_r;
     reg        range_live;
     reg [1:0]  mon_bad;
-    integer    dd;
     integer    pd;
 
     wire [2:0] active_coarse = code_active / 56;
@@ -173,10 +176,9 @@ module DLL_FULL_PERIOD_TOP #(
             commit_tog <= 1'b0;
             lo <= CODE_MIN; hi <= CODE_MAX;
             main_tog_seen <= 1'b0; mon_tog_seen <= 1'b0;
-            main_evt <= 1'b0; mon_evt <= 1'b0;
+            main_evt <= 1'b0;
             alive_cnt <= 3'd0; acq_settle <= 2'd0;
             phase_good <= 8'd0; phase_ok_r <= 1'b0;
-            phase_delta <= 16'd0; mon_delta_r <= 16'd0;
             range_live <= 1'b0; mon_bad <= 2'd0;
         end else if (!EN) begin
             div <= 4'd0; acq_mode <= 1'b0; acq_armed <= 1'b0; flush <= 4'd0;
@@ -185,10 +187,9 @@ module DLL_FULL_PERIOD_TOP #(
             commit_tog <= 1'b0;
             lo <= CODE_MIN; hi <= CODE_MAX;
             main_tog_seen <= 1'b0; mon_tog_seen <= 1'b0;
-            main_evt <= 1'b0; mon_evt <= 1'b0;
+            main_evt <= 1'b0;
             alive_cnt <= 3'd0; acq_settle <= 2'd0;
             phase_good <= 8'd0; phase_ok_r <= 1'b0;
-            phase_delta <= 16'd0; mon_delta_r <= 16'd0;
             range_live <= 1'b0; mon_bad <= 2'd0;
         end else begin
             div <= div + 1'b1;
@@ -199,7 +200,6 @@ module DLL_FULL_PERIOD_TOP #(
                 alive_cnt <= 3'd0;
                 if (acq_ok) begin
                     // tracking event; consume immediately
-                    phase_delta <= pd[15:0];
                     if ((pd <= phase_tol) ||
                         (pd >= period_ticks - phase_tol)) begin
                         if (phase_good < LOCK_COUNT[7:0])
@@ -234,7 +234,6 @@ module DLL_FULL_PERIOD_TOP #(
             // Monitor event: continuous absolute-range revalidation.
             if (mon_tog != mon_tog_seen) begin
                 mon_tog_seen <= mon_tog;
-                mon_delta_r <= md[15:0];
                 if (acq_ok && (period_ticks != 0)) begin
                     if ((md >= period_ticks - mon_tol) &&
                         (md <= period_ticks + mon_tol)) begin
@@ -285,11 +284,10 @@ module DLL_FULL_PERIOD_TOP #(
                 if ((div == 4'd0) && main_evt && (period_ticks != 0) &&
                     (acq_settle == 2'd0)) begin
                     main_evt <= 1'b0;
-                    dd = ad;
                     acq_delay <= ad[15:0];
-                    if (dd < period_ticks) begin
+                    if (ad < period_ticks) begin
                         if (code_target >= hi) begin
-                            if (dd >= period_ticks - acq_tol) begin
+                            if (ad >= period_ticks - acq_tol) begin
                                 acq_ok <= 1'b1;
                                 range_live <= 1'b1;
                                 mon_bad <= 2'd0;
@@ -304,7 +302,7 @@ module DLL_FULL_PERIOD_TOP #(
                         end
                     end else begin
                         if (code_target <= lo) begin
-                            if (dd <= period_ticks + acq_tol) begin
+                            if (ad <= period_ticks + acq_tol) begin
                                 acq_ok <= 1'b1;
                                 range_live <= 1'b1;
                                 mon_bad <= 2'd0;
@@ -378,4 +376,6 @@ module DLL_FULL_PERIOD_TOP #(
             end
         end
     end
+/* verilator lint_on UNUSEDSIGNAL */
+/* verilator lint_on SYNCASYNCNET */
 endmodule

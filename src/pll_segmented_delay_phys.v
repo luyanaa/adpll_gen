@@ -32,7 +32,7 @@ module PLL_SEGMENTED_DELAY_PHYS #(
         for (g = 0; g < NSEG; g = g + 1) begin : seg
             wire [SEG_TAPS+SEG_EXTRA_CELLS:0] chain;
             assign chain[0] = seg_node[g];
-            for (i = 0; i < SEG_TAPS; i = i + 1) begin : cell
+            for (i = 0; i < SEG_TAPS; i = i + 1) begin : stage
                 FINE_DELAY_CELL u_cell (
                     .MUX(1'b1),
                     .IN(chain[i]),
@@ -60,7 +60,7 @@ module PLL_SEGMENTED_DELAY_PHYS #(
     wire [FINE_TAPS:0] fine_chain;
     assign fine_chain[0] = seg_node[NSEG];
     generate
-        for (i = 0; i < FINE_TAPS; i = i + 1) begin : fine_cell
+        for (i = 0; i < FINE_TAPS; i = i + 1) begin : fine_stage
             FINE_DELAY_CELL u_cell (
                 .MUX(1'b1),
                 .IN(fine_chain[i]),

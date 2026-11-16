@@ -13,6 +13,8 @@
 // IMPL=1: PLL_SEGMENTED_DELAY_PHYS, the real-cell structure used by the
 //         ics55 OpenSTA range/boundary measurements.  This backend has no
 //         timing model of its own; use SDF/STA for delay.
+/* verilator lint_off ASSIGNDLY */
+// Timing model cell: the transport delay is the point of this module.
 module DLL_DELAY_CELL #(
     parameter integer DLY_PS = 0
 ) (
@@ -23,6 +25,7 @@ module DLL_DELAY_CELL #(
     always @(I) d <= #(DLY_PS) I;
     assign O = d;
 endmodule
+/* verilator lint_on ASSIGNDLY */
 
 module DLL_DCDL_SEGMENT #(
     parameter integer SEG_TAPS = 56,
@@ -55,7 +58,6 @@ module DLL_DCDL_SIM #(
     parameter integer CODE_BITS = 9,
     parameter integer SEGS = 4,
     parameter integer SEG_TAPS = 56,
-    parameter integer SEG_EXTRA_CELLS = 10,
     parameter integer FINE_TAPS = 56,
     parameter integer T0_PS = 2930,
     parameter integer CELL_PS = 30,

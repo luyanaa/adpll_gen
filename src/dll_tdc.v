@@ -91,7 +91,7 @@ module DLL_TDC #(
     // ------------------------------------------------------- REF domain
     reg  [1:0] rt_sync, ot_sync, mt_sync;
     reg        rt_prev, ot_prev, mt_prev;
-    reg [STAMP_BITS-1:0] ref_stamp_r, ref_prev, period_r;
+    reg [STAMP_BITS-1:0] ref_stamp_r, period_r;
     reg [STAMP_BITS-1:0] main_stamp_r, mon_stamp_r;
     reg [STAMP_BITS-1:0] acq_stamp_r;
     reg                  acq_pending;
@@ -102,7 +102,6 @@ module DLL_TDC #(
             rt_sync <= 2'b0; ot_sync <= 2'b0; mt_sync <= 2'b0;
             rt_prev <= 1'b0; ot_prev <= 1'b0; mt_prev <= 1'b0;
             ref_stamp_r <= {STAMP_BITS{1'b0}};
-            ref_prev    <= {STAMP_BITS{1'b0}};
             period_r    <= {STAMP_BITS{1'b0}};
             main_stamp_r <= {STAMP_BITS{1'b0}};
             mon_stamp_r  <= {STAMP_BITS{1'b0}};
@@ -115,7 +114,6 @@ module DLL_TDC #(
 
             if (ref_event) begin
                 ref_stamp_r <= ref_ts_t;
-                ref_prev    <= ref_stamp_r;
                 period_r    <= ref_ts_t - ref_stamp_r;
                 rt_prev     <= rt_sync[1];
                 if (acq_pending) begin

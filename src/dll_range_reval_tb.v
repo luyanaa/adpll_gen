@@ -24,8 +24,7 @@ module dll_range_reval_tb;
 
     DLL_FULL_PERIOD_TOP #(
         .TAPS(280), .T0_PS(2930), .CELL_PS(30), .EXTRA_PS(62),
-        .CODE_MIN(20), .CODE_MAX(170), .PERIOD_TICKS(50),
-        .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
+        .CODE_MIN(20), .CODE_MAX(170),         .LOCK_COUNT(16), .COMMIT_GUARD_PS(1800)
     ) u (
         .REF(REF), .RST_N(rst), .EN(1'b1), .TICK(TICK),
         .CODE_START(9'd88),
@@ -87,6 +86,24 @@ module dll_range_reval_tb;
             $display("FAIL: 6 ns phase not at full period, ph=%0.3f", ph);
             errors = errors + 1;
         end
+
+        // Wrong-phase extra edge: force a high pulse at half a period.
+        @(posedge REF);
+        #(half_ns + 1.0);   // clear of the previous high + 2-FF sync window
+        force u.main_out = 1'b1;
+        #0.2;
+        force u.main_out = 1'b0;
+        #0.2;
+        release u.main_out;
+        repeat (8) @(posedge REF);
+        if (ph_ok !== 1'b0 || locked !== 1'b0) begin
+            $display("FAIL: wrong-phase extra edge did not drop PHASE_OK/LOCKED, %b/%b",
+                     ph_ok, locked);
+            errors = errors + 1;
+        end else begin
+            $display("PASS: wrong-phase extra edge rejected");
+        end
+        wait_locked(1, 4000, "re-lock after wrong edge");
 
         // Missing main output edge: force the line output low.
         force u.main_out = 1'b0;
