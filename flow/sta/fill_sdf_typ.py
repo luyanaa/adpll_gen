@@ -13,7 +13,7 @@ def main() -> int:
         print("usage: fill_sdf_typ.py <in.sdf> <out.sdf>")
         return 2
     text = open(sys.argv[1], encoding="utf-8").read()
-    out = re.sub(r"\(([0-9]+\.[0-9]+)::([0-9]+\.[0-9]+)\)", repl, text)
+    out = re.sub(r"\((-?[0-9]+\.[0-9]+)::(-?[0-9]+\.[0-9]+)\)", repl, text)
     open(sys.argv[2], "w", encoding="utf-8").write(out)
     print(f"wrote {sys.argv[2]}")
     return 0
