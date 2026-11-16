@@ -43,7 +43,6 @@ module DDR_CLOCK_PHY #(
     parameter integer DLL_CODE_MIN = 20,
     parameter integer DLL_CODE_MAX = 170,
     parameter integer DLL_CODE_INIT = 55,
-    parameter integer DLL_PERIOD_TICKS = 50,
     parameter integer DLL_COMMIT_GUARD_PS = 1800,
     parameter integer FILTER_BITS = 16,
     parameter integer DCC_LOCK_COUNT = 16,
@@ -113,7 +112,6 @@ module DDR_CLOCK_PHY #(
         .TAPS(280), .T0_PS(DLL_T0_PS), .CELL_PS(DLL_CELL_PS),
         .EXTRA_PS(DLL_EXTRA_PS),
         .CODE_MIN(DLL_CODE_MIN), .CODE_MAX(DLL_CODE_MAX),
-        .PERIOD_TICKS(DLL_PERIOD_TICKS),
         .LOCK_COUNT(DLL_LOCK_COUNT),
         .COMMIT_GUARD_PS(DLL_COMMIT_GUARD_PS)
     ) u_dll (

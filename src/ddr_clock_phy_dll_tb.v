@@ -49,7 +49,7 @@ module ddr_clock_phy_dll_tb;
         .DCC_COARSE_NDELS(15), .DCC_MID_NDELS(15), .DCC_FINE_NDELS(31),
         .FILTER_BITS(16),
         .DCC_LOCK_COUNT(16), .DLL_LOCK_COUNT(16),
-        .DLL_T0_PS(2930), .DLL_STEP_PS(35),
+        .DLL_T0_PS(2930), .DLL_CELL_PS(30), .DLL_EXTRA_PS(62),
         .DLL_CODE_MIN(20), .DLL_CODE_MAX(170), .DLL_CODE_INIT(55),
         .NTAPS(16), .SEL_BITS(4), .DEAD_TICKS(2),
         .USE_DLL(1)
