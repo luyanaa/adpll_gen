@@ -259,13 +259,17 @@ module DLL_TDC_PHYS #(
     output wire                  main_tog,
     output wire [15:0]           mon_stamp,
     output wire                  mon_tog,
-    output wire [15:0]           acq_stamp
+    output wire [15:0]           acq_stamp,
+    // Exposed ACQ sampler pipeline; the top/TB computes the period code
+    // outside this module so Yosys/ABC cannot fold it away.
+    output wire [319:0]          acq_therm_ref_out,
+    output wire [4:0]            acq_dly_out
 );
     // ------------------------------------------------------ delay lines
     wire [NTAP:0] phase_tap;
     wire [NTAP:0] acq_tap;
     wire phase_start, acq_start;
-    DLL_EDGE_PULSE #(.IMPL(IMPL), .CELL_PS(CELL_PS), .CELLS(8)) u_phase_pulse (
+    DLL_EDGE_PULSE #(.IMPL(IMPL), .CELL_PS(CELL_PS), .CELLS(16)) u_phase_pulse (
         .CLK(PHASE_IN), .PULSE(phase_start)
     );
     DLL_EDGE_PULSE #(.IMPL(IMPL), .CELL_PS(CELL_PS), .CELLS(8)) u_acq_pulse (
@@ -378,4 +382,6 @@ module DLL_TDC_PHYS #(
     assign acq_stamp  = 16'd0;
     assign main_tog   = ot2;
     assign mon_tog    = mt2;
+    assign acq_therm_ref_out = acq_therm_ref;
+    assign acq_dly_out       = acq_dly;
 endmodule

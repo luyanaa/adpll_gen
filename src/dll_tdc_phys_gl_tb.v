@@ -27,6 +27,22 @@ module dll_tdc_phys_gl_tb;
     reg RST_N = 1'b1;
     wire [15:0] ref_stamp, period_ticks, main_stamp, mon_stamp, acq_stamp;
     wire main_tog, mon_tog;
+    wire [319:0] acq_therm_out;
+    wire [4:0]   acq_dly_out;
+    reg [319:0]  d_th0, d_th1, d_first;
+    reg [15:0]   period_ext;
+    integer j, cnt;
+    always @(posedge REF) begin
+        d_th0 <= acq_therm_out;
+        d_th1 <= d_th0;
+        d_first <= d_th1;
+        if (acq_dly_out[3]) begin
+            cnt = 0;
+            for (j = 0; j < 320; j = j + 1)
+                if (d_first[j]) cnt = cnt + 1;
+            period_ext <= cnt;
+        end
+    end
 
 `ifdef SDF_FILE
     initial $sdf_annotate(`SDF_FILE, dut);
@@ -37,7 +53,9 @@ module dll_tdc_phys_gl_tb;
         .MON_OUT(MON_OUT), .RST_N(RST_N), .ACQ_LATCH(ACQ_LATCH),
         .ref_stamp(ref_stamp), .period_ticks(period_ticks),
         .main_stamp(main_stamp), .main_tog(main_tog),
-        .mon_stamp(mon_stamp), .mon_tog(mon_tog), .acq_stamp(acq_stamp)
+        .mon_stamp(mon_stamp), .mon_tog(mon_tog), .acq_stamp(acq_stamp),
+        .acq_therm_ref_out(acq_therm_out),
+        .acq_dly_out(acq_dly_out)
     );
 
     integer k;
@@ -45,9 +63,9 @@ module dll_tdc_phys_gl_tb;
         #1 RST_N = 1'b0;
         #20 RST_N = 1'b1;
         repeat (40) @(posedge REF);
-        $display("GL TDC: period=%0d main=%0d mon=%0d", period_ticks,
-                 main_stamp, mon_stamp);
-        if (period_ticks == 0 || period_ticks > 400) begin
+        $display("GL TDC: period_ext=%0d internal_period=%0d main=%0d mon=%0d",
+                 period_ext, period_ticks, main_stamp, mon_stamp);
+        if (period_ext == 0 || period_ext > 400) begin
             $display("FAIL: period code out of range");
             $fatal(1, "period code");
         end
