@@ -286,16 +286,21 @@ module DLL_TDC_PHYS #(
         if (!RST_N) phase_therm <= {NTAP{1'b0}};
         else        phase_therm <= phase_tap[NTAP-1:0];
     end
+    (* keep *) reg [319:0] th0, th1;
     always @(posedge REF or negedge RST_N) begin
         if (!RST_N) begin
             acq_therm_ref <= {NTAP{1'b0}};
+            th0           <= {320{1'b0}};
+            th1           <= {320{1'b0}};
             first_therm   <= {320{1'b0}};
         end else begin
             acq_therm_ref <= acq_tap[NTAP-1:0];
-            // Capture the sampler Q of the first REF after the ACQ edge in
-            // the same always as the sampler, so the next 2T wavefront cannot
-            // overwrite it.
-            if (acq_dly[1]) first_therm <= acq_therm_ref;
+            // Unconditional sampler pipeline.  The Yosys opt otherwise
+            // dead-code-eliminates a conditional first_therm capture and
+            // ties the whole REF sampler path to zero.
+            th0 <= acq_therm_ref;
+            th1 <= th0;
+            first_therm <= th1;
         end
     end
     always @(posedge MON_OUT or negedge RST_N) begin
@@ -344,7 +349,7 @@ module DLL_TDC_PHYS #(
     // ------------------------------------------------------ period code
     // LINE_ACQ starts at the ACQ_CLK edge.  The REF sampler at the next edge
     // sees one REF period; the encoder output is available one REF later.
-    (* keep *) reg [3:0]  acq_dly;
+    (* keep *) reg [4:0]  acq_dly;
     (* keep *) reg [15:0] period_r;
     (* keep *) reg [319:0] first_therm;
     wire [8:0] first_enc;
@@ -355,12 +360,12 @@ module DLL_TDC_PHYS #(
             period_r    <= 16'd0;
             first_therm <= {320{1'b0}};
         end else begin
-            acq_dly <= {acq_dly[2:0], ACQ_LATCH};
+            acq_dly <= {acq_dly[3:0], ACQ_LATCH};
             // ACQ_LATCH is one REF before the ACQ edge.  The first REF sample
             // after the edge is acq_dly[1]; capture that sampler Q (not the
             // encoder output, which can see the next 2T wavefront) at
             // acq_dly[2], and register its code at acq_dly[3].
-            if (acq_dly[3])
+            if (acq_dly[4])
                 period_r <= {7'b0, first_enc};
         end
     end
