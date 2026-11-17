@@ -112,6 +112,21 @@ module ddr_clock_phy_dll_tb;
             errors = errors + 1;
         end
 
+        // DCC/DLL/selector duty breakdown for the CK_PHY check.
+        begin : dcc_dll_duty
+            real t0, th, tl;
+            @(posedge CK_DCC); t0 = $realtime;
+            @(negedge CK_DCC); th = $realtime - t0;
+            @(posedge CK_DCC); tl = $realtime - (t0 + th);
+            $display("ddr_clock_phy_dll: CK_DCC high=%0.3f low=%0.3f period=%0.3f duty=%0.1f%% code=%0d err=%b",
+                     th, tl, th + tl, 100.0 * th / (th + tl), DUTY_CODE, DCC_ERR);
+            @(posedge CK_DLL); t0 = $realtime;
+            @(negedge CK_DLL); th = $realtime - t0;
+            @(posedge CK_DLL); tl = $realtime - (t0 + th);
+            $display("ddr_clock_phy_dll: CK_DLL high=%0.3f low=%0.3f period=%0.3f duty=%0.1f%%",
+                     th, tl, th + tl, 100.0 * th / (th + tl));
+        end
+
         // The lock flag must correspond to a real one-period phase.
         begin : dll_phase
             real t0, t1, period, delay, modp;

@@ -119,12 +119,13 @@ module pll_freq_lock #(
             cnt_bin <= 'd0;
             sample_bin <= 'd0;
             cnt_cap <= 'd0;
-            cnt_filt <= 'd0;
             meas_accum <= 'd0;
             meas_count <= 'd0;
             cap_valid <= 1'b0;
             SAMPLE_VALID <= 1'b0;
             MEASURED_COUNT <= 'd0;
+            FREQ_OK <= 1'b0;
+            freq_miss <= 3'd0;
         end else begin
             cnt_gray_s1 <= cnt_gray;
             cnt_gray_s2 <= cnt_gray_s1;
@@ -134,7 +135,6 @@ module pll_freq_lock #(
             if(!cap_valid) begin
                 cnt_bin <= sample_bin;
                 cnt_cap <= 'd0;
-                cnt_filt <= 'd0;
                 meas_accum <= 'd0;
                 meas_count <= 'd0;
                 cap_valid <= 1'b1;
@@ -143,11 +143,6 @@ module pll_freq_lock #(
             end else begin
                 cnt_cap <= (sample_bin - cnt_bin) << PS_SHIFT;
                 cnt_bin <= sample_bin;
-                // Standby freezes only the IIR; the raw delta, FREQ_OK and
-                // the measurement interface stay live so a FREQ_OK drop can
-                // reopen the FLL.
-                if (!fll_standby)
-                    cnt_filt <= (cnt_filt * 3 + ((sample_bin - cnt_bin) << PS_SHIFT) + 2) >> 2;
                 if(meas_count == MEAS_PERIODS - 1) begin
                     MEASURED_COUNT <= meas_accum + ((sample_bin - cnt_bin) << PS_SHIFT);
                     meas_accum <= 'd0;
@@ -158,6 +153,19 @@ module pll_freq_lock #(
                     meas_count <= meas_count + 1'b1;
                     SAMPLE_VALID <= 1'b0;
                 end
+            end
+            // Live FCW window: this stays on REF even when the FLL
+            // IIR/tuning clock is gated, so a FREQ_OK drop can reopen it.
+            if (!cap_valid) begin
+                FREQ_OK <= 1'b0;
+                freq_miss <= 3'd0;
+            end else if ((cnt_cap >= FCW_NA) && (cnt_cap <= FCW_PA)) begin
+                FREQ_OK <= 1'b1;
+                freq_miss <= 3'd0;
+            end else if (freq_miss >= FREQ_LOSS_LIM - 1) begin
+                FREQ_OK <= 1'b0;
+            end else begin
+                freq_miss <= freq_miss + 3'd1;
             end
         end
     end
@@ -180,6 +188,16 @@ module pll_freq_lock #(
         FCW_NA <= FCW - LOCK_TOL;
     end
 
+    // True ICG for the IIR/tuning: the enable is latched on the falling REF
+    // so REF_G has no glitch.  The live sampler/FREQ_OK/measurement remain on
+    // CLK_REF; REF_G stops only the IIR/tuning flops while LOCKED & FREQ_OK.
+    reg fll_gate_en;
+    always @(negedge CLK_REF or negedge RST_N) begin
+        if (!RST_N) fll_gate_en <= 1'b1;
+        else        fll_gate_en <= ~fll_standby;
+    end
+    wire REF_G = CLK_REF & fll_gate_en;
+
 `ifdef INVALID
     reg cnt_less;
     reg cnt_more;
@@ -201,12 +219,11 @@ module pll_freq_lock #(
     localparam integer FREQ_LOSS_LIM = (FREQ_LOSS < 1) ? 1 :
         (FREQ_LOSS > 7) ? 7 : FREQ_LOSS;
     reg [2:0] freq_miss;
-    always @(posedge CLK_REF or negedge RST_N) begin
+    always @(posedge REF_G or negedge RST_N) begin
         if(!RST_N) begin
             ERR <= 1'b0;
             LOCKED <= 1'b0;
-            FREQ_OK <= 1'b0;
-            freq_miss <= 3'd0;
+            cnt_filt <= 'd0;
             COARSE_MUX <= 'd0;
             MID_MUX <= 'd0;
             cnt_done <= 'd0;
@@ -214,7 +231,8 @@ module pll_freq_lock #(
             cnt_coarse_wait <= 'd0;
             started <= 1'b0;
         end else begin
-            if (!fll_standby) begin
+            // IIR is the only state that is frozen by REF_G.
+            cnt_filt <= (cnt_filt * 3 + cnt_cap + 2) >> 2;
             // Start status
             if(!started && START) started <= 1'b1;
 
@@ -286,26 +304,6 @@ module pll_freq_lock #(
                 end
             end else begin
                 cnt_coarse_wait <= TOL_COARSE_WAIT-1;
-            end
-            end
-
-            // Live window, on the raw per-REF delta rather than cnt_filt.
-            // The IIR settles a code or two above or below the same raw
-            // count depending on which side it came from, so a LOCK_TOL
-            // of 1 around cnt_filt false-unlocks an exact integer ratio.
-            // One raw sample outside the window must not drop FREQ_OK;
-            // FREQ_LOSS consecutive misses do.  Sticky LOCKED stays set
-            // either way; only START restarts that search.
-            if (!cap_valid) begin
-                FREQ_OK <= 1'b0;
-                freq_miss <= 3'd0;
-            end else if ((cnt_cap >= FCW_NA) && (cnt_cap <= FCW_PA)) begin
-                FREQ_OK <= 1'b1;
-                freq_miss <= 3'd0;
-            end else if (freq_miss >= FREQ_LOSS_LIM - 1) begin
-                FREQ_OK <= 1'b0;
-            end else begin
-                freq_miss <= freq_miss + 3'd1;
             end
         end
     end

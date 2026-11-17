@@ -133,8 +133,18 @@ module DDR_CLOCK_PHY #(
 
     assign CK_PATH = USE_DLL ? CK_DLL : CK_DCC;
     assign ERR = DCC_ERR | DLL_ERR;
-    assign PHY_LOCKED = PLL_LOCKED & DCC_LOCKED &
-                        (USE_DLL ? DLL_LOCKED : 1'b1) & ~BUSY;
+    // The fail-closed output gate must not AND the clock with a live lock
+    // flag: DCC_LOCKED is a dither-window level and can pulse, chopping the
+    // CK_PHY high phase.  Latch the qualified lock instead; PLL_LOCKED/BUSY
+    // still clear it and force the fail-closed state.
+    reg phy_locked_q;
+    always @(posedge TICK or negedge RST_N) begin
+        if (!RST_N) phy_locked_q <= 1'b0;
+        else if (!PLL_LOCKED || BUSY) phy_locked_q <= 1'b0;
+        else if (DCC_LOCKED && (USE_DLL ? DLL_LOCKED : 1'b1))
+            phy_locked_q <= 1'b1;
+    end
+    assign PHY_LOCKED = phy_locked_q & PLL_LOCKED & ~BUSY;
 
     // Fail-closed differential pair.  Both sides are low when the path is
     // not locked; CK_PHY_N is the functional complement, not a modeled

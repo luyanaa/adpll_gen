@@ -344,9 +344,11 @@ with `FRONTEND_MODE=3, PRESCALE=2`.  `pll_freq_lock` shifts the per-REF delta
 by `PS_SHIFT` so FCW remains in input edges.  PLL macro smoke:
 
 ```text
-PLL: cnt_cap=16 cnt_filt=17 FREQ_OK=1 FREQ_LOCKED=1 LOCKED=1 FCW=16
+PLL: cnt_cap=16 cnt_filt=15 FREQ_OK=1 FREQ_LOCKED=1 LOCKED=1 FCW=16
+steady-state 16.000 MID_OUT/REF, 0 ppm
 PASS: frequency lock is FCW=16, not an alias
 frequency_counter_frontend_tb: PASS
+freq_lock_tb: PASS
 freq_lock_cdc_tb: PASS (100 REF checks)
 freq_ok_tb: PASS
 freq_lock_overflow_tb: PASS (9 windows)
@@ -359,25 +361,31 @@ pll_macro_top_tb: gates dsm_gate=0 fll_standby=1
 ```
 
 The DSM accumulator/FINE_MUX are clocked by the gated `DSM_CK_G` (latched
-enable, no glitch); the FLL IIR/tuning freezes while `LOCKED && FREQ_OK`,
-while `cnt_cap`, `FREQ_OK` and the `SAMPLE_VALID` measurement interface stay
-live.  A FREQ_OK drop reopens the FLL.  The PLL smoke still locks
-(`LOCKED=1`, `FREQ_OK=1`).
+enable, no glitch).  The FLL IIR/tuning flops are on a true gated `REF_G`
+clock (`fll_gate_en` is latched on the falling REF); `cnt_cap`, `FREQ_OK`,
+`SAMPLE_VALID` and `MEASURED_COUNT` remain on REF, so a FREQ_OK drop reopens
+the gate.  The PLL smoke still locks (`LOCKED=1`, `FREQ_OK=1`, 0 ppm).
 
 The behavioral physical-TDC TB (`test_dll_phys_tdc`) and the period
 range-revalidation TB still use their external-ns phase checks; they show the
 TDC pulse-width calibration offset at SS even though the gate-level full DLL
-locks at 4.657-4.795 ns.  The PHY `ddr_clock_phy_dll` DLL phase check passes
-(0.002 ns modulo 5 ns), but its DCC/selector `CK_PHY` duty is 44.5%/period
-4.5 ns in that test (`DCC_ERR=1`); that is a separate DCC/selector path issue,
-not the DLL 0T condition.
+locks at 4.657-4.795 ns.
+
+PHY integration (`ddr_clock_phy_dll_tb`): DCC/DLL and the gated output are
+clean — `CK_DCC`/`CK_DLL`/`CK_PHY` are all 50.0% at 5.000 ns, the DLL delay
+is 0.002 ns modulo 5.000 ns, and the fail-closed check passes.  The earlier
+44.5%/4.5 ns CK_PHY was the fail-closed `PHY_LOCKED & CK_SEL` gate: the live
+`DCC_LOCKED` dither level was ANDed with the clock.  `PHY_LOCKED` is now a
+latched qualification (set on DCC+DLL lock, cleared by `!PLL_LOCKED`/`BUSY`),
+so it is stable while the clock runs.  `DCC_ERR=1` remains the DCC's internal
+status; the DCC duty/period and the PHY test pass.
 
 `make test_ddr_phy` treats the legacy COARSE-only DCDL as
 `test_ddr_phy_legacy_blocked` (passes only while it is BLOCKED) and gates
-the new design with `test_segmented_dcdl`.  The remaining production
-blockers are gate-level/SDF and placed/PEX/PVT verification of the new
-DLL, and a uniform integer-divided reference.  `USE_DLL=0` remains the
-verified fallback.
+the new design with `test_segmented_dcdl`.  The gate-level/SDF closure and
+the PHY DLL test pass; the remaining production blocker is placed/PEX/PVT
+verification of the new DLL, plus a uniform integer-divided reference.
+`USE_DLL=0` remains the verified fallback.
 
 ## 8. Not done
 
