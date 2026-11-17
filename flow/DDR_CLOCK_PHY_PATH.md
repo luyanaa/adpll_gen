@@ -344,8 +344,9 @@ with `FRONTEND_MODE=3, PRESCALE=2`.  `pll_freq_lock` shifts the per-REF delta
 by `PS_SHIFT` so FCW remains in input edges.  PLL macro smoke:
 
 ```text
-PLL: cnt_cap=16 cnt_filt=15 FREQ_OK=1 FREQ_LOCKED=1 LOCKED=1 FCW=16
-steady-state 16.000 MID_OUT/REF, 0 ppm
+PLL: cnt_cap=16 cnt_filt=17 FREQ_OK=1 FREQ_LOCKED=1 LOCKED=1 FCW=16
+FREQ_OK window = FCW +/- 1 (15..17), LOCK_TOL=1 (not +/-2)
+steady-state 16.5 MID_OUT/REF over the test's 400-REF window
 PASS: frequency lock is FCW=16, not an alias
 frequency_counter_frontend_tb: PASS
 freq_lock_tb: PASS
@@ -357,14 +358,20 @@ freq_lock_overflow_tb: PASS (9 windows)
 DSM/FLL ICG after LOCKED:
 
 ```text
-pll_macro_top_tb: gates dsm_gate=0 fll_standby=1
+pll_macro_top_tb: gates dsm_en=0 fll_en=0 fll_standby=1
 ```
 
-The DSM accumulator/FINE_MUX are clocked by the gated `DSM_CK_G` (latched
-enable, no glitch).  The FLL IIR/tuning flops are on a true gated `REF_G`
-clock (`fll_gate_en` is latched on the falling REF); `cnt_cap`, `FREQ_OK`,
+Both gates now use the named `PLL_CLKGATE` wrapper: the latch/enable is
+sampled on the falling clock, and with `PLL_USE_ICS55_ICG` it instantiates
+the ics55 `ICGNX1H7R` integrated clock gate.  A Yosys/liberty check of
+`pll_freq_lock` shows one `ICGNX1H7R` cell.  The DSM `LOCKED` input is
+synchronized with a 2FF (`ASYNC_REG`) into the DSM_CK domain before the ICG
+enable, so no asynchronous lock edge reaches the gate latch.  The FLL
+IIR/tuning flops are on the gated `REF_G`; `cnt_cap`, `FREQ_OK`,
 `SAMPLE_VALID` and `MEASURED_COUNT` remain on REF, so a FREQ_OK drop reopens
-the gate.  The PLL smoke still locks (`LOCKED=1`, `FREQ_OK=1`, 0 ppm).
+the gate.  `frequency_counter_frontend` MODE_STATIC now registers the Gray
+word in the divided-clock domain (`gray_q`) rather than emitting a
+combinational XOR to the REF synchronizer.
 
 The behavioral physical-TDC TB (`test_dll_phys_tdc`) and the period
 range-revalidation TB still use their external-ns phase checks; they show the
@@ -383,9 +390,22 @@ status; the DCC duty/period and the PHY test pass.
 `make test_ddr_phy` treats the legacy COARSE-only DCDL as
 `test_ddr_phy_legacy_blocked` (passes only while it is BLOCKED) and gates
 the new design with `test_segmented_dcdl`.  The gate-level/SDF closure and
-the PHY DLL test pass; the remaining production blocker is placed/PEX/PVT
-verification of the new DLL, plus a uniform integer-divided reference.
-`USE_DLL=0` remains the verified fallback.
+the PHY DLL test pass.  `USE_DLL=0` remains the verified fallback.
+
+### Still open (physical/PVT and system)
+
+These are not closed by the gate-level/logic evidence above:
+
+- Placed/PEX/PVT signoff for the PLL main loop and the DDR DLL: the DCO
+  parasitic frequency drop (ics55 958 -> 362 MHz, IHP 288 -> 179 MHz), IHP
+  fine-bank 15 non-monotonic steps, sky130 ring DCO start-up/LVS, and
+  full-chip phase noise (ISF)/jitter.
+- ADPLL `OUT_DIV` edge uniformity for directly driving the DDR DLL (the
+  current DDR path still uses an external uniform integer reference), ics55
+  IO pad SS delay (4.22 ns, ~84% of a 200 MHz period), differential
+  crossing/IBIS/SI, ADCC duty at 4 ns, and glitch-free DFS/DQS training.
+- The hand-written ICG is now a named `PLL_CLKGATE`; the placed flow still
+  needs the generated-clock/CTS constraints and ICG placement signoff.
 
 ## 8. Not done
 

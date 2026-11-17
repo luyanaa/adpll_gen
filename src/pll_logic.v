@@ -10,7 +10,7 @@ module pll_logic#(
     parameter integer DSM_DIV = 2,
     parameter integer LOCKED_WAIT = 64,
     parameter integer FILTER_ILL = 16,
-    parameter integer LOCK_TOL = 2,
+    parameter integer LOCK_TOL = 1,
     parameter integer LOCK_COUNT = 16,
     parameter integer LOSS_COUNT = 4,
     // Simulation hook.  When 1, PHASE_LOCK / LOCK_LOST / FREQ_LOCKED /
@@ -123,16 +123,24 @@ module pll_logic#(
         if(IS_DSM) begin : dsm_impl
             wire DSM_CK;
             pll_fix_divider #(.DIV(DSM_DIV)) dsm_div (.clk(MID_OUT), .rst_n(RST_N), .out(DSM_CK));
-            // ICG-style DSM clock gate: after the integer loop is LOCKED the
-            // delta-sigma accumulator and FINE_MUX hold their last code.  The
-            // enable is latched on the falling DSM_CK so the gated clock has
-            // no glitch and can reopen when LOCKED drops.
-            reg dsm_gate;
-            always @(negedge DSM_CK or negedge RST_N) begin
-                if (!RST_N) dsm_gate <= 1'b1;
-                else        dsm_gate <= ~LOCKED;
+            // ICG DSM clock gate: LOCKED is synchronized into the DSM_CK
+            // domain before it enables the gate, then the named PLL_CLKGATE
+            // wrapper (ics55 ICGNX1H7R when enabled) holds the enable on the
+            // falling clock.  No asynchronous LOCKED edge reaches the latch.
+            (* ASYNC_REG = "TRUE" *) reg locked_dsm_s1, locked_dsm_s2;
+            always @(posedge DSM_CK or negedge RST_N) begin
+                if (!RST_N) begin
+                    locked_dsm_s1 <= 1'b0;
+                    locked_dsm_s2 <= 1'b0;
+                end else begin
+                    locked_dsm_s1 <= LOCKED;
+                    locked_dsm_s2 <= locked_dsm_s1;
+                end
             end
-            wire DSM_CK_G = DSM_CK & dsm_gate;
+            wire DSM_CK_G;
+            PLL_CLKGATE u_dsm_icg (
+                .EN(~locked_dsm_s2), .CLK(DSM_CK), .GCLK(DSM_CK_G)
+            );
             reg [FINE_CODE_BITS-1:0] FCWI;
             reg [FILTER_BITS-FINE_CODE_BITS:0] FCWF;
             always @(posedge DSM_CK_G or negedge RST_N) begin

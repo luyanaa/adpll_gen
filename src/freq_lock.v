@@ -5,6 +5,25 @@
 // ref clock, and update coarse and mid configurations.
 `timescale 1fs/1fs
 
+// Standard clock-gate wrapper.  For the ics55 macro the PDK ICG cell is used
+// when PLL_USE_ICS55_ICG is defined; otherwise this is the portable negedge
+// latch + AND model.  The enable is sampled on the falling clock so GCLK has
+// no glitch.
+module PLL_CLKGATE (
+    input  wire EN,
+    input  wire CLK,
+    output wire GCLK
+);
+`ifdef PLL_USE_ICS55_ICG
+    ICGNX1H7R u_icg (.CKN(CLK), .E(EN), .ECK(GCLK));
+`else
+    (* keep *) reg en_l;
+    initial en_l = 1'b1;
+    always @(negedge CLK) en_l <= EN;
+    assign GCLK = CLK & en_l;
+`endif
+endmodule
+
 module pll_freq_lock #(
     parameter integer COARSE_NDELS = 4,     // Assign to coarse delays
     parameter integer MID_NDELS = 5,        // Assign to mid delays
@@ -188,15 +207,13 @@ module pll_freq_lock #(
         FCW_NA <= FCW - LOCK_TOL;
     end
 
-    // True ICG for the IIR/tuning: the enable is latched on the falling REF
-    // so REF_G has no glitch.  The live sampler/FREQ_OK/measurement remain on
-    // CLK_REF; REF_G stops only the IIR/tuning flops while LOCKED & FREQ_OK.
-    reg fll_gate_en;
-    always @(negedge CLK_REF or negedge RST_N) begin
-        if (!RST_N) fll_gate_en <= 1'b1;
-        else        fll_gate_en <= ~fll_standby;
-    end
-    wire REF_G = CLK_REF & fll_gate_en;
+    // True ICG for the IIR/tuning.  The wrapper latches EN on the falling REF
+    // (or instantiates the ics55 ICG cell); the live sampler/FREQ_OK/
+    // measurement remain on CLK_REF.
+    wire REF_G;
+    PLL_CLKGATE u_fll_icg (
+        .EN(~fll_standby), .CLK(CLK_REF), .GCLK(REF_G)
+    );
 
 `ifdef INVALID
     reg cnt_less;

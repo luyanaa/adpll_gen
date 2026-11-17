@@ -94,6 +94,8 @@ module frequency_counter_frontend #(
             reg [1:0] div_cnt;
             reg clk_div;
             reg [CNT_W-1:0] cnt;
+            reg [CNT_W-1:0] gray_q;
+            wire [CNT_W-1:0] cnt_inc = cnt + 1'b1;
             always @(posedge CLK or negedge RST_N) begin
                 if (!RST_N) begin
                     div_cnt <= 2'd0;
@@ -106,11 +108,19 @@ module frequency_counter_frontend #(
                 end
             end
             always @(posedge clk_div or negedge RST_N) begin
-                if (!RST_N) cnt <= 'd0;
-                else        cnt <= cnt + 1'b1;
+                if (!RST_N) begin
+                    cnt    <= 'd0;
+                    gray_q <= 'd0;
+                end else begin
+                    cnt    <= cnt_inc;
+                    // Register the Gray word in the source (divided) clock
+                    // domain; a combinational XOR can glitch on multi-bit
+                    // carries and be sampled by the REF 2FF synchronizer.
+                    gray_q <= cnt_inc ^ (cnt_inc >> 1);
+                end
             end
             assign COUNT = cnt << PS_SHIFT;
-            assign GRAY_COUNT = cnt ^ (cnt >> 1);
+            assign GRAY_COUNT = gray_q;
             assign CDC_SAFE = 1'b1;
         end else if (MODE == MODE_JOHNSON) begin : johnson_frontend
             // 4-stage Johnson prescaler (divide by 8) plus a synchronous

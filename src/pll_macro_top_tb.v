@@ -93,8 +93,10 @@ module pll_macro_top_tb;
         $display("pll_macro_top_tb: cycles=%0d LOCKED=%b ERR=%b OUT=%b state=%0d FREQ_LOCKED=%b PHASE_LOCK=%b LOCK_LOST=%b SS_BBPD=%b",
                  cycles, LOCKED, ERR, OUT, dut.pll_dig.state, dut.pll_dig.FREQ_LOCKED,
                  dut.pll_dig.PHASE_LOCK, dut.pll_dig.LOCK_LOST, dut.pll_dig.SS_BBPD);
-        $display("pll_macro_top_tb: gates dsm_gate=%b fll_standby=%b",
-                 dut.pll_dig.dsm_impl.dsm_gate, dut.pll_dig.flock.fll_standby);
+        $display("pll_macro_top_tb: gates dsm_en=%b fll_en=%b fll_standby=%b",
+                 dut.pll_dig.dsm_impl.u_dsm_icg.en_l,
+                 dut.pll_dig.flock.u_fll_icg.en_l,
+                 dut.pll_dig.flock.fll_standby);
         $display("pll_macro_top_tb: fll cnt_filt=%0d cnt_done=%0d FREQ_OK=%b LOCKED=%b ERR=%b FCW_NA=%0d FCW_PA=%0d",
                  dut.pll_dig.flock.cnt_filt, dut.pll_dig.flock.cnt_done,
                  dut.pll_dig.FREQ_OK, dut.pll_dig.FREQ_LOCKED,
