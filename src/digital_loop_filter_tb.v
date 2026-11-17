@@ -48,10 +48,10 @@ module digital_loop_filter_tb();
     pll_digital_loop_filter #(
         .BITS(FILTER_BITS)
     ) dut (
-        .VCO(FILTER_CLK), .REF(CLK_REF), .RST_N(RST_N), .ENABLE(ENABLE),
+        .CLK(FILTER_CLK), .RST_N(RST_N), .ENABLE(ENABLE),
         .SS_BBPD(SS_BBPD),
         .KP(KP), .KI(KI),
-        .OUT(OUT)
+        .OUT(OUT), .ILL_P(), .ILL_N()
     );
 
     integer iter;

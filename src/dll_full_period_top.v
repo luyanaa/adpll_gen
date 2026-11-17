@@ -93,21 +93,33 @@ module DLL_FULL_PERIOD_TOP #(
     // period and phase comparisons see the same launch delay.
     wire acq_clk_buf, mon_clk_buf, line_in_buf;
     wire acq_clk_b1, acq_clk_b2;
-    FINE_DELAY_CELL u_acq_clk_buf (
-        .MUX(1'b1), .IN(acq_clk), .OUT(acq_clk_buf)
-    );
-    FINE_DELAY_CELL u_acq_clk_b1 (
-        .MUX(1'b1), .IN(acq_clk_buf), .OUT(acq_clk_b1)
-    );
-    FINE_DELAY_CELL u_acq_clk_b2 (
-        .MUX(1'b1), .IN(acq_clk_b1), .OUT(acq_clk_b2)
-    );
-    FINE_DELAY_CELL u_mon_clk_buf (
-        .MUX(1'b1), .IN(acq_clk), .OUT(mon_clk_buf)
-    );
-    FINE_DELAY_CELL u_line_in_buf (
-        .MUX(1'b1), .IN(line_in), .OUT(line_in_buf)
-    );
+    generate
+        if (DLL_IMPL == 0) begin : launch_sim
+            // Behavioral path: no physical launch buffers, so the DDR/DLL
+            // simulations do not need the ics55 cell library.
+            assign acq_clk_buf = acq_clk;
+            assign acq_clk_b1  = acq_clk;
+            assign acq_clk_b2  = acq_clk;
+            assign mon_clk_buf = acq_clk;
+            assign line_in_buf = line_in;
+        end else begin : launch_phys
+            FINE_DELAY_CELL u_acq_clk_buf (
+                .MUX(1'b1), .IN(acq_clk), .OUT(acq_clk_buf)
+            );
+            FINE_DELAY_CELL u_acq_clk_b1 (
+                .MUX(1'b1), .IN(acq_clk_buf), .OUT(acq_clk_b1)
+            );
+            FINE_DELAY_CELL u_acq_clk_b2 (
+                .MUX(1'b1), .IN(acq_clk_b1), .OUT(acq_clk_b2)
+            );
+            FINE_DELAY_CELL u_mon_clk_buf (
+                .MUX(1'b1), .IN(acq_clk), .OUT(mon_clk_buf)
+            );
+            FINE_DELAY_CELL u_line_in_buf (
+                .MUX(1'b1), .IN(line_in), .OUT(line_in_buf)
+            );
+        end
+    endgenerate
 
     reg [CODE_BITS-1:0] code_target;
     reg [CODE_BITS-1:0] code_active;

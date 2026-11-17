@@ -197,12 +197,20 @@ module pll_logic#(
         (DCO_TIMEOUT > 7) ? 7 : DCO_TIMEOUT;
     reg [DCO_ACT_W-1:0] out_edges;
     reg [DCO_ACT_W-1:0] out_edges_gray;
+    // The watchdog only needs edge activity, not the exact edge count.  A
+    // static /2 prescaler keeps the 10-bit Gray counter off the full-rate OUT
+    // clock; the extra toggle flop is the only full-rate storage.
+    reg out_div2;
     (* ASYNC_REG = "TRUE" *) reg [DCO_ACT_W-1:0] out_edges_g1;
     (* ASYNC_REG = "TRUE" *) reg [DCO_ACT_W-1:0] out_edges_g2;
     reg [DCO_ACT_W-1:0] out_edges_g2_q;
     reg [2:0] dco_miss_cnt;
     wire [DCO_ACT_W-1:0] out_edges_next = out_edges + 1'b1;
     always @(posedge OUT or negedge RST_N) begin
+        if (!RST_N) out_div2 <= 1'b0;
+        else        out_div2 <= ~out_div2;
+    end
+    always @(posedge out_div2 or negedge RST_N) begin
         if (!RST_N) begin
             out_edges <= 'd0;
             out_edges_gray <= 'd0;
