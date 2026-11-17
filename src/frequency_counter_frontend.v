@@ -23,6 +23,7 @@ module frequency_counter_frontend #(
     localparam integer MODE_SYNC = 0;
     localparam integer MODE_RIPPLE = 1;
     localparam integer MODE_JOHNSON = 2;
+    localparam integer MODE_STATIC = 3;
     genvar i;
 
     generate
@@ -81,6 +82,36 @@ module frequency_counter_frontend #(
             assign COUNT = cnt;
             assign GRAY_COUNT = (cnt >> 1) ^ cnt;
             assign CDC_SAFE = 1'b0;
+        end else if (MODE == MODE_STATIC) begin : static_frontend
+            // True static prescaler: the counter flops are clocked by the
+            // divided clock, not by CLK.  GRAY_COUNT is the divided count
+            // (one bit per divided edge), so the REF domain must multiply the
+            // delta by PRESCALE; COUNT is normalized for debug.
+            localparam integer PS = (PRESCALE < 2) ? 2 :
+                (PRESCALE > 4) ? 4 : PRESCALE;
+            localparam integer PS_SHIFT = (PS == 2) ? 1 : 2;
+            localparam integer HALF = PS / 2;
+            reg [1:0] div_cnt;
+            reg clk_div;
+            reg [CNT_W-1:0] cnt;
+            always @(posedge CLK or negedge RST_N) begin
+                if (!RST_N) begin
+                    div_cnt <= 2'd0;
+                    clk_div <= 1'b0;
+                end else if (div_cnt == HALF - 1) begin
+                    div_cnt <= 2'd0;
+                    clk_div <= ~clk_div;
+                end else begin
+                    div_cnt <= div_cnt + 1'b1;
+                end
+            end
+            always @(posedge clk_div or negedge RST_N) begin
+                if (!RST_N) cnt <= 'd0;
+                else        cnt <= cnt + 1'b1;
+            end
+            assign COUNT = cnt << PS_SHIFT;
+            assign GRAY_COUNT = cnt ^ (cnt >> 1);
+            assign CDC_SAFE = 1'b1;
         end else if (MODE == MODE_JOHNSON) begin : johnson_frontend
             // 4-stage Johnson prescaler (divide by 8) plus a synchronous
             // extension counter.  The phase decode is intentionally explicit:

@@ -17,7 +17,7 @@ mkdir -p "$OUT"
 
 # One netlist, mapped with the TT liberty.  Each corner's delays come from
 # its own OpenSTA SDF.
-$YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/fine_delay.v $ROOT/src/dll_dcdl.v $ROOT/src/pll_segmented_delay_phys.v $ROOT/src/dll_tdc.v $ROOT/src/dll_tdc_phys.v $ROOT/src/dll_full_period_top.v $ROOT/src/dll_acq_period.v; setattr -mod -unset keep_hierarchy; setattr -mod -unset keep; chparam -set TDC_IMPL 1 -set TDC_LINE_IMPL 1 -set DLL_IMPL 1 -set CODE_MIN 20 -set CODE_MAX 230 -set PHASE_TOL_DIV 4 -set ACQ_TOL_DIV 3 -set MON_TOL_NUM 3 -set MON_TOL_DEN 8 -set PHASE_MISS_MAX 8 -set ACQ_EARLY 1 DLL_FULL_PERIOD_TOP; synth -top DLL_FULL_PERIOD_TOP -flatten; dfflibmap -liberty $LIB_TT; abc -liberty $LIB_TT; write_verilog -noattr $OUT/dll_gate_net.v; stat" \
+$YOSYS -p "read_verilog $ROOT/src/pll_cells_ics55.v $ROOT/src/fine_delay.v $ROOT/src/dll_dcdl.v $ROOT/src/pll_segmented_delay_phys.v $ROOT/src/dll_tdc.v $ROOT/src/dll_tdc_phys.v $ROOT/src/dll_full_period_top.v $ROOT/src/dll_acq_period.v; setattr -mod -unset keep_hierarchy; setattr -mod -unset keep; chparam -set TDC_IMPL 1 -set TDC_LINE_IMPL 1 -set DLL_IMPL 1 -set CODE_MIN 20 -set CODE_MAX 230 -set PHASE_TOL_DIV 5 -set ACQ_TOL_DIV 3 -set MON_TOL_NUM 1 -set MON_TOL_DEN 4 -set PHASE_MISS_MAX 8 -set ACQ_EARLY 1 DLL_FULL_PERIOD_TOP; synth -top DLL_FULL_PERIOD_TOP -flatten; dfflibmap -liberty $LIB_TT; abc -liberty $LIB_TT; write_verilog -noattr $OUT/dll_gate_net.v; stat" \
   > "$OUT/dll_gate.yosys.log"
 
 for corner in TT SS FF; do

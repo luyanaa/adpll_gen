@@ -10,7 +10,11 @@ module pll_digital_loop_filter #(
     // Swap the P/N correction direction.  The DCO delay increases with the
     // fine code, so the phase loop needs the opposite sign from the default
     // filter decode; the ADCC/ADDLL keep the default.
-    parameter integer INVERT_PN = 0
+    parameter integer INVERT_PN = 0,
+    // Register the DLF output only where the extra latency is acceptable
+    // (the PLL phase loop).  The ADCC/ADDLL duty loops keep the combinational
+    // output so their pulse-combiner timing is unchanged.
+    parameter integer REG_OUT = 0
 ) (
     input CLK, RST_N, ENABLE,
     input [1:0] SS_BBPD,
@@ -130,17 +134,27 @@ module pll_digital_loop_filter #(
             OUT_C = INT;
         end
     end
-    always @(posedge CLK or negedge RST_N) begin
-        if(!RST_N) begin
-            OUT   <= INT_INIT[BITS-1:0];
-            ILL_P <= 1'b0;
-            ILL_N <= 1'b0;
-        end else begin
-            OUT   <= OUT_C;
-            ILL_P <= ILL_P_C;
-            ILL_N <= ILL_N_C;
+    generate
+        if (REG_OUT) begin : out_reg
+            always @(posedge CLK or negedge RST_N) begin
+                if(!RST_N) begin
+                    OUT   <= INT_INIT[BITS-1:0];
+                    ILL_P <= 1'b0;
+                    ILL_N <= 1'b0;
+                end else begin
+                    OUT   <= OUT_C;
+                    ILL_P <= ILL_P_C;
+                    ILL_N <= ILL_N_C;
+                end
+            end
+        end else begin : out_comb
+            always @(*) begin
+                OUT   = OUT_C;
+                ILL_P = ILL_P_C;
+                ILL_N = ILL_N_C;
+            end
         end
-    end
+    endgenerate
 
 `ifdef SIMULATION
     // Just to debug the legality

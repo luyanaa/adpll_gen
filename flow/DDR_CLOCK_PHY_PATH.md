@@ -285,19 +285,28 @@ FF: period_ext=230 main=212 mon=207
 PASS: physical TDC line + gate-level/SDF smoke at TT/SS/FF
 ```
 
-Full DLL gate-level/SDF (`dll_gate_tb`, full-period phase, all corners):
+Full DLL gate-level/SDF (`dll_gate_tb`, tightened 0T window):
 
 ```text
-TT: LOCKED after 146 REF, CODE=111, delay=4.696 ns, per=142 main=142 mon=143
-SS: LOCKED after 130 REF, CODE=46,  delay=4.729 ns, per=82  main=83  mon=88
-FF: LOCKED after 115 REF, CODE=178, delay=4.777 ns, per=222 main=222 mon=212
+TT: LOCKED after 162 REF, CODE=105, delay=4.759 ns, per=141 main=144 mon=128
+SS: LOCKED after 162 REF, CODE=39,  delay=4.657 ns, per=81  main=81  mon=71
+FF: LOCKED after 162 REF, CODE=171, delay=4.795 ns, per=222 main=223 mon=214
 dll_gate_tb: PASS (TT/SS/FF)
 ```
 
-The captured period and the tracking phase code are equal at every corner
-(142/142, 82/83, 222/222); the external ns delay is ~94% of the nominal REF
-period because the phase-sampler clock buffer shifts the measured edge by
-~0.3 ns.  The DLL is locked to exactly one measured period, not to 0T or 2T.
+Behavioral full-period/0T test (`dll_full_period_tb`):
+
+```text
+TT/SS/FF lock: 4.852 / 4.880 / 4.810 ns
+0T / 0.5T / 2T: LOCKED=0, ACQ_FAIL=1 (rejected)
+dll_full_period_tb: PASS
+```
+
+The phase window is `period>>5 + 1` (~3.1%) and the monitor window is 25%;
+the old 6% phase window accepted a 4.7 ns (0.94 T) code as a full period.  The
+captured period and the tracking phase code now match at every gate corner,
+and the physical PHY DLL check shows `DLL delay=0.002 ns` modulo the 5.000 ns
+period (code 67).
 
 Closure fixes that were required for the gate netlist:
 
@@ -318,20 +327,50 @@ Closure fixes that were required for the gate netlist:
   the next 56-cell segment and the minimum code delay was ~6.18 ns (>1 REF
   period).
 - Physical acquisition window/controller parameters selected with
-  `chparam` (`CODE_MIN=20`, `CODE_MAX=230`, `ACQ_TOL_DIV=3`, monitor 3/8,
-  miss tolerance 8, early in-window acceptance).
+  `chparam` (`CODE_MIN=20`, `CODE_MAX=230`, `ACQ_TOL_DIV=3`,
+  `PHASE_TOL_DIV=5`, monitor 1/4, miss tolerance 8, early in-window
+  acceptance).
 
 PEX/PVT is not yet run: LibreLane v3.0.14 and the ics55 PDK are present, but
 the full DLL has not been placed/routed/extracted.  The gate-level/SDF flow
 above is the prerequisite; the next step is LibreLane hardening plus
 SPEF/SDF multi-corner closure.
 
+### Frontend /2 and DSM/FLL ICG
+
+`frequency_counter_frontend` has `MODE_STATIC=3`: the Gray counter is clocked
+by the divided clock (not the full MID_OUT), and `pll_logic` instantiates it
+with `FRONTEND_MODE=3, PRESCALE=2`.  `pll_freq_lock` shifts the per-REF delta
+by `PS_SHIFT` so FCW remains in input edges.  PLL macro smoke:
+
+```text
+PLL: cnt_cap=16 cnt_filt=17 FREQ_OK=1 FREQ_LOCKED=1 LOCKED=1 FCW=16
+PASS: frequency lock is FCW=16, not an alias
+frequency_counter_frontend_tb: PASS
+freq_lock_cdc_tb: PASS (100 REF checks)
+freq_ok_tb: PASS
+freq_lock_overflow_tb: PASS (9 windows)
+```
+
+DSM/FLL ICG after LOCKED:
+
+```text
+pll_macro_top_tb: gates dsm_gate=0 fll_standby=1
+```
+
+The DSM accumulator/FINE_MUX are clocked by the gated `DSM_CK_G` (latched
+enable, no glitch); the FLL IIR/tuning freezes while `LOCKED && FREQ_OK`,
+while `cnt_cap`, `FREQ_OK` and the `SAMPLE_VALID` measurement interface stay
+live.  A FREQ_OK drop reopens the FLL.  The PLL smoke still locks
+(`LOCKED=1`, `FREQ_OK=1`).
+
 The behavioral physical-TDC TB (`test_dll_phys_tdc`) and the period
 range-revalidation TB still use their external-ns phase checks; they show the
-TDC pulse-width calibration offset at SS (≈0.97 ns) even though the gate-level
-full DLL locks at 5.005 ns.  These behavioral calibration checks remain to be
-updated/calibrated; they do not affect the gate-level ACQ/full-DLL closure
-above.
+TDC pulse-width calibration offset at SS even though the gate-level full DLL
+locks at 4.657-4.795 ns.  The PHY `ddr_clock_phy_dll` DLL phase check passes
+(0.002 ns modulo 5 ns), but its DCC/selector `CK_PHY` duty is 44.5%/period
+4.5 ns in that test (`DCC_ERR=1`); that is a separate DCC/selector path issue,
+not the DLL 0T condition.
 
 `make test_ddr_phy` treats the legacy COARSE-only DCDL as
 `test_ddr_phy_legacy_blocked` (passes only while it is BLOCKED) and gates

@@ -50,6 +50,10 @@ module pll_freq_lock #(
 );
     wire CLK_REF = REF; // NOTE: Negative injection
     wire CLK_OUT = MID_OUT;
+    // Static frontend normalization: the Gray counter runs at CLK_OUT/PS;
+    // each divided edge is PS input edges.
+    localparam integer PS_SHIFT = (PRESCALE == 2) ? 1 :
+        (PRESCALE == 4) ? 2 : 0;
 
     // Frequency-count CDC: constrained asynchronous Gray snapshot.
     //
@@ -79,7 +83,11 @@ module pll_freq_lock #(
     (* ASYNC_REG = "TRUE" *) reg [CNT_W-1:0] cnt_gray_s2;
     reg [CNT_W-1:0] cnt_bin;
     reg [CNT_W-1:0] sample_bin;
-    reg [CNT_W-1:0] cnt_cap; // count over the last REF period
+    reg [CNT_W-1:0] cnt_cap; // count over the last REF period (input edges)
+    // FLL standby gate: once the frequency is locked and the live window is
+    // good, freeze the IIR/control updates.  The Gray sampler and the live
+    // cnt_cap/FREQ_OK path stay on REF, so a FREQ_OK drop reopens the gate.
+    wire fll_standby = LOCKED & FREQ_OK;
     reg [CNT_W-1:0] cnt_filt; // 1/4 IIR filter for lock/tuning decisions
     reg [MEAS_W-1:0] meas_accum;
     reg [31:0] meas_count;
@@ -133,19 +141,20 @@ module pll_freq_lock #(
                 SAMPLE_VALID <= 1'b0;
                 MEASURED_COUNT <= 'd0;
             end else begin
-                cnt_cap <= sample_bin - cnt_bin;
-                // Round the IIR update.  Truncating every low-count sample
-                // can pin the filtered value at zero when REF sees only 1-3
-                // DCO edges per period (Core C / low-frequency operation).
-                cnt_filt <= (cnt_filt * 3 + (sample_bin - cnt_bin) + 2) >> 2;
+                cnt_cap <= (sample_bin - cnt_bin) << PS_SHIFT;
                 cnt_bin <= sample_bin;
+                // Standby freezes only the IIR; the raw delta, FREQ_OK and
+                // the measurement interface stay live so a FREQ_OK drop can
+                // reopen the FLL.
+                if (!fll_standby)
+                    cnt_filt <= (cnt_filt * 3 + ((sample_bin - cnt_bin) << PS_SHIFT) + 2) >> 2;
                 if(meas_count == MEAS_PERIODS - 1) begin
-                    MEASURED_COUNT <= meas_accum + (sample_bin - cnt_bin);
+                    MEASURED_COUNT <= meas_accum + ((sample_bin - cnt_bin) << PS_SHIFT);
                     meas_accum <= 'd0;
                     meas_count <= 'd0;
                     SAMPLE_VALID <= 1'b1;
                 end else begin
-                    meas_accum <= meas_accum + (sample_bin - cnt_bin);
+                    meas_accum <= meas_accum + ((sample_bin - cnt_bin) << PS_SHIFT);
                     meas_count <= meas_count + 1'b1;
                     SAMPLE_VALID <= 1'b0;
                 end
@@ -205,6 +214,7 @@ module pll_freq_lock #(
             cnt_coarse_wait <= 'd0;
             started <= 1'b0;
         end else begin
+            if (!fll_standby) begin
             // Start status
             if(!started && START) started <= 1'b1;
 
@@ -277,8 +287,9 @@ module pll_freq_lock #(
             end else begin
                 cnt_coarse_wait <= TOL_COARSE_WAIT-1;
             end
+            end
 
-                    // Live window, on the raw per-REF delta rather than cnt_filt.
+            // Live window, on the raw per-REF delta rather than cnt_filt.
             // The IIR settles a code or two above or below the same raw
             // count depending on which side it came from, so a LOCK_TOL
             // of 1 around cnt_filt false-unlocks an exact integer ratio.

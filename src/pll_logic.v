@@ -10,7 +10,7 @@ module pll_logic#(
     parameter integer DSM_DIV = 2,
     parameter integer LOCKED_WAIT = 64,
     parameter integer FILTER_ILL = 16,
-    parameter integer LOCK_TOL = 1,
+    parameter integer LOCK_TOL = 2,
     parameter integer LOCK_COUNT = 16,
     parameter integer LOSS_COUNT = 4,
     // Simulation hook.  When 1, PHASE_LOCK / LOCK_LOST / FREQ_LOCKED /
@@ -106,7 +106,8 @@ module pll_logic#(
     pll_digital_loop_filter #(
         .BITS(FILTER_BITS),
         .INT_INIT(1 << (FILTER_BITS - 1)),
-        .INVERT_PN(1)
+        .INVERT_PN(1),
+        .REG_OUT(1)
     ) dlf (
         .CLK(!INJ_EDGE),
         .RST_N(RST_N), .ENABLE(ENABLE),
@@ -122,9 +123,19 @@ module pll_logic#(
         if(IS_DSM) begin : dsm_impl
             wire DSM_CK;
             pll_fix_divider #(.DIV(DSM_DIV)) dsm_div (.clk(MID_OUT), .rst_n(RST_N), .out(DSM_CK));
+            // ICG-style DSM clock gate: after the integer loop is LOCKED the
+            // delta-sigma accumulator and FINE_MUX hold their last code.  The
+            // enable is latched on the falling DSM_CK so the gated clock has
+            // no glitch and can reopen when LOCKED drops.
+            reg dsm_gate;
+            always @(negedge DSM_CK or negedge RST_N) begin
+                if (!RST_N) dsm_gate <= 1'b1;
+                else        dsm_gate <= ~LOCKED;
+            end
+            wire DSM_CK_G = DSM_CK & dsm_gate;
             reg [FINE_CODE_BITS-1:0] FCWI;
             reg [FILTER_BITS-FINE_CODE_BITS:0] FCWF;
-            always @(posedge DSM_CK or negedge RST_N) begin
+            always @(posedge DSM_CK_G or negedge RST_N) begin
                 if(!RST_N) begin
                     FCWI <= 0;
                     FCWF <= 0;
@@ -138,7 +149,7 @@ module pll_logic#(
                 .BITS_INT(FINE_CODE_BITS),
                 .BITS_DSM(FILTER_BITS-FINE_CODE_BITS+1)
             ) dsm (
-                .CK(DSM_CK),
+                .CK(DSM_CK_G),
                 .RST(!RST_N),
                 .EN_DSM(DCO_EN),
                 .EN_DSM_DT(DSM_EN_DT),
@@ -148,7 +159,7 @@ module pll_logic#(
                 .FCWF(FCWF),
                 .DSM_OUT(FILTER_DEC)
             );
-            always @(posedge DSM_CK or negedge RST_N) if(!RST_N) FINE_MUX <= 'd0; else FINE_MUX <= FINE_MUX_D; // For better in-time resolution
+            always @(posedge DSM_CK_G or negedge RST_N) if(!RST_N) FINE_MUX <= 'd0; else FINE_MUX <= FINE_MUX_D; // For better in-time resolution
         end else begin
             assign FILTER_DEC = FILTER_OUT[FILTER_BITS-1:FILTER_BITS-FINE_CODE_BITS];
             always @(posedge CKR or negedge RST_N) if(!RST_N) FINE_MUX <= 'd0; else FINE_MUX <= FINE_MUX_D; // Just save energy
@@ -303,7 +314,9 @@ module pll_logic#(
         .CNT_BITS(FCW_BITS),
         .CNT_EXTRA_BITS(CNT_EXTRA_BITS),
         .MEAS_PERIODS(MEAS_PERIODS),
-        .LOCK_TOL(LOCK_TOL)
+        .LOCK_TOL(LOCK_TOL),
+        .FRONTEND_MODE(3),
+        .PRESCALE(2)
     ) flock (
         .REF(REF), .MID_OUT(MID_OUT), .OUT(OUT),
         .RST_N(RST_N),

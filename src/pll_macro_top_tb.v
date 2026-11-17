@@ -93,6 +93,13 @@ module pll_macro_top_tb;
         $display("pll_macro_top_tb: cycles=%0d LOCKED=%b ERR=%b OUT=%b state=%0d FREQ_LOCKED=%b PHASE_LOCK=%b LOCK_LOST=%b SS_BBPD=%b",
                  cycles, LOCKED, ERR, OUT, dut.pll_dig.state, dut.pll_dig.FREQ_LOCKED,
                  dut.pll_dig.PHASE_LOCK, dut.pll_dig.LOCK_LOST, dut.pll_dig.SS_BBPD);
+        $display("pll_macro_top_tb: gates dsm_gate=%b fll_standby=%b",
+                 dut.pll_dig.dsm_impl.dsm_gate, dut.pll_dig.flock.fll_standby);
+        $display("pll_macro_top_tb: fll cnt_filt=%0d cnt_done=%0d FREQ_OK=%b LOCKED=%b ERR=%b FCW_NA=%0d FCW_PA=%0d",
+                 dut.pll_dig.flock.cnt_filt, dut.pll_dig.flock.cnt_done,
+                 dut.pll_dig.FREQ_OK, dut.pll_dig.FREQ_LOCKED,
+                 dut.pll_dig.FREQ_ERR, dut.pll_dig.flock.FCW_NA,
+                 dut.pll_dig.flock.FCW_PA);
         $display("pll_macro_top_tb: cap_valid=%b cnt_bin=%0d cnt=%0d out_edges=%0d mid_edges=%0d FCW=%0d cnt_cap=%0d COARSE=%b MID=%b FINE=%b",
                  dut.pll_dig.flock.cap_valid, dut.pll_dig.flock.cnt_bin,
                  dut.pll_dig.flock.cnt, out_edges, mid_edges,

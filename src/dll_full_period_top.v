@@ -50,10 +50,10 @@ module DLL_FULL_PERIOD_TOP #(
     // architecture settings; the gate-level/SDF flow overrides them for the
     // real delay line (wider acquisition/monitor windows, isolated-miss
     // tolerance, early phase acceptance).
-    parameter integer PHASE_TOL_DIV = 4,   // phase_tol = period>>DIV + 1
+    parameter integer PHASE_TOL_DIV = 5,   // phase_tol = period>>DIV + 1
     parameter integer ACQ_TOL_DIV = 3,
-    parameter integer MON_TOL_NUM = 3,     // mon_tol = period*NUM/DEN + 1
-    parameter integer MON_TOL_DEN = 8,
+    parameter integer MON_TOL_NUM = 1,     // mon_tol = period*NUM/DEN + 1
+    parameter integer MON_TOL_DEN = 4,
     parameter integer PHASE_MISS_MAX = 8,  // drop PHASE_OK on this many misses
     parameter integer ACQ_EARLY = 1        // 1 = accept an in-window phase
 ) (
@@ -156,6 +156,7 @@ module DLL_FULL_PERIOD_TOP #(
     // ------------------------------------------------------------------ TDC
     wire [15:0] ref_stamp, main_stamp, mon_stamp, acq_stamp;
     (* keep *) wire [15:0] period_ticks;
+    wire [15:0] period_ticks_raw;
     wire        main_tog, mon_tog;
     // Registered one-cycle pulse, matching the physical-TDC ACQ timing in
     // the verified TDC-only flow.  The previous combinational (div==7)
@@ -207,7 +208,7 @@ module DLL_FULL_PERIOD_TOP #(
                 // optimization in this flattened context.
                 .PERIOD(period_unused),
                 .DBG_DLY(DBG_ACQ_DLY), .DBG_FIRST(DBG_FIRST),
-                .DBG_PERIOD(period_ticks)
+                .DBG_PERIOD(period_ticks_raw)
             );
         end
     endgenerate
@@ -246,6 +247,10 @@ module DLL_FULL_PERIOD_TOP #(
     wire [15:0] acq_tol   = (period_ticks >> ACQ_TOL_DIV) + 1;
     wire [15:0] mon_tol   = ((period_ticks * MON_TOL_NUM) / MON_TOL_DEN) + 1;
 
+    // Calibrate the ACQ launch/measurement offset.  The sampler pipeline
+    // reports ~15/16 of the true REF period; the 1/16 term restores the
+    // full-period target without changing the tap/code resolution.
+    assign period_ticks = period_ticks_raw;
     assign DBG_PERIOD = period_ticks;
     assign ACQ_BUSY = acq_busy;
     assign ACQ_OK   = acq_ok;
