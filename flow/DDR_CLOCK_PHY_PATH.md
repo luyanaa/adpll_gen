@@ -407,6 +407,60 @@ These are not closed by the gate-level/logic evidence above:
 - The hand-written ICG is now a named `PLL_CLKGATE`; the placed flow still
   needs the generated-clock/CTS constraints and ICG placement signoff.
 
+### Ring-DCO extracted-view audit
+
+**The ics55 base chain had been optimized away.**  The committed
+`pnr/outputs/ics55/PLL_RING_DCO_PHYS.v` (the view behind the SDF, SPEF and
+post-PnR simulation) contained **3** of the 256 `BASE_NDELS` buffers, while
+the IHP view contains all 256.  Yosys/ABC removed the unprotected chain of
+`PLL_CELL_BUFFX0` stages in `src/il_dco.v`: the base chain has no `keep`
+attribute, unlike `FINE_DELAY`.  The stale ics55 view is therefore a
+three-buffer ring, not the intended 256-stage ring: the SPEF-annotated loop
+closes at 1395 MHz and the SDF gate simulation at 914.9 MHz, and the DCO
+frequency/tuning numbers reported from that view are not usable.
+
+Fix: every base-chain stage is marked `(* keep *) (* dont_touch = "true" *)`.
+`make -C flow/macro/ring_dco_ics55 syn` now keeps 256
+`base_delay_stage_*_delay_cell` instances (385 mapped cells in the
+pre-PnR netlist).  The P&R/SPEF/SDF views must be regenerated from that
+netlist before any ics55 DCO number is quoted.
+
+**Rebuild and re-extraction.**  The ics55 macro was re-run
+(`make -C flow/macro/ring_dco_ics55 pnr`) with the kept chain.  The new
+`pnr/outputs/ics55/PLL_RING_DCO_PHYS.v` has 256 base buffers / 976 mapped
+cells, and the new SPEF was extracted by RCX (477 nets, 1229 rseg).
+
+**Reproducible loop-delay sweep.**  `flow/sta/ring_dco_loop.py` rewrites the
+extracted netlist to cut the oscillator loop (`LOOP_IN`/`LOOP_OUT`), reads the
+corner Liberty and the extracted SPEF, and reports one traversal as
+half-period.  `COARSE=15 MID=15`, FINE swept:
+
+```text
+corner  ics55 period(ns)  ics55 freq(MHz)   IHP period(ns)  IHP freq(MHz)
+TT           25.1057           39.83            30.6747          32.60
+SS           45.0708           22.19            48.6494          20.56
+FF           17.5426           57.00            15.2077          65.76
+```
+
+IHP is the pre-existing full-chain view; the cell-level transient in
+`flow/characterization/macro_char/` reports 33.21 / 20.95 / 47.58 MHz at
+TT/SS/FF, matching TT and SS within ~2% (the FF transient is under-settled at
+the 150 ns stop time).  The ics55 coarse code is monotonic at TT
+(fine = 0): coarse 1/5/10/15 -> 43.05 / 42.09 / 40.98 / 39.83 MHz.
+
+The older ics55/IHP "958 -> 362" and "288 -> 179 MHz" figures cannot be
+reproduced from the committed views; they predate this audit and should not be
+used until each macro's PEX view is rebuilt and re-measured.
+
+**FINE is invisible to Liberty STA.**  All 32 FINE codes give an identical
+period at TT for both PDKs (ics55 25.10568 ns; IHP 30.67468 ns; same at
+SS/FF).  FINE only switches the
+transistor-level load of the 31 `NAND3X1` dummies, and Liberty pin
+capacitances are code-invariant, so neither SDF nor SPEF STA can show the fine
+step.  Fine monotonicity needs a transistor transient; a full 32-code macro
+SPICE scan did not complete within 15 minutes on this host, so the IHP fine
+non-monotonicity remains open.
+
 ## 8. Not done
 
 - The IO wrapper is a cell-level structural/timing view; there is no

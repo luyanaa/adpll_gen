@@ -45,6 +45,11 @@ module PLL_ILDCO #(
                 sim_buff delay_cell(
                     .I(BASE_CHAIN[bi]), .Z(BASE_CHAIN[bi+1]));
 `else
+                // The base chain is the ring's in-loop delay.  It must not be
+                // optimized away: ABC collapses an unprotected chain of
+                // identical buffers, which shortens the ring and moves the
+                // oscillator by more than 2x.  Keep every stage.
+                (* keep *) (* dont_touch = "true" *)
                 PLL_CELL_BUFFX0 delay_cell(
 `ifdef WITH_POWER
                     .VDD(VDD), .VSS(VSS),
