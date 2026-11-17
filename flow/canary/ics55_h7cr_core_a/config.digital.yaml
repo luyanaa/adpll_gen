@@ -26,6 +26,10 @@ VERILOG_FILES:
   - dir::../../../src/delta_sigma.v
   - dir::../../../src/fix_div.v
   - dir::../../../src/conf_div.v
+  - dir::../../../src/frequency_counter_frontend.v
+  - dir::../../../src/ref_watchdog.v
+  - dir::../../../src/lock_detector.v
+  - dir::../../../src/ddr_ck.v
 
 # ---------------------------------------------------------------------------
 # PDK / standard-cell library
@@ -37,7 +41,7 @@ PDK: ics55
 
 # The PDK ics55.map is a GDS-import map, not a LEF/DEF map.  Without this
 # override KLayout streams DEF routing/SPNET onto auto layers.
-KLAYOUT_DEF_LAYER_MAP: /opt/adpll_gen/flow/maps/ics55_lefdef.map
+KLAYOUT_DEF_LAYER_MAP: dir::../../maps/ics55_lefdef.map
 STD_CELL_LIBRARY: ics55_LLSC_H7CR
 
 # The validated PDK example uses a PDK-scoped block for the same settings.
