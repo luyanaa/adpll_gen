@@ -47,7 +47,9 @@ module pll_macro_top #(
     wire [FINE_NDELS-1:0] FINE_MUX;
     wire DCO_EN;
 
-    pll_logic #(
+    pll_logic
+`ifndef POSTSYN
+    #(
         .COARSE_NDELS(COARSE_NDELS),
         .MID_NDELS(MID_NDELS),
         .FINE_NDELS(FINE_NDELS),
@@ -66,7 +68,9 @@ module pll_macro_top #(
         .DIV_INIT(DIV_INIT),
 `endif
         .FCW_BITS(FCW_BITS)
-    ) pll_dig (
+    )
+`endif
+    pll_dig (
         .REF(REF), .OUT(OUT), .MID_OUT(MID_OUT), .INJ_EDGE(INJ_EDGE), .RST_N(RST_N),
         .SS_BBPD(SS_BBPD),
         .KP(KP), .KI(KI), .FCW(FCW),

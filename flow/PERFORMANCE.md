@@ -77,8 +77,20 @@ SS 只剩 2 个 max-cap 与 2 个 max-slew（TT/FF 为 0），不是时序违例
 |---|---:|---:|---:|---:|
 | TT | 2.050 mW | 0.975 mW | 0.0029 mW | **3.027 mW** |
 
-这些数字**没有**包含 `/2` 前端、`REG_OUT` 或 DSM/FLL ICG 的降幅——降幅只能
-在门级仿真出两段 VCD（LOCKED 前/后）后量化。
+这些数字**没有**包含 `/2` 前端、`REG_OUT` 或 DSM/FLL ICG 的降幅。
+
+**VCD 量化受阻（已定位原因）。** `scripts/power_vcd.py` 已写好（OpenSTA
+2.0.17 没有 `read_vcd`，走 OpenROAD），门级 VCD 也能产出
+（`src/pll_macro_top_tb_power.v`，37 MB），但**门级网表上锁不住**：
+`FREQ_OK` 在 145 ns 拉起后 1505 ns 又掉回，`locked_q` 从未置位，所以
+ICG 前后的对比窗口拿不到。
+
+原因不是设计回归（同一 RTL 的行为级 `pll_macro_top_tb` 仍然
+`LOCKED=1`/`FREQ_LOCKED=1` PASS），而是 P&R 网表里被插入了 **55 个
+`DLY*` 时序修复单元**：它们是 CTS/repair 为满足 2.5 ns 约束加的纯延迟
+缓冲，会直接改变数字环路的反馈时序，而 DCO 侧仍是行为模型 `sim_dco`。
+两者叠加使锁定环路失配。给 P&R 网表做功能仿真时应关闭时序修复
+（或从 SDF 而非网表取延迟），这一项尚未做。
 
 #### SS 收敛过程（每步都是实测 STA）
 
