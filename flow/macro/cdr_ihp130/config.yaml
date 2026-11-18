@@ -1,0 +1,44 @@
+# LibreLane physical macro for CDR_TOP on IHP SG13G2 1.2 V.
+#
+# Analog back end for OpenSERDES CDR_MODE=4: a multi-phase DCO plus a
+# glitch-managed phase mux and a sampler.  Contract:
+#   ../OpenSERDES/rtl/serdes_rx_digital.sv  (rx_dll_tap -> rx_smp)
+#   ../OpenSERDES/rtl/cdr_multiphase.sv     (2^PH_W phases)
+#   ../OpenSERDES/docs/dll_backend.md §2, §5
+#
+# The bang-bang loop, the slot/fine accumulator and the lock FSM stay in
+# cdr_multiphase (digital, generic); this macro is the DLL/sampler half.
+
+DESIGN_NAME: CDR_TOP
+
+VERILOG_FILES:
+  - dir::src/cdr_top.v
+  - dir::../../../src/pll_multiphase_dco.v
+  - dir::src/pll_cells_ihp-sg13g2.v
+
+PDK: ihp-sg13g2
+STD_CELL_LIBRARY: sg13g2_stdcell
+
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD]
+SCL_GROUND_PINS: [VSS]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+# Metal3 is the signal layer the sg13g2 stdcell pins land on; route above it.
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal5
+
+CLOCK_PORT: REF
+CLOCK_PERIOD: 10.0
+
+# The phase delay line is a ring: do not let CTS or the resizer touch it.
+DESIGN_REPAIR_REMOVE_BUFFERS: false
+
+DIE_AREA: [0, 0, 120, 100]
+FP_CORE_UTIL: 25
+PL_TARGET_DENSITY_PCT: 40
+
+# Signoff steps that need IHP KLayout/netgen collateral are skipped by the
+# Makefile, not here; see flow/macro/ihp130_sg13g2/README.md.
