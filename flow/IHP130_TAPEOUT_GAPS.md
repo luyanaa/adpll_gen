@@ -117,8 +117,32 @@ With both fixed, `make pnr` completes and `pnr.tcl` writes `final.db`, `.v`,
 
 ```text
 RCX-0045: Extract 236 nets, 1588 rsegs, 1588 caps, 1497 ccs
-SPEF 203 D_NET, SDF 552 cells / 277 delays, CDL 51889 B
+SPEF 203 D_NET, SDF 552 CELL / 277 DELAY / 276 INSTANCE, CDL 51889 B
 ```
+
+Both views were then checked end to end, not just for file existence:
+
+* **SPEF** parses and back-annotates in OpenROAD against the routed macro
+  netlist.  Macro-level post-PEX STA at TT reports setup **+1.4837 ns** and
+  hold **+0.5937 ns** (worst paths `INJ_EN -> dff_y_impl/D` and
+  `REF -> dff_y_impl/D`).
+* **SDF** annotates in an Icarus gate simulation of the routed macro: with
+  `$sdf_annotate` on `PLL_ANALOG_MACRO.sdf` the DCO oscillates and produces
+  **130 OUT edges** in 200 ns (`SDF_SIM: PASS`).  Without a usable SDF the
+  same netlist would not have timing-annotated delays.
+
+Reproduce the SDF check:
+
+```sh
+iverilog -g2012 -gspecify -o sdf_sim.out -DSDF='"<abs>/PLL_ANALOG_MACRO.sdf"' \
+  <tb>.v flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.v \
+  <ciel>/ihp-sg13g2/libs.ref/sg13g2_stdcell/verilog/sg13g2_udp.v \
+  <pdk_root>/.../verilog/sg13g2_stdcell.v
+vvp sdf_out     # prints "SDF_SIM: PASS (macro oscillates with SDF annotated)"
+```
+
+The UDP file matters: `sg13g2_stdcell.v` instantiates `ihp_dff_r` and friends
+from `sg13g2_udp.v`, which is not in the ORFS platform copy.
 
 ### B4. Multi-corner macro Liberty — CLOSED
 
