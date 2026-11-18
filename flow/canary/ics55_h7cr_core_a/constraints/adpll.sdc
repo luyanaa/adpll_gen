@@ -89,6 +89,57 @@ set_clock_groups -asynchronous \
     -group {INJ_EDGE}
 
 # ---------------------------------------------------------------------------
+# CDC synchronizers: exempt the first stage from hold repair
+# ---------------------------------------------------------------------------
+# The RTL marks every 2FF synchronizer first stage (* ASYNC_REG = "TRUE" *),
+# and set_clock_groups below declares the four clocks asynchronous.  OpenROAD's
+# repair_design still inserts hold buffers on them: 42 of the 55 DLY4X2H7R
+# cells in run RUN_2026-11-18_11-55-44 sit on cnt_gray_s1/s2,
+# out_edges_g1/g2, watch_s1/s2 and clr_r1/r2.  That is 7.6% of the die in
+# timing_repair cells, and it is also what breaks functional gate-level
+# simulation of the P&R netlist: a delay inserted into a 2FF shifts the loop
+# timing against the behavioural DCO.
+#
+# A metastable first stage cannot be fixed by added delay -- the requirement is
+# MTBF, not hold.
+#
+# Mechanism: hierarchical pin names are gone after synthesis, but the *net*
+# names survive (the netlist keeps flock.cnt_gray_s1[12] etc.).  Resolve each
+# synchronizer net to its sink pins and exempt those.  set_max_delay is not
+# used: OpenSTA rejects -datapath_only on this netlist (STA-0563), and the
+# hold exemption alone is what removes the delay cells.
+#
+# Verified with OpenROAD on RUN_2026-11-18_11-55-44: 93 sink pins resolved,
+# set_false_path -hold accepted for all of them.
+proc cdc_exempt_hold {patterns} {
+    set total 0
+    foreach pat $patterns {
+        set nets [get_nets -quiet $pat]
+        set sinks {}
+        foreach n $nets {
+            set sinks [concat $sinks \
+                [get_pins -quiet -of_objects $n -filter "direction==input"]]
+        }
+        if {[llength $sinks] > 0} {
+            set_false_path -hold -to $sinks
+            set total [expr {$total + [llength $sinks]}]
+        }
+    }
+    if {$total > 0} {
+        puts "adpll.sdc: CDC hold exemption applied to $total sink pins"
+    }
+}
+
+cdc_exempt_hold {
+    *cnt_gray_s1*  *cnt_gray_s2*
+    *out_edges_g1* *out_edges_g2*
+    *watch_s1*     *watch_s2*
+    *clr_r1*       *clr_r2*
+    *ref_ok_s1*    *ref_ok_s2*
+    *locked_dsm_s1* *locked_dsm_s2*
+}
+
+# ---------------------------------------------------------------------------
 # Clock quality
 # ---------------------------------------------------------------------------
 # PDK ics55 H7CR config.tcl sets CLOCK_UNCERTAINTY_CONSTRAINT 0.25 and

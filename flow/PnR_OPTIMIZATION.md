@@ -139,18 +139,44 @@ SDC 也有 `set_clock_groups -asynchronous`，但 **LibreLane 的 repair 仍按
 之间的 hold 本来就不该检查（第一级同步器的 metastability 只能靠
 MTBF 设计，不能靠延迟器）。
 
-**动作**：在 `constraints/adpll.sdc` 里为 CDC 目标寄存器加
+**动作（已实施）**：`constraints/adpll.sdc` 里加了 `cdc_exempt_hold` 过程：
 
 ```tcl
-# 2FF synchronizer first stage: no hold requirement across the async boundary
-set_false_path -to [get_pins -hier -filter "full_name =~ *cnt_gray_s1*"]
-set_false_path -to [get_pins -hier -filter "full_name =~ *out_edges_g1*"]
-set_false_path -to [get_pins -hier -filter "full_name =~ *watch_s1*"]
-set_false_path -to [get_pins -hier -filter "full_name =~ *clr_r1*"]
+proc cdc_exempt_hold {patterns} {
+    foreach pat $patterns {
+        set nets [get_nets -quiet $pat]
+        set sinks {}
+        foreach n $nets {
+            set sinks [concat $sinks \
+                [get_pins -quiet -of_objects $n -filter "direction==input"]]
+        }
+        if {[llength $sinks] > 0} { set_false_path -hold -to $sinks }
+    }
+}
 ```
 
-（或用 `set_max_delay -datapath_only` 给一个宽松上限，保留基本的
-routing sanity 检查。）
+三条实现要点（都是实测踩出来的）：
+
+1. **不能用 `get_pins -hier` 按名字匹配**。P&R 后层级名完全消失，
+   `get_pins -hier -filter "full_name =~ *cnt_gray_s1*"` 返回 0 个。
+2. **但网名保留了**。最终网表里仍是 `\flock.cnt_gray_s1[12]`，所以
+   `get_nets *cnt_gray_s1*` 能精确拿到 16 个网。
+3. **`set_max_delay -datapath_only` 在这个网表上不可用**
+   （OpenSTA 报 `STA-0563`）。只用 `set_false_path -hold` 即可。
+
+OpenROAD 实测（`RUN_2026-11-18_11-55-44` 网表）：
+
+```text
+*cnt_gray_s1*   -> 16 nets, 16 sink pins   set_false_path -hold OK
+*cnt_gray_s2*   -> 16 nets, 23 sink pins   OK
+*out_edges_g1*  -> 10 nets, 10 sink pins   OK
+*out_edges_g2*  -> 20 nets, 36 sink pins   OK
+*watch_s1*      ->  1 net,   1 sink pin    OK
+*watch_s2*      ->  1 net,   3 sink pins   OK
+*clr_r1*        ->  1 net,   1 sink pin    OK
+*clr_r2*        ->  1 net,   3 sink pins   OK
+TOTAL 93 sink pins
+```
 
 **预期收益**：
 
@@ -236,12 +262,39 @@ P0 三项都是配置/SDC 级改动，且各自有明确的验证指标：
 目标——因为如果 2.5 ns 目标先上，repair 会在那些本不该检查的 CDC 路径上
 插更多延迟器，反而更难收拾。
 
+## 8.5 ICG 映射需要配套的 hold 修复（实测回归）
+
+单看综合，`PLL_USE_ICS55_ICG` 是净收益（2403 vs 2434 µm²，ICG 可被 CTS
+识别）。但**完整 P&R 后时序退步**：
+
+| | 无 ICG 宏 | 有 ICG 宏 |
+|---|---:|---:|
+| hold WNS | 0.0000 | **-0.1150** |
+| hold 违例 | 0 | **36** |
+| setup WNS | 0.0000 | **-0.1222** |
+| max_slew / max_cap 违例 | 2 / 2 | 9 / 4 |
+| hold_buffer | 55 | 18 |
+| timing_repair 面积 | 1560 µm² | 2120 µm² |
+
+**原因**：ICG 把 `REF_G`/`DSM_CK_G` 从"组合与门"变成 CTS 拓扑里的真实
+门控单元，负载与插入延迟随之改变。原本靠 55 个 `DLY4X2H7R` 勉强压住的
+REF 域内部 hold（例如 `FREQ_OK` → `_3785_`，路径上有 3 个 `DLY4X2`），
+在 hold_buffer 降到 18 后不再成立。
+
+**这不是 ICG 本身的问题**，而是修 hold 的资源被重新分配后，REF 域那些
+本该靠 CDC 约束豁免、却仍在被检查的路径暴露出来。这与第 4 节的 CDC 发现
+是同一个根：**先做 CDC `set_false_path`，再做 ICG 映射**。当前顺序反了。
+
+`VERILOG_DEFINES` 已从 `config.digital.yaml` 回退，保持已收敛基线
+（`RUN_2026-11-18_11-55-44`）。ICG 映射留待 CDC 约束到位后再启用。
+
 ## 9. 已在本轮验证的实验
 
 | 实验 | 结果 |
 |---|---|
 | 加 `-DPLL_USE_ICS55_ICG` 综合 `pll_logic` | 3671 cells / **2403 µm²**（当前 3672 / 2434），`ICGNX1H7R × 2`，`PLL_CLKGATE` 两个实例都正确映射 |
 | 加 `VERILOG_DEFINES` 后跑完整 P&R | Yosys/OpenROAD 报告 **`Clock gate cell: 2, Area 11.20`**；fallback `en_l` 网完全消失 |
+| 同上，看时序 | **回归**：hold WNS 0 → **-0.1150**（36 条违例），setup -0.1222（12 条），max_slew 2→9，max_cap 2→4。`hold_buffer` 55→18、`timing_repair` 1560→2120 µm² |
 | 提取 55 个 `DLY4X2H7R` 的输入网 | 42 个在 `cnt_gray_s1/s2`、`out_edges_g1/g2`、`watch_s1/s2`、`clr_r1/r2` 上 |
 | 检查 ICG liberty 属性 | `clock_gating_integrated_cell : "latch_negedge_postcontrol"`，area 5.6 µm²，CTS 可识别 |
 | 检查 P&R 优化目标 | `CLOCK_PERIOD = 20`（REF），OUT 的 2.5 ns 只存在于 SDC，未进 P&R 优化 |

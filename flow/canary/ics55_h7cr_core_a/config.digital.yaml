@@ -37,11 +37,14 @@ VERILOG_FILES:
 # ADAPT: some releases take PDK/STD_CELL_LIBRARY only from --pdk/--scl or only
 # from a pdk::<pattern> block.  Keep whichever form the installed version
 # accepts; do not assume all three at once.
-# Map PLL_CLKGATE to the PDK integrated clock gate (ICGNX1H7R).  Without this
-# the wrapper falls back to a negedge flop + AND gate, which CTS cannot see as
-# a clock gate.  See flow/PnR_OPTIMIZATION.md section 1.
-VERILOG_DEFINES:
-  - PLL_USE_ICS55_ICG
+# PLL_USE_ICS55_ICG maps PLL_CLKGATE to the PDK ICGNX1H7R so CTS sees a real
+# clock gate.  Synthesis is smaller and the cell is correct, but the full P&R
+# regresses: hold WNS 0 -> -0.1150 (36 violations), setup -0.1222, because the
+# ICG changes REF_G/DSM_CK_G load and the hold-repair budget is reallocated
+# before the CDC paths are exempted.  Enable it only together with the CDC
+# set_false_path work; see flow/PnR_OPTIMIZATION.md sections 4 and 8.5.
+# VERILOG_DEFINES:
+#   - PLL_USE_ICS55_ICG
 
 PDK: ics55
 
