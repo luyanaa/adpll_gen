@@ -339,6 +339,46 @@ Three macro placements were needed before routing would close:
 so at (0,0) more than half the pins sat on the die boundary with no access.
 Area was never the limit (22.5% utilisation).
 
+## 2.8 The remaining PnR rerun is host-bound, not flow-bound
+
+Several reruns appeared to hang at `OpenROAD.STAPrePNR` with a zero-byte
+`sta.log`.  It was not a flow defect and not the multi-corner library after
+all:
+
+```text
+$ cat /proc/loadavg
+43.44 45.28 42.46          # on an 8-core machine
+$ top -bn1 | grep '^%Cpu'
+%Cpu(s): 94.4 us, ... 0.0 id
+$ ps -eo pid,pcpu,etime,comm --sort=-pcpu | head
+ 4184375  157 01:26:38 ngspice        <- not this project
+ 4181243  157 01:28:39 ngspice        <- not this project
+   58602  133   19:45  ngspice        <- not this project
+ 3960178 30.4 08:20:04 yosys-abc
+```
+
+Three `ngspice` runs from another work area (`gf180_work/edram/...`,
+`build/r2r_tran.spice`) hold ~450% CPU and an 8-hour `yosys-abc` holds another
+30%.  With no idle core the bundled `sta` on a 22900-instance netlist makes
+almost no progress, which is why every attempt stalled around 12/80.
+
+Those processes are not this session's work, so they were left alone.  The
+rerun is being retried at `nice -n 19` so it yields to them rather than
+competing.
+
+**Practical consequence**: the numbers in 2.6/2.7 come from the run that did
+complete (`RUN_2026-11-18_18-14-45`) plus per-corner STA on its routed
+netlist.  A fresh full PnR will take many hours on this host and cannot be
+used as an iteration loop until the machine has capacity.
+
+Two flow changes made to reduce the cost, both kept:
+
+* `config.macro.yaml` now sets `LIB` to TT only.  LibreLane builds the STA
+  `LIB` variable from that block, so listing SS/FF there forces three library
+  loads per STA invocation regardless of `STA_CORNERS`; SS/FF are verified
+  afterwards with `scripts/sta_per_corner.tcl`.
+* `STA_CORNERS` is TT only for the same reason.
+
 ## 3. Minimum path to a shippable IHP top
 
 Ordered so each step is verifiable before the next:
