@@ -261,6 +261,21 @@ module pll_logic#(
     // REF_OK level would reassert LOCKED on the first REF edge after an
     // outage, before the FSM had re-acquired.  dco_fail is the same sticky
     // for a stopped DCO; it is cleared by the same acknowledgement.
+    // REF_OK is produced by pll_ref_watchdog on REF, but ref_fail is an OUT
+    // domain flop.  Sampling the raw level is a clock-domain crossing, and
+    // the timing-repair pass tried to fix it with a 10-deep BUFX1P4 chain
+    // that turned into a -0.044 ns setup violation on ref_fail itself.
+    // Synchronize it with the standard 2FF.
+    (* ASYNC_REG = "TRUE" *) reg ref_ok_s1, ref_ok_s2;
+    always @(posedge OUT or negedge RST_N) begin
+        if (!RST_N) begin
+            ref_ok_s1 <= 1'b1;
+            ref_ok_s2 <= 1'b1;
+        end else begin
+            ref_ok_s1 <= REF_OK;
+            ref_ok_s2 <= ref_ok_s1;
+        end
+    end
     reg ref_fail;
     reg dco_fail;
     reg clr_q, clr_qq;
@@ -276,7 +291,7 @@ module pll_logic#(
         end else begin
             clr_q <= clr_toggle;
             clr_qq <= clr_q;
-            if (!REF_OK)
+            if (!ref_ok_s2)
                 ref_fail <= 1'b1;
             else if (clr_q ^ clr_qq)
                 ref_fail <= 1'b0;
