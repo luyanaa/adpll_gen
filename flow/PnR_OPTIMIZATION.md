@@ -343,6 +343,69 @@ SDC OK
 clocks: REF OUT MID_OUT INJ_EDGE REF_G_CLK DSM_CK_G_CLK OUT_DIV_CLK CK_CLK
 ```
 
+## 8.45 更重要的发现：DSM 路径此前一直被漏检
+
+加上 `REF_G_CLK`/`DSM_CK_G_CLK` 后，SS setup 从 +0.0373 崩到 **-4.6330**
+（70 条违例），`DLY4X2H7R` 涨到 387。看似 ICG 的锅，实际是**暴露了一个
+从来没人检查过的真实路径**：
+
+```text
+Startpoint: _3744_ (DSM_CK_G_CLK)
+Endpoint:   _3872_ (DSM_CK_G_CLK)
+data path:  271 级逻辑
+slack:      -4.6330 ns   (周期 5 ns)
+```
+
+**271 级不是逻辑深度，是缓冲链。** 拆开看：
+
+```text
+数据路径单元总数        178
+  BUFX1P4H7R             94   （rebuffer1178..1223 共 46 级串联）
+  BUFX16H7R              20
+  真实逻辑门             26   （AND3/OAO211/NOR2/XNOR2/XOR2/OR3/AOI211...）
+```
+
+`rebuffer1178` → `rebuffer1223` 是**连续 46 级 `BUFX1P4H7R` 串联**。真实
+组合逻辑只有 26 级，在 5 ns 里完全够用。这 46 级是 repair 在 **DSM 域
+没有时钟声明时**对负 hold 的"修复"产物：没有时钟，`repair_design` 把
+所有跨越 DSM 域的连接当成需要平衡的路径，逐条堆缓冲。
+
+**为什么之前没报？** 因为 SDC 从未把 `DSM_CK`/`DSM_CK_G` 建成时钟。
+LibreLane 的 clock list 只有 `REF/OUT/MID_OUT/INJ_EDGE`，所有 DSM 域
+触发器都被当成无时钟，`report_checks` 直接跳过。**这就是为什么"三个 corner
+全部收敛、TDS 为 0"这个结论不完整**——它只覆盖了四个已声明时钟域。
+
+**这可以用约束修，不需要改 RTL。** 26 级真实逻辑在 5 ns 里绰绰有余；
+46 级缓冲是「没有时钟声明」的直接后果。把 `DSM_CK_G`/`REF_G` 建成
+generated clock 之后，repair 就有了正确的时钟关系，不会再对 DSM 内部
+连接堆缓冲。
+
+**当前处理**：`DSM_CK_G_CLK` 的声明保留在 SDC 里（这是正确的约束），
+`PLL_USE_ICS55_ICG` 回退到未定义，恢复已验证基线。ICG 的启用必须等
+DSM 路径先修好——否则把 ICG 映射进去只会让这条本该被看见的路径在
+CTS 里变成真实时钟树，然后失败。
+
+## 8.46 教训：未声明的时钟域会静默逃过所有检查
+
+这一轮连错两次，两次都源于同一个盲区：
+
+1. 先以为 ICG 的 hold 回归是"修复资源重分配"；实测 `DLY4X2H7R` 从 15
+   涨到 201，方向完全相反。
+2. 再以为 DSM 的 -4.63 ns 是"271 级组合逻辑跑不完，要改 RTL"；拆开
+   数单元后发现真实逻辑只有 **26 级**，其余 152 个是缓冲器，其中
+   `rebuffer1178..1223` 是 46 级串联。
+
+**共同根因**：`DSM_CK`/`DSM_CK_G`/`REF_G` 从来没有 `create_generated_clock`。
+没有时钟声明，STA 就把这些网上的触发器当作无时钟，于是：
+
+- `report_checks` 跳过它们 → 前面所有"三个 corner 全绿、TNS 0"的结论
+  只覆盖 4 个已声明时钟域；
+- `repair_design` 仍会看到这些连接（它按 connectivity 工作），对每个
+  跨域连接堆缓冲 → 单条路径出现 46 级串联。
+
+**结论**：数字 canary 此前报告"收敛"是不完整的，缺 DSM 与 REF_G 两个域。
+补上约束后真实状态才可见。这不是 PnR 参数问题，是约束完整性问题。
+
 ## 8.5 ICG 映射需要配套的 hold 修复（实测回归）
 
 单看综合，`PLL_USE_ICS55_ICG` 是净收益（2403 vs 2434 µm²，ICG 可被 CTS

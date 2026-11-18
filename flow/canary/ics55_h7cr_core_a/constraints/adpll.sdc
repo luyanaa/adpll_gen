@@ -93,18 +93,39 @@ if {[llength [get_clocks -quiet INJ_EDGE]] == 0} {
 #
 # The gates are transparent while enabled, so both clocks are the same
 # frequency as their source with a small insertion delay.
+# create_generated_clock wants a pin/port, not a net: resolve the driver of
+# each gated-clock net first.  The driver is either the ICG's ECK pin
+# (PLL_USE_ICS55_ICG) or the fallback AND gate's Y pin.
+proc _drv_pin {net} {
+    set drv [get_pins -quiet -of_objects $net -filter "direction==output"]
+    if {[llength $drv] > 0} { return [lindex $drv 0] }
+    return ""
+}
+
 if {[llength [get_clocks -quiet REF_G_CLK]] == 0} {
-    set refg [get_nets -quiet *flock.REF_G*]
-    if {[llength $refg] > 0} {
-        create_generated_clock -name REF_G_CLK -source [get_ports REF] \
-            -divide_by 1 $refg
+    set refg_net [lindex [get_nets -quiet *flock.REF_G*] 0]
+    if {$refg_net ne ""} {
+        set refg_pin [_drv_pin $refg_net]
+        if {$refg_pin ne ""} {
+            create_generated_clock -name REF_G_CLK -source [get_ports REF] \
+                -divide_by 1 $refg_pin
+        }
     }
 }
+
+# DSM_CK is already MID_OUT/DSM_DIV (a pll_fix_divider instance) and
+# DSM_CK_G is the same clock through the gate, so divide by 1 relative to
+# DSM_CK.  Declaring it as MID_OUT/2 again double-divided the period.
 if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
-    set dsmg [get_nets -quiet *DSM_CK_G*]
-    if {[llength $dsmg] > 0} {
-        create_generated_clock -name DSM_CK_G_CLK \
-            -source [get_ports MID_OUT] -divide_by 2 $dsmg
+    set dsmg_net [lindex [get_nets -quiet *dsm_impl.DSM_CK_G*] 0]
+    set dsmck_net [lindex [get_nets -quiet *dsm_impl.DSM_CK] 0]
+    if {$dsmg_net ne "" && $dsmck_net ne ""} {
+        set dsmg_pin [_drv_pin $dsmg_net]
+        set dsmck_pin [_drv_pin $dsmck_net]
+        if {$dsmg_pin ne "" && $dsmck_pin ne ""} {
+            create_generated_clock -name DSM_CK_G_CLK \
+                -source $dsmck_pin -divide_by 1 $dsmg_pin
+        }
     }
 }
 
