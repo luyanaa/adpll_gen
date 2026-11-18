@@ -155,6 +155,68 @@ can fail to converge at those codes.  This is unresolved.
 The ring DCO used "flow-generated legal fill" with the official density deck.
 `PLL_ANALOG_MACRO` fill status was not re-checked in this assessment.
 
+## 2.5 Step 1 progress: the top now elaborates
+
+B1 is partially closed.  What was needed, and what is still open:
+
+| Change | Why |
+|---|---|
+| copied `PLL_ANALOG_MACRO.{lef,lib,gds,v}` into `hardmacro/` as `PLL_ANALOG.{lef,lib,gds}` + `PLL_ANALOG_MACRO.v` | the top config's `dir::hardmacro/...` paths did not exist |
+| `MACROS` key renamed `PLL_ANALOG` -> `PLL_ANALOG_MACRO` | the LEF macro name and the Liberty cell name are both `PLL_ANALOG_MACRO` |
+| `MACROS.*.lib` changed from a path to a per-corner dict | v3.0.16 rejects a bare string ("Refusing to automatically convert string ... to dict") |
+| top switched from `src/pll.v` to `src/pll_macro_top.v` | `pll.v` instantiates the behavioural `PLL_ANALOG`; only `pll_macro_top` binds `PLL_ANALOG_MACRO` |
+| `DESIGN_NAME` `pll` -> `pll_macro_top` | matches the actual top module |
+| `VERILOG_DEFINES: [POSTSYN]` | the routed macro netlist has parameters baked in; without it Yosys fails with "Parameter not found: IL_NDELS" |
+| `pll_macro_top.v`: parameter list gated on `POSTSYN` | same reason |
+| added `frequency_counter_frontend.v`, `ref_watchdog.v`, `lock_detector.v`, `ddr_ck.v` | the top instantiates them; they were missing from `VERILOG_FILES` |
+| `LIB`/`RCX_RULESETS` `/opt/...` -> `/shared/...` | `/opt/OpenROAD-flow-scripts` does not exist here |
+| `assemble_pdk_root.sh` re-run with `ORFS_PLATFORM=/shared/...` | its default `/opt` path left the PDK root without `libs.tech/librelane`, so LibreLane could not find the PDK |
+| `PDN_MACRO_CONNECTIONS: ["pll_ana VDD VSS VDD VSS"]` enabled | without it PDN fails with PDN-0235 (unplaced macros), then PDN-0179 |
+| macro placed at die corner, `DIE_AREA` sized to the macro | the macro's Metal2 OBS is fragmented; a mid-die placement left no repairable Metal1 channel (PDN-0178 at x=5.76..9.6) |
+
+Verified: Yosys elaborates `pll_macro_top` with `PLL_ANALOG_MACRO` instantiated
+(`hierarchy -check` passes), and the LibreLane flow now gets past PDN,
+tap/endcap, placement and CTS.
+
+**Step 1 result: the top is assembled and reaches post-PnR STA.**
+`RUN_2026-11-18_17-29-18` completed synth -> floorplan -> place -> CTS ->
+global route -> detailed route -> antenna (0 net/0 pin violations) -> RCX ->
+post-PnR STA.  This is the first time the digital control and the analog macro
+exist in one netlist.
+
+Congestion took three attempts to clear; the cause was pin access, not area:
+
+* 260 x 200 um die, macro at (0,0) -> GRT-0116 congestion.
+* 400 x 300 um, lower density, macro at (0,0) -> still GRT-0116.
+* Macro at (40,40) -> routes clean.  30 of the macro's 71 pins sit on the LEF's
+  left edge and 37 on the right edge, so at (0,0) half the pins landed on the
+  die boundary with no access.
+
+Placed result (`nom_ss_125C_1v08`):
+
+```text
+instances            22900        die area      329584 um2
+instance area       298090 um2    macros             1 / 16800 um2
+utilization          22.5%        power (TT)     9.5 mW
+hold WNS           +0.0000        max_slew/cap   0 / 0
+setup WNS          -1.0090        setup TNS     -23.28 ns, 37 paths
+```
+
+The single worst path is `_3955_ -> OUT_DIV[output port clocked by OUT]`,
+i.e. the same SDC modelling bug already fixed for ics55: OUT_DIV and CK are
+divided *clock* outputs but were constrained with `set_output_delay`.  The IHP
+SDC has now been synced with the three ics55 fixes (OUT_DIV/CK as
+generated clocks, `SET_DIV`/`LOAD_DIV` as static straps, CDC hold exemption).
+Verified locally: SDC OK with 8 clocks (REF, OUT, MID_OUT, INJ_EDGE,
+REF_G_CLK, DSM_CK_G_CLK, OUT_DIV_CLK, CK_CLK).
+
+A rerun with the corrected SDC is required before quoting an IHP top-level
+setup number.
+
+Not yet done at this level: macro SPEF/SDF (B3), multi-corner macro Liberty
+(B4, SS/FF currently reuse the TT macro Liberty and are therefore not
+macro-valid), the SS_BBPD sampling arc (B2), and full-chip DRC/LVS (B6).
+
 ## 3. Minimum path to a shippable IHP top
 
 Ordered so each step is verifiable before the next:

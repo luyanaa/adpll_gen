@@ -82,12 +82,19 @@ module pll_macro_top #(
         .DCO_EN(DCO_EN), .LOCKED(LOCKED), .ERR(ERR)
     );
 
-    PLL_ANALOG_MACRO #(
+    // The routed macro netlist has its parameters baked in, so a post-synthesis
+    // top must not override them (Yosys errors with "does not have a parameter
+    // named IL_NDELS").  POSTSYN selects the fixed-width instance.
+    PLL_ANALOG_MACRO
+`ifndef POSTSYN
+    #(
         .COARSE_NDELS(COARSE_NDELS),
         .MID_NDELS(MID_NDELS),
         .FINE_NDELS(FINE_NDELS),
         .IL_NDELS(IL_NDELS)
-    ) pll_ana (
+    )
+`endif
+    pll_ana (
         .COARSE_MUX(COARSE_MUX),
         .MID_MUX(MID_MUX),
         .FINE_MUX(FINE_MUX),
