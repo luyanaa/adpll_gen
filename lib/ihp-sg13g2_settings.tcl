@@ -31,8 +31,21 @@ if {[info exists ::env(NO_IO)] && $::env(NO_IO) == "1"} {
 
 set RCX_RULES "${PDK_ROOT}/ihp-sg13g2/libs.tech/librelane/openrcx/IHP_rcx_patterns.rules"
 # The assembled local PDK root may only carry the ORFS platform RCX file.
-if {![file exists $RCX_RULES] && [file exists "/opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules"]} {
-  set RCX_RULES "/opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules"
+# Try every location this checkout actually has; the original /opt path does
+# not exist here, which left RCX_RULES dangling and made extract_parasitics
+# (and therefore write_spef/write_sdf) fail silently in the 2026-10-29 build.
+foreach _rcx_cand [list \
+        "/shared/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules" \
+        "/opt/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules" \
+        "${PDK_ROOT}/ihp-sg13g2/libs.ref/sg13g2_stdcell/rcx/rcx_patterns.rules"] {
+    if {![file exists $RCX_RULES] && [file exists $_rcx_cand]} {
+        set RCX_RULES $_rcx_cand
+    }
+}
+if {![file exists $RCX_RULES]} {
+    puts "WARNING: RCX rules not found; SPEF/SDF will not be written"
+} else {
+    puts "RCX rules: $RCX_RULES"
 }
 
 set techsite "CoreSite"

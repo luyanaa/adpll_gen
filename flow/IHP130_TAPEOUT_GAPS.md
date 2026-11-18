@@ -25,9 +25,11 @@ blackbox stub.  The manifest there still says `status: not_built` and
 | Verilog | `flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.v` | present |
 | SPICE | `signoff/outputs/ihp-sg13g2-sg13g2_stdcell/PLL_ANALOG_MACRO.spice` | present |
 | SDC | `flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.sdc.tcl` | present |
-| **SPEF** | — | **missing** |
-| **SDF** | — | **missing** |
-| **CDL** | — | **missing** (SPICE exists, CDL for LVS does not) |
+| SPEF | `flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.spef` (203 nets) | **present** (was missing) |
+| SDF | `flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.sdf` (552 cells) | **present** (was missing) |
+| CDL | `flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.cdl` | **present** (was missing) |
+| Liberty, all 3 corners | `flow/macro/ihp130_sg13g2/corners/PLL_ANALOG_MACRO__{tt_1p20V_25C,ss_1p08V_125C,ff_1p32V_m40C}.lib` | **present** (was TT only) |
+| SDF, all 3 corners | same directory, `.sdf` | **present** |
 
 The macro contains the DCO + injection chain + SS-BBPD sampler only.
 `grep -c "pll_logic" PLL_ANALOG_MACRO.v` = 0: it has **no digital control**.
@@ -97,14 +99,48 @@ constraint for closing the PLL loop.
 `timing_type : setup_rising/hold_rising`, `related_pin : INJ_EDGE`, at all
 three corners; calibrate from the macro's own STA/SPICE.
 
-### B3. No macro SPEF/SDF, so there is no post-layout macro timing
+### B3. Macro SPEF/SDF — CLOSED
 
-The macro was placed, routed and GDS'd, but no parasitics were extracted into
-a view the top can consume.  `PLL_RING_DCO_PHYS.spef` exists for the ring DCO
-only, and `OFFICIAL_SIGNOFF.md` notes its names do not match the netlist.
+Root cause was two configuration bugs, not a missing flow step:
 
-**Fix**: run RCX on `PLL_ANALOG_MACRO` for the three corners and emit
-per-corner Liberty or SDF.
+* `lib/ihp-sg13g2_settings.tcl` resolved `RCX_RULES` to
+  `$PDK_ROOT/ihp-sg13g2/libs.tech/librelane/openrcx/IHP_rcx_patterns.rules`
+  with a fallback to `/opt/OpenROAD-flow-scripts/...`, which does not exist
+  here.  The fallback list now also covers the `/shared` ORFS checkout and the
+  PDK `libs.ref/.../rcx` symlink, and warns loudly if none is found.
+* `flow/macro/ihp130_sg13g2/Makefile` was missing `SKIP_PLL_POS=1`, so
+  `pnr.tcl` ran the ics55-specific `pos_coarse` placement step and aborted
+  before reaching `extract_parasitics`.
+
+With both fixed, `make pnr` completes and `pnr.tcl` writes `final.db`, `.v`,
+`_pg.v`, `.def`, `.lef`, `.cdl`, `.lib`, `.spef` and `.sdf`.  Measured:
+
+```text
+RCX-0045: Extract 236 nets, 1588 rsegs, 1588 caps, 1497 ccs
+SPEF 203 D_NET, SDF 552 cells / 277 delays, CDL 51889 B
+```
+
+### B4. Multi-corner macro Liberty — CLOSED
+
+`pnr.tcl` only calls `write_timing_model` for the single `typ` corner, so the
+routed macro shipped TT-only.  `flow/macro/ihp130_sg13g2/extract_multi_corner.tcl`
+loads the routed `final.db`, defines three scenes (`typ`/`ff`/`ss`) against the
+PDK TT/FF/SS cell libraries, and writes one Liberty + SDF per scene.
+
+Implemented note: OpenROAD 26Q4 rejects `-corner` on both commands; the
+correct flag is `-scene`.
+
+Verified that the corners really differ:
+
+```text
+corner            nom_voltage  nom_temp   pins  arcs  first cell_rise values
+tt_1p20V_25C      1.20          25.0       71    20   0.33999,0.40562,0.44920
+ss_1p08V_125C     1.08         125.0       71    20   0.32550,0.42782,0.49587
+ff_1p32V_m40C     1.32         -40.0       71    20   0.34929,0.39158,0.41936
+```
+
+All six files have distinct md5 sums.  `config.macro.yaml` now maps each corner
+to its own macro Liberty instead of reusing TT.
 
 ### B4. Zero multi-corner macro Liberty
 

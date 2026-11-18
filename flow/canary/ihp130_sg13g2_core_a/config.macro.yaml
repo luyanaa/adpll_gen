@@ -66,16 +66,21 @@ MACROS:
   PLL_ANALOG_MACRO:
     gds: dir::hardmacro/PLL_ANALOG.gds
     lef: dir::hardmacro/PLL_ANALOG.lef
-    # LibreLane v3.0.16 requires a per-corner dict here, not a bare path.
-    # Only TT exists, so SS/FF reuse TT deliberately and are NOT macro-valid;
-    # see the header note and flow/IHP130_TAPEOUT_GAPS.md gap B4.
+    # Real per-corner macro Liberty, extracted from the routed database with
+    # flow/macro/ihp130_sg13g2/extract_multi_corner.tcl (RCX + write_timing_model
+    # per scene).  Values differ: SS 1.08 V/125 C, TT 1.20 V/25 C,
+    # FF 1.32 V/-40 C.  Regenerate with:
+    #   PDK_ROOT=<ciel ihp root> TOP=PLL_ANALOG_MACRO \
+    #   FINAL_DB=pnr/outputs/ihp-sg13g2-sg13g2_stdcell/PLL_ANALOG_MACRO.final.db \
+    #   OUTDIR=flow/macro/ihp130_sg13g2/corners openroad -exit \
+    #   flow/macro/ihp130_sg13g2/extract_multi_corner.tcl
     lib:
       nom_tt_025C_1v20:
-        - dir::hardmacro/PLL_ANALOG.lib
+        - dir::hardmacro/corners/PLL_ANALOG_MACRO__tt_1p20V_25C.lib
       nom_ss_125C_1v08:
-        - dir::hardmacro/PLL_ANALOG.lib
+        - dir::hardmacro/corners/PLL_ANALOG_MACRO__ss_1p08V_125C.lib
       nom_ff_n40C_1v32:
-        - dir::hardmacro/PLL_ANALOG.lib
+        - dir::hardmacro/corners/PLL_ANALOG_MACRO__ff_1p32V_m40C.lib
     # PDN generation needs the macro placed explicitly (PDN-0235 "Design has
     # unplaced macros" otherwise).  Die is 500x500 um placeholder; put the
     # 160x105 um macro near the origin with room for the digital ring.

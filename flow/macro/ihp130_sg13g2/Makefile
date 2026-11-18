@@ -28,6 +28,7 @@ CDLS := $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_stdcell/cdl/sg13g2_stdcell.cdl
 
 COMMON := PDK=$(PDK) SCL=$(SCL) TOP=$(TOP) DIGTOP=$(DIGTOP) \
           SYN_SRC="$(SYN_SRC)" SYN_DIG_SRC="$(SYN_DIG_SRC)" SKIP_CTS=1 \
+          SKIP_PLL_POS=1 SKIP_CLK_ISOLATE=1 \
           NO_IO=1 LEFS="$(LEFS)" GDSS="$(GDSS)" CDLS="$(CDLS)"
 KLAYOUT ?= klayout
 export NO_IO = 1
