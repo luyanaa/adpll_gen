@@ -16,6 +16,17 @@ module PLL_CLKGATE (
 );
 `ifdef PLL_USE_ICS55_ICG
     ICGNX1H7R u_icg (.CKN(CLK), .E(EN), .ECK(GCLK));
+`elsif PLL_USE_IHP_ICG
+    // IHP SG13G2 lgcp/slgcp are `dont_use : true` in the ORFS library, so the
+    // gate is built from the library's own latch plus an AND
+    // (latch_negedge_postcontrol).  Instantiate the latch directly: dfflibmap
+    // does not map inferred $_DLATCH_ cells, so an `always @(*) if (!CLK)`
+    // form would leave an unmapped latch.
+    wire en_l;
+    sg13g2_dllrq_1 u_icg_latch (
+        .D(EN), .GATE_N(CLK), .RESET_B(1'b1), .Q(en_l)
+    );
+    assign GCLK = CLK & en_l;
 `else
     (* keep *) reg en_l;
     initial en_l = 1'b1;

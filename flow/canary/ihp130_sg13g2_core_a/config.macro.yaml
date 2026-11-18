@@ -48,6 +48,10 @@ STD_CELL_LIBRARY: sg13g2_stdcell
 # with 'Parameter not found: IL_NDELS'.
 VERILOG_DEFINES:
   - POSTSYN
+  # Build PLL_CLKGATE from sg13g2_dllrq_1 (latch) + AND, i.e. the standard
+  # latch_negedge_postcontrol gate.  Without it the enable is a real flop and
+  # STA reports a clock-gating hold check on the AND.
+  - PLL_USE_IHP_ICG
 
 # ---------------------------------------------------------------------------
 # Hard macro
