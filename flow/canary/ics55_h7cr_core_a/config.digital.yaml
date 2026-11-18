@@ -37,6 +37,12 @@ VERILOG_FILES:
 # ADAPT: some releases take PDK/STD_CELL_LIBRARY only from --pdk/--scl or only
 # from a pdk::<pattern> block.  Keep whichever form the installed version
 # accepts; do not assume all three at once.
+# Map PLL_CLKGATE to the PDK integrated clock gate (ICGNX1H7R).  Without this
+# the wrapper falls back to a negedge flop + AND gate, which CTS cannot see as
+# a clock gate.  See flow/PnR_OPTIMIZATION.md section 1.
+VERILOG_DEFINES:
+  - PLL_USE_ICS55_ICG
+
 PDK: ics55
 
 # The PDK ics55.map is a GDS-import map, not a LEF/DEF map.  Without this
