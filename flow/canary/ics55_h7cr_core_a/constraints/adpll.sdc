@@ -125,9 +125,27 @@ if {[llength [get_ports -quiet INJ_EN]] > 0} {
 # LOCKED/ERR are launched on negedge INJ_EDGE (20 ns domain).
 set_output_delay -max 5.000 -clock INJ_EDGE [get_ports {LOCKED ERR}]
 set_output_delay -min 0.000 -clock INJ_EDGE [get_ports {LOCKED ERR}]
-# OUT_DIV is launched by the OUT-clock divider.
-set_output_delay -max 0.500 -clock OUT [get_ports OUT_DIV]
-set_output_delay -min 0.000 -clock OUT [get_ports OUT_DIV]
+# OUT_DIV is the divider's *clock* output, not a data output.  The last
+# stage is a clock mux: `use_clk` is a falling-edge flop (the /1 bypass
+# select), and the mux output is the divided clock that feeds ddr_ck_gate.
+# Constraining it with set_output_delay made STA treat a half-period clock-mux
+# path as a data path and reported it as the SS/TT/FF setup violator
+# (~-0.99 ns SS).  Declare it as a generated clock instead; the mux select is
+# already guaranteed to move only while clk is low (see conf_div.v).
+# The nominal waveform uses DIV_INIT=2 (the divider's power-on ratio); the
+# runtime SET_DIV value changes the real period, which a static SDC cannot
+# express.  That is acceptable for a canary because the divider's own
+# reg->reg timing (the use_clk -> high_count path) is checked separately in
+# the OUT group.
+if {[llength [get_clocks -quiet OUT_DIV_CLK]] == 0} {
+    create_generated_clock -name OUT_DIV_CLK -source [get_ports OUT] \
+        -divide_by 2 [get_ports OUT_DIV]
+}
+# CK (the DDR pad clock) is the same divided clock, gated by LOCKED.
+if {[llength [get_clocks -quiet CK_CLK]] == 0} {
+    create_generated_clock -name CK_CLK -source [get_ports OUT] \
+        -divide_by 2 [get_ports CK]
+}
 
 # DCO control buses only exist as ports in the digital-only top.  In the full
 # top they are internal nets feeding pll_ana and must be constrained by the

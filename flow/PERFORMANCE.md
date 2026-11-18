@@ -27,6 +27,8 @@ characterization report。完整 top-level `pll` 还没有和硬宏一起集成�
 | PDK / 库 | Die (µm × µm) | Die area (mm²) | Macro Liberty area (µm²) | 面积利用率 | 实例数 | 时序 / 签核 |
 |---|---:|---:|---:|---:|---:|---|
 | ics55 H7CR | 160 × 100 | 0.0160 | 1485.96 | 9.3% | 1207 DEF objects（README 统计 181 个 P&R 实例） | top DRC 0（305 cell-internal waived）；**LVS PASS**；宏级 setup/hold 未单独保存 |
+| ics55 `PLL_RING_DCO_PHYS`（ring DCO，宏目录视图） | 120 × 120 | 0.0144 | 1501.36 | **10.4%** | — | 无 DRC/LVS/PVT 签核；`flow/macro/ring_dco_ics55/README.md` 已注明未表征 |
+| ics55 `PLL_RING_DCO_PHYS`（本轮 P&R 重建） | 98.98 × 71.54 | 0.00708 | 1285.48 | **18.2%** | 976 mapped cells | SPEF 已重提取（477 nets / 1229 rseg）；无 DRC/LVS |
 | GF180mcu AS 3.3 V | 85.64 × 103.56 | 0.00887 | 5057.73 | 57.0% | 452（304 stdcells） | setup **+0.487 ns** / hold **+0.306 ns** @ REF 20 ns / OUT 2.5 ns；DRC 0；LVS PASS（fill-marker shim） |
 | sky130 as_sc_hs 1.8 V | 80.21 × 90.93 | 0.00729 | 3912.51 | 53.6% | 653（517 stdcells） | setup **+2.463 ns** / hold **+0.158 ns** @ REF 20 ns / OUT 2.5 ns；DRC 0；LVS 仍卡在 cell-CDL/device 比较 |
 | IHP SG13G2 1.2 V | 160 × 105 | 0.0168 | 7865.39 | 46.8% | 805 DEF objects | route DRC 0；minimal-deck DRC **0**（含 density）；LVS PASS（fill-stripped view）；宏级 setup/hold 未单独保存 |
@@ -47,17 +49,63 @@ characterization report。完整 top-level `pll` 还没有和硬宏一起集成�
 IHP 的 5.62 mW 是 **Core A 数字控制 canary** 的 TT 功耗，不是硬宏或完整
 ADPLL 的功耗。
 
-### 3.1 本轮锁路径 RTL 后的口径
+### 3.1 ics55 数字 canary 的新 post-PnR 结果（本轮重跑）
 
-上表的 ics55/IHP `OUT`、`MID_OUT`、`INJ_EDGE` Fmax 是**本轮审计之前**的
-post-route canary 结果。参考丢失看门狗、DCO 活动 Gray CDC、分频器首高
-和 `PHASE_LOCK` 窗口改动之后，尚未重跑综合/P&R/STA，因此不能把这些
-数字当作新 RTL 的 Fmax。
+上表 ics55/IHP 三行是**审计之前**的快照。ics55 已用当前 RTL 重跑完整的
+LibreLane 数字流程（synth → floorplan → place → CTS → route → RCX →
+post-PnR STA/power），可以替换旧数字：
+
+Run `flow/canary/ics55_h7cr_core_a/runs/RUN_2026-11-18_09-06-10`，
+约束 `REF=20 ns`、`OUT/MID_OUT=2.5 ns`、四个时钟异步：
+
+| corner | Hold WNS | Setup WNS | Setup TNS | Setup 违例数 |
+|---|---:|---:|---:|---:|
+| TT 1.20 V/25 C | +0.1236 | -0.3232 | -0.3232 | 1 |
+| SS 1.08 V/125 C | +0.2631 | -0.9930 | -15.0906 | 38 |
+| FF 1.32 V/-40 C | +0.0661 | -0.0373 | -0.0373 | 1 |
+
+实现规模：**7938 实例 / 20449 µm²**（sequential 4056.92、其他 10690.1、
+时序修复 buffer 1662.36、clock buffer 671.72），core 20449 µm²，
+die 22900.2 µm²。综合（Yosys，未 P&R）是 2715 cells / 8096.48 µm²，
+即 P&R 后面积约 2.5 倍——增量几乎全是 CTS/时序修复 buffer（669 个）。
+
+功耗（`report_power`，**默认翻转率、无 VCD**）：
+
+| corner | Internal | Switching | Leakage | Total |
+|---|---:|---:|---:|---:|
+| TT | 1.594 mW | 0.791 mW | 0.0012 mW | **2.386 mW** |
+| SS | 1.184 mW | 0.625 mW | 0.0191 mW | **1.828 mW** |
+| FF | 2.197 mW | 0.991 mW | 0.0029 mW | **3.191 mW** |
+
+这些数字**没有**包含 `/2` 前端、`REG_OUT` 或 DSM/FLL ICG 的降幅——降幅
+只能在门级仿真出两段 VCD（LOCKED 前/后）后用 OpenROAD `read_vcd` 量化。
+
+**已定位并修掉的 SS 关键路径。** 旧的 40 个 SS setup 违例中有 37 个是
+同一条路径：`div.use_clk`（OUT 下降沿触发，只有半个 OUT 周期）→ mux →
+shift → `+1` → OR4/NOR4 → `div.high_count[0]`，slack -0.784 ns。
+`conf_div.v` 改为并行预译码两个候选除数的 high/low 宽度后再用一级 mux
+选择（提交 `d7873bb`）。单模块 STA（映射网表、2.5 ns、无 input delay）：
+arrival 2.679 → 2.112 ns，slack -0.250 → **+0.320 ns**，
+`divider_tb` 输出逐行一致。
+
+修复后剩下的 `OUT_DIV` 违例是**约束建模错误**，不是逻辑问题：`OUT_DIV`
+和 `CK` 是分频后的**时钟输出**（末级是 clock mux），却被 `set_output_delay`
+当数据输出约束。`constraints/adpll.sdc` 已改为
+`create_generated_clock`（`OUT_DIV_CLK`、`CK_CLK`，`-divide_by 2`）。
+
+**旧口径说明（保留）**：上表 ics55/IHP `OUT`/`MID_OUT`/`INJ_EDGE` 的
+Fmax 列仍是旧快照；IHP 尚未重跑。
 
 同样：
 
 - ics55 约 335 MHz、IHP 约 179 MHz 的 PEX 结果是**单一调谐码**，不能外推
-  成完整调谐范围；IHP fine bank 的非单调步进仍未解决。
+  成完整调谐范围；IHP fine bank 的非单调步进仍未解决（Liberty STA 对 32
+  个 FINE 码给出完全相同的周期，见 `flow/DDR_CLOCK_PHY_PATH.md`）。
+- DLL 门级网表实测 **11,688 instances**，不是 16,908。
+  `SEG_EXTRA_CELLS=10` 只贡献 4 段 × 10 = **160 cells（1.4%）**，删掉它
+  不能显著缩小面积；主面积是 2600 个 DFF 与 1431 个 fine 单元。
+  ics55 `PLL_RING_DCO_PHYS` 的基链原本被 ABC 折叠成 3/256 级（已修，见
+  `flow/DDR_CLOCK_PHY_PATH.md`），旧频率数字因此不可用。
 - 完整 PLL 的 RMS jitter / integrated phase noise 仍没有可签核流程。
 - `FREQ_LOCKED` 是**捕获范围**标志：`cnt_filt` 进入 `FCW ± LOCK_TOL`
   （默认 ±1 计数/REF），不是 SoC 频率精度。行为级 400 个 REF 的平均
