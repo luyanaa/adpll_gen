@@ -9,6 +9,8 @@ The current status is **implementation characterization**, not a product
 signoff.  Full analog DCO/PLL characterization (phase noise, injection range,
 locked jitter, full-top power) has not been completed.
 
+> 中文版：[`README.zh-cn.md`](README.zh-cn.md)
+
 ## 1. Architecture and parameterization
 
 | Item | Value |
@@ -45,6 +47,8 @@ Detailed parameter and limit analysis:
 - `flow/ADPLL_FREQ_DIV.md`
 - `flow/PERFORMANCE.md`
 - `flow/PDK_ESTIMATES.md`
+- `flow/PnR_OPTIMIZATION.md`
+- `flow/IHP130_TAPEOUT_GAPS.md`
 
 ## 2. Functional verification status
 
