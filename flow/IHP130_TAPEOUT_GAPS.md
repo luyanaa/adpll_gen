@@ -253,6 +253,44 @@ Not yet done at this level: macro SPEF/SDF (B3), multi-corner macro Liberty
 (B4, SS/FF currently reuse the TT macro Liberty and are therefore not
 macro-valid), the SS_BBPD sampling arc (B2), and full-chip DRC/LVS (B6).
 
+## 2.6 Corrected-SDC rerun result
+
+`RUN_2026-11-18_18-14-45` reran the top with the synced SDC (OUT_DIV/CK as
+generated clocks, SET_DIV/LOAD_DIV as static straps, CDC hold exemption) and
+with the new per-corner macro Liberty.
+
+| corner | Hold WNS | Setup WNS | Setup TNS | max_slew | max_cap |
+|---|---:|---:|---:|---:|---:|
+| TT 1.20 V/25 C | -0.0349 | -3.1034 | -97.85 | 0 | 0 |
+| SS 1.08 V/125 C | -0.0063 | -6.1426 | -246.96 | 0 | 0 |
+| FF 1.32 V/-40 C | -0.0461 | -1.2775 | -35.16 | 0 | 0 |
+
+Before the SDC fix the SS worst path was `_3955_ -> OUT_DIV[output port]` at
+-1.0090 ns.  That path is gone: OUT_DIV is now a generated clock and is no
+longer timed as a data endpoint.  max_slew and max_cap violations are 0 at all
+three corners (they were 2 and 2).
+
+What remains, and it is not SDC modelling:
+
+**A. DSM domain setup: -6.14 ns (SS), 101 of the 181 paths.**
+`pll_dig.dsm_impl.dsm.dff_err3[11] -> pll_dig.FINE_MUX_D[14]`, both on
+`clknet_*_pll_dig.dsm_impl.DSM_CK_G`.  This is the DSM error-feedback adder
+chain reaching the FINE_MUX register inside one DSM_CK period.  It is the same
+gap recorded in flow/PnR_OPTIMIZATION.md section 8.46 and gap B5 here: the
+domain was never checked before because `DSM_CK_G` had no generated clock.
+Closing it is an RTL change (pipeline the delta_sigma error feedback, or
+narrow BITS_DSM, or register the FINE_MUX decode) -- not a PnR knob.
+
+**B. A hold violation on the FLL clock gate: -0.0349 / -0.0063 / -0.0461 ns.**
+`pll_dig.flock.u_fll_icg.en_l -> sg13g2_and2_1 -> pll_dig.flock.REF_G`, reported
+as a clock-gating check.  This is a side effect of declaring `REF_G_CLK`:
+without PLL_USE_ICS55_ICG the gate is a plain AND, so the tool now treats the
+combined enable as a gating signal and checks it.  Two ways out: either map the
+gate to the PDK clock-gating cell (needs the ics55-style parameter for IHP,
+which does not exist yet), or accept the AND and pin the gate open for hold.
+Both are single-digit-picosecond numbers, but they must not be silently
+waived.
+
 ## 3. Minimum path to a shippable IHP top
 
 Ordered so each step is verifiable before the next:
