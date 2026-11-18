@@ -40,14 +40,23 @@ done
 
 mkdir -p "$REF_DIR" "$TECH_DIR/klayout/tech"
 
+# Copy, do not symlink.  LibreLane runs OpenROAD/STA inside the tools
+# container, which mounts $ROOT_DIR and $PDK_ROOT only.  A symlink into
+# /shared/OpenROAD-flow-scripts dangles inside that container, which shows up
+# as 'sg13g2_tech.lef does not exist' and leaves the STA step hanging with an
+# empty log.  Copies cost ~40 MB and always resolve.
 for d in lib lef gds cdl verilog; do
-    ln -sfn "$ORFS_PLATFORM/$d" "$REF_DIR/$d"
+    if [[ -L "$REF_DIR/$d" || ! -e "$REF_DIR/$d" ]]; then
+        rm -rf "$REF_DIR/$d"
+        cp -r "$ORFS_PLATFORM/$d" "$REF_DIR/$d"
+    fi
 done
 
 # OpenRCX pattern file (one file covers all ORFS corners).
 [[ -s "$ORFS_PLATFORM/rcx_patterns.rules" ]] || die "missing $ORFS_PLATFORM/rcx_patterns.rules"
 mkdir -p "$REF_DIR/rcx"
-ln -sfn "$ORFS_PLATFORM/rcx_patterns.rules" "$REF_DIR/rcx/IHP_rcx_patterns.rules"
+rm -f "$REF_DIR/rcx/IHP_rcx_patterns.rules"
+cp "$ORFS_PLATFORM/rcx_patterns.rules" "$REF_DIR/rcx/IHP_rcx_patterns.rules"
 
 ln -sfn "$LOCAL_TECH" "$TECH_DIR/librelane"
 
@@ -64,12 +73,12 @@ ln -sfn "$ORFS_PLATFORM/sg13g2.lyp" "$TECH_DIR/klayout/tech/sg13g2.lyp"
 ln -sfn "$ORFS_PLATFORM/sg13g2.map" "$TECH_DIR/klayout/tech/sg13g2.map"
 
 printf 'PDK root assembled: %s\n' "$PDK_ROOT"
-printf '  libs.ref/%s/lib       -> %s\n' "$SCL" "$ORFS_PLATFORM/lib"
-printf '  libs.ref/%s/lef       -> %s\n' "$SCL" "$ORFS_PLATFORM/lef"
-printf '  libs.ref/%s/gds       -> %s\n' "$SCL" "$ORFS_PLATFORM/gds"
-printf '  libs.ref/%s/cdl       -> %s\n' "$SCL" "$ORFS_PLATFORM/cdl"
-printf '  libs.ref/%s/verilog   -> %s\n' "$SCL" "$ORFS_PLATFORM/verilog"
-printf '  libs.ref/%s/rcx       -> %s\n' "$SCL" "$ORFS_PLATFORM/rcx_patterns.rules"
+printf '  libs.ref/%s/lib       = copy of %s\n' "$SCL" "$ORFS_PLATFORM/lib"
+printf '  libs.ref/%s/lef       = copy of %s\n' "$SCL" "$ORFS_PLATFORM/lef"
+printf '  libs.ref/%s/gds       = copy of %s\n' "$SCL" "$ORFS_PLATFORM/gds"
+printf '  libs.ref/%s/cdl       = copy of %s\n' "$SCL" "$ORFS_PLATFORM/cdl"
+printf '  libs.ref/%s/verilog   = copy of %s\n' "$SCL" "$ORFS_PLATFORM/verilog"
+printf '  libs.ref/%s/rcx       = copy of %s\n' "$SCL" "$ORFS_PLATFORM/rcx_patterns.rules"
 printf '  libs.tech/librelane   -> %s\n' "$LOCAL_TECH"
 printf '  NOT provided: official IHP libs.tech/librelane, KLayout DRC/LVS runsets,\n'
 printf '                netgen setup, magic tech.  Signoff steps must be skipped.\n'

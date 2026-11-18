@@ -291,6 +291,54 @@ which does not exist yet), or accept the AND and pin the gate open for hold.
 Both are single-digit-picosecond numbers, but they must not be silently
 waived.
 
+## 2.7 Per-corner STA with the real multi-corner macro Liberty
+
+LibreLane's bundled `sta` could not finish this design: 22900 instances with
+three *distinct* macro Liberty files per corner means nine library loads, and
+the step ran >15 min per corner without emitting one log line.  It was not
+hung (process state R, 25% CPU) but it was not usable either.
+
+`flow/canary/ihp130_sg13g2_core_a/scripts/sta_per_corner.tcl` runs the same
+checks through OpenROAD directly, one corner per invocation, so each has its
+own timeout and log.  Results on `RUN_2026-11-18_18-14-45`:
+
+| corner | hold worst | setup worst | notes |
+|---|---:|---:|---|
+| TT 1.20 V/25 C | +0.3805 | -2.5010 | `_4374_/Q -> _4417_/D` (DSM) |
+| SS 1.08 V/125 C | +0.0240 | -5.1631 | same path, slow corner |
+| FF 1.32 V/-40 C | +0.5925 | -0.8872 | same path, fast corner |
+
+**Hold is positive at every corner**, including the FLL clock-gate check that
+used to fail:
+
+```text
+_4253_/Q (u_fll_icg.en_l latch) -> _2206_/B (AND2) : +9.5972 / +9.5110 / +9.6472
+```
+
+The earlier -0.0349 / -0.0063 / -0.0461 ns on that path was the fallback DFF
+feeding the AND.  With PLL_USE_IHP_ICG the enable is `sg13g2_dllrq_1`
+(latch) and the check passes by ~9.5 ns at all corners, so the regression is
+gone.
+
+The remaining setup violation is one path at every corner:
+`_4374_/Q -> _4417_/D`, both `sg13g2_dfrbpq_1` on the DSM clock.  It is the
+delta_sigma error-feedback chain into FINE_MUX already described in 2.6/A and
+B5 -- an RTL-level fix, not PnR.
+
+### Note on the floorplan
+
+Three macro placements were needed before routing would close:
+
+| die | macro at | result |
+|---|---|---|
+| 260 x 200 | (0,0) | GRT-0116 congestion |
+| 400 x 300 | (0,0) | GRT-0116 congestion |
+| 400 x 300 | (40,40) | routes clean |
+
+30 of the macro's 71 LEF pins are on its left edge and 37 on the right edge,
+so at (0,0) more than half the pins sat on the die boundary with no access.
+Area was never the limit (22.5% utilisation).
+
 ## 3. Minimum path to a shippable IHP top
 
 Ordered so each step is verifiable before the next:

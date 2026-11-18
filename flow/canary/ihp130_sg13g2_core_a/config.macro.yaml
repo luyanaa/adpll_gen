@@ -134,11 +134,11 @@ GND_NETS: [VSS]
 # ---------------------------------------------------------------------------
 LIB:
   nom_tt_025C_1v20:
-    - /shared/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+    - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib
   nom_ss_125C_1v08:
-    - /shared/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_slow_1p08V_125C.lib
+    - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib
   nom_ff_n40C_1v32:
-    - /shared/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/lib/sg13g2_stdcell_fast_1p32V_m40C.lib
+    - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p32V_m40C.lib
 
 STA_CORNERS:
   - nom_tt_025C_1v20
@@ -149,9 +149,9 @@ STA_CORNERS:
 # RC extraction (same OpenRCX rules file as the digital canary)
 # ---------------------------------------------------------------------------
 RCX_RULESETS:
-  "nom_tt_025C_1v20": /shared/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
-  "nom_ss_125C_1v08": /shared/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
-  "nom_ff_n40C_1v32": /shared/OpenROAD-flow-scripts/flow/platforms/ihp-sg13g2/rcx_patterns.rules
+  "nom_tt_025C_1v20": dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/rcx/IHP_rcx_patterns.rules
+  "nom_ss_125C_1v08": dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/rcx/IHP_rcx_patterns.rules
+  "nom_ff_n40C_1v32": dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/rcx/IHP_rcx_patterns.rules
 
 # ---------------------------------------------------------------------------
 # Signoff switches
