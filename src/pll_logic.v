@@ -481,6 +481,7 @@ module pll_logic#(
         end
     end
     wire div_raw;
+    wire div_even;
     wire [DIV_BITS-1:0] div_q;
     pll_mod_divider #(.W(DIV_BITS), .DIV_INIT(DIV_INIT)) div(
         .clk(OUT),
@@ -488,7 +489,8 @@ module pll_logic#(
         .set_div(SET_DIV),
         .load_div(LOAD_DIV),
         .out(div_raw),
-        .div_q(div_q)
+        .div_q(div_q),
+        .div_even(div_even)
     );
     assign OUT_DIV = div_raw;
     ddr_ck_gate #(.W(DIV_BITS)) u_ddr_ck (
@@ -496,6 +498,7 @@ module pll_logic#(
         .locked(LOCKED),
         .rst_n(div_rst_n),
         .div(div_q),
+        .div_even(div_even),
         .ck(CK)
     );
 `endif

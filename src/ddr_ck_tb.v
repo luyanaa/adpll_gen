@@ -17,16 +17,17 @@ module ddr_ck_tb;
 
     wire div_clk;
     wire [7:0] div_q;
+    wire div_even;
     wire ck;
 
     pll_mod_divider #(.W(8), .DIV_INIT(8)) div (
         .clk(clk), .rst_n(rst_n),
         .set_div(set_div), .load_div(load_div),
-        .out(div_clk), .div_q(div_q)
+        .out(div_clk), .div_q(div_q), .div_even(div_even)
     );
     ddr_ck_gate #(.W(8)) u_ck (
         .clk_div(div_clk), .locked(locked), .rst_n(rst_n),
-        .div(div_q), .ck(ck)
+        .div(div_q), .div_even(div_even), .ck(ck)
     );
 
     integer edges, fail, duty_n;

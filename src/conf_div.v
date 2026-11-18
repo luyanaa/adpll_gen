@@ -23,7 +23,13 @@ module pll_mod_divider #(
     input  wire [W-1:0]     set_div,   // new division value (>=1)
     input  wire             load_div,  // pulse to latch set_div (synchronous)
     output wire             out,       // divided clock output (/1 bypass)
-    output wire [W-1:0]     div_q      // active divisor (for the DDR CK gate)
+    output wire [W-1:0]     div_q,     // active divisor (for the DDR CK gate)
+    // Registered "divisor is usable for the DDR pad clock" qualification:
+    // even and >= 2.  It is computed in this (OUT) clock domain so the
+    // ddr_ck_gate negedge capture sees one stable bit instead of an 8-bit
+    // compare.  That compare was the last SS setup violator (-0.456 ns at
+    // 1.08 V/125 C) because the negedge flop only has half an OUT period.
+    output wire             div_even
 );
     localparam integer DIV0 = (DIV_INIT < 1) ? 1 : DIV_INIT;
     localparam integer DIV0_HIGH = (DIV0 <= 1) ? 1 :
@@ -38,11 +44,13 @@ module pll_mod_divider #(
     reg [W-1:0] div_pend;
     reg         pend;
     reg         use_clk;    // /1 bypass; out follows clk
+    reg         even_q;     // registered div>=2 && !div[0]
     reg         enter_req;  // arm the bypass on the next falling clk
     reg         leave_req;  // drop the bypass on the next falling clk
 
     assign out = use_clk ? clk : out_reg;
     assign div_q = div;
+    assign div_even = even_q;
 
     wire [W-1:0] limit = high_phase ? high_count : low_count;
     // End of the low phase: the output period in progress is complete.
@@ -81,6 +89,7 @@ module pll_mod_divider #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             div        <= DIV0[W-1:0];
+            even_q     <= (DIV0 >= 2) && !DIV0[0];
             cnt        <= 'd0;
             out_reg    <= 1'b0;
             high_phase <= 1'b0;
@@ -94,6 +103,10 @@ module pll_mod_divider #(
             // Zero is rejected as /1.  A load on the cycle-end edge stays
             // pending; apply_pend ignores load_div so this edge still
             // finishes the old period.
+            // The DDR qualification follows the divisor actually in force,
+            // so a ratio change updates it one OUT edge after `div`.
+            even_q <= (div_for_counts >= 2) && !div_for_counts[0];
+
             if (load_div) begin
                 div_pend <= (set_div < 1) ? 1 : set_div;
                 pend <= 1'b1;

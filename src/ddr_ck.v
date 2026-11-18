@@ -32,17 +32,21 @@ module ddr_ck_gate #(parameter integer W = 8) (
     input  wire             locked,
     input  wire             rst_n,
     input  wire [W-1:0]     div,
+    // Pre-registered "even and >= 2" qualification from pll_mod_divider.
+    // Computed in the OUT domain; this block only samples the one bit on the
+    // divided clock's falling edge.  Recomputing the 8-bit compare here put
+    // it on the negedge capture path, where only half an OUT period is
+    // available (ics55 SS -0.456 ns).
+    input  wire             div_even,
     output wire             ck
 );
-    // Even and >= 2: high_count == low_count in pll_mod_divider.
-    wire even_ok = (div >= 2) && !div[0];
     reg ck_en;
 
     always @(negedge clk_div or negedge rst_n) begin
         if (!rst_n)
             ck_en <= 1'b0;
         else
-            ck_en <= (locked === 1'b1) && even_ok;
+            ck_en <= (locked === 1'b1) && div_even;
     end
 
     assign ck = ck_en & locked & clk_div;
