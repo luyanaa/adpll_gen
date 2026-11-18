@@ -82,10 +82,40 @@ if {[llength [get_clocks -quiet INJ_EDGE]] == 0} {
 # four as asynchronous for the canary.  Replace the REF/INJ_EDGE split with a
 # create_generated_clock + -edge_shift once the macro Liberty provides the
 # injection delay.
+# ---------------------------------------------------------------------------
+# Gated clocks produced by PLL_CLKGATE
+# ---------------------------------------------------------------------------
+# When PLL_USE_ICS55_ICG is defined, flock.REF_G and dsm_impl.DSM_CK_G are
+# driven by real ICGNX1H7R cells and CTS builds them as separate clock nets.
+# Without a generated-clock declaration STA treats those nets as ordinary
+# data: every REF -> REF_G transfer becomes a synchronous path and repair
+# fills it with delay cells (measured: DLY4X2H7R 15 -> 201, hold -0.1161).
+#
+# The gates are transparent while enabled, so both clocks are the same
+# frequency as their source with a small insertion delay.
+if {[llength [get_clocks -quiet REF_G_CLK]] == 0} {
+    set refg [get_nets -quiet *flock.REF_G*]
+    if {[llength $refg] > 0} {
+        create_generated_clock -name REF_G_CLK -source [get_ports REF] \
+            -divide_by 1 $refg
+    }
+}
+if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
+    set dsmg [get_nets -quiet *DSM_CK_G*]
+    if {[llength $dsmg] > 0} {
+        create_generated_clock -name DSM_CK_G_CLK \
+            -source [get_ports MID_OUT] -divide_by 2 $dsmg
+    }
+}
+
+# REF_G is REF gated by the FLL ICG: same frequency, small insertion delay.
+# It stays in the REF group so REF -> REF_G transfers are analysed (the ICG
+# setup requirement is real), while the CDC synchronizers inside both domains
+# are exempted separately below.
 set_clock_groups -asynchronous \
-    -group {REF} \
+    -group {REF REF_G_CLK} \
     -group {OUT} \
-    -group {MID_OUT} \
+    -group {MID_OUT DSM_CK_G_CLK} \
     -group {INJ_EDGE}
 
 # ---------------------------------------------------------------------------
@@ -225,7 +255,8 @@ set_load 0.050 [all_outputs]
 # ---------------------------------------------------------------------------
 # - SS_BBPD -> loop filter: no macro Liberty yet.  When it exists, this must be
 #   a real setup/hold check against negedge INJ_EDGE, not a false path.
-# - CKR and DSM_CK: internally generated clocks; add create_generated_clock
-#   after synthesis/CTS names are stable.
+# - CKR and DSM_CK: internally generated clocks.  REF_G/DSM_CK_G are now
+#   declared above; CKR still needs a create_generated_clock once its CTS
+#   name is stable.
 # - COARSE_MUX/MID_MUX/FINE_MUX in the full top: constrain at the macro pins
 #   from PLL_ANALOG.lib (input caps + setup/hold), not as top-level outputs.

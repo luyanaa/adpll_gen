@@ -290,6 +290,59 @@ P0 三项都是配置/SDC 级改动，且各自有明确的验证指标：
 目标——因为如果 2.5 ns 目标先上，repair 会在那些本不该检查的 CDC 路径上
 插更多延迟器，反而更难收拾。
 
+## 8.4 ICG 回归的真因：REF_G 没有 generated clock 声明（已定位）
+
+第一次启用 `PLL_USE_ICS55_ICG` 时 hold 从 0 退到 -0.1150（36 条违例），
+当时归因为"hold 修复资源重分配"。**那个解释是错的**，实测证据是延迟器
+数量反而暴增：
+
+```text
+              无 ICG 宏   有 ICG 宏（无 generated clock）
+DLY4X2H7R        15            201
+hold WNS       0.0000       -0.1161
+hold 违例         0            37
+setup WNS      0.0000       -0.1221
+```
+
+**真因**：ICG 生效后 `flock.REF_G` 由 `ICGNX1H7R` 驱动，CTS 把它建成一条
+独立的时钟网络。但 SDC 从来没有声明它是 `REF` 的 generated clock，于是
+STA 把 `REF_G` 上的触发器（如 `MID_MUX_D[14]`）当成普通的 **REF 域数据
+终点**，`FREQ_OK`（REF 域）→ `MID_MUX_D`（REF_G 域）就成了"同步路径"，
+repair 就往里塞延迟器：
+
+```text
+Startpoint: _3801_  FREQ_OK   (DFFRQX0P5H7R, CK=clknet_4_6_0_REF_regs)
+Endpoint:   _3785_  MID_MUX_D[14] (DFFRQX0P5H7R, CK=clknet_3_5_0_flock.REF_G)
+```
+
+201 个 `DLY4X2H7R` 就是这么来的——每个被误判的跨域位一个。
+
+**修复**：SDC 补上两个 generated clock，并把它们并入正确的时钟组：
+
+```tcl
+create_generated_clock -name REF_G_CLK   -source [get_ports REF]     -divide_by 1 <REF_G net>
+create_generated_clock -name DSM_CK_G_CLK -source [get_ports MID_OUT] -divide_by 2 <DSM_CK_G net>
+
+set_clock_groups -asynchronous \
+    -group {REF REF_G_CLK} \
+    -group {OUT} \
+    -group {MID_OUT DSM_CK_G_CLK} \
+    -group {INJ_EDGE}
+```
+
+`REF_G_CLK` 与 `REF` 同组（ICG 的 setup 要求是真实的，必须分析），
+`DSM_CK_G_CLK` 与 `MID_OUT` 同组（它是 MID_OUT 的 /2）。
+
+**顺序要求**：`set_clock_groups` 必须在 `create_generated_clock` 之后，
+否则引用未定义的时钟名会报错。
+
+SDC 语法与时钟创建已验证（OpenROAD，`RUN_2026-11-18_13-22-11` 网表）：
+
+```text
+SDC OK
+clocks: REF OUT MID_OUT INJ_EDGE REF_G_CLK DSM_CK_G_CLK OUT_DIV_CLK CK_CLK
+```
+
 ## 8.5 ICG 映射需要配套的 hold 修复（实测回归）
 
 单看综合，`PLL_USE_ICS55_ICG` 是净收益（2403 vs 2434 µm²，ICG 可被 CTS
@@ -304,14 +357,12 @@ P0 三项都是配置/SDC 级改动，且各自有明确的验证指标：
 | hold_buffer | 55 | 18 |
 | timing_repair 面积 | 1560 µm² | 2120 µm² |
 
-**原因**：ICG 把 `REF_G`/`DSM_CK_G` 从"组合与门"变成 CTS 拓扑里的真实
-门控单元，负载与插入延迟随之改变。原本靠 55 个 `DLY4X2H7R` 勉强压住的
-REF 域内部 hold（例如 `FREQ_OK` → `_3785_`，路径上有 3 个 `DLY4X2`），
-在 hold_buffer 降到 18 后不再成立。
+**原因（已由上节 8.4 修正）**：真正的原因是 `REF_G` 缺少
+`create_generated_clock` 声明，导致 REF → REF_G 的每个触发器被当成同步
+路径，repair 插了 201 个延迟器。上表 hold_buffer 反而从 55 降到 18 是因为
+repair 把预算全花在了那些误判路径上。
 
-**这不是 ICG 本身的问题**，而是修 hold 的资源被重新分配后，REF 域那些
-本该靠 CDC 约束豁免、却仍在被检查的路径暴露出来。这与第 4 节的 CDC 发现
-是同一个根：**先做 CDC `set_false_path`，再做 ICG 映射**。当前顺序反了。
+早先"hold 修复资源重分配"的推断不成立。
 
 `VERILOG_DEFINES` 已从 `config.digital.yaml` 回退，保持已收敛基线
 （`RUN_2026-11-18_11-55-44`）。ICG 映射留待 CDC 约束到位后再启用。
