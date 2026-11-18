@@ -57,8 +57,14 @@ module pll_mod_divider #(
     wire cycle_end = !use_clk && !leave_req && !high_phase &&
                      (cnt + 1'b1 >= low_count);
     wire apply_pend = pend && cycle_end && !load_div;
-    wire [W-1:0] div_for_counts = (!use_clk && leave_req) ? div_pend :
-                                  apply_pend ? div_pend : div;
+    // div_for_counts must not depend on use_clk.  use_clk is a falling-edge
+    // flop (the /1 bypass select), so any term that consults it turns the
+    // width pre-decode into a half-OUT-period path; that was the last ics55
+    // SS setup violator (-0.641 ns at 1.08 V/125 C).  The `!use_clk` qualifier
+    // is redundant: while use_clk is high the posedge block only clears the
+    // counter and never reads high_count/low_count, and when the bypass is
+    // dropped leave_req is still set, so the div_pend selection is unchanged.
+    wire [W-1:0] div_for_counts = (leave_req || apply_pend) ? div_pend : div;
 
     // Pre-decode both candidate divisors concurrently, then pick one.  The
     // candidates are the running `div` and the pending `div_pend`; both are
