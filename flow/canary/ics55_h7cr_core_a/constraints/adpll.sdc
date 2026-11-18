@@ -109,9 +109,15 @@ set_input_delay -min 1.000 -clock REF [get_ports {KP[*] KI[*] FCW[*]}]
 set_input_delay -max 5.000 -clock REF [get_ports {DSM_EN_DT DSM_EN_SHDT DSM_ORDER[*]}]
 set_input_delay -min 1.000 -clock REF [get_ports {DSM_EN_DT DSM_EN_SHDT DSM_ORDER[*]}]
 
-# OUT-sampled divider interface.
-set_input_delay -max 0.500 -clock OUT [get_ports {SET_DIV[*] LOAD_DIV}]
-set_input_delay -min 0.100 -clock OUT [get_ports {SET_DIV[*] LOAD_DIV}]
+# Divider ratio interface.  SET_DIV/LOAD_DIV are quasi-static straps: the
+# ratio is programmed once (or on a slow control event), not toggled every OUT
+# cycle.  They must not be timed as OUT-synchronous data.  Timing them so
+# pulled the ports into the OUT group, where the tool inserted hold buffers
+# (DLY4X2H7R) and then reported the resulting chain as a -1.03 ns SS setup
+# violation.  Treat them as static inputs.
+set_false_path -from [get_ports {SET_DIV[*] LOAD_DIV}]
+set_input_delay -max 5.000 -clock REF [get_ports {SET_DIV[*] LOAD_DIV}]
+set_input_delay -min 1.000 -clock REF [get_ports {SET_DIV[*] LOAD_DIV}]
 
 # Async reset and static enables are not data paths.
 set_false_path -from [get_ports RST_N]

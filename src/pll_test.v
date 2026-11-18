@@ -53,7 +53,12 @@ module pll_test();
     ) 
 `endif
     dut (
+`ifdef WITH_POWER
+        // Power ports exist only when pll is built WITH_POWER.  The
+        // LibreLane post-route netlist promotes them to the PDN and drops
+        // them from pll_logic, so a POSTSYN run must not pass them.
         .VDD(VDD), .VSS(VSS),
+`endif
         .REF(CLK_REF), .RST_N(RST_N), .INJ_EN(INJ_EN),
         .KP(KP), .KI(KI),
         .FCW(FCW),
