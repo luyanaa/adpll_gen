@@ -49,49 +49,61 @@ characterization report。完整 top-level `pll` 还没有和硬宏一起集成�
 IHP 的 5.62 mW 是 **Core A 数字控制 canary** 的 TT 功耗，不是硬宏或完整
 ADPLL 的功耗。
 
-### 3.1 ics55 数字 canary 的新 post-PnR 结果（本轮重跑）
+### 3.1 ics55 数字 canary 的新 post-PnR 结果（本轮重跑，已收敛）
 
 上表 ics55/IHP 三行是**审计之前**的快照。ics55 已用当前 RTL 重跑完整的
 LibreLane 数字流程（synth → floorplan → place → CTS → route → RCX →
-post-PnR STA/power），可以替换旧数字：
+post-PnR STA/power），**三个 corner 全部 setup/hold 收敛，TNS 与违例数
+均为 0**，流程退出码 0。
 
-Run `flow/canary/ics55_h7cr_core_a/runs/RUN_2026-11-18_09-06-10`，
-约束 `REF=20 ns`、`OUT/MID_OUT=2.5 ns`、四个时钟异步：
+Run `RUN_2026-11-18_11-55-44`，约束 `REF=20 ns`、`OUT/MID_OUT=2.5 ns`、
+四个时钟异步：
 
-| corner | Hold WNS | Setup WNS | Setup TNS | Setup 违例数 |
+| corner | Hold WNS | Setup WNS | Setup TNS | Setup 违例 |
 |---|---:|---:|---:|---:|
-| TT 1.20 V/25 C | +0.1236 | -0.3232 | -0.3232 | 1 |
-| SS 1.08 V/125 C | +0.2631 | -0.9930 | -15.0906 | 38 |
-| FF 1.32 V/-40 C | +0.0661 | -0.0373 | -0.0373 | 1 |
+| TT 1.20 V/25 C | +0.1303 | **+0.5881** | 0.0000 | 0 |
+| SS 1.08 V/125 C | +0.2712 | **+0.0373** | 0.0000 | 0 |
+| FF 1.32 V/-40 C | +0.0663 | **+0.7491** | 0.0000 | 0 |
 
-实现规模：**7938 实例 / 20449 µm²**（sequential 4056.92、其他 10690.1、
-时序修复 buffer 1662.36、clock buffer 671.72），core 20449 µm²，
-die 22900.2 µm²。综合（Yosys，未 P&R）是 2715 cells / 8096.48 µm²，
-即 P&R 后面积约 2.5 倍——增量几乎全是 CTS/时序修复 buffer（669 个）。
+SS 只剩 2 个 max-cap 与 2 个 max-slew（TT/FF 为 0），不是时序违例。
+
+实现规模：**7847 实例 / 20477.5 µm²**，core 20477.5 µm²，die 22943.2 µm²，
+`utilization = 1.0`（核心区填满）；hold buffer 55、setup buffer 32。
+综合（Yosys，未 P&R）是 2715 cells / 8096.48 µm²。
 
 功耗（`report_power`，**默认翻转率、无 VCD**）：
 
 | corner | Internal | Switching | Leakage | Total |
 |---|---:|---:|---:|---:|
-| TT | 1.594 mW | 0.791 mW | 0.0012 mW | **2.386 mW** |
-| SS | 1.184 mW | 0.625 mW | 0.0191 mW | **1.828 mW** |
-| FF | 2.197 mW | 0.991 mW | 0.0029 mW | **3.191 mW** |
+| TT | 2.050 mW | 0.975 mW | 0.0029 mW | **3.027 mW** |
 
-这些数字**没有**包含 `/2` 前端、`REG_OUT` 或 DSM/FLL ICG 的降幅——降幅
-只能在门级仿真出两段 VCD（LOCKED 前/后）后用 OpenROAD `read_vcd` 量化。
+这些数字**没有**包含 `/2` 前端、`REG_OUT` 或 DSM/FLL ICG 的降幅——降幅只能
+在门级仿真出两段 VCD（LOCKED 前/后）后量化。
 
-**已定位并修掉的 SS 关键路径。** 旧的 40 个 SS setup 违例中有 37 个是
-同一条路径：`div.use_clk`（OUT 下降沿触发，只有半个 OUT 周期）→ mux →
-shift → `+1` → OR4/NOR4 → `div.high_count[0]`，slack -0.784 ns。
-`conf_div.v` 改为并行预译码两个候选除数的 high/low 宽度后再用一级 mux
-选择（提交 `d7873bb`）。单模块 STA（映射网表、2.5 ns、无 input delay）：
-arrival 2.679 → 2.112 ns，slack -0.250 → **+0.320 ns**，
-`divider_tb` 输出逐行一致。
+#### SS 收敛过程（每步都是实测 STA）
 
-修复后剩下的 `OUT_DIV` 违例是**约束建模错误**，不是逻辑问题：`OUT_DIV`
-和 `CK` 是分频后的**时钟输出**（末级是 clock mux），却被 `set_output_delay`
-当数据输出约束。`constraints/adpll.sdc` 已改为
-`create_generated_clock`（`OUT_DIV_CLK`、`CK_CLK`，`-divide_by 2`）。
+| run | SS Setup WNS | SS 违例 | TT | FF | 修复 |
+|---|---:|---:|---:|---:|---|
+| 09-06 | -0.9930 | 38 | -0.3232 | -0.0373 | 基线（新 RTL 首跑） |
+| 09-28 | -0.4556 | 37 | +0.2455 | +0.5309 | 分频器宽度预译码 + OUT_DIV/CK 改 generated clock |
+| 09-50 | -1.0301 | 42 | +0.1539 | +0.4728 | （`SET_DIV` 被误当同步数据，已回退） |
+| 10-10 | -0.6412 | 34 | +0.1504 | +0.4704 | `SET_DIV/LOAD_DIV` 改静态 strap；`div_even` 预寄存 |
+| 10-30 | -0.5578 | 40 | +0.1918 | +0.4887 | 去掉 `div_for_counts` 的 `use_clk` 项 |
+| 10-53 | -0.2763 | 35 | +0.3386 | +0.5895 | `use_clk_p`：bypass 选择重定时进 posedge 域 |
+| 11-16 | -0.0438 | 1 | +0.5734 | +0.7176 | 同上，补齐三处残留 `use_clk` 读取 |
+| 11-35 | -0.4447 | 1 | +0.5334 | +0.6875 | （`REF_OK` 2FF 没触及 `ref_fail` 自环，已回退） |
+| **11-55** | **+0.0373** | **0** | **+0.5881** | **+0.7491** | `ref_fail` 粘滞位移入 REF 域 |
+
+两个关键结构问题：
+
+1. **`use_clk` 穿入 posedge 逻辑**。`use_clk` 是 /1 bypass 的下降沿触发器，
+   而 `cycle_end`／`apply_pend`／`div_for_counts` 都在 posedge 块里读它，
+   形成只有半个 OUT 周期（1.25 ns）的 reg→reg 路径。改为 posedge 域重定时
+   副本 `use_clk_p`，`use_clk` 只保留给最后的输出时钟 mux。
+2. **`ref_fail` 的 OUT 域自反馈**。该触发器反馈环里几乎没有逻辑，hold 修复
+   工具往里塞了 10 级 `BUFX1P4H7R`，撑出 -0.44 ns setup 违例。粘滞位整体
+   移入 REF 域（与 `dco_fail` 同域），清除用的 `clr_toggle`（INJ_EDGE 域）
+   走 3FF 同步 + 边沿检测。
 
 **旧口径说明（保留）**：上表 ics55/IHP `OUT`/`MID_OUT`/`INJ_EDGE` 的
 Fmax 列仍是旧快照；IHP 尚未重跑。
