@@ -43,8 +43,8 @@ VERILOG_FILES:
 # ICG changes REF_G/DSM_CK_G load and the hold-repair budget is reallocated
 # before the CDC paths are exempted.  Enable it only together with the CDC
 # set_false_path work; see flow/PnR_OPTIMIZATION.md sections 4 and 8.5.
-# VERILOG_DEFINES:
-#   - PLL_USE_ICS55_ICG
+VERILOG_DEFINES:
+  - PLL_USE_ICS55_ICG
 
 PDK: ics55
 
