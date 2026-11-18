@@ -43,7 +43,8 @@ module pll_mod_divider #(
     reg         out_reg;
     reg [W-1:0] div_pend;
     reg         pend;
-    reg         use_clk;    // /1 bypass; out follows clk
+    reg         use_clk;    // /1 bypass; out follows clk (negedge select)
+    reg         use_clk_p;  // use_clk re-timed into the posedge domain
     reg         even_q;     // registered div>=2 && !div[0]
     reg         enter_req;  // arm the bypass on the next falling clk
     reg         leave_req;  // drop the bypass on the next falling clk
@@ -54,7 +55,7 @@ module pll_mod_divider #(
 
     wire [W-1:0] limit = high_phase ? high_count : low_count;
     // End of the low phase: the output period in progress is complete.
-    wire cycle_end = !use_clk && !leave_req && !high_phase &&
+    wire cycle_end = !use_clk_p && !leave_req && !high_phase &&
                      (cnt + 1'b1 >= low_count);
     wire apply_pend = pend && cycle_end && !load_div;
     // div_for_counts must not depend on use_clk.  use_clk is a falling-edge
@@ -90,7 +91,7 @@ module pll_mod_divider #(
     wire [W-1:0] lo_pend = half_lo(div_pend);
     wire [W-1:0] high_count_pend = div_for_counts_is_pend ? hi_pend : hi_cur;
     wire [W-1:0] low_count_pend  = div_for_counts_is_pend ? lo_pend : lo_cur;
-    wire div_for_counts_is_pend = (!use_clk && leave_req) || apply_pend;
+    wire div_for_counts_is_pend = (!use_clk_p && leave_req) || apply_pend;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -106,6 +107,14 @@ module pll_mod_divider #(
             enter_req  <= 1'b0;
             leave_req  <= 1'b0;
         end else begin
+            // Re-time the bypass select into this (posedge) domain.  use_clk
+            // itself is a falling-edge flop, so reading it here created a
+            // half-OUT-period reg->reg path (ics55 SS -0.558 ns).  The
+            // re-timed copy is equivalent for the control decisions below:
+            // while use_clk is high the output is driven by clk through the
+            // mux, so out_reg/cnt are not observable for that one cycle.
+            use_clk_p <= use_clk;
+
             // Zero is rejected as /1.  A load on the cycle-end edge stays
             // pending; apply_pend ignores load_div so this edge still
             // finishes the old period.
@@ -116,7 +125,7 @@ module pll_mod_divider #(
             if (load_div) begin
                 div_pend <= (set_div < 1) ? 1 : set_div;
                 pend <= 1'b1;
-            end else if (apply_pend || (!use_clk && leave_req)) begin
+            end else if (apply_pend || (!use_clk_p && leave_req)) begin
                 pend <= 1'b0;
             end
 
@@ -129,7 +138,7 @@ module pll_mod_divider #(
             high_count <= high_count_pend;
             low_count  <= low_count_pend;
 
-            if (use_clk) begin
+            if (use_clk_p) begin
                 // Bypass.  Hold the counter low so leaving it starts a low
                 // phase.  use_clk itself falls in the negedge block.
                 cnt <= 'd0;
