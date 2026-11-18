@@ -52,6 +52,32 @@ module pll_mod_divider #(
     wire [W-1:0] div_for_counts = (!use_clk && leave_req) ? div_pend :
                                   apply_pend ? div_pend : div;
 
+    // Pre-decode both candidate divisors concurrently, then pick one.  The
+    // candidates are the running `div` and the pending `div_pend`; both are
+    // registered and stable well before the select resolves.
+    function [W-1:0] half_hi;
+        input [W-1:0] d;
+        begin
+            if (d <= 1)          half_hi = {{(W-1){1'b0}}, 1'b1};
+            else if (d[0])       half_hi = (d >> 1) + 1'b1;
+            else                 half_hi = d >> 1;
+        end
+    endfunction
+    function [W-1:0] half_lo;
+        input [W-1:0] d;
+        begin
+            if (d <= 1)          half_lo = {{(W-1){1'b0}}, 1'b1};
+            else                 half_lo = d >> 1;
+        end
+    endfunction
+    wire [W-1:0] hi_cur = half_hi(div);
+    wire [W-1:0] lo_cur = half_lo(div);
+    wire [W-1:0] hi_pend = half_hi(div_pend);
+    wire [W-1:0] lo_pend = half_lo(div_pend);
+    wire [W-1:0] high_count_pend = div_for_counts_is_pend ? hi_pend : hi_cur;
+    wire [W-1:0] low_count_pend  = div_for_counts_is_pend ? lo_pend : lo_cur;
+    wire div_for_counts_is_pend = (!use_clk && leave_req) || apply_pend;
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             div        <= DIV0[W-1:0];
@@ -75,16 +101,14 @@ module pll_mod_divider #(
                 pend <= 1'b0;
             end
 
-            if (div_for_counts <= 1) begin
-                high_count <= 1;
-                low_count  <= 1;
-            end else if (div_for_counts[0]) begin
-                high_count <= (div_for_counts >> 1) + 1'b1;
-                low_count  <= div_for_counts >> 1;
-            end else begin
-                high_count <= div_for_counts >> 1;
-                low_count  <= div_for_counts >> 1;
-            end
+            // Register the two candidate high/low widths and select with a
+            // single mux.  The direct form put the whole
+            // div -> half-compare -> shift -> increment chain in the same
+            // cycle, and div_for_counts depends on use_clk (a falling-edge
+            // flop with only half an OUT period).  That path was the SS
+            // post-route setup violator (-0.784 ns at 1.08 V/125 C).
+            high_count <= high_count_pend;
+            low_count  <= low_count_pend;
 
             if (use_clk) begin
                 // Bypass.  Hold the counter low so leaving it starts a low
