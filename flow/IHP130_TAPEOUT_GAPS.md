@@ -114,8 +114,23 @@ three corners come out almost equal (SS 0.3255 < TT 0.3400 < FF 0.3493).  At
 index 4 of the 7-point template the ordering is correct and well separated
 (SS 0.7958 > TT 0.6413 > FF 0.5418), giving the 1.24x / 0.845x ratios above.
 
-Verified: OpenSTA parses all three files (`OK` for each) and the top-level
-per-corner STA still runs to completion at TT/SS/FF.
+Verified with **both** readers, which turned out to matter: OpenSTA parses
+all three files, and OpenROAD `read_liberty` reports `READ-OK` for each.
+
+**Correction worth recording.**  The first version of the patch was not
+idempotent *and* corrupted the file while trying to be.  It stripped a
+previously injected `timing() { ... }` group with a regex; Liberty groups nest,
+so the regex stopped at the first `}` and left that group's
+`rise_transition`/`cell_fall`/`fall_transition` orphaned, driving the brace
+depth to -1.  OpenSTA accepted the malformed file, so it looked fine — the
+failure only surfaced when the full signoff PnR run hit it, because OpenROAD's
+reader is stricter and reported `syntax error` at the mismatched brace.  The
+lesson is that a Liberty writer must be brace-depth aware, and that a single
+parser accepting a generated file is not evidence the file is well formed.
+`add_bbpd_arc.py` now locates groups by indentation depth with brace counting,
+strips file-wide before inserting, and self-verifies (balanced braces, exactly
+one arc per `SS_BBPD` bit) or exits non-zero.  Three consecutive runs produce
+identical structure.
 
 Caveat worth stating: the c2q value is **calibration-seeded, not measured per
 corner**.  A characterised per-corner c2q from the macro's own SPICE/STA would
