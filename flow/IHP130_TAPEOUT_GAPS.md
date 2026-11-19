@@ -284,56 +284,80 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
-### B12. The DCO clocks cannot propagate: OUT/MID_OUT/INJ_EDGE are macro outputs
+### B12. CTS leaves the divided-clock domain dangling: 33 registers are unchecked
 
-While closing B11 I hit the reason the derived clocks stay `Virtual: yes`, and
-it is structural rather than a scripting mistake.
+Closing B11 exposed a defect one level down, and it is in the clock tree rather
+than the constraints.
 
-`OUT`, `MID_OUT` and `INJ_EDGE` are **outputs of the PLL_ANALOG macro**
-(`pll_ana`).  In the assembled top they are internal nets, not top-level input
-ports, so `create_clock` on them produces a *virtual* clock: STA has no real
-source pin to propagate from.  Measured at STAPostPNR:
+#### What is measured
+
+`checks.rpt` at every corner, post-PnR:
 
 ```text
-Clock: MID_OUT
-Sources: pll_ana/MID_OUT
-Generated: no
-Virtual: yes        <-- the DCO clock itself is virtual
+Warning: There are 33 unclocked register/latch pins.
+  _4479_/CLK ... _4509_/CLK   (FLL frequency counter)
+  _4613_/CLK _4615_/CLK       (LOCKED -> DSM synchroniser)
 ```
 
-Everything derived from them inherits that (`OUT_DIV_CLK`, `CK_CLK`,
-`DSM_CK_G_CLK`, `CKR_CLK`, `OUT_DIV2_CLK`, `FE_CLK_DIV` all report
-`Virtual: yes`), and `set_propagated_clock` cannot propagate a virtual clock.
-So the clock tree inside those domains is not analysed, which is why
-`checks.rpt` goes from 2 unclocked pins at STAPrePNR to 33 at STAPostPNR: at
-pre-PnR the flops are clocked by the register net the SDC named, and after CTS
-the load net is renamed to `*_regs` and the connection to the (virtual) clock
-root is lost.  `clk_div_regs` occurs 0 times before `35-openroad-cts` and 61
-times after, which localises the break exactly.
+Progression across the work: 82 unclocked -> 51 (declaring `FE_CLK_DIV`) -> 2
+at STAPrePNR (declaring `OUT_DIV2_CLK`, `CKR_CLK`, `DSM_CK_CLK`) -> back to 33
+at STAPostPNR.
 
-An attempt worth recording as a dead end: making the helper declare a clock on
-*every* driver pin matching the net pattern.  That produced
-`FE_CLK_DIV` .. `FE_CLK_DIV_12` and `CKR_CLK` .. `CKR_CLK_9` -- thirteen
-independent asynchronous domains for what is one clock, because every CTS
-buffer output matched.  Strictly worse than the original problem; reverted.
+#### Why it goes back up after CTS
 
-The real options, none of them an SDC tweak:
+The netlist shows the split directly. Before CTS, `clk_div` occurs 0 times with
+a `_regs` suffix; after `35-openroad-cts` it occurs 61 times.  In the routed
+netlist the two trees are:
 
-1. **Characterise the macro's clock outputs as real clock sources.**  The hard
-   macro should publish its output clocks (`.lib` with `is_clock` /
-   `clock_gating` semantics, or a `.opensta` "clock port" declaration) so the
-   top-level STA sees `pll_ana/MID_OUT` as a proper clock root rather than a
-   virtual one.  This is the clean fix and it is a macro-view deliverable.
-2. **Route the DCO clocks out and back in through real ports** in the canary
-   only, so STA can propagate them.  Cheap, but it changes the design to suit
-   the checker.
-3. **Accept virtual clocks and analyse the domains separately** with explicit
-   `-through` / pin-anchored corners -- what the out-of-flow
-   `sta_per_corner.tcl` does today.
+```verilog
+// the one that connects: register Q -> buffer -> tree
+sg13g2_buf_16 clkbuf_0_..._clk_div      (.X(clknet_0_..._clk_div),
+                                         .A(..._clk_div));           // <- driven
+// the one that clocks the counter flops
+sg13g2_buf_16 clkbuf_0_..._clk_div_regs (.X(clknet_0_..._clk_div_regs),
+                                         .A(..._clk_div_regs));      // <- NO driver
+```
 
-Until one of these is chosen, treat the reported three-corner setup/hold
-numbers as covering the REF/OUT/MID_OUT domains that *can* be propagated, and
-treat the 33 unclocked pins as unchecked rather than passing.
+`..._clk_div_regs` has no driver anywhere in the netlist -- the source register
+still drives `..._clk_div`.  CTS created the `_regs` name for the load side and
+never connected its root, so the 33 counter flops hang off an undriven net.
+That is why a virtual clock on `clk_div` reports 0 endpoints while the same
+declaration on `pll_dig.out_div2` (whose tree is connected) reports 38.
+
+`FE_CLK_DIV`, `CKR_CLK` and `DSM_CK_CLK` each report 0 endpoints in `max.rpt`;
+`REF_G_CLK` (100), `DSM_CK_G_CLK` (154), `OUT_DIV2_CLK` (38) and `OUT` (271) all
+report normally.  The difference is not the declaration -- it is whether the
+tree root is connected.
+
+Also relevant: `MID_OUT` reports `Virtual: yes` even though it is the DCO clock,
+because `OUT`/`MID_OUT`/`INJ_EDGE` are *outputs of the PLL_ANALOG macro*, not
+top-level ports.  Virtual clocks still time their domains here (`OUT` has 271
+endpoints), so that alone is not the blocker -- the dangling `_regs` tree is.
+
+#### Dead end, recorded so it is not retried
+
+Declaring a generated clock on *every* driver pin matching the net pattern
+produced `FE_CLK_DIV`..`FE_CLK_DIV_12` and `CKR_CLK`..`CKR_CLK_9`: thirteen
+asynchronous domains for one clock, because every CTS buffer output matched.
+Strictly worse.  Reverted.
+
+#### Options
+
+1. **Stop CTS from splitting `clk_div`.**  Give the divider output a
+   `(* keep *)` / dont-touch attribute, or register the divided clock into a
+   buffer cell explicitly, so the load tree keeps the original net name.  Needs
+   experimenting; no LibreLane knob disables the rename.
+2. **Move the /2 into the RTL structure rather than a raw register output**:
+   clock the counter from `MID_OUT` and gate the increment by the divided
+   enable instead of gating the clock.  This removes a real generated clock from
+   the design and is the conventional fix, but it changes `frequency_counter_
+   frontend` behaviour and needs its own timing/functional check.
+3. **Report it rather than close it.**  The 33 registers are the FLL counter and
+   the LOCKED hand-off.  If they are not timed, `FREQ_LOCKED` correctness is not
+   backed by signoff -- so this cannot be a silent pass.
+
+Nothing else in the flow is affected: hold is clean at all three corners, and
+max cap / max slew / detailed route / antenna are all zero.
 
 ### B10. First complete IHP top PnR: three-corner timing, and the real setup gap
 
