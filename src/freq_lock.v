@@ -17,16 +17,27 @@ module PLL_CLKGATE (
 `ifdef PLL_USE_ICS55_ICG
     ICGNX1H7R u_icg (.CKN(CLK), .E(EN), .ECK(GCLK));
 `elsif PLL_USE_IHP_ICG
-    // IHP SG13G2 lgcp/slgcp are `dont_use : true` in the ORFS library, so the
-    // gate is built from the library's own latch plus an AND
-    // (latch_negedge_postcontrol).  Instantiate the latch directly: dfflibmap
-    // does not map inferred $_DLATCH_ cells, so an `always @(*) if (!CLK)`
-    // form would leave an unmapped latch.
-    wire en_l;
-    sg13g2_dllrq_1 u_icg_latch (
-        .D(EN), .GATE_N(CLK), .RESET_B(1'b1), .Q(en_l)
+    // IHP SG13G2 clock gate.
+    //
+    // Do NOT build this from sg13g2_dllrq_1 (latch) + AND, even though that is
+    // the textbook latch_negedge_postcontrol structure.  The library models
+    // that latch with a GATE_N -> Q `falling_edge` arc, i.e. the gate is a
+    // *clock* pin as far as STA is concerned.  Wiring GATE_N to CLK and then
+    // ANDing CLK with the latch output closes a loop in the clock graph
+    // (CLK -> GATE_N -> Q -> AND -> GCLK), and OpenSTA's path search never
+    // terminates: report_checks spins forever at ~100% CPU with no output.
+    // Measured: the same design with the two latches' Q disconnected reports
+    // in 220 ms instead of hanging.
+    //
+    // sg13g2_lgcp_1 is the real ICG cell and is modelled correctly for this
+    // use: GCLK carries no edge arc at all, and GATE only has setup/hold
+    // against CLK.  The ORFS library marks it dont_use and lists it in
+    // synth_excluded.cells, so both exclusions are lifted in the canary
+    // config (PNR_EXCLUDED_CELLS / SYNTH_EXCLUDED_CELL_FILE) -- a design that
+    // actually needs a clock gate cannot honour a blanket dont_use.
+    sg13g2_lgcp_1 u_icg (
+        .CLK(CLK), .GATE(EN), .GCLK(GCLK)
     );
-    assign GCLK = CLK & en_l;
 `else
     (* keep *) reg en_l;
     initial en_l = 1'b1;

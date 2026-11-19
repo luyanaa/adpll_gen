@@ -48,9 +48,19 @@ STD_CELL_LIBRARY: sg13g2_stdcell
 # with 'Parameter not found: IL_NDELS'.
 VERILOG_DEFINES:
   - POSTSYN
-  # Build PLL_CLKGATE from sg13g2_dllrq_1 (latch) + AND, i.e. the standard
-  # latch_negedge_postcontrol gate.  Without it the enable is a real flop and
-  # STA reports a clock-gating hold check on the AND.
+  # Build PLL_CLKGATE from the library's real ICG cell, sg13g2_lgcp_1.  Without
+  # this the enable is a real flop and STA reports a clock-gating hold check on
+  # the AND.
+  #
+  # Do NOT go back to sg13g2_dllrq_1 + AND.  That latch is modelled with a
+  # GATE_N -> Q falling_edge arc, so tying GATE_N to CLK and ANDing CLK with
+  # the latch output closes a loop in the clock graph; OpenSTA's path search
+  # then never terminates (measured: report_checks hangs at 100% CPU, and
+  # disconnecting the two latch outputs takes the same report to 220 ms).
+  # lgcp's GCLK has no edge arc and GATE only has setup/hold, which is the
+  # correct model.  Its `dont_use` flag and the ORFS exclusion lists are
+  # cleared by
+  #   build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/enable_lgcp.py
   - PLL_USE_IHP_ICG
 
 # ---------------------------------------------------------------------------

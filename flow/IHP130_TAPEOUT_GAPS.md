@@ -240,52 +240,64 @@ SPEF names do not match the netlist.  For a PLL tapeout, phase noise and
 jitter are the headline specs; neither exists.
 
 
-### B9. PnR stalls in `OpenROAD.STAPrePNR` on the DSM-fixed netlist (OPEN)
+### B9. PnR hung in `STAPrePNR`: the IHP clock gate closed a loop in the clock graph -- FIXED
 
-The signoff PnR run that was supposed to produce the three-corner numbers
-never got past the *second* step.  It hung in `STAPrePNR`: three `sta`
-processes at 100% CPU for 5 h 50 min, `sta.log` and `min.rpt` both 0 bytes.
-It was not slow -- `staprepnr` takes 7 s on the previous netlist.
+The signoff rerun never reached the three-corner numbers.  It hung in
+`STAPrePNR` with three `sta` processes at 100% CPU for 5 h 50 min and both
+`sta.log` and `min.rpt` at 0 bytes.  It was not slow: the same step takes 7 s.
+The later `STAMidPNR` hung the same way (one `openroad`, 99.9% CPU, ~200 s of
+CPU in 200 s of wall time, single-threaded, `stime` 0.2 s -- pure computation,
+no I/O wait).
 
-Diagnosis, narrowed by single-variable replay with the real `corner.tcl`,
-the real `_env*.tcl` and the real PDK libs:
+**Root cause.**  Commit `c087a46` built `PLL_CLKGATE` from `sg13g2_dllrq_1`
+(latch) plus an AND -- the textbook `latch_negedge_postcontrol` gate -- to
+remove a clock-gating hold check.  But the sg13g2 Liberty models that latch
+with a **`GATE_N -> Q` `falling_edge` arc**, which makes `GATE_N` a *clock* pin
+to STA.  Wiring `GATE_N` to `CLK` and then ANDing `CLK` with the latch output
+closes a loop in the clock graph:
 
-| variable changed | result |
+```text
+CLK -> GATE_N(latch) -> Q -> AND(CLK, Q) -> GCLK
+```
+
+OpenSTA's path search does not terminate on that loop.  It is not a
+combinational data loop -- a structural cycle check on both netlists finds
+zero cycles, and `set_false_path -from <latch Q>` does not help, because the
+loop is formed while the *clock* graph is built.
+
+**Isolation evidence**, all by single-variable replay with the real
+`corner.tcl`, real `_env*.tcl` and real PDK libs:
+
+| change | result |
 | --- | --- |
-| old env + old netlist | completes, writes SDF, **0.8 s** |
-| old env + **new** netlist | hangs in the first `report_checks` |
-| Liberty: single TT vs per-corner | no effect (both hang) |
-| Liberty: `SS_BBPD` arc present vs absent | no effect (both hang) |
-| 3 corners vs TT-only | not the trigger -- the hang is per-corner and happens at TT too |
+| old netlist (no `dllrq`) | completes, 0.8 s, writes SDF |
+| new netlist (2x `dllrq`) | hangs in the first `report_checks` |
+| new netlist, `SS_BBPD` arc stripped | still hangs -- the arc is not the cause |
+| old ODB + ODB-branch `report_checks` | 253 ms |
+| new ODB + ODB-branch `report_checks` | hangs |
+| new ODB, disconnect the 2 latch `Q` outputs | **220 ms** |
+| new ODB, `set_false_path -from <latch Q>` | still hangs |
 
-So the trigger is the **new netlist** (the one carrying the DSM `FILTER_DEC`
-register fix): 517 -> 538 `sg13g2_dfrbpq_1`, 2667 instances.  Ruled out along
-the way, each by measurement rather than reasoning:
+The cell histogram was what pointed at it: `sg13g2_dllrq_1` is the only cell
+type present in the new netlist and absent from the old one.
 
-- The `SS_BBPD` clock-to-Q arc is *not* the cause (a netlist with the arc
-  stripped hangs identically).
-- `report_checks` itself is fast on both netlists when driven from a plain
-  `read_liberty` + `read_sdc` script: ~100 ms for the full design, ~70 ms per
-  clock group, ideal *and* propagated clocks.
-- Clock count is not it: the successful run also had all eight clocks
-  (`REF OUT MID_OUT INJ_EDGE REF_G_CLK DSM_CK_G_CLK OUT_DIV_CLK CK_CLK`).
-- Parasitics are not it: `_CURRENT_CORNER_SPEFS` is empty at this step.
-- CDC exemptions resolve identically (93 sink pins on both).
+Ruled out along the way, each by measurement: the `SS_BBPD` clock-to-Q arc,
+the per-corner macro Libs, the number of corners, the number of clocks (the
+successful run also had all eight), parasitics (SPEFs are empty at that step),
+the CDC hold exemptions (93 sinks on both), and the design size (2523 -> 2667
+cells, 541 registers, 8 clocks).
 
-What remains is a difference inside `corner.tcl`'s own path that the plain
-script does not reproduce (`read_timing_info` + `read_current_netlist` +
-`read_current_sdc`'s `set_propagated_clock`, then the
-`-format full_clock_expanded -group_path_count 1000` report).  A truncated
-`corner.tcl` that stops after the first `report_checks` runs the old netlist
-in 143 ms and hangs on the new one, which localises it to that one command
-under that one driver path.
+**Fix.**  Use the library's real ICG cell, `sg13g2_lgcp_1`, in the
+`PLL_USE_IHP_ICG` branch of `PLL_CLKGATE`.  It is modelled correctly for this
+use: `GCLK` carries no edge arc at all, and `GATE` only has setup/hold against
+`CLK`, so no clock-graph loop can form.  The ORFS library marks it
+`dont_use : true` and lists it in `synth_exclude.cells` / `pnr_exclude.cells`;
+both were lifted, because a design that actually needs a clock gate cannot
+honour a blanket `dont_use`:
 
-Next step is *not* more diagnosis: it is to make this step survivable and
-compare.  Two candidates, both cheap to test:
-1. lower the per-corner report cost for the pre-PnR check only
-   (`group_path_count`, drop `full_clock_expanded`), and
-2. re-synthesise without the DSM `FILTER_DEC` change to confirm the netlist
-   delta is really the trigger rather than a coincidence of that run.
+- `build/.../sg13g2_stdcell/lib/enable_lgcp.py` clears `dont_use` on
+  `sg13g2_lgcp_1` only, in every corner Lib, idempotently;
+- `sg13g2_lgcp_1` removed from `synth_exclude.cells` and `pnr_exclude.cells`.
 
 ### B8. Known open DCO tuning defect
 
