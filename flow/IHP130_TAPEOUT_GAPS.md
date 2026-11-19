@@ -241,6 +241,49 @@ jitter are the headline specs; neither exists.
 
 
 
+### B11. 82 FLL counter registers were never timed (open, fix in progress)
+
+`checks.rpt` at every corner reports:
+
+```text
+Warning: There are 82 unclocked register/latch pins.
+  _4479_/CLK
+  _4480_/CLK
+  ...
+```
+
+and the worst TT/SS setup paths show
+`Endpoint: _4338_ (flip-flop clocked by OUT')` -- the prime is STA's marker for
+an endpoint it could not attach to a known clock.
+
+Cause: `frequency_counter_frontend` toggles a register `clk_div` on `MID_OUT`
+and then clocks its whole counter from it:
+
+```verilog
+always @(posedge CLK ...) div_cnt <= ...; clk_div <= ~clk_div;
+always @(posedge clk_div ...) cnt <= cnt_inc; gray_q <= ...;
+```
+
+so `clk_div` is a real clock domain inside `pll_dig.flock`, but the SDC never
+declared a `create_generated_clock` for it.  Those 82 registers are the FLL
+frequency counter -- the logic that produces `FREQ_LOCKED` and therefore gates
+acquisition -- so leaving them unchecked is a genuine signoff hole, not
+bookkeeping.
+
+Fix: declare it, `PRESCALE = 2` in the signoff build (pll_logic passes
+`.PRESCALE(2)`) and `div_cnt` runs off `MID_OUT`, so the clock is `MID_OUT/2`:
+
+```tcl
+create_generated_clock -name FE_CLK_DIV \
+    -source [lindex $mid_src_fe 0] -divide_by 2 [lindex $clkdiv_pin 0]
+```
+
+added as its own asynchronous group next to `MID_OUT`.  Expect the reported
+setup numbers to change once this lands: 82 previously invisible registers
+become timed, so a clean-looking number can get worse and a violating one can
+appear.  That is the correct direction -- unchecked registers are not passing
+registers.
+
 ### B10. First complete IHP top PnR: three-corner timing, and the real setup gap
 
 The full flow runs end to end.  Two RTL/SDC defects were found and fixed on the
