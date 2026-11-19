@@ -390,8 +390,17 @@ proc _declare_negedge_clocks {} {
 # ---------------------------------------------------------------------------
 # Clock quality
 
-# after all master clocks exist
-_declare_negedge_clocks
+# after all master clocks exist.
+# Opt-in: declaring the 89 negedge clocks is correct and is what makes them
+# visible to STA, but doing so reveals a real cross-domain hold path
+# (NE_CLK_1 -> DSM_CK_G_CLK, -0.4039) that needs a CDC decision.  Until that is
+# settled, keep the default signoff numbers on the configuration that has been
+# verified end-to-end and let the mode be selected explicitly.
+if {[info exists ::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)] && $::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)} {
+    _declare_negedge_clocks
+} else {
+    puts "adpll.sdc: negedge clock declaration disabled (set ADPLL_DECLARE_NEGEDGE_CLOCKS=1)"
+}
 
 # ---------------------------------------------------------------------------
 # The ORFS ihp-sg13g2 platform does not publish these limits.  The values
