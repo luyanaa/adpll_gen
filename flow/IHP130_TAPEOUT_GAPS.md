@@ -284,6 +284,57 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
+### B12. The DCO clocks cannot propagate: OUT/MID_OUT/INJ_EDGE are macro outputs
+
+While closing B11 I hit the reason the derived clocks stay `Virtual: yes`, and
+it is structural rather than a scripting mistake.
+
+`OUT`, `MID_OUT` and `INJ_EDGE` are **outputs of the PLL_ANALOG macro**
+(`pll_ana`).  In the assembled top they are internal nets, not top-level input
+ports, so `create_clock` on them produces a *virtual* clock: STA has no real
+source pin to propagate from.  Measured at STAPostPNR:
+
+```text
+Clock: MID_OUT
+Sources: pll_ana/MID_OUT
+Generated: no
+Virtual: yes        <-- the DCO clock itself is virtual
+```
+
+Everything derived from them inherits that (`OUT_DIV_CLK`, `CK_CLK`,
+`DSM_CK_G_CLK`, `CKR_CLK`, `OUT_DIV2_CLK`, `FE_CLK_DIV` all report
+`Virtual: yes`), and `set_propagated_clock` cannot propagate a virtual clock.
+So the clock tree inside those domains is not analysed, which is why
+`checks.rpt` goes from 2 unclocked pins at STAPrePNR to 33 at STAPostPNR: at
+pre-PnR the flops are clocked by the register net the SDC named, and after CTS
+the load net is renamed to `*_regs` and the connection to the (virtual) clock
+root is lost.  `clk_div_regs` occurs 0 times before `35-openroad-cts` and 61
+times after, which localises the break exactly.
+
+An attempt worth recording as a dead end: making the helper declare a clock on
+*every* driver pin matching the net pattern.  That produced
+`FE_CLK_DIV` .. `FE_CLK_DIV_12` and `CKR_CLK` .. `CKR_CLK_9` -- thirteen
+independent asynchronous domains for what is one clock, because every CTS
+buffer output matched.  Strictly worse than the original problem; reverted.
+
+The real options, none of them an SDC tweak:
+
+1. **Characterise the macro's clock outputs as real clock sources.**  The hard
+   macro should publish its output clocks (`.lib` with `is_clock` /
+   `clock_gating` semantics, or a `.opensta` "clock port" declaration) so the
+   top-level STA sees `pll_ana/MID_OUT` as a proper clock root rather than a
+   virtual one.  This is the clean fix and it is a macro-view deliverable.
+2. **Route the DCO clocks out and back in through real ports** in the canary
+   only, so STA can propagate them.  Cheap, but it changes the design to suit
+   the checker.
+3. **Accept virtual clocks and analyse the domains separately** with explicit
+   `-through` / pin-anchored corners -- what the out-of-flow
+   `sta_per_corner.tcl` does today.
+
+Until one of these is chosen, treat the reported three-corner setup/hold
+numbers as covering the REF/OUT/MID_OUT domains that *can* be propagated, and
+treat the 33 unclocked pins as unchecked rather than passing.
+
 ### B10. First complete IHP top PnR: three-corner timing, and the real setup gap
 
 The full flow runs end to end.  Two RTL/SDC defects were found and fixed on the
