@@ -581,6 +581,84 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B20. Where the 79 SS setup violators actually are
+
+Now that the NE_CLK paths are visible, attributed `RUN_2026-11-20_07-19-47`
+(`nom_ss_125C_1v08`) by path group:
+
+```text
+group              n     worst       tns
+  DSM_CK_G_CLK    11   -2.6245   -16.500
+  OUT             54   -1.2334   -36.091
+  NE_CLK_61        1   -0.3871    -0.387
+  MID_OUT         10   -0.2296    -1.284
+  NE_CLK_66        1   -0.0965    -0.097
+  NE_CLK_59        1   -0.0349    -0.035
+  NE_CLK_37        1   -0.0285    -0.029
+  TOTAL           79
+```
+
+So the negedge declarations contribute only 3 violators of 79.  The earlier
+expectation that they accounted for OUT's 53 was wrong, and this confirms it
+with the full breakdown.
+
+#### OUT (54) is an architectural half-period problem, not slack
+
+Within OUT the violators are concentrated: 36 of 54 share the startpoint
+`_4470_` (`pll_dig.div.cnt[1]`), 8 share `_4300_` (`div[2]`), 8 share
+`_4477_` (`pcnt[0]`).
+
+The budget of the worst path:
+
+```text
+capture edge          1.2500 ns      <- HALF the 2.5 ns period
+clock uncertainty    -0.2500
+library setup        -0.1888
+                     ________
+data required         1.4255 ns
+data arrival          2.6589 ns      (19 stages, 13 of them data)
+slack                -1.2334 ns
+```
+
+`capture edge 1.25` means the endpoint captures on the **negative** edge --
+`_4468_` is `pll_dig.div.p_hi`, one half of `conf_div`'s dual-edge odd divider:
+
+```verilog
+always @(negedge clk) p_hi <= odd_div && (pcnt < odd_k);
+always @(posedge clk) n_hi <= odd_div && (ncnt < odd_k);
+wire odd_out = odd_div && (p_hi | n_hi);
+```
+
+24 of the 54 OUT violators capture on the 1.25 ns edge (the rest are
+`div[2]`/`pcnt` paths that also show a 1.25 ns capture).  So OUT is short of
+time because half the registers in that domain get **half a period**, not
+because the logic is deep: 13 data stages is modest.
+
+Closing OUT needs one of:
+
+1. **Give the divider a full-period capture.**  The `p_hi | n_hi` OR only needs
+   the two halves to agree on 50 % duty; both could be registered on the rising
+   edge from the already-available counters (`pcnt` for one, `ncnt` sampled one
+   cycle later for the other) so the whole domain runs on one edge.  This is
+   the same shape of change already made to `frequency_counter_frontend` in
+   B12, which worked.
+2. **Relax OUT** to a 5 ns constraint if the divider is not meant to run at
+   400 MHz.  That is a spec question, not a fix.
+3. Accept it and report OUT as the known gap.
+
+#### DSM_CK_G_CLK (11) is the adder, unchanged
+
+Same cause already documented in B10: 38 logic levels against a 5 ns budget.
+Independent of the negedge work.
+
+#### The 2 unclocked pins are NOT this tree
+
+`net59_regs` (the `_regs` CTS tree that `_4470_` is clocked from) is connected:
+`clkbuf_0_net59_regs.A <- net59_regs <- clkbuf_regs_1_OUT <- OUT`, and `OUT` is
+the macro's output pin.  Those registers are timed (`net59_regs` appears 2065
+times in `max.rpt`).  The 2 remaining unclocked pins are `_4703_`/`_4705_`, the
+`(* ASYNC_REG *)` LOCKED synchroniser of B12, which is a separate issue.
+
 ### B14-FIX. CLOSED: 89 negedge flops timed, hold back to 0 violations
 
 B14 found 89 flops clocked through an inverter (`always @(negedge clk)` becomes
