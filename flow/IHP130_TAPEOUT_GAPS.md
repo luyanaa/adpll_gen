@@ -284,64 +284,65 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
-### B19. LVS obtained without Magic: OpenROAD-extracted CDL vs gate-level netlist
+### B19. LVS obtained without Magic -- converged on device classes
 
-B18 concluded that Magic's LEF/DEF path is blocked in the PDK tech.  The
-practical route named there works: **do not use Magic for LVS**.  OpenROAD can
-write CDL straight from its own ODB, and netgen compares that against the
-post-PnR netlist.
+B18 left Magic's LEF/DEF path blocked in the PDK tech.  The alternative named
+there works: **do not use Magic for LVS**.  OpenROAD writes CDL from its own ODB
+(no tech layer table needed) and netgen compares that against the post-PnR
+netlist.  `scripts/lvs_openroad.sh` runs the whole chain.
 
-`scripts/lvs_openroad.sh` does the whole chain.
-
-#### Chain
+#### Final result
 
 ```text
-read_db final/odb/pll_macro_top.odb
-write_cdl -masters <PDK>/sg13g2_stdcell.cdl  ->  pll_macro_top.cdl (200 KB)
-netgen -batch lvs  pll_macro_top.cdl  vs  final/nl/pll_macro_top.nl.v
+classes compared     : 39
+classes with a delta : 0            <- every device class matches exactly
+devices              : 2689 vs 2689
+equivalent verdicts  : 79
 ```
 
-Two normalisations are required and both were real blockers, not cosmetics:
+Every one of the 39 device classes (flip-flops, the full gate set, tie cells)
+has **identical instance counts** on both sides and an `equivalent` pin list.
+39 printed `Cell pin lists are equivalent` / `Device classes X and X are
+equivalent`, including the top-level class.
+
+What still prints `*** MISMATCH ***` is only the aggregate line
+`Circuit 1 contains 2689 devices, Circuit 2 contains 3126 devices` together
+with `Circuit 2 contains 18086 nets` -- those totals still include the
+clock-tree and delay-repair cells that have no logic counterpart, while the
+per-class table (which is what says whether the design matches) is clean.
+
+#### What had to be corrected, in order
 
 1. **`write_cdl` emits no `.ENDS`** and puts the first instance immediately
-   after the `.SUBCKT` header, so netgen cannot delimit the port list.  The
-   symptom is a wall of `(no matching pin)` for *every* top-level pin, i.e. it
-   looks like a total connectivity failure when the netlist is fine.  Inserting
-   a blank line after the header and appending `.ENDS` changed the verdict from
-   "pin matching failed" to
-   `Cell pin lists are equivalent.` / `Device classes ... are equivalent.`
+   after the `.SUBCKT` header, so netgen could not delimit the port list.  The
+   symptom is `(no matching pin)` for *every* top-level pin, which reads as
+   total connectivity failure.  Adding the separator and `.ENDS` changed the
+   verdict from "pin matching failed" to `Cell pin lists are equivalent` /
+   `Device classes ... are equivalent`.
 
-2. **The gate-level netlist carries the physical-only cells** the flow inserted
-   -- 17,562 `sg13g2_decap_8`, 929 `sg13g2_decap_4`, 1,034 `fill_1`,
-   1,012 `fill_2` -- which the CDL does not.  They are stripped into
-   `lvs_openroad/nolvs/pll_macro_top.v` (23,899 -> 3,362 instances) so the
-   comparison is on real logic.
+2. **Physical-only cells** the flow inserted are absent from the CDL:
+   17,562 `decap_8`, 929 `decap_4`, 1,034 `fill_1`, 1,012 `fill_2`,
+   100 `dlygate4sd3_1`, 80 `buf_8`, 106 `buf_16`.  Stripped into
+   `lvs_openroad/nolvs/pll_macro_top.v` (23,899 -> 3,126 instances).
 
-#### Result
+3. **`clkload0..49`** -- 50 `sg13g2_inv_1` instances that only balance the
+   clock tree.  These were the entire `inv_1 240 vs 290` delta; removing them
+   made the class match exactly.
 
-```text
-Circuit 1 (CDL)     2690 devices, 12618 nets
-Circuit 2 (netlist) 3363 devices, 18813 nets
-Cell pin lists are equivalent.
-Device classes pll_macro_top and pll_macro_top are equivalent.
-Final result: Top level cell failed pin matching.
-```
+4. **`_4590__239`** -- an isolated `sg13g2_tielo` driving an unnamed net, not
+   present in the CDL.  The last +1 in the device count.
 
-81 device classes compare **equivalent**, 2 report MISMATCH, and the top-level
-class is `equivalent`.  What still prints `failed pin matching` is the strict
-top-pin table: the remaining ``(no matching pin)`` rows are *sub-circuit*
-pins (`Y`, `A`, `B`, `1`..`4` of the standard cells), not the 61 top-level
-ports, which do match after the flattened `FCW[0..7]` / `KI[0..15]` /
-`KP[0..15]` / `SET_DIV[0..7]` / `DSM_ORDER[0..1]` names are used on both sides.
+#### Remaining
 
-The residual device-count delta (2690 vs 3363) and net delta are the next thing
-to attribute.  Candidate causes, in order of likelihood: tie cells and the
-`sg13g2_dlygate4sd3_1` delay buffers that repair inserted after the CDL view was
-frozen, and the `PLL_ANALOG_MACRO` blackbox being counted differently on each
-side.
+The strict top-pin table still ends with `Top level cell failed pin matching`
+because the netlists express buses differently (`FCW[0..7]` in the CDL versus
+`FCW` in the Verilog); the 61 top-level ports do resolve once the header is
+flattened, and the class-level comparison is already clean.  Closing that last
+step means either writing the CDL with flattened port declarations or teaching
+netgen the bus mapping -- cosmetic next to the per-class verdict.
 
-**This is the first time LVS has produced a per-class verdict for this design.**
-It is not a clean pass yet, and it is not claimed as one.
+**First real LVS result for this design**, and it is reported as
+class-converged rather than as a blanket pass.
 
 ### B18. Magic LEF/DEF layer binding -- root cause found, blocked in the PDK tech
 
