@@ -284,6 +284,65 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
+### B19. LVS obtained without Magic: OpenROAD-extracted CDL vs gate-level netlist
+
+B18 concluded that Magic's LEF/DEF path is blocked in the PDK tech.  The
+practical route named there works: **do not use Magic for LVS**.  OpenROAD can
+write CDL straight from its own ODB, and netgen compares that against the
+post-PnR netlist.
+
+`scripts/lvs_openroad.sh` does the whole chain.
+
+#### Chain
+
+```text
+read_db final/odb/pll_macro_top.odb
+write_cdl -masters <PDK>/sg13g2_stdcell.cdl  ->  pll_macro_top.cdl (200 KB)
+netgen -batch lvs  pll_macro_top.cdl  vs  final/nl/pll_macro_top.nl.v
+```
+
+Two normalisations are required and both were real blockers, not cosmetics:
+
+1. **`write_cdl` emits no `.ENDS`** and puts the first instance immediately
+   after the `.SUBCKT` header, so netgen cannot delimit the port list.  The
+   symptom is a wall of `(no matching pin)` for *every* top-level pin, i.e. it
+   looks like a total connectivity failure when the netlist is fine.  Inserting
+   a blank line after the header and appending `.ENDS` changed the verdict from
+   "pin matching failed" to
+   `Cell pin lists are equivalent.` / `Device classes ... are equivalent.`
+
+2. **The gate-level netlist carries the physical-only cells** the flow inserted
+   -- 17,562 `sg13g2_decap_8`, 929 `sg13g2_decap_4`, 1,034 `fill_1`,
+   1,012 `fill_2` -- which the CDL does not.  They are stripped into
+   `lvs_openroad/nolvs/pll_macro_top.v` (23,899 -> 3,362 instances) so the
+   comparison is on real logic.
+
+#### Result
+
+```text
+Circuit 1 (CDL)     2690 devices, 12618 nets
+Circuit 2 (netlist) 3363 devices, 18813 nets
+Cell pin lists are equivalent.
+Device classes pll_macro_top and pll_macro_top are equivalent.
+Final result: Top level cell failed pin matching.
+```
+
+81 device classes compare **equivalent**, 2 report MISMATCH, and the top-level
+class is `equivalent`.  What still prints `failed pin matching` is the strict
+top-pin table: the remaining ``(no matching pin)`` rows are *sub-circuit*
+pins (`Y`, `A`, `B`, `1`..`4` of the standard cells), not the 61 top-level
+ports, which do match after the flattened `FCW[0..7]` / `KI[0..15]` /
+`KP[0..15]` / `SET_DIV[0..7]` / `DSM_ORDER[0..1]` names are used on both sides.
+
+The residual device-count delta (2690 vs 3363) and net delta are the next thing
+to attribute.  Candidate causes, in order of likelihood: tie cells and the
+`sg13g2_dlygate4sd3_1` delay buffers that repair inserted after the CDL view was
+frozen, and the `PLL_ANALOG_MACRO` blackbox being counted differently on each
+side.
+
+**This is the first time LVS has produced a per-class verdict for this design.**
+It is not a clean pass yet, and it is not claimed as one.
+
 ### B18. Magic LEF/DEF layer binding -- root cause found, blocked in the PDK tech
 
 Final state after a systematic comparison against the reference tech.  The
