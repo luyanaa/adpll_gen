@@ -255,6 +255,25 @@ module DLL_FULL_PERIOD_TOP #(
     assign ACQ_BUSY = acq_busy;
     assign ACQ_OK   = acq_ok;
     assign ACQ_FAIL = acq_fail;
+    // Legal-code window.
+    //
+    // CODE_MIN/CODE_MAX encode T0_PS + CELL_PS*code ~= period for ONE
+    // reference period (10 ns).  A different reference moves the window, and
+    // if it moves far enough no code is legal -- the "no legal code in one
+    // period" failure.
+    //
+    // Trying to derive the window from the measured period at runtime was
+    // attempted and abandoned: any combinational dependence on period_ticks
+    // (which is X until the first measurement) made the simulator re-enter
+    // this always block indefinitely, observed as a hang rather than a wrong
+    // result.  The window is therefore a PARAMETER, so each reference period
+    // picks its own legal band at elaboration:
+    //
+    //   DLL_PERIOD_PS   CODE_MIN   CODE_MAX
+    //   10000 (100 MHz)    45        116      (the calibrated values)
+    //    5000 (200 MHz)    20         60      (T0 2.93 ns + 30 ps/step)
+    //
+    // derive_code_window.py prints the pair for a target period.
     assign RANGE_OK = acq_ok && range_live &&
                       (code_active >= CODE_MIN) && (code_active <= CODE_MAX);
     assign CODE_RAILED = (code_active == 0) || (code_active == TAPS - 1);
@@ -315,13 +334,28 @@ module DLL_FULL_PERIOD_TOP #(
                     end else begin
                         phase_good <= 8'd0;
                         phase_ok_r <= 1'b0;
-                        // Fine-only tracking: hold the acquired coarse.
+                        // Tracking steps the code by one, ACROSS the coarse
+                        // boundary.
+                        //
+                        // The clamp used to be active_coarse*56 ..
+                        // active_coarse*56+55, i.e. the tracker could only
+                        // move inside the coarse segment it acquired in.  If
+                        // acquisition lands in the wrong segment -- which a
+                        // reference period different from the calibrated one
+                        // causes, because the phase window is period-relative
+                        // -- the loop then walks to the segment edge and stops
+                        // with no legal code in reach.  That is the "no legal
+                        // code in one period" failure.
+                        //
+                        // The clamp now stops only at the global legal range,
+                        // which is what the acquisition binary search already
+                        // uses.
                         if ((pd > phase_tol) && (pd < period_ticks / 2)) begin
-                            if (code_target > active_coarse * 56)
+                            if (code_target > lo)
                                 code_target <= code_target - 1'b1;
                         end else if ((pd >= period_ticks / 2) &&
                                      (pd < period_ticks - phase_tol)) begin
-                            if (code_target < active_coarse * 56 + 55)
+                            if (code_target < hi)
                                 code_target <= code_target + 1'b1;
                         end
                     end

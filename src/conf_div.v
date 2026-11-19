@@ -43,15 +43,62 @@ module pll_mod_divider #(
     reg         out_reg;
     reg [W-1:0] div_pend;
     reg         pend;
-    reg         use_clk;    // /1 bypass; out follows clk (negedge select)
+    reg         use_clk = (DIV0 == 1);  // /1 bypass; out follows clk
+    // Initialised as well as reset: use_clk is reset on the FALLING edge, so
+    // a reset released in the high phase would leave use_clk_p sampling X.
     reg         use_clk_p;  // use_clk re-timed into the posedge domain
     reg         even_q;     // registered div>=2 && !div[0]
     reg         enter_req;  // arm the bypass on the next falling clk
     reg         leave_req;  // drop the bypass on the next falling clk
 
-    assign out = use_clk ? clk : out_reg;
+    // Odd divisors take the 50%-duty path; even divisors and the /1 bypass
+    // keep the existing behaviour.
+    assign out = use_clk ? clk : (odd_div ? odd_out : out_reg);
     assign div_q = div;
     assign div_even = even_q;
+
+    // ------------------------------------------------------------------
+    // Odd divisors need 50% duty to feed a DLL.
+    //
+    // With the posedge-only counter an odd divisor cannot be 50%: div=3 is
+    // 2:1 (66.7%), div=5 3:2 (60%), div=15 8:7 (53.3%).  A DLL fed from that
+    // reference sees unequal phase steps and has no legal code over one
+    // period.
+    //
+    // Kept deliberately OUTSIDE the main FSM: an earlier version gated the
+    // existing posedge path on `odd_div` and broke the even-divisor load
+    // (the FSM never applied `div_pend`, so div stayed at DIV_INIT).  This
+    // block only reads `div` and drives `out` when div is odd.
+    //
+    // Standard construction: two counters, one per clk edge, each producing
+    // a k=(div-1)/2 wide pulse; OR the two.  The negedge copy is half a cycle
+    // later, so high time is k+0.5 out of div -> exactly 50%.
+    // ------------------------------------------------------------------
+    wire         odd_div = div[0] && (div > 1);
+    wire [W-1:0] odd_k   = (div == 1) ? 'd0 : ((div - 1'b1) >> 1);
+
+    reg [W-1:0] pcnt, ncnt;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)      pcnt <= 'd0;
+        else if (odd_div) pcnt <= (pcnt + 1'b1 >= div) ? 'd0 : pcnt + 1'b1;
+        else             pcnt <= 'd0;
+    end
+    always @(negedge clk or negedge rst_n) begin
+        if (!rst_n)      ncnt <= 'd0;
+        else if (odd_div) ncnt <= (ncnt + 1'b1 >= div) ? 'd0 : ncnt + 1'b1;
+        else             ncnt <= 'd0;
+    end
+
+    // Pulse high while the counter is below the half width.  Registered on the
+    // opposite edge so the OR has no glitch.
+    reg p_hi, n_hi;
+    always @(negedge clk or negedge rst_n)
+        if (!rst_n) p_hi <= 1'b0; else p_hi <= odd_div && (pcnt < odd_k);
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) n_hi <= 1'b0; else n_hi <= odd_div && (ncnt < odd_k);
+
+    wire odd_out = odd_div && (p_hi | n_hi);
 
     wire [W-1:0] limit = high_phase ? high_count : low_count;
     // End of the low phase: the output period in progress is complete.
