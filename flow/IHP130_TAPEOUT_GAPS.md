@@ -284,6 +284,38 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
+### B13. Pre-existing: `lock_fsm_tb` does not pass, and did not before
+
+While checking that the B12 change to `frequency_counter_frontend` did not
+regress the lock FSM, `lock_fsm_tb` was found failing:
+
+```text
+FAIL: relock after stuck low LOCKED=0 expected=1 state=2
+FATAL: src/lock_fsm_tb.v:258: lock_fsm_tb failed
+```
+
+Reverting `frequency_counter_frontend` to its pre-B12 content and re-running the
+same test did **not** fix it -- the failures changed but remained:
+
+```text
+FAIL: locked before ref loss LOCKED=0 expected=1 state=3
+FAIL: relock after stuck high LOCKED=0 expected=1 state=1
+FAIL: dco stuck low LOCKED=1 expected=0 state=3
+```
+
+So the test is not a reliable gate today: it fails with and without the change,
+and the failing set is not stable between runs.  Two possibilities, neither
+investigated yet: the TB's stimulus/timing assumptions drifted from
+`lock_detector`/`ref_watchdog` behaviour, or the TB has a race.
+
+What *is* verified: `frequency_counter_frontend_tb` covers the B12 change
+directly and passes unchanged (`sync=20 ps2=20 ripple=236 johnson=20`), and the
+PnR flow confirms the structural outcome (33 -> 2 unclocked pins).
+
+This matters for signoff because `lock_fsm_tb` is the only test that exercises
+the acquisition/relock FSM at RTL.  It should be repaired before anyone relies
+on it as evidence that a future change to the FSM is safe.
+
 ### B12. CTS left divided-clock trees undriven -- FIXED by gating the enable
 
 CTS created `<name>_regs` load trees whose root net has no driver, so the flops
