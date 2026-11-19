@@ -407,12 +407,28 @@ proc _declare_negedge_clocks {} {
 # A synchronous enable has no hold relationship to satisfy, so exempt the
 # enable's driver.  Anchored on the net name (DCO_EN survives CTS) rather than
 # on an instance, because the driver pin is anonymous post-CTS.
-# Default-off.  The declaration itself is correct, but every form of exemption
-# tried for the DCO_EN crossing it exposes failed to close the hold violation
-# (see the gap doc: six variants, all leaving -0.4039), so turning it on by
-# default would trade a clean hold result for an open one.  Values are the
-# ones verified end to end with the declaration off.
-if {[info exists ::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)] && $::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)} {
+# Default-on.  The 89 negedge flops (B14) are now timed, and the DCO_EN
+# crossing that doing so exposed is closed in RTL by a 2FF synchroniser before
+# delta_sigma's EN_DSM (pll_logic.v), not by an SDC exemption -- six exemption
+# variants were tried and none moved the -0.4039.  Set
+# ADPLL_DECLARE_NEGEDGE_CLOCKS=0 to fall back to the 11-clock view.
+if {![info exists ::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)] || $::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)} {
+    _declare_negedge_clocks
+} else {
+    puts "adpll.sdc: negedge clock declaration off (ADPLL_DECLARE_NEGEDGE_CLOCKS=1 to enable)"
+}
+
+# DCO_EN is synchronised into the DSM domain in RTL (pll_logic.v: 2FF on
+# DSM_CK_G before delta_sigma's EN_DSM), so no SDC exemption is needed here.
+# Six exemption variants were tried and all left the violation at -0.4039; the
+# RTL fix is what closes it.
+
+# Default-on.  The 89 negedge flops (B14) are now timed, and the DCO_EN
+# crossing that doing so exposed is closed in RTL by a 2FF synchroniser before
+# delta_sigma's EN_DSM (pll_logic.v), not by an SDC exemption -- six exemption
+# variants were tried and none moved the -0.4039.  Set
+# ADPLL_DECLARE_NEGEDGE_CLOCKS=0 to fall back to the 11-clock view.
+if {![info exists ::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)] || $::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)} {
     _declare_negedge_clocks
 } else {
     puts "adpll.sdc: negedge clock declaration off (ADPLL_DECLARE_NEGEDGE_CLOCKS=1 to enable)"

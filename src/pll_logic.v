@@ -142,6 +142,32 @@ module pll_logic#(
             PLL_CLKGATE u_dsm_icg (
                 .EN(~locked_dsm_s2), .CLK(DSM_CK), .GCLK(DSM_CK_G)
             );
+            // DCO_EN is generated in the INJ_EDGE domain (_4240_, a negedge
+            // register) and used here as delta_sigma's clock enable.  That makes
+            // it a cross-domain connection, and once the negedge clocks are
+            // declared STA times it and fails hold:
+            //   _4240_/Q -> fanout116 -> _2425_/A1 -> _2425_/Y -> _4316_/D
+            //   hold -0.4039
+            // Six SDC exemption forms were tried and none closed it (the pair is
+            // reached through more than one cone), so synchronise it here the
+            // same way LOCKED is synchronised above.
+            //
+            // EN_DSM is a level, not an edge: delaying it by two DSM_CK_G periods
+            // only postpones the noise-shaping start, which is irrelevant at a
+            // ~1 MHz loop bandwidth.  Reset releases the enable to 1 so the DSM
+            // is not held off during reset.
+            (* ASYNC_REG = "TRUE" *) reg dco_en_dsm_s1, dco_en_dsm_s2;
+            always @(posedge DSM_CK_G or negedge RST_N) begin
+                if (!RST_N) begin
+                    dco_en_dsm_s1 <= 1'b1;
+                    dco_en_dsm_s2 <= 1'b1;
+                end else begin
+                    dco_en_dsm_s1 <= DCO_EN;
+                    dco_en_dsm_s2 <= dco_en_dsm_s1;
+                end
+            end
+            wire DCO_EN_DSM = dco_en_dsm_s2;
+
             reg [FINE_CODE_BITS-1:0] FCWI;
             reg [FILTER_BITS-FINE_CODE_BITS:0] FCWF;
             always @(posedge DSM_CK_G or negedge RST_N) begin
@@ -160,7 +186,7 @@ module pll_logic#(
             ) dsm (
                 .CK(DSM_CK_G),
                 .RST(!RST_N),
-                .EN_DSM(DCO_EN),
+                .EN_DSM(DCO_EN_DSM),
                 .EN_DSM_DT(DSM_EN_DT),
                 .EN_DSM_SHDT(DSM_EN_SHDT),
                 .DSM_ORDER(DSM_ORDER),
