@@ -254,6 +254,36 @@ hold +0.5937 ns (`flow/IHP130_TAPEOUT_GAPS.md` B3) and is a reasonable seed.
   while `corners/` holds all three.  `config.macro.yaml` maps corners
   correctly, so this is packaging only.
 
+### Review items closed on 2026-11-19 (SerDes agent)
+
+Each of these was checked against the file before acting:
+
+| item | state | resolution |
+|---|---|---|
+| `jitter_zerocross.py` pointed at `phase_noise.py`, which does not exist | confirmed | now points at `src/isf_phase_noise.py` and says so |
+| `architecture_catalog.json` said `multiphase_dco: implementation: missing` | confirmed | set to `rtl_verified` with the four implementation refs and a `status_note` that the CDR backend is RTL-only |
+| `IHP130_TAPEOUT_GAPS.md` had two `### B4` sections | confirmed | the stale "Zero multi-corner macro Liberty" one is removed and replaced by a comment pointing at the closed entry |
+| `cdr_ihp130` had no `macro.sdc.tcl` | confirmed | added; `SDC OK`, 2 clocks (`REF` 10 ns, `REC_CLK` generated). Three real traps were found while writing it: (a) `get_ports {TAP[*]}` matches nothing — the ports are buses, so use `TAP`; (b) Yosys renames the DCO closing-gate pin to an anonymous `_xxxx_p_Pin`, so a pin-anchored generated clock silently resolves to nothing — anchor on the `REC_CLK` output port instead; (c) an unguarded `get_pins` on a missing name raises `STA-0374` and aborts the whole SDC, so wrap it in `-quiet` + `llength` |
+| DSM setup path −6.14 ns at SS | confirmed, and the three stages are as described | fixed by registering `FILTER_DEC` between `delta_sigma` and the thermometer decoder, inside the `IS_DSM` branch (`DSM_CK_G` is not in scope outside it). Registering the decoder OUTPUT does not help — adder and decode stay in series. `pll_macro_top_tb` still passes (`LOCKED=1`, `FREQ_LOCKED=1`) |
+| ISF phase-noise flow never run | confirmed: no `sim/outputs/*/test_dco_noise*` | in progress; see below |
+
+**Still open from the review, not fixed**: the DCO fine-bank non-monotonicity
+(Group 2a) is the only *functional* defect and needs circuit-level debug, not a
+code change. `cdr_ihp130` still has no PnR run, DRC/LVS or `SIGNOFF.md`, so it
+must not be presented as a qualified block.
+
+**The ISF flow needs `PDK_ROOT` with the `ics55/` level.** The PDK on this host
+is flat (`/grid/icsprout55-pdk/libs.tech/...`), but `lib/ics55_settings.tcl`
+builds `$PDK_ROOT/$PDK/...`, so a direct `PDK_ROOT=/grid/icsprout55-pdk` fails
+with `couldn't read file .../ics55/libs.tech/librelane/config.tcl`. Make a
+symlink root instead:
+
+```sh
+mkdir -p /tmp/opencode/pdkroot
+ln -sfn /grid/icsprout55-pdk /tmp/opencode/pdkroot/ics55
+make -C syn PDK=ics55 TOP=PLL_ILDCO all gen USE_DOCKER=0 PDK_ROOT=/tmp/opencode/pdkroot
+```
+
 ### Two rules worth not relearning
 
 Both from `a9f51f7`/`222b70f`, and both cost real debug time:

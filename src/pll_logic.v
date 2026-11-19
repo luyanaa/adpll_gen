@@ -119,6 +119,7 @@ module pll_logic#(
     );
 
     wire [FINE_CODE_BITS-1:0] FILTER_DEC;
+    wire [FINE_CODE_BITS-1:0] FILTER_DEC_RAW;
     generate
         if(IS_DSM) begin : dsm_impl
             wire DSM_CK;
@@ -165,8 +166,28 @@ module pll_logic#(
                 .DSM_ORDER(DSM_ORDER),
                 .FCWI(FCWI),
                 .FCWF(FCWF),
-                .DSM_OUT(FILTER_DEC)
+                .DSM_OUT(FILTER_DEC_RAW)
             );
+            // Split the DSM adder chain from the thermometer decode.
+            //
+            // Measured path (SS, -6.14 ns, 101 of 181 paths):
+            //   dsm.dff_err3[11] -> sum/err adder -> FILTER_DEC
+            //     -> pll_term_decoder_with_zero ((1<<IN)-1, 31 bits, no reg)
+            //     -> FINE_MUX_D -> FINE_MUX (DSM_CK_G)
+            //
+            // Registering the DECODER OUTPUT does not help: the adder and the
+            // decode are still in series in the same cycle.  The register has
+            // to sit on FILTER_DEC, which is the actual boundary -- delta_sigma
+            // documents its output as combinational ("Register outside").
+            //
+            // Cost: one DSM_CK of fine-update latency, irrelevant at a
+            // ~1 MHz loop bandwidth.  The DSM noise-shaping maths is untouched.
+            reg [FINE_CODE_BITS-1:0] FILTER_DEC_Q;
+            always @(posedge DSM_CK_G or negedge RST_N)
+                if (!RST_N) FILTER_DEC_Q <= 'd0;
+                else        FILTER_DEC_Q <= FILTER_DEC_RAW;
+            assign FILTER_DEC = FILTER_DEC_Q;
+
             always @(posedge DSM_CK_G or negedge RST_N) if(!RST_N) FINE_MUX <= 'd0; else FINE_MUX <= FINE_MUX_D; // For better in-time resolution
         end else begin
             assign FILTER_DEC = FILTER_OUT[FILTER_BITS-1:FILTER_BITS-FINE_CODE_BITS];

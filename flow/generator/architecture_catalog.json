@@ -295,9 +295,15 @@
       ],
       "risk": "layout/phase calibration, high complexity",
       "benefit": "lower jitter and finer phase resolution",
-      "implementation": "missing",
-      "implementation_refs": [],
-      "hardmacro_ready": false
+      "implementation": "rtl_verified",
+      "implementation_refs": [
+        "src/pll_multiphase_dco.v",
+        "src/pll_multiphase_dco_tb.v",
+        "flow/macro/cdr_ihp130/src/cdr_top.v",
+        "flow/macro/cdr_ihp130/src/cdr_top_tb.v"
+      ],
+      "hardmacro_ready": false,
+      "status_note": "RTL + TB verified: PH_W=2/3/4/5 -> 4/8/16/32 phases, uniform within 0.4%. CDR backend (cdr_ihp130) is RTL-verified only: no macro.sdc.tcl, no PnR, no DRC/LVS."
     },
     {
       "id": "fractional_n_feedback",

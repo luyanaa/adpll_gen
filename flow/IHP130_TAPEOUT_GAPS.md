@@ -166,13 +166,10 @@ ff_1p32V_m40C     1.32         -40.0       71    20   0.34929,0.39158,0.41936
 All six files have distinct md5 sums.  `config.macro.yaml` now maps each corner
 to its own macro Liberty instead of reusing TT.
 
-### B4. Zero multi-corner macro Liberty
-
-One `PLL_ANALOG_MACRO.lib` exists with `nom_* 1.20 V, 25 C`.  Tapeout needs
-TT + SS + FF (the ORFS platform ships `typ_1p20V_25C`, `slow_1p08V_125C`,
-`fast_1p65V_m40C`; note the fast corner is 1.65 V, not 1.32 V).
-
-**Fix**: three macro Liberty views, or one with three `operating_conditions`.
+<!-- The original "B4. Zero multi-corner macro Liberty" section was removed:
+     multi-corner macro Liberty is CLOSED and documented in the B4 entry above
+     (flow/macro/ihp130_sg13g2/corners/*.lib).  Keeping a second B4 that says
+     the opposite is what this note replaces. -->
 
 ### B5. The digital control is not in the macro and its own closure is open
 

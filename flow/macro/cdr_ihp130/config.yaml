@@ -33,6 +33,9 @@ RT_MAX_LAYER: Metal5
 CLOCK_PORT: REF
 CLOCK_PERIOD: 10.0
 
+PNR_SDC_FILE: dir::macro.sdc.tcl
+SIGNOFF_SDC_FILE: dir::macro.sdc.tcl
+
 # The phase delay line is a ring: do not let CTS or the resizer touch it.
 DESIGN_REPAIR_REMOVE_BUFFERS: false
 
