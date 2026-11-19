@@ -240,6 +240,46 @@ SPEF names do not match the netlist.  For a PLL tapeout, phase noise and
 jitter are the headline specs; neither exists.
 
 
+
+### B10. First complete IHP top PnR: three-corner timing, and what is left
+
+The full flow now runs end to end (`RUN_2026-11-19_19-39-40`) -- the first time
+the assembled top has reached post-PnR STA.  Everything after place-and-route
+is clean; setup is the one real gap.
+
+| Corner | Hold WS | Hold TNS | Hold viol | Setup WS | Setup TNS | Setup viol |
+| --- | --- | --- | --- | --- | --- | --- |
+| TT (`nom_tt_025C_1v20`) | +0.2033 | 0 | **0** | -2.3824 | -27.3640 | 36 |
+| SS (`nom_ss_125C_1v08`) | +0.3474 | 0 | **0** | -5.0151 | -108.4087 | 96 |
+| FF (`nom_ff_n40C_1v32`) | +0.1167 | 0 | **0** | -0.8209 | -4.2889 | 7 |
+
+Also clean: max cap violations 0, max slew violations 0, detailed-route
+violations 0, antenna net violations 0, antenna pin violations 0, hold buffers
+106, setup buffers 99.  Area 307 910 um^2 (macro 16 800 um^2), 23 784
+instances, 23.3 % utilization, TT power 11.46 mW.  No unmapped instances.
+
+**All three corners violate on the same path**: `_4252_ -> _4644_`, both
+`sg13g2_dfrbpq_1` clocked by `DSM_CK_G_CLK`, 49-55 logic stages.  The clock is
+declared `-period 2.500` (400 MHz).  That is not a place-and-route failure --
+the path is 49 stages of the DSM adder tree and cannot close in 2.5 ns in this
+library, at any placement.
+
+Part of the loss is clock tree, not logic: the reported path spends
+`MID_OUT -> clkbuf_0_MID_OUT -> clkbuf_1_0 -> u_icg/GCLK -> clkbuf_0_DSM_CK_G
+-> clkbuf_4_x` on *each* of launch and capture, about 1.35 ns per side, in a
+2.5 ns period.  `DSM_CK_G_CLK` is a generated clock with `-divide_by 1`
+relative to `MID_OUT`, so it is a second full clock tree hanging off the first
+rather than a division that would relax the period.
+
+So the setup gap is an architecture/constraint question, not a routing one:
+either the DSM clock must genuinely be a division of `MID_OUT` (so the period
+is a multiple of 2.5 ns), or the DSM adder has to be pipelined.  Worth settling
+before spending more PnR effort, because no amount of resizing will close 5 ns.
+
+Note on the ICG: the path passes through the new `sg13g2_lgcp_1`
+(`pll_dig.dsm_impl.u_dsm_icg.u_icg/GCLK`) and STA now handles it correctly.
+Before the B9 fix the whole run hung instead of reporting.
+
 ### B9. PnR hung in `STAPrePNR`: the IHP clock gate closed a loop in the clock graph -- FIXED
 
 The signoff rerun never reached the three-corner numbers.  It hung in
