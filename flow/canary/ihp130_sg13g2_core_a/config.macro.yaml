@@ -180,9 +180,27 @@ RCX_RULESETS:
 # running; do not claim DRC/LVS/antenna results from this skeleton.
 RUN_MAGIC_STREAMOUT: false
 RUN_KLAYOUT_STREAMOUT: true
-RUN_MAGIC_WRITE_LEF: false
+# Magic.WriteLEF is needed by Odb.CheckDesignAntennaProperties (it consumes the
+# design LEF).  It only needs GDS+DEF, so it works without any DRC deck.
+RUN_MAGIC_WRITE_LEF: true
 RUN_KLAYOUT_XOR: false
-RUN_MAGIC_DRC: false
-RUN_KLAYOUT_DRC: false
-RUN_LVS: false
+# The IHP PDK does ship full signoff collateral -- it was simply not copied into
+# build/pdk_root, which is why the earlier comment said there was none:
+#   libs.tech/klayout/tech/drc/ihp-sg13g2.drc   (KLayout DRC, Ruby deck)
+#   libs.tech/magic/ihp-sg13g2-drc.tech         (Magic DRC)
+#   libs.tech/magic/ihp-sg13g2-extract.tech     (Magic extraction for LVS)
+#   libs.tech/netgen/ihp-sg13g2_setup.tcl       (netgen LVS setup)
+RUN_MAGIC_DRC: true
+RUN_KLAYOUT_DRC: true
+RUN_LVS: true
 RUN_EQY: false
+
+KLAYOUT_DRC_RUNSET: dir::build/pdk_root/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc
+
+# Magic needs the IHP tech file to read/write GDS.  LibreLane defaults
+# MAGIC_TECH to /dev/null for this PDK, which is why Magic.WriteLEF failed with
+#   Nothing in "cifinput" section of tech file
+#   Cell sg13g2_decap_8 is not defined
+# The GDS tech is the one that provides cifinput/cifoutput.
+MAGIC_TECH: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2-GDS.tech
+MAGIC_LEF_WRITE_USE_GDS: true

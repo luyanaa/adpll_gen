@@ -284,6 +284,54 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
+### B15. The IHP DRC/LVS collateral does exist; the config said otherwise
+
+`config.macro.yaml` carried a comment inherited from `config.digital.yaml`:
+
+```yaml
+# As in config.digital.yaml: no official IHP DRC/LVS/netgen collateral is
+# installed.  These v3.0.16 flow gates keep the missing-tool steps from
+# running; do not claim DRC/LVS/antenna results from this skeleton.
+RUN_MAGIC_WRITE_LEF: false
+RUN_MAGIC_DRC: false
+RUN_KLAYOUT_DRC: false
+RUN_LVS: false
+```
+
+**That comment is wrong for this PDK checkout.**  The collateral exists under
+the IHP PDK's `libs.tech/`, it simply was never copied into `build/pdk_root`
+(which only held `klayout/` and `librelane/`):
+
+| file | purpose |
+| --- | --- |
+| `libs.tech/klayout/tech/drc/ihp-sg13g2.drc` | KLayout DRC (Ruby deck, 18 KB + rule_decks/) |
+| `libs.tech/klayout/tech/drc/rule_decks/sg13g2_maximal.drc` | full rule set, 151 KB |
+| `libs.tech/magic/ihp-sg13g2-drc.tech` | Magic DRC |
+| `libs.tech/magic/ihp-sg13g2-extract.tech` | Magic extraction for LVS |
+| `libs.tech/magic/ihp-sg13g2-GDS.tech` | GDS read/write tech |
+| `libs.tech/netgen/ihp-sg13g2_setup.tcl` | netgen LVS setup |
+
+They are now copied in.  Two blockers surfaced while enabling them:
+
+1. **`MAGIC_TECH` defaulted to `/dev/null`.**  LibreLane does not supply a
+   Magic tech for this PDK, so `Magic.WriteLEF` died with
+   `Nothing in "cifinput" section of tech file` and then
+   `Cell sg13g2_decap_8 is not defined` -- the LEF cells could not be resolved
+   without a tech.  Fix: `MAGIC_TECH` pointed at `ihp-sg13g2-GDS.tech` (the one
+   that has `cifinput`/`cifoutput`, confirmed by grep) plus
+   `MAGIC_LEF_WRITE_USE_GDS: true`.
+
+2. **`KLayout.DRC` supports only sky130A/B.**  Its own docstring says so, and at
+   runtime it warns `KLAYOUT_DRC_RUNSET is unset ... This step will be skipped`
+   for anything else.  So the LibreLane step will not run the IHP deck even
+   with `KLAYOUT_DRC_RUNSET` set -- the IHP DRC has to be invoked by calling
+   KLayout on `ihp-sg13g2.drc` directly (the deck takes `$input`, `$topcell`
+   and `$report`).
+
+What *is* already clean from the flow itself, at every corner: detailed-route
+violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
+max slew 0.  Those come from OpenROAD, not from the PDK decks.
+
 ### B14. 93 flops are clocked through an inverter and fell out of their clock group
 
 Found while breaking down the remaining SS setup violations by path group:
