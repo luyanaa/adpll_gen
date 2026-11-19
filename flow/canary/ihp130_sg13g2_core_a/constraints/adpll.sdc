@@ -289,7 +289,110 @@ cdc_exempt_hold {
 }
 
 # ---------------------------------------------------------------------------
+# Negedge clocks: `always @(negedge clk)` lands behind an inverter
+# ---------------------------------------------------------------------------
+# Synthesis implements a negedge register as INV(clk) -> flop CLK, so the flop
+# is not on the clock net and STA cannot attach it to any clock group.  In the
+# netlist 89 flops are like this, one per inverter, and they are where a large
+# part of the remaining setup violations live (path group OUT alone held 53 of
+# 73 at SS).
+#
+# Declared structurally rather than by net name, because the names differ by
+# stage: pre-CTS the flop clock is the inverter output `_0202_`, after CTS it is
+# `net264`.  A net-name list therefore matched nothing at STAPrePNR (measured:
+# "NE_CLK declared on 0 net").  Instead, walk the flops and take every one
+# whose CLK pin is driven by an inverter output, then anchor the generated
+# clock on that inverter output with -source set to the clock feeding the
+# inverter.
+#
+# -source keeps each generated clock inside its master's clock group, so this
+# does not split a domain into many asynchronous groups (that was the failure
+# mode recorded in B12 and it produced thirteen domains for one clock).
+proc _declare_negedge_clocks {} {
+    set made 0
+    set seen {}
+    set _diag_flops 0
+    set _diag_clkpin 0
+    set _diag_drv 0
+    set _diag_inv 0
+    set _diag_src 0
+    foreach flop [get_cells -quiet -hierarchical *] {
+        set rt [get_property $flop ref_name]
+        if {![string match *dfrbp* $rt] && ![string match *dl* $rt]} { continue }
+        set clkpins [get_pins -quiet -of_objects $flop -filter "name==CLK"]
+        if {[llength $clkpins] == 0} { continue }
+        incr _diag_clkpin
+        set clkpin [lindex $clkpins 0]
+        set drv [get_pins -quiet -of_objects [get_nets -quiet -of_objects $clkpin] \
+                     -filter "direction==output"]
+        if {[llength $drv] == 0} { continue }
+        incr _diag_drv
+        set drvcell [get_cells -quiet -of_objects $drv]
+        set drvtype [get_property $drvcell ref_name]
+        if {![string match *inv* $drvtype]} { continue }
+        incr _diag_inv
+        set outpin [lindex $drv 0]
+        if {[lsearch -exact $seen $outpin] >= 0} { continue }
+        lappend seen $outpin
+        # Master clock.  The inverter's input net is named after the clock it
+        # carries -- measured on the routed netlist: INJ_EDGE (77 of the 89),
+        # OUT (10), plus a handful of stray non-clock nets.  Match that name
+        # against the clock list and take the clock's own source pin.
+        #
+        # (Walking one pin upstream instead landed on another inverter's Y,
+        # e.g. Sources: _3285_/Y, which is not a clock and put each of the 89
+        # into its own group.)
+        set inpin [get_pins -quiet -of_objects $drvcell -filter "direction==input"]
+        if {[llength $inpin] == 0} { continue }
+        set innet [lindex [get_nets -quiet -of_objects [lindex $inpin 0]] 0]
+        if {$innet eq ""} { continue }
+        set innetname [get_property $innet name]
+        regsub {^\\} $innetname {} innetname
+        set master ""
+        # longest name first so a substring never matches a shorter clock
+        set _ne_clks {}
+        foreach clk [all_clocks] { lappend _ne_clks [list [string length [get_property $clk name]] $clk] }
+        foreach _pair [lsort -integer -decreasing -index 0 $_ne_clks] {
+            set clk [lindex $_pair 1]
+            set clkname [get_property $clk name]
+            # Post-CTS the inverter input is a CTS leaf of the clock, e.g.
+            # clknet_4_13_0_INJ_EDGE, so an exact match finds nothing
+            # (measured post-PnR: inv=89 but src=0, and the clocks silently
+            # did not exist).  Match the clock name anywhere in the net name,
+            # longest name first so REF does not shadow REF_G_CLK.
+            if {[string first $clkname $innetname] >= 0} {
+                set master [get_property $clk sources]
+                break
+            }
+        }
+        if {$master eq ""} { continue }
+        incr _diag_src
+        set srcpin [list $master]
+        set cname NE_CLK_$made
+        if {[catch {
+            # -invert alone is rejected (Error 388: missing -multiply_by,
+            # -divide_by, -combinational or -edges); a waveform argument is
+            # mandatory.  -divide_by 1 with -invert is exactly "same frequency,
+            # opposite phase", which is what negedge registers want.
+            create_generated_clock -name $cname -source [lindex $srcpin 0] \
+                -divide_by 1 -invert $outpin
+        } e]} {
+            puts "WARNING: adpll.sdc: $cname failed: $e"
+            continue
+        }
+        incr made
+    }
+    puts "adpll.sdc: NE_CLK diag clkpin=$_diag_clkpin drv=$_diag_drv inv=$_diag_inv src=$_diag_src made=$made"
+    puts "adpll.sdc: NE_CLK declared on $made inverter clock(s)"
+    return $made
+}
+
+# ---------------------------------------------------------------------------
 # Clock quality
+
+# after all master clocks exist
+_declare_negedge_clocks
+
 # ---------------------------------------------------------------------------
 # The ORFS ihp-sg13g2 platform does not publish these limits.  The values
 # below are the generic LibreLane/ORFS assumptions also used by the ics55 and
