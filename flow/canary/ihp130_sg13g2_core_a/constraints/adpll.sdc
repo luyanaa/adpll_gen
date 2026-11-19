@@ -307,6 +307,60 @@ cdc_exempt_hold {
 }
 
 # ---------------------------------------------------------------------------
+# Negedge (inverted) clocks
+# ---------------------------------------------------------------------------
+# `always @(negedge clk)` regs are implemented by synthesis as
+# INV(clk) -> posedge, and nothing declared those inverted nets as clocks.  In
+# the routed netlist 93 flops are clocked that way: ~70 in the INJ_EDGE domain,
+# 9 in OUT_DIV (the odd-divider's ncnt counter), 1 in MID_OUT and 1 in
+# net60_regs.  All of them fell outside their real clock group -- the worst SS
+# OUT path ended at `_4469_ (flip-flop clocked by OUT')`, where the prime is
+# STA's marker for an unattachable endpoint, and that single group holds 53 of
+# the 73 SS setup violators.
+#
+# Declare them properly: for every inverter whose output is used as a flop
+# clock, create a generated clock on the *inverter output*, sourced from the
+# master clock feeding the inverter, with -invert so the phase is right.
+proc _genclk_inverted {name net_pat src_list} {
+    if {[llength $src_list] == 0} {
+        puts "WARNING: adpll.sdc: $name skipped (no source clock)"
+        return 0
+    }
+    set made 0
+    set seen {}
+    foreach pin [get_pins -quiet $net_pat -filter "direction==output"] {
+        if {[lsearch -exact $seen $pin] >= 0} { continue }
+        lappend seen $pin
+        # only care about pins that actually clock a register
+        if {[llength [get_pins -quiet -of_objects $pin -filter "is_clock_pin"]] == 0} { continue }
+        set cname $name
+        if {$made > 0} { set cname ${name}_$made }
+        if {[llength [get_clocks -quiet $cname]] > 0} { incr made; continue }
+        if {[catch {
+            create_generated_clock -name $cname -source [lindex $src_list 0] \
+                -invert $pin
+        } e]} {
+            puts "WARNING: adpll.sdc: $cname on $pin failed: $e"
+            continue
+        }
+        puts "adpll.sdc: $cname created (-invert) at $pin"
+        incr made
+    }
+    if {$made == 0} {
+        puts "WARNING: adpll.sdc: $name skipped (no inverter clocking a flop)"
+    }
+    return [expr {$made > 0}]
+}
+
+set out_src_inv [get_ports -quiet OUT]
+if {[llength $out_src_inv] == 0} { set out_src_inv [get_pins -quiet *pll_ana/OUT] }
+set inj_src_inv [get_ports -quiet INJ_EDGE]
+if {[llength $inj_src_inv] == 0} { set inj_src_inv [get_pins -quiet *pll_ana/INJ_EDGE] }
+
+_genclk_inverted NE_CLK_OUT     *pll_dig.div.*   $out_src_inv
+_genclk_inverted NE_CLK_INJ     *pll_dig.*       $inj_src_inv
+
+# ---------------------------------------------------------------------------
 # Clock quality
 # ---------------------------------------------------------------------------
 # The ORFS ihp-sg13g2 platform does not publish these limits.  The values

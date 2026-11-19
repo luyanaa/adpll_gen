@@ -284,6 +284,66 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
+### B14. 93 flops are clocked through an inverter and fell out of their clock group
+
+Found while breaking down the remaining SS setup violations by path group:
+
+```text
+group                      n     worst        tns
+  DSM_CK_G_CLK            10   -2.3466    -13.588
+  OUT                     53   -1.2274    -33.135
+  MID_OUT                 10   -0.2734     -1.604
+```
+
+`OUT` holds 53 of 73, and its worst path ended at
+`_4469_ (flip-flop clocked by OUT')` -- the prime being STA's marker for an
+endpoint it cannot attach to a known clock.
+
+Tracing `_4469_` in the routed netlist:
+
+```verilog
+sg13g2_dfrbpq_1 _4469_ (.D(_0043_), .Q(pll_dig.div.ncnt[6]), .CLK(net269));
+sg13g2_inv_1 _3769__270 (.Y(net269), .A(clknet_4_13_0_net59_regs));
+```
+
+So the flop is clocked by `INV(clk)`.  This is how `always @(negedge clk)` is
+implemented after synthesis, and nothing declared those inverted nets as
+clocks.  A scan of the netlist found **93 inverter outputs driving a flop
+clock**:
+
+| domain | count | example |
+| --- | --- | --- |
+| INJ_EDGE | ~70 | `_0153_` .. `_0245_` |
+| OUT_DIV (`pll_dig.div`) | 9 | `net260` .. `net269` |
+| MID_OUT | 1 | `net259` |
+| net60_regs | 1 | `net272` |
+
+`_4469_` is `pll_dig.div.ncnt[6]`, i.e. the negedge half of the odd-divider's
+dual counter in `conf_div.v`:
+
+```verilog
+always @(posedge clk ...) pcnt <= ...;
+always @(negedge clk ...) ncnt <= ...;
+```
+
+So the very counter that produces the 50 % odd-duty output is half outside its
+own timing group.  For a divider whose whole purpose is exact duty cycle, that
+is a signoff hole, not a reporting artifact.
+
+Fix attempted: declare these as generated clocks on the inverter outputs with
+`-invert` (OpenSTA supports it), sourced from the real master clock:
+
+```tcl
+create_generated_clock -name $cname -source $master -invert $inv_pin
+```
+
+Only pins that actually drive a register clock are picked, so the 240 inverters
+in the netlist do not each become a clock.  This is a live experiment at the
+time of writing -- the numbers below do not include it yet, and the risk is the
+same one that bit the CTS-tolerance attempt in B12: too many clock objects
+splitting one domain into asynchronous pieces.  Any result must be checked by
+looking at the clock count and the violator-per-group table, not just the WNS.
+
 ### B13. Pre-existing: `lock_fsm_tb` does not pass, and did not before
 
 While checking that the B12 change to `frequency_counter_frontend` did not
