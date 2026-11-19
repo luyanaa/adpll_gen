@@ -160,7 +160,7 @@ if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
 # FLL front-end divided clock
 # ---------------------------------------------------------------------------
 # frequency_counter_frontend toggles `clk_div` on MID_OUT and then clocks the
-# whole counter (cnt, gray_q) from `always @(posedge clk_div)`.  That makes
+# whole counter (cnt, gray_q) from 'always @(posedge clk_div)'.  That makes
 # clk_div a real clock domain inside pll_dig.flock, but it had no
 # create_generated_clock -- so 82 registers were reported as
 # "unclocked register/latch pins" in checks.rpt and were never timed at all.
@@ -170,29 +170,11 @@ if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
 # PRESCALE is 2 in the signoff build (pll_logic instantiates
 # .PRESCALE(2)), and div_cnt runs off MID_OUT, so clk_div is MID_OUT/2.
 set frontend_prescale 2
-if {[llength [get_clocks -quiet FE_CLK_DIV]] == 0} {
-    # clk_div is a *net* name, not an instance name, so match the pin by
-    # walking from the net.  A pin-name wildcard finds nothing here (measured:
-    # "FE_CLK_DIV not created (pin 0, src 1)"), which is why the 82 registers
-    # stayed unclocked.
-    set clkdiv_net [lindex [get_nets -quiet *static_frontend.clk_div] 0]
-    set clkdiv_pin ""
-    if {$clkdiv_net ne ""} {
-        set clkdiv_pin [get_pins -quiet -of_objects $clkdiv_net -filter "direction==output"]
-    }
-    set mid_src_fe [get_ports -quiet MID_OUT]
-    if {[llength $mid_src_fe] == 0} {
-        set mid_src_fe [get_pins -quiet *pll_ana/MID_OUT]
-    }
-    if {[llength $clkdiv_pin] > 0 && [llength $mid_src_fe] > 0} {
-        create_generated_clock -name FE_CLK_DIV \
-            -source [lindex $mid_src_fe 0] \
-            -divide_by $frontend_prescale [lindex $clkdiv_pin 0]
-        puts "adpll.sdc: FE_CLK_DIV = MID_OUT/$frontend_prescale at [lindex $clkdiv_pin 0]"
-    } else {
-        puts "WARNING: adpll.sdc: FE_CLK_DIV not created (pin [llength $clkdiv_pin], src [llength $mid_src_fe])"
-    }
-}
+# FE_CLK_DIV is no longer declared: B12 changed frequency_counter_frontend to
+# clock its counter from CLK with an enable instead of from the divided register
+# output, so there is no derived clock domain there any more.  Keeping the old
+# declaration produced "FE_CLK_DIV not created (pin 0, src 1)" because the net
+# it anchored on no longer exists.
 
 # ---------------------------------------------------------------------------
 # Derived clocks that were also never declared
@@ -305,60 +287,6 @@ cdc_exempt_hold {
     *ref_ok_s1*    *ref_ok_s2*
     *locked_dsm_s1* *locked_dsm_s2*
 }
-
-# ---------------------------------------------------------------------------
-# Negedge (inverted) clocks
-# ---------------------------------------------------------------------------
-# `always @(negedge clk)` regs are implemented by synthesis as
-# INV(clk) -> posedge, and nothing declared those inverted nets as clocks.  In
-# the routed netlist 93 flops are clocked that way: ~70 in the INJ_EDGE domain,
-# 9 in OUT_DIV (the odd-divider's ncnt counter), 1 in MID_OUT and 1 in
-# net60_regs.  All of them fell outside their real clock group -- the worst SS
-# OUT path ended at `_4469_ (flip-flop clocked by OUT')`, where the prime is
-# STA's marker for an unattachable endpoint, and that single group holds 53 of
-# the 73 SS setup violators.
-#
-# Declare them properly: for every inverter whose output is used as a flop
-# clock, create a generated clock on the *inverter output*, sourced from the
-# master clock feeding the inverter, with -invert so the phase is right.
-proc _genclk_inverted {name net_pat src_list} {
-    if {[llength $src_list] == 0} {
-        puts "WARNING: adpll.sdc: $name skipped (no source clock)"
-        return 0
-    }
-    set made 0
-    set seen {}
-    foreach pin [get_pins -quiet $net_pat -filter "direction==output"] {
-        if {[lsearch -exact $seen $pin] >= 0} { continue }
-        lappend seen $pin
-        # only care about pins that actually clock a register
-        if {[llength [get_pins -quiet -of_objects $pin -filter "is_clock_pin"]] == 0} { continue }
-        set cname $name
-        if {$made > 0} { set cname ${name}_$made }
-        if {[llength [get_clocks -quiet $cname]] > 0} { incr made; continue }
-        if {[catch {
-            create_generated_clock -name $cname -source [lindex $src_list 0] \
-                -invert $pin
-        } e]} {
-            puts "WARNING: adpll.sdc: $cname on $pin failed: $e"
-            continue
-        }
-        puts "adpll.sdc: $cname created (-invert) at $pin"
-        incr made
-    }
-    if {$made == 0} {
-        puts "WARNING: adpll.sdc: $name skipped (no inverter clocking a flop)"
-    }
-    return [expr {$made > 0}]
-}
-
-set out_src_inv [get_ports -quiet OUT]
-if {[llength $out_src_inv] == 0} { set out_src_inv [get_pins -quiet *pll_ana/OUT] }
-set inj_src_inv [get_ports -quiet INJ_EDGE]
-if {[llength $inj_src_inv] == 0} { set inj_src_inv [get_pins -quiet *pll_ana/INJ_EDGE] }
-
-_genclk_inverted NE_CLK_OUT     *pll_dig.div.*   $out_src_inv
-_genclk_inverted NE_CLK_INJ     *pll_dig.*       $inj_src_inv
 
 # ---------------------------------------------------------------------------
 # Clock quality
