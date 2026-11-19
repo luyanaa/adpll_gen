@@ -43,7 +43,13 @@ def _logical_lines(fil, seen=None):
     return out
 
 def _split_params(tokens):
-    """Splits the tokens of an instance into (connections + master, params dict)"""
+    """Splits the tokens of an instance into (connections + master, params dict)
+
+    Handles the HSPICE subcircuit-call form the ics55 CDL uses inside the
+    BUFX/INV cells: `XXI1 net6 VDD VSS Y / INV pl=6e-08 pw=1.9e-07 ...`.
+    The `/` separates the connections from the master, so without stripping it
+    the master becomes "/" and the real name `INV` lands in the parameter list.
+    """
     pos = []
     params = {}
     text = " ".join(tokens)
@@ -53,6 +59,9 @@ def _split_params(tokens):
         if "=" in tok:
             k, v = tok.split("=", 1)
             params[k.lower()] = v
+        elif tok == "/":
+            # Separator only; the tokens on either side are still positional.
+            continue
         else:
             pos.append(tok)
     return pos, params

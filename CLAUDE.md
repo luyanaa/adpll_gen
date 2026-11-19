@@ -284,6 +284,52 @@ ln -sfn /grid/icsprout55-pdk /tmp/opencode/pdkroot/ics55
 make -C syn PDK=ics55 TOP=PLL_ILDCO all gen USE_DOCKER=0 PDK_ROOT=/tmp/opencode/pdkroot
 ```
 
+### ngspice 44.2 defect found while wiring the ISF flow (2026-11-19)
+
+**A netlist whose only content is comments/`.param` plus a `.op`/`.tran` card
+aborts ngspice 44.2 once the transient/op phase is entered:**
+
+```text
+$ printf '* comment only\n.param x=1\n.op\n.end\n' > c1.sp
+$ ngspice -n -b c1.sp
+ngspice: ../../../../../src/frontend/dotcards.c:225: ft_cktcoms:
+Assertion `plot_cur->pl_dvecs != NULL' failed.
+```
+
+The same deck with the analysis inside a `.control` block runs fine.  This is
+what the existing convention in this file ("`.control` block, not `-b`") is
+protecting against; it is a crash, not a warning.
+
+**`BUFX*`/`INVX*` cells in the ics55 CDL cannot be parsed as shipped.**  The
+CDL calls the transistor-level inverter with the HSPICE slash form and passes
+sizing parameters:
+
+```text
+.SUBCKT BUFX0P5H7R A VDD VSS Y
+XXI1 net6 VDD VSS Y / INV pl=6e-08 pw=1.9e-07 nl=6e-08 nw=1.5e-07
+.ENDS
+```
+
+but `.SUBCKT INV A VDD VSS Y` declares no formal parameters, so ngspice stops
+with `Too many parameters for subcircuit type "inv"`.  There are **1473** such
+calls in the ics55 CDL, so this blocks every transistor-level ics55
+simulation, not just the ISF flow.
+
+Fix (done in a patched copy, not in the PDK):
+
+```text
+.SUBCKT INV A VDD VSS Y pl=6e-08 pw=1.9e-07 nl=6e-08 nw=1.5e-07
+```
+
+Applied to `/tmp/opencode/pdkroot/ics55/libs.ref/ics55_LLSC_H7CR/cdl/ics55_LLSC_H7CR_patched.cdl`; point `models.inc` at that file.  Verify with a
+minimal deck: with the patched header the `Too many parameters` error is gone
+with or without the `/` separator.
+
+Also fixed in `src/spice_netlist.py`: `_split_params` now drops the bare `/`
+token, so the HSPICE form `X... Y / INV pl=...` no longer leaves the real
+master name in the parameter list (master became `/` and `INV` was read as a
+parameter).
+
 ### Two rules worth not relearning
 
 Both from `a9f51f7`/`222b70f`, and both cost real debug time:
