@@ -112,18 +112,32 @@ if {[llength [get_clocks -quiet REF_G_CLK]] == 0} {
     }
 }
 
-# DSM_CK is already MID_OUT/DSM_DIV (a pll_fix_divider instance) and
-# DSM_CK_G is the same clock through the gate, so divide by 1 relative to
-# DSM_CK.  Declaring it as MID_OUT/2 again double-divided the period.
+# DSM_CK is MID_OUT divided by DSM_DIV (a pll_fix_divider instance; DSM_DIV
+# defaults to 2 in pll_macro_top).  DSM_CK_G is the same clock through the ICG,
+# so no further division.
+#
+# The previous version derived DSM_CK_G_CLK with -divide_by 1 from the *divider
+# register's Q pin*, which made STA report a 2.500 ns period -- the same as
+# MID_OUT.  That is half the real period, and it is what turned the DSM adder
+# into a 49-stage path against a 2.5 ns budget at all three corners.  The
+# divider register is real (_4277_ in the routed netlist: D from the counter
+# logic, CLK = clknet_1_0__leaf_MID_OUT, Q = pll_dig.dsm_impl.DSM_CK), so the
+# divided clock is genuinely MID_OUT/DSM_DIV.
+#
+# Anchor must be MID_OUT itself, not the divider's Q: -source takes a clock
+# source pin, and the Q pin of a flop is data, not a clock root.
+set dsm_div 2
 if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
     set dsmg_net [lindex [get_nets -quiet *dsm_impl.DSM_CK_G*] 0]
-    set dsmck_net [lindex [get_nets -quiet *dsm_impl.DSM_CK] 0]
-    if {$dsmg_net ne "" && $dsmck_net ne ""} {
+    set mid_src [get_ports -quiet MID_OUT]
+    if {[llength $mid_src] == 0} {
+        set mid_src [get_pins -quiet *pll_ana/MID_OUT]
+    }
+    if {$dsmg_net ne "" && [llength $mid_src] > 0} {
         set dsmg_pin [_drv_pin $dsmg_net]
-        set dsmck_pin [_drv_pin $dsmck_net]
-        if {$dsmg_pin ne "" && $dsmck_pin ne ""} {
+        if {$dsmg_pin ne ""} {
             create_generated_clock -name DSM_CK_G_CLK \
-                -source $dsmck_pin -divide_by 1 $dsmg_pin
+                -source [lindex $mid_src 0] -divide_by $dsm_div $dsmg_pin
         }
     }
 }
