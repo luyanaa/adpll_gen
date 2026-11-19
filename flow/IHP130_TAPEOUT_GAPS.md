@@ -82,22 +82,45 @@ wiring was never done:
 `PLL_ANALOG_MACRO.{lef,lib,gds,v}`, rename to the `PLL_ANALOG` instance name
 the top elaborates, and run the flow.
 
-### B2. Macro Liberty has no output-arc to the sampling interface
+### B2. Macro Liberty `SS_BBPD` arc — CLOSED (as a clock-to-Q, not setup/hold)
 
-The 20 arcs are all `combinational` and reference `REF`/`INJ_EN`/
-`COARSE_MUX[*]`.  There is **no setup/hold arc from `SS_BBPD` to the
-`INJ_EDGE` sampling edge**, which `manifest.yaml` itself lists as the
-"critical_interface":
+`SS_BBPD` had no timing arc at all: only `direction : output` and a
+capacitance.  The top-level STA therefore checked the digital loop filter's
+capture of the sampler against nothing, which blinds the whole loop.
 
-> SS_BBPD -> digital loop filter sampled on negedge INJ_EDGE
+**The reviewed recommendation was wrong about the arc type.**  `SS_BBPD` is
+*launched* by a negative-edge flop inside the macro
+(`src/il_dco.v`: `PLL_CELL_DFFNQX1`, `CKN = INJ_EDGE`), so the only meaningful
+arc from `INJ_EDGE` to `SS_BBPD` is a **clock-to-Q**
+(`timing_type : rising_edge`), not `setup_rising`/`hold_rising`.  A setup
+requirement on a signal the macro itself generates is not physically
+meaningful, and would have hidden real capture requirements instead of
+exposing them.
 
-Without it the top-level STA checks the digital loop filter's capture of
-`SS_BBPD` against nothing.  This is the single most important missing timing
-constraint for closing the PLL loop.
+Implemented by `flow/macro/ihp130_sg13g2/add_bbpd_arc.py`, applied to all
+three corner Liberty files:
 
-**Fix**: add `timing()` groups on `SS_BBPD[*]` with
-`timing_type : setup_rising/hold_rising`, `related_pin : INJ_EDGE`, at all
-three corners; calibrate from the macro's own STA/SPICE.
+```text
+corner            bit0                       bit1
+tt_1p20V_25C      INJ_EDGE/rising_edge/0.35000   same
+ss_1p08V_125C     INJ_EDGE/rising_edge/0.43434   same
+ff_1p32V_m40C     INJ_EDGE/rising_edge/0.29571   same
+```
+
+The TT seed (0.35 ns) comes from the macro's own post-PEX STA; each corner
+scales by that corner's `INJ_EDGE` delay at a **mid** load point.  Using the
+near-zero-load point is misleading: there the intrinsic term dominates and the
+three corners come out almost equal (SS 0.3255 < TT 0.3400 < FF 0.3493).  At
+index 4 of the 7-point template the ordering is correct and well separated
+(SS 0.7958 > TT 0.6413 > FF 0.5418), giving the 1.24x / 0.845x ratios above.
+
+Verified: OpenSTA parses all three files (`OK` for each) and the top-level
+per-corner STA still runs to completion at TT/SS/FF.
+
+Caveat worth stating: the c2q value is **calibration-seeded, not measured per
+corner**.  A characterised per-corner c2q from the macro's own SPICE/STA would
+replace the scaling assumption; until then treat the arc as a
+direction-correct, magnitude-approximate model.
 
 ### B3. Macro SPEF/SDF — CLOSED
 
