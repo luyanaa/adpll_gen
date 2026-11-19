@@ -284,6 +284,69 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
+### B16. First real KLayout DRC run on the IHP top
+
+Ran the IHP deck directly, since LibreLane's `KLayout.DRC` step refuses any PDK
+other than sky130:
+
+```text
+klayout -b -rd input=final/gds/pll_macro_top.gds \
+          -rd topcell=pll_macro_top \
+          -rd report=pll_drc.lyrdb \
+          -rm libs.tech/klayout/tech/drc/ihp-sg13g2.drc
+```
+
+Exit 0, 19.7 MB report.  Two things had to be fixed to get there: the deck
+sources `libs.tech/klayout/python/sg13g2_pycell_lib`, which had not been copied,
+and it needs `libs.tech/klayout/tech/` complete.
+
+#### Result
+
+```text
+items            69,631
+distinct rules       25
+```
+
+Bucket by cell and by rule:
+
+| | count | share |
+| --- | --- | --- |
+| `PLL_ANALOG_MACRO` (hard macro) | 69,057 | 99.2 % |
+| `pll_macro_top` (the new P&R) | 574 | 0.8 % |
+
+| rule | count | meaning |
+| --- | --- | --- |
+| `forbidden.nodrc` | 64,053 | no-DRC boundary markers, **not a violation** |
+| `TM2.b` | 2,414 | top metal-2 min width/space |
+| `TM1.b` | 1,410 | top metal-1 min width/space |
+| `AFil.c` | 712 | active fill |
+| `TM1Fil.c` | 216 | TM1 fill |
+| `GFil.d` | 213 | gate fill |
+| rest | ~600 | various fill / min-width |
+
+**Excluding `forbidden.nodrc`, real violations are 5,578**: 5,004 inside the
+hard macro and 574 in the newly placed and routed logic.
+
+Top-level breakdown (the part this work is responsible for):
+
+```text
+TM1Fil.c  216      TM2.b   84      M3Fil.c  55      M2.b  12
+TM2Fil.c  102      TM1.b   74      M2Fil.c  22      M4.b   4
+```
+
+So the top-level violations are dominated by **fill-cell rules**
+(`*Fil.c`) plus 171 metal min-width/space hits -- consistent with fill being
+inserted without a post-fill DRC loop, not with a broken router.
+
+The macro's 5,004 are a separate matter: the macro was characterised and
+extracted as an analog block and was never DRC-clean on its own.  That is the
+same macro whose Liberty/SDF/SPEF were closed in B3/B4, so its *timing* views
+are fine while its *layout* still needs its own DRC pass.
+
+Neither number is a clean signoff.  What is now true: DRC can be run, the
+report is produced reproducibly, and the violations are attributed by cell and
+by rule instead of unknown.
+
 ### B15. The IHP DRC/LVS collateral does exist; the config said otherwise
 
 `config.macro.yaml` carried a comment inherited from `config.digital.yaml`:
