@@ -32,7 +32,9 @@ module DLL_FULL_PERIOD_TOP #(
     parameter integer CODE_BITS = 9,
     parameter integer T0_PS = 2930,
     parameter integer CELL_PS = 30,
-    parameter integer EXTRA_PS = 62,
+    // 0 keeps the segment boundary step equal to one fine cell
+    // (see DLL_DCDL_SEGMENT); nonzero values add that much DNL.
+    parameter integer EXTRA_PS = 0,
     parameter integer DLL_IMPL = 0,
     // 0 = 10 GHz simulation timestamp TDC, 1 = physical delay-line TDC.
     parameter integer TDC_IMPL = 0,

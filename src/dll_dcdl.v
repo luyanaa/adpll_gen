@@ -27,10 +27,44 @@ module DLL_DELAY_CELL #(
 endmodule
 /* verilator lint_on ASSIGNDLY */
 
+// One segment of the DLL delay line.
+//
+// Segment boundary uniformity
+// ---------------------------
+// The line is a chain of segments, and `fine` taps a dedicated 56-cell chain
+// AFTER the segments.  The code->delay map is therefore
+//
+//   period(code) = T0
+//                + (code / SEG_TAPS) * (SEG_TAPS*CELL_PS + EXTRA_PS)
+//                + (code % SEG_TAPS) * CELL_PS
+//
+// so the step from code (k*SEG_TAPS-1) to (k*SEG_TAPS) is
+// CELL_PS + EXTRA_PS, while an in-segment step is CELL_PS.
+//
+// With the old EXTRA_PS=62 ps that boundary step was 92 ps = 3.07 LSB, i.e.
+// a 62 ps GAP in the transfer curve: no code lands on the periods inside it,
+// and the loop cannot settle there.  That is a direct cause of "no legal code
+// over one period" for references that need a period in that gap.
+//
+// Fix: the bypass must add NOTHING.  code = k*SEG_TAPS lands on seg_node[k],
+// which already contains k full segments of SEG_TAPS cells, so the boundary
+// step is one cell if the bypass is zero and 1+D extra if it is not.  Any
+// nonzero EXTRA_PS is pure DNL:
+//
+//   EXTRA_PS =  62 ps -> boundary step 92 ps = 3.07 LSB   (62 ps gap)
+//   EXTRA_PS =  30 ps -> boundary step 60 ps = 2.00 LSB   (30 ps gap)
+//   EXTRA_PS =   0 ps -> boundary step 30 ps = 1.00 LSB   (monotone, DN L 0)
+//
+// EXTRA_PS is therefore 0 by default.  It stays a parameter so a per-PDK
+// characterisation can re-introduce a real trim if the physical segment adds
+// unavoidable delay, but the model now defaults to a uniform grid.
 module DLL_DCDL_SEGMENT #(
     parameter integer SEG_TAPS = 56,
     parameter integer CELL_PS = 30,
-    parameter integer EXTRA_PS = 62
+    // Bypass trim.  Must be 0 for a uniform code->delay grid: see the note
+    // above.  Nonzero values introduce exactly this much DNL at every
+    // segment boundary.
+    parameter integer EXTRA_PS = 0
 ) (
     input  wire CLK_IN,
     input  wire USED,
@@ -61,7 +95,8 @@ module DLL_DCDL_SIM #(
     parameter integer FINE_TAPS = 56,
     parameter integer T0_PS = 2930,
     parameter integer CELL_PS = 30,
-    parameter integer EXTRA_PS = 62
+    // 0 keeps the code->delay map uniform (see DLL_DCDL_SEGMENT).
+    parameter integer EXTRA_PS = 0
 ) (
     input  wire                  CLK_IN,
     input  wire [CODE_BITS-1:0]  CODE,
@@ -135,7 +170,8 @@ module DLL_DCDL #(
     parameter integer FINE_TAPS = 56,
     parameter integer T0_PS = 2930,
     parameter integer CELL_PS = 30,
-    parameter integer EXTRA_PS = 62
+    // 0 keeps the code->delay map uniform; see DLL_DCDL_SEGMENT.
+    parameter integer EXTRA_PS = 0
 ) (
     input  wire                  CLK_IN,
     input  wire [CODE_BITS-1:0]  CODE,
