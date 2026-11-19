@@ -204,3 +204,10 @@ KLAYOUT_DRC_RUNSET: dir::build/pdk_root/ihp-sg13g2/libs.tech/klayout/tech/drc/ih
 # The GDS tech is the one that provides cifinput/cifoutput.
 MAGIC_TECH: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2-GDS.tech
 MAGIC_LEF_WRITE_USE_GDS: true
+
+# SPICE extraction + LVS.  The macro is a hard macro with no gate-level view
+# inside the top's powered netlist, so it is abstracted during extraction and
+# the LVS comparison is on the standard-cell logic the flow actually places.
+MAGIC_EXT_USE_GDS: true
+MAGIC_EXT_ABSTRACT_CELLS:
+  - PLL_ANALOG_MACRO

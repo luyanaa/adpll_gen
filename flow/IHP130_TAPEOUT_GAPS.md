@@ -284,6 +284,63 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
+### B17. LVS: extraction path opened, one layer-map gap left
+
+LVS needs an extracted SPICE to compare against the powered netlist, and that
+requires Magic to read the GDS.  Two things blocked it and both are now solved:
+
+1. **`MAGICRC` and `MAGIC_PDK_SETUP` defaulted to `/dev/null`**, on top of
+   `MAGIC_TECH` also being `/dev/null` (B15).  With no tech loaded, Magic
+   reported `Nothing in "cifinput" section of tech file`, read no geometry, and
+   wrote an empty LEF:
+
+   ```text
+   211 bytes
+   MACRO (UNNAMED)
+   ```
+
+   The IHP PDK ships tech files but no `.magicrc`, so one was written:
+   `build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2.magicrc`, which does
+   `tech load ihp-sg13g2-GDS.tech` and `tech unlock *`.
+
+   Verified directly: with that rcfile, `gds read` on the final GDS succeeds and
+   every cell is present, including `pll_macro_top`, `PLL_ANALOG_MACRO` and
+   `sg13g2_decap_8` (the cell that previously "could not be read"):
+
+   ```text
+   GDS_READ_OK cells=(UNNAMED) PLL_ANALOG_MACRO pll_macro_top sg13g2_a21o_1
+     ... sg13g2_decap_8 {sg13g2_decap_8$1} sg13g2_dfrbpq_1 sg13g2_lgcp_1 ...
+   ```
+
+2. **One unmapped layer remains.**  Reading the macro GDS raises
+
+   ```text
+   Error while reading cell "PLL_ANALOG_MACRO" (byte position 3601664):
+     Unknown layer/datatype in boundary, layer=62 type=0
+   ```
+
+   The top-level GDS uses 40 distinct layer/datatype pairs; `62/0` is present
+   and is not in `libs.tech/klayout/tech/sg13g2.map` (which starts at Metal1
+   8/0 and never mentions 62).  So the macro's stream-out used a layer the
+   standard-cell/GDS tech does not define.  Get this from the macro's own
+   stream-out settings rather than guessing: whatever layer 62/0 carries has to
+   be declared in the Magic cifinput section before extraction can be clean.
+
+Current state of the signoff checks:
+
+| check | state |
+| --- | --- |
+| detailed-route DRC (OpenROAD) | **0** |
+| antenna (OpenROAD, post-repair) | **0 nets, 0 pins** |
+| KLayout DRC (IHP deck) | runs; 5,578 real violations, 99 % in the macro (B16) |
+| Magic LEF write | **works** once MAGICRC/MAGIC_TECH are set |
+| Magic SPICE extraction | blocked on layer 62/0 |
+| netgen LVS | pending extraction |
+
+The macro abstraction is configured (`MAGIC_EXT_ABSTRACT_CELLS:
+[PLL_ANALOG_MACRO]`), so once extraction reads the geometry the comparison runs
+on the standard-cell logic the flow actually places.
+
 ### B16. First real KLayout DRC run on the IHP top
 
 Ran the IHP deck directly, since LibreLane's `KLayout.DRC` step refuses any PDK
