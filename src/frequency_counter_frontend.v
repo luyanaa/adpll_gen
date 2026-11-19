@@ -107,15 +107,23 @@ module frequency_counter_frontend #(
                     div_cnt <= div_cnt + 1'b1;
                 end
             end
-            always @(posedge clk_div or negedge RST_N) begin
+            // 计数寄存器的时钟统一用 CLK，改由使能脉冲控制递增。
+            // 原写法 `always @(posedge clk_div)` 把寄存器输出当时钟，CTS 会为
+            // 负载侧再造一棵树并把根留成悬空网（实测 ..._clk_div_regs 全
+            // netlist 无驱动源），导致这 33 个寄存器在签核时根本没有被计时。
+            // 用使能门控在功能上等价：clk_div 的每个上升沿对应 div_cnt 回绕
+            // 的那一拍，因此计数条件就是 (div_cnt == HALF-1)。
+            wire cnt_en = (div_cnt == HALF - 1);
+            always @(posedge CLK or negedge RST_N) begin
                 if (!RST_N) begin
                     cnt    <= 'd0;
                     gray_q <= 'd0;
-                end else begin
+                end else if (cnt_en) begin
                     cnt    <= cnt_inc;
-                    // Register the Gray word in the source (divided) clock
-                    // domain; a combinational XOR can glitch on multi-bit
-                    // carries and be sampled by the REF 2FF synchronizer.
+                    // Register the Gray word in the divided-clock *phase*
+                    // (same CLK edge as clk_div's toggle); a combinational XOR
+                    // can glitch on multi-bit carries and be sampled by the
+                    // REF 2FF synchronizer.
                     gray_q <= cnt_inc ^ (cnt_inc >> 1);
                 end
             end

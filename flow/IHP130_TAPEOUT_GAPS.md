@@ -284,80 +284,70 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
-### B12. CTS leaves the divided-clock domain dangling: 33 registers are unchecked
+### B12. CTS left divided-clock trees undriven -- FIXED by gating the enable
 
-Closing B11 exposed a defect one level down, and it is in the clock tree rather
-than the constraints.
+CTS created `<name>_regs` load trees whose root net has no driver, so the flops
+clocked from them were invisible to STA (`checks.rpt`: 33 unclocked pins; those
+clock names report 0 endpoints in `max.rpt` while `OUT`/`REF`/`REF_G_CLK` report
+271/336/100).
 
-#### What is measured
-
-`checks.rpt` at every corner, post-PnR:
-
-```text
-Warning: There are 33 unclocked register/latch pins.
-  _4479_/CLK ... _4509_/CLK   (FLL frequency counter)
-  _4613_/CLK _4615_/CLK       (LOCKED -> DSM synchroniser)
-```
-
-Progression across the work: 82 unclocked -> 51 (declaring `FE_CLK_DIV`) -> 2
-at STAPrePNR (declaring `OUT_DIV2_CLK`, `CKR_CLK`, `DSM_CK_CLK`) -> back to 33
-at STAPostPNR.
-
-#### Why it goes back up after CTS
-
-The netlist shows the split directly. Before CTS, `clk_div` occurs 0 times with
-a `_regs` suffix; after `35-openroad-cts` it occurs 61 times.  In the routed
-netlist the two trees are:
+#### Evidence that it was the tree, not the constraint
 
 ```verilog
-// the one that connects: register Q -> buffer -> tree
+// connected:
 sg13g2_buf_16 clkbuf_0_..._clk_div      (.X(clknet_0_..._clk_div),
-                                         .A(..._clk_div));           // <- driven
-// the one that clocks the counter flops
+                                         .A(..._clk_div));        // <- driven
+// not connected:
 sg13g2_buf_16 clkbuf_0_..._clk_div_regs (.X(clknet_0_..._clk_div_regs),
-                                         .A(..._clk_div_regs));      // <- NO driver
+                                         .A(..._clk_div_regs));   // <- no driver
 ```
 
-`..._clk_div_regs` has no driver anywhere in the netlist -- the source register
-still drives `..._clk_div`.  CTS created the `_regs` name for the load side and
-never connected its root, so the 33 counter flops hang off an undriven net.
-That is why a virtual clock on `clk_div` reports 0 endpoints while the same
-declaration on `pll_dig.out_div2` (whose tree is connected) reports 38.
+`..._clk_div_regs` has no driver anywhere in the routed netlist; the source
+register still drives `..._clk_div`.  `clk_div_regs` appears 0 times before
+`35-openroad-cts` and 61 times after, which localises the break to CTS.
 
-`FE_CLK_DIV`, `CKR_CLK` and `DSM_CK_CLK` each report 0 endpoints in `max.rpt`;
-`REF_G_CLK` (100), `DSM_CK_G_CLK` (154), `OUT_DIV2_CLK` (38) and `OUT` (271) all
-report normally.  The difference is not the declaration -- it is whether the
-tree root is connected.
+#### Fix (option 2, applied to the FLL front-end)
 
-Also relevant: `MID_OUT` reports `Virtual: yes` even though it is the DCO clock,
-because `OUT`/`MID_OUT`/`INJ_EDGE` are *outputs of the PLL_ANALOG macro*, not
-top-level ports.  Virtual clocks still time their domains here (`OUT` has 271
-endpoints), so that alone is not the blocker -- the dangling `_regs` tree is.
+`frequency_counter_frontend` used a register output as a clock:
 
-#### Dead end, recorded so it is not retried
+```verilog
+always @(posedge clk_div) begin cnt <= cnt_inc; gray_q <= ...; end
+```
 
-Declaring a generated clock on *every* driver pin matching the net pattern
-produced `FE_CLK_DIV`..`FE_CLK_DIV_12` and `CKR_CLK`..`CKR_CLK_9`: thirteen
-asynchronous domains for one clock, because every CTS buffer output matched.
-Strictly worse.  Reverted.
+It now clocks from `CLK` and gates the increment instead:
 
-#### Options
+```verilog
+wire cnt_en = (div_cnt == HALF - 1);
+always @(posedge CLK) if (cnt_en) begin cnt <= cnt_inc; gray_q <= ...; end
+```
 
-1. **Stop CTS from splitting `clk_div`.**  Give the divider output a
-   `(* keep *)` / dont-touch attribute, or register the divided clock into a
-   buffer cell explicitly, so the load tree keeps the original net name.  Needs
-   experimenting; no LibreLane knob disables the rename.
-2. **Move the /2 into the RTL structure rather than a raw register output**:
-   clock the counter from `MID_OUT` and gate the increment by the divided
-   enable instead of gating the clock.  This removes a real generated clock from
-   the design and is the conventional fix, but it changes `frequency_counter_
-   frontend` behaviour and needs its own timing/functional check.
-3. **Report it rather than close it.**  The 33 registers are the FLL counter and
-   the LOCKED hand-off.  If they are not timed, `FREQ_LOCKED` correctness is not
-   backed by signoff -- so this cannot be a silent pass.
+Functionally equivalent: `div_cnt` wraps on exactly the edge where `clk_div`
+would have risen, so the counter advances once per divided period with the same
+phase.  `frequency_counter_frontend_tb` passes unchanged
+(`sync=20 ps2=20 ripple=236 johnson=20`).
 
-Nothing else in the flow is affected: hold is clean at all three corners, and
-max cap / max slew / detailed route / antenna are all zero.
+Measured effect on the full signoff flow:
+
+| | before | after |
+| --- | --- | --- |
+| unclocked register/latch pins (post-PnR) | 33 | **2** |
+| TT setup WS / viol | -0.5027 / 10 | **-0.4091 / 9** |
+| SS setup WS / viol | -2.5391 / 67 | **-2.3466 / 73** |
+| FF setup WS / viol | +0.0037 / 0 | **+0.0692 / 0** |
+| hold WS TT/SS/FF | +0.2033/+0.3474/+0.1167 | +0.2030/+0.3470/+0.1163 |
+
+Hold stays clean at every corner.
+
+#### The last 2 (open)
+
+`_4682_`/`_4684_` are the `(* ASYNC_REG *)` LOCKED synchroniser, clocked from
+`clknet_1_*_leaf_pll_dig.dsm_impl.DSM_CK_regs` -- the same undriven-root pattern,
+this time on the DSM divider output.  It cannot be fixed the same way: those two
+flops must sample LOCKED *before* the ICG, otherwise the gate enable would
+depend on a signal behind the gate (deadlock).  Options are the same as the
+general case: stop CTS renaming `DSM_CK`, or accept a documented 2-flop
+exception with an explicit `set_false_path` and a note that the hand-off is
+synchroniser-only and checked by the RTL TB.
 
 ### B10. First complete IHP top PnR: three-corner timing, and the real setup gap
 
