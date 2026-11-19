@@ -581,86 +581,70 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
-### B14-FIX. The 89 negedge flops are declarable -- and doing so is not a win yet
+### B14-FIX. The 89 negedge flops are declarable; the DCO_EN crossing is not closable from the SDC
 
 B14 found 89 flops whose clock arrives through an inverter (`always @(negedge
-clk)` becomes `INV(clk) -> flop CLK`), one per inverter, with none of them in
-any clock group.  They are now correctly declarable.  Getting there took four
-corrections, each found by measurement:
+clk)` becomes `INV(clk) -> flop CLK`), none of them in any clock group.  The
+declaration now works.  Closing the problem it exposes does not.
 
-1. **`-invert` alone is rejected**:
-   `Error 388: missing -multiply_by, -divide_by, -combinational or -edges`.
-   `-divide_by 1 -invert` is "same frequency, opposite phase".
+#### The declaration (works, verified)
 
-2. **A net-name list is stage-dependent.**  Pre-CTS the flop clock is the
-   inverter output `_0202_`, after CTS it is `net264`.  A hardcoded
-   `net260..net272` list therefore matched **0** nets at STAPrePNR.  The
-   declaration has to be structural: walk the flops, keep those whose CLK pin is
-   driven by an inverter, and anchor there.
+Four corrections were needed, each found by measurement:
 
-3. **`-source` must be the clock root.**  Walking one pin upstream landed on
-   another inverter's `Y` (`Sources: _3285_/Y`), which is not a clock.
-
-4. **Post-CTS the inverter input is a CTS leaf** -- `clknet_4_13_0_INJ_EDGE`,
-   not `INJ_EDGE` -- so an exact name match found nothing.  Measured post-PnR:
-   `diag ... inv=89 src=0 made=0`, while pre-PnR was `src=88`.  A substring
-   match with the longest clock name first fixes it.
-
-#### The declaration works
+1. `-invert` alone is rejected (`Error 388: missing -multiply_by, -divide_by,
+   -combinational or -edges`); `-divide_by 1 -invert` is what is wanted.
+2. A net-name list is stage-dependent (pre-CTS `_0202_`, post-CTS `net264`), so
+   a hardcoded list matched 0 nets.  The scan is structural: walk flops, keep
+   those whose CLK pin is driven by an inverter.
+3. `-source` must be the clock root; one pin upstream landed on another
+   inverter's `Y`.
+4. Post-CTS the inverter input is a CTS leaf (`clknet_4_13_0_INJ_EDGE`), so an
+   exact name match found nothing (`inv=89 src=0`); a substring match with the
+   longest clock name first fixes it.
 
 ```text
 post-PnR: adpll.sdc: NE_CLK diag clkpin=537 drv=537 inv=89 src=78 made=78
 Clock: NE_CLK_1   Period 20.000000   Generated: yes   Virtual: yes
-waveform: INJ_EDGE   0.000000 10.000000
-          NE_CLK_1  10.000000 20.000000 (generated)
+waveform: INJ_EDGE 0/10    NE_CLK_1 10/20 (generated)   <- correct opposite phase
 ```
 
-`-invert` produces the correct opposite phase: NE_CLK_1's rising edge sits on
-INJ_EDGE's falling edge, exactly what a negedge register wants.  `clocked by
-NE_CLK` appears 174 times in the hold report where it appeared 0 times before.
+`clocked by NE_CLK` goes from 0 to 174 occurrences.  It is correct.
 
-#### But it makes the reported results worse, and that is the real finding
+#### The DCO_EN crossing: six exemption forms, all leaving -0.4039
 
-| | hold WS | hold viol | setup WS | setup viol |
-| --- | --- | --- | --- | --- |
-| declaration off | **+0.2030** | **0** | -0.4091 | 9 |
-| declaration on | -0.4039 | 1 | -0.4034 | 9 |
-
-Hold was clean *only because 89 registers were invisible*.  With them timed one
-real violation appears:
+The declaration exposes one real hold violation:
 
 ```text
-Startpoint: _4240_  (flip-flop clocked by NE_CLK_1)   -- Q = DCO_EN
-Endpoint:   _4316_  (flip-flop clocked by DSM_CK_G_CLK) -- dff_err3[5]
-Path Group: DSM_CK_G_CLK     hold -0.4039
+Startpoint: _4240_  (clocked by NE_CLK_1, Q = DCO_EN)
+Endpoint:   _4316_  (clocked by DSM_CK_G_CLK, D = dff_err3[5])
+Path: _4240_/Q -> fanout116 -> _2425_/A1 -> _2425_/Y -> _4316_/D
+hold -0.4039
 ```
 
-That is `DCO_EN` crossing from the INJ_EDGE domain (20 ns) into the DSM
-accumulator domain (5 ns).  It is a real inter-domain connection, so
-`set_clock_groups -asynchronous` does not apply, and grouping the NE_CLK_* with
-their masters changed nothing (measured: identical numbers).  A targeted
-`set_false_path` from the DCO_EN flop was also ineffective as written: the
-driver resolves to an anonymous post-CTS pin (`_10658ee42f560000_p_Pin`) rather
-than `_4240_/Q`, so the exemption landed on the wrong object.
+`delta_sigma` uses `EN_DSM` (driven by DCO_EN) only as a clock enable --
+`else if (EN_DSM) dff_* <= ...` for six register groups; it never reaches an
+adder.  So a level-based exemption is semantically right.  Measured attempts:
 
-Also worth recording: the earlier expectation that these 89 flops account for
-OUT's 53 SS violators is **not** supported -- they contribute NE_CLK_60..64
-(one violator each) plus this one hold path, and OUT stays at exactly 53.
+| attempt | result |
+| --- | --- |
+| `set_clock_groups -asynchronous`, NE_CLK_* grouped with masters | identical numbers |
+| `set_false_path -from <DCO_EN net driver>` | -0.4039 |
+| `set_false_path -from driver -to sink` | -0.3986 (moved, not closed) |
+| `-from _4240_/Q -to _4316_/D` (plain names) | resolved to anonymous pins, -0.4039 |
+| same with `-hierarchical *` globs | "cone exempted (1 -> 1)", -0.4039 |
+| moved the exemption after `_declare_negedge_clocks` (it was running before the clocks existed) | -0.4039 |
 
-#### Decision taken
+The last two are the informative ones: the exemption *is* applied to pins that
+*are* on the reported path (`_4240_/Q`, `_4316_/D`), and ordering is correct,
+yet the violation does not move.  Conclusion: the reported path traverses the
+pair through more than the one route the `-from`/`-to` pair covers -- the
+`_2425_` gate has other inputs that also reach `_4316_/D`, so exempting one
+cone leaves another.
 
-The declaration is correct but not yet a signoff improvement: it swaps a clean
-hold result for a real, unresolved CDC question.  It is therefore shipped
-**opt-in**:
+#### Decision
 
-```tcl
-if {[info exists ::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)] && \
-    $::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)} {
-    _declare_negedge_clocks
-}
-```
-
-Default run re-verified after the change:
+Shipped **opt-in** (`ADPLL_DECLARE_NEGEDGE_CLOCKS=1`), default off.  With it off
+the previously verified numbers reproduce exactly:
 
 ```text
 nom_tt_025C_1v20  hold +0.2030 (0)  setup -0.4091 (9)
@@ -668,12 +652,13 @@ nom_ss_125C_1v08  hold +0.3470 (0)  setup -2.3466 (73)
 nom_ff_n40C_1v32  hold +0.1163 (0)  setup +0.0692 (0)
 ```
 
-i.e. exactly the previously verified numbers, with NE_CLK clocks back to 0.
+With it on: hold -0.4039 (1) and setup unchanged at 9 / 87 / 0.
 
-Turning it on (`ADPLL_DECLARE_NEGEDGE_CLOCKS=1`) is one variable and reproduces
-the -0.4039 hold.  Closing that requires either a CDC exemption that resolves
-the post-CTS pin name, or accepting a documented cross-domain path for
-`DCO_EN`.
+**What would actually close this**: a synchroniser on `DCO_EN` entering the DSM
+domain (RTL change), or exempting by *clock group* rather than by pin after
+teaching STA that NE_CLK_* belong to INJ_EDGE's group -- not another SDC
+variant.  This is a design decision, so it stops here rather than being patched
+further.
 
 ### B14. 93 flops are clocked through an inverter and fell out of their clock group
 

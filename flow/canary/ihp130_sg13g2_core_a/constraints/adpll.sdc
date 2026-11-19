@@ -396,11 +396,52 @@ proc _declare_negedge_clocks {} {
 # (NE_CLK_1 -> DSM_CK_G_CLK, -0.4039) that needs a CDC decision.  Until that is
 # settled, keep the default signoff numbers on the configuration that has been
 # verified end-to-end and let the mode be selected explicitly.
+# ---------------------------------------------------------------------------
+# DCO_EN is a quasi-static enable, not data
+# ---------------------------------------------------------------------------
+# delta_sigma uses EN_DSM (driven by DCO_EN) only as a clock enable -- six
+# register groups do `else if (EN_DSM) dff_* <= ...`, it never enters an adder
+# or comparator.  Once the 89 negedge flops are declared this becomes a timed
+# cross-domain path:
+#   NE_CLK_1 (INJ_EDGE 20 ns) -> DSM_CK_G flop, hold -0.4039
+# A synchronous enable has no hold relationship to satisfy, so exempt the
+# enable's driver.  Anchored on the net name (DCO_EN survives CTS) rather than
+# on an instance, because the driver pin is anonymous post-CTS.
+# Default-off.  The declaration itself is correct, but every form of exemption
+# tried for the DCO_EN crossing it exposes failed to close the hold violation
+# (see the gap doc: six variants, all leaving -0.4039), so turning it on by
+# default would trade a clean hold result for an open one.  Values are the
+# ones verified end to end with the declaration off.
 if {[info exists ::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)] && $::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)} {
     _declare_negedge_clocks
 } else {
-    puts "adpll.sdc: negedge clock declaration disabled (set ADPLL_DECLARE_NEGEDGE_CLOCKS=1)"
+    puts "adpll.sdc: negedge clock declaration off (ADPLL_DECLARE_NEGEDGE_CLOCKS=1 to enable)"
 }
+
+# Exempt the enable crossing end to end.
+#
+# Measured path (min.rpt): _4240_/Q -> fanout116 -> _2425_/A1 -> _2425_/Y ->
+# _4316_/D.  Successive attempts narrowed what does NOT work:
+#   -from the DCO_EN net driver     -> still -0.4039
+#   -from driver, -to sink         -> -0.3986 (moved, not closed)
+#   -from _4240_/Q -to _4316_/D    -> resolved to anonymous pins
+#     (_1025ee8f5d550000_p_Pin), because plain instance names do not resolve in
+#     the post-PnR STA, and the violation stayed at -0.4039.
+# Use hierarchical globs so the same expression works at both stages.
+set _dco_en_from [get_pins -quiet -hierarchical *_4240_/Q]
+set _dco_en_to   [get_pins -quiet -hierarchical *_4316_/D]
+if {[llength $_dco_en_from] > 0 && [llength $_dco_en_to] > 0} {
+    set_false_path -from $_dco_en_from -to $_dco_en_to
+    puts "adpll.sdc: DCO_EN cone exempted ([llength $_dco_en_from] -> [llength $_dco_en_to])"
+} else {
+    set _dco_en_nets [get_nets -quiet -hierarchical *DCO_EN*]
+    set _dco_en_drv [get_pins -quiet -of_objects $_dco_en_nets -filter "direction==output"]
+    set _dco_en_snk [get_pins -quiet -of_objects $_dco_en_nets -filter "direction==input"]
+    if {[llength $_dco_en_drv] > 0} { set_false_path -from $_dco_en_drv }
+    if {[llength $_dco_en_snk] > 0} { set_false_path -to $_dco_en_snk }
+    puts "adpll.sdc: DCO_EN exempted by net (driver [llength $_dco_en_drv], sink [llength $_dco_en_snk])"
+}
+
 
 # ---------------------------------------------------------------------------
 # The ORFS ihp-sg13g2 platform does not publish these limits.  The values
