@@ -180,9 +180,12 @@ RCX_RULESETS:
 # running; do not claim DRC/LVS/antenna results from this skeleton.
 RUN_MAGIC_STREAMOUT: false
 RUN_KLAYOUT_STREAMOUT: true
-# Magic.WriteLEF is needed by Odb.CheckDesignAntennaProperties (it consumes the
-# design LEF).  It only needs GDS+DEF, so it works without any DRC deck.
-RUN_MAGIC_WRITE_LEF: true
+# Magic.WriteLEF is off.  It existed only to feed
+# Odb.CheckDesignAntennaProperties, a warning-only checker, and the macro GDS
+# carries an unnamed 62/0 layer that the GDS tech cannot map -- so the write
+# produced 'MACRO (UNNAMED)' and the checker then crashed on StopIteration.
+# LVS does not need it: MAGIC_EXT_USE_GDS=false extracts from DEF/LEF.
+RUN_MAGIC_WRITE_LEF: false
 RUN_KLAYOUT_XOR: false
 # The IHP PDK does ship full signoff collateral -- it was simply not copied into
 # build/pdk_root, which is why the earlier comment said there was none:
@@ -202,12 +205,22 @@ KLAYOUT_DRC_RUNSET: dir::build/pdk_root/ihp-sg13g2/libs.tech/klayout/tech/drc/ih
 #   Nothing in "cifinput" section of tech file
 #   Cell sg13g2_decap_8 is not defined
 # The GDS tech is the one that provides cifinput/cifoutput.
-MAGIC_TECH: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2-GDS.tech
+# The IHP PDK ships tech files but no .magicrc, and LibreLane defaults MAGICRC
+# and MAGIC_PDK_SETUP to /dev/null, so Magic started with no tech: "gds read"
+# reported 'Nothing in cifinput section of tech file', read no geometry, and
+# wrote a 211-byte LEF containing 'MACRO (UNNAMED)'.
+MAGICRC: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2-signoff.magicrc
+MAGIC_TECH: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2-signoff.tech
 MAGIC_LEF_WRITE_USE_GDS: true
 
 # SPICE extraction + LVS.  The macro is a hard macro with no gate-level view
 # inside the top's powered netlist, so it is abstracted during extraction and
 # the LVS comparison is on the standard-cell logic the flow actually places.
-MAGIC_EXT_USE_GDS: true
+# Extract from DEF/LEF, not GDS.  The macro's stream-out carries a 62/0
+# "NoDRC.drawing" marker that the Magic GDS tech does not define, and
+# "gds read" aborts PLL_ANALOG_MACRO on it.  The macro is abstracted for LVS
+# anyway, so its geometry never needs to be parsed: the DEF/LEF path is both
+# correct for this comparison and much faster.
+MAGIC_EXT_USE_GDS: false
 MAGIC_EXT_ABSTRACT_CELLS:
   - PLL_ANALOG_MACRO

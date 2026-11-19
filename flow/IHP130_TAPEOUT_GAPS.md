@@ -284,6 +284,78 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
+### B18. Magic LEF/DEF layer binding: what was tried and where it stands
+
+`Magic.SpiceExtraction` needs Magic to read the LEF/DEF, and that fails on layer
+names.  Progress and the exact remaining blocker, so the next attempt does not
+repeat the dead ends:
+
+**What was wrong, in order.**
+
+1. `MAGICRC`, `MAGIC_PDK_SETUP` and `MAGIC_TECH` all defaulted to `/dev/null`,
+   so no tech was loaded at all.  `gds read` then reported
+   `Nothing in "cifinput" section of tech file`, loaded no geometry, and the
+   written LEF was `MACRO (UNNAMED)` in 211 bytes.
+
+2. The IHP PDK splits its Magic collateral across two techs that are each
+   incomplete for a full flow:
+
+   | tech | has |
+   | --- | --- |
+   | `ihp-sg13g2-GDS.tech` | complete tech: tech, planes, styles, types, contact, compose, connect, cifinput, cifoutput — **no `lef` section** |
+   | `ihp-sg13g2.tech` | `lef` section (Metal1, Via1, ...) — **no cifinput/cifoutput** |
+
+   `scripts/build_magic_tech.py` merges them: the complete GDS tech plus a
+   rewritten `lef` section.  It also writes the matching `.magicrc`
+   (`tech load <merged>` + `tech unlock *`), and is idempotent.
+
+3. With the merged tech, `gds read` **works**: every cell loads, including
+   `sg13g2_decap_8` which previously "could not be read", and `load
+   pll_macro_top` succeeds.
+
+**What still fails.**  `lef read` of the standard-cell LEF rejects every
+routing layer:
+
+```text
+LEF read, Line 342 (Error): Don't know how to parse layer "Metal1"
+LEF read, Line 342 (Error): Try adding this name to the LEF techfile section
+LEF read, Line 346 (Error): Don't know how to parse layer "Metal2"
+```
+
+The `lef` section was rewritten to the sky130A.tech shape, whose reference
+format in this container is
+
+```text
+routing m1  met1 MET1 m1
+```
+
+i.e. columns 2..N are all *tech layer names*; Magic matches the LEF string
+against them.  Written as `routing m1 MET1 MET1 Metal1` it is still rejected,
+so the matching is not on the columns alone.  The likely cause is that IHP
+declares its drawing layers in `cifinput` as
+
+```text
+ layer MET1  MET1,MET1PIN
+```
+
+while sky130 declares them in a `layers`-style block the `lef` section can
+refer to, so `MET1` is not registered as a routable layer name at the point
+Magic consults the lef table.
+
+**Dead ends already ruled out**, do not retry:
+- `cifinput` inside the `.magicrc` -> `invalid command name "cifinput"`
+  (it is a tech-file section, not an rcfile command)
+- `templayer NoDRC nodrf` -> not a legal keyword
+- `calma 62 0 NoDRC` -> IHP techs never use `calma`; their form is
+  `layer <name> <name,...>`
+- `layer NoDRC NoDRC` -> the GDS stores no name for 62/0 at all
+  (`KLayout get_info(62).name == ""`), so it cannot be matched by name
+
+**State of the checks.**  Unaffected by this: OpenROAD detailed-route DRC 0,
+antenna 0/0, and the KLayout IHP DRC run (B16, 5,578 real violations with 99 %
+inside the macro).  Blocked by it: Magic LEF write with real content, Magic
+SPICE extraction, netgen LVS.
+
 ### B17. LVS: extraction path opened, one layer-map gap left
 
 LVS needs an extracted SPICE to compare against the powered netlist, and that
