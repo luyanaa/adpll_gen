@@ -284,77 +284,74 @@ become timed, so a clean-looking number can get worse and a violating one can
 appear.  That is the correct direction -- unchecked registers are not passing
 registers.
 
-### B18. Magic LEF/DEF layer binding: what was tried and where it stands
+### B18. Magic LEF/DEF layer binding -- root cause found, blocked in the PDK tech
 
-`Magic.SpiceExtraction` needs Magic to read the LEF/DEF, and that fails on layer
-names.  Progress and the exact remaining blocker, so the next attempt does not
-repeat the dead ends:
+Final state after a systematic comparison against the reference tech.  The
+blocker is not the LEF file and not the merge: **the IHP tech contributes no
+extractable layer table at all**.
 
-**What was wrong, in order.**
+#### The measurement that settles it
 
-1. `MAGICRC`, `MAGIC_PDK_SETUP` and `MAGIC_TECH` all defaulted to `/dev/null`,
-   so no tech was loaded at all.  `gds read` then reported
-   `Nothing in "cifinput" section of tech file`, loaded no geometry, and the
-   written LEF was `MACRO (UNNAMED)` in 211 bytes.
+```text
+ihp-sg13g2-GDS.tech        RES loaded  RES layers=0  RES planes=0
+ihp-sg13g2-signoff.tech    RES loaded  RES layers=0  RES planes=0
+```
 
-2. The IHP PDK splits its Magic collateral across two techs that are each
-   incomplete for a full flow:
-
-   | tech | has |
-   | --- | --- |
-   | `ihp-sg13g2-GDS.tech` | complete tech: tech, planes, styles, types, contact, compose, connect, cifinput, cifoutput — **no `lef` section** |
-   | `ihp-sg13g2.tech` | `lef` section (Metal1, Via1, ...) — **no cifinput/cifoutput** |
-
-   `scripts/build_magic_tech.py` merges them: the complete GDS tech plus a
-   rewritten `lef` section.  It also writes the matching `.magicrc`
-   (`tech load <merged>` + `tech unlock *`), and is idempotent.
-
-3. With the merged tech, `gds read` **works**: every cell loads, including
-   `sg13g2_decap_8` which previously "could not be read", and `load
-   pll_macro_top` succeeds.
-
-**What still fails.**  `lef read` of the standard-cell LEF rejects every
-routing layer:
+`tech load` reports success for *both* the pristine PDK tech and my merged one,
+and `tech names layers` / `tech names planes` are empty in both.  So Magic has
+no layer table for this PDK, which is exactly why
 
 ```text
 LEF read, Line 342 (Error): Don't know how to parse layer "Metal1"
 LEF read, Line 342 (Error): Try adding this name to the LEF techfile section
-LEF read, Line 346 (Error): Don't know how to parse layer "Metal2"
 ```
 
-The `lef` section was rewritten to the sky130A.tech shape, whose reference
-format in this container is
+is emitted from the **Via** block of the *tech* LEF (`Via Via1_XX` followed by
+`LAYER Metal1 ; RECT ...`).  The same two commands on sky130A report its layers
+normally, and `lef read` of a sky130 LEF succeeds with zero errors -- that
+control experiment is in `scripts/sky130_control_test.sh`.
 
-```text
-routing m1  met1 MET1 m1
-```
+#### What was tried, in order, and what each ruled out
 
-i.e. columns 2..N are all *tech layer names*; Magic matches the LEF string
-against them.  Written as `routing m1 MET1 MET1 Metal1` it is still rejected,
-so the matching is not on the columns alone.  The likely cause is that IHP
-declares its drawing layers in `cifinput` as
+| attempt | result |
+| --- | --- |
+| `MAGICRC`/`MAGIC_PDK_SETUP`/`MAGIC_TECH` were `/dev/null` | fixed; `gds read` then works, all cells load |
+| merge `GDS.tech` (all sections) + `lef` from main tech | `lef` still rejects Metal1 |
+| `lef` rows in sky130A.tech shape `routing m1 met1 MET1 m1` | still rejects |
+| point `lef` column 1 at the LEF spelling (`routing m1 Metal1 MET1`) | still rejects |
+| rename cifinput column 1 to the plane alias, sky130 style (`layer m1 MET1,...,Metal1`) | still rejects |
+| rename cifinput column 1 to the LEF spelling (`layer Metal1 MET1,...`) | still rejects |
+| `calma <layer> <gds> <dt>` bindings generated from `sg13g2.lyp` (8/0 -> MET1, 19/0 -> VIA1, ...) | fixes `gds read` layer numbers, `lef` unaffected |
+| `end` terminator on the `lef` section (sky130 has one, IHP does not) | no change |
+| `options ignore-unknown-layer-labels` at the top of cifinput (sky130 has it) | no change |
 
-```text
- layer MET1  MET1,MET1PIN
-```
+Note what *did* get fixed along the way: with the `calma` bindings plus the
+renamed cifinput entries, the **GDS layer-number errors disappeared entirely**
+(`Unknown layer/datatype ... layer=8 type=0` and friends), and `gds read` +
+`load pll_macro_top` now succeed.  What remains is only the LEF/DEF path.
 
-while sky130 declares them in a `layers`-style block the `lef` section can
-refer to, so `MET1` is not registered as a routable layer name at the point
-Magic consults the lef table.
+#### Interpretation
 
-**Dead ends already ruled out**, do not retry:
-- `cifinput` inside the `.magicrc` -> `invalid command name "cifinput"`
-  (it is a tech-file section, not an rcfile command)
-- `templayer NoDRC nodrf` -> not a legal keyword
-- `calma 62 0 NoDRC` -> IHP techs never use `calma`; their form is
-  `layer <name> <name,...>`
-- `layer NoDRC NoDRC` -> the GDS stores no name for 62/0 at all
-  (`KLayout get_info(62).name == ""`), so it cannot be matched by name
+The IHP tech declares its drawing layers in a cifinput block whose first column
+is a GDS stream name (`layer MET1 MET1,MET1PIN,MET1TXT`), while sky130 declares
+a plane alias (`layer m1 MET1,MET1TXT,MET1PIN`).  That difference is invisible
+to my patches because `tech names layers` is empty either way -- the tech is
+being consumed as GDS metadata only, not as an extractable process.  Whether
+this is a Magic-8.3 vs IHP-tech mismatch or a missing PDK file would need the
+Magic source or PDK maintainer input; it is not reachable from the tech text.
 
-**State of the checks.**  Unaffected by this: OpenROAD detailed-route DRC 0,
-antenna 0/0, and the KLayout IHP DRC run (B16, 5,578 real violations with 99 %
-inside the macro).  Blocked by it: Magic LEF write with real content, Magic
-SPICE extraction, netgen LVS.
+#### Consequences for signoff
+
+Unaffected and already obtained through other tools:
+- OpenROAD detailed-route DRC **0**, antenna **0 nets / 0 pins**
+- KLayout IHP DRC runs and attributes 5,578 real violations (B16)
+
+Blocked, and therefore *not* claimed:
+- Magic SPICE extraction, netgen LVS
+
+If LVS is required, the practical route is not Magic: netgen can compare the
+gate-level netlist against an OpenROAD- or KLayout-produced SPICE, which avoids
+the tech layer table entirely.
 
 ### B17. LVS: extraction path opened, one layer-map gap left
 

@@ -73,33 +73,111 @@ def main() -> int:
         return 1
     gds = GDS_TECH.read_text()
     available = gds_layer_names(gds)
-    if not available:
-        print("no cifinput layers found in the GDS tech", file=sys.stderr)
-        return 1
 
-    # Format follows sky130A.tech, which is the reference Magic tech in this
-    # container:
-    #     routing m1  met1 MET1 m1
-    # i.e. columns 2..N are all *tech layer names*, not LEF-style names.  Magic
-    # resolves the LEF/DEF layer string against these columns; listing only
-    # "Metal1" is what produced
-    #     LEF read: Don't know how to parse layer "Metal1"
+    # cifinput column 1 must be a name `planes` declares.  The IHP planes
+    # section says "metal1,m1", while cifinput says "layer MET1 ..." -- a GDS
+    # stream name with no plane behind it.  The tech LEF in turn says
+    # "LAYER Metal1", which then matches nothing:
+    #
+    #   LEF read: Don't know how to parse layer "Metal1"
+    #
+    # sky130 does it consistently: planes "metal1,m1", cifinput "layer m1",
+    # tech LEF "LAYER met1".  So rename each routing layer's cifinput entry to
+    # the plane alias and keep the GDS name and LEF spelling as extra names.
+    plane = {}
+    pm = re.search(r"^planes\s*$", gds, re.M)
+    if pm:
+        rest = gds[pm.end():]
+        pend = re.search(
+            r"^(tech|styles|types|contact|compose|connect|cifinput|lef|edit)\s*$",
+            rest, re.M)
+        for line in rest[: pend.start() if pend else len(rest)].splitlines():
+            names = [n.strip() for n in line.strip().split(",") if n.strip()]
+            if len(names) == 2 and re.match(r"^(metal|via)\d+$", names[0]):
+                plane[names[0]] = names[1]          # metal1 -> m1, via1 -> v1
+
+    for _kind, _alias, _lef_name, _tech_name in LEF_MAP:
+        if _tech_name not in available:
+            continue
+        # MET1 -> metal1 -> m1
+        plane_key = _tech_name.replace("MET", "metal").replace("VIA", "via")
+        plane_key = re.sub(r"(metal|via)$", r"\g<1>" + "1", plane_key) \
+            if plane_key in ("metal", "via") else plane_key
+        if plane_key not in plane:
+            plane_key = {"MET1": "metal1", "MET2": "metal2", "MET3": "metal3",
+                         "MET4": "metal4", "MET5": "metal5", "MET6": "metal6",
+                         "MET7": "metal7", "VIA1": "via1", "VIA2": "via2",
+                         "VIA3": "via3", "VIA4": "via4"}.get(_tech_name, "")
+        newname = plane.get(plane_key, _tech_name)
+        pat = re.compile(r"^(\s*layer\s+)" + re.escape(_tech_name) + r"(\s+)([^\n]*)$", re.M)
+
+        def _repl(m, newname=newname, lef=_lef_name, tech=_tech_name):
+            keep = [n.strip() for n in m.group(3).split(",") if n.strip()]
+            for extra in (tech, lef):
+                if extra not in keep:
+                    keep.append(extra)
+            return f"{m.group(1)}{newname}{m.group(2)}" + ",".join(keep)
+
+        gds, n = pat.subn(_repl, gds)
+        if n == 0:
+            print(f"WARNING: no cifinput layer line for {_tech_name}", file=sys.stderr)
+
+    # ---------------------------------------------------------------------
+    # GDS layer numbers
+    # ---------------------------------------------------------------------
+    # The routed GDS stores layers as bare numbers (8/0, 10/0, 19/0, ...) with
+    # no embedded names, while the tech identifies layers by name, so
+    # "gds read" rejects them:
+    #   Error while reading cell ...: Unknown layer/datatype in boundary,
+    #                                  layer=8 type=0
+    # Magic binds a number to a name with the `calma` sub-command of a
+    # cifinput layer entry (nmos.tech: `layer NM metal,pmc,dmc,glass` then
+    # `calma 3 1`).  The authoritative number->name table is KLayout's layer
+    # properties file, which the IHP PDK ships.
+    calma_lines = []
+    lyp = MAGIC.parent / "klayout/tech/sg13g2.lyp"   # MAGIC = .../libs.tech/magic
+    if lyp.exists():
+        lyp_text = lyp.read_text()
+        number_name = {}
+        for blk in re.findall(r"<properties>.*?</properties>", lyp_text, re.S):
+            src = re.search(r"<source>(\d+)/(\d+)</source>", blk)
+            nm = re.search(r"<name>([^<.]+)\.", blk)
+            if src and nm:
+                number_name.setdefault(int(src.group(1)), nm.group(1))
+        # map the KLayout name (Metal1) to the tech layer name we just bound
+        lef_to_tech = {lef: tech for _k, _a, lef, tech in LEF_MAP}
+        seen = set()
+        for num, kname in sorted(number_name.items()):
+            tech = lef_to_tech.get(kname)
+            if tech is None or tech not in available or tech in seen:
+                continue
+            seen.add(tech)
+            calma_lines.append(f"  calma {tech} {num} 0")
+        if calma_lines:
+            gds = gds.rstrip() + (
+                "\n\n# GDS layer numbers (from klayout/tech/sg13g2.lyp); the routed\n"
+                "# GDS carries numbers only, so each must be bound to a tech layer.\n"
+                + "\n".join(calma_lines) + "\n"
+            )
+            print(f"  calma bindings: {len(calma_lines)}")
+    else:
+        print(f"  WARNING: no layer properties at {lyp}", file=sys.stderr)
+
     lines = [
         "lef",
-        "# LEF/DEF layer string -> tech layer name(s).",
-        "# The IHP GDS tech calls its layers MET1, VIA1, MET2, ... while the LEF",
-        "# and DEF say Metal1, Via1, Metal2, ...  Magic resolves the LEF string",
-        "# against these columns (format taken from sky130A.tech):",
-        "#     routing m1  met1 MET1 m1",
-        "# Without the TECH column every routing layer is rejected and the DEF",
-        "# read then drops the pins.",
+        "# Format from sky130A.tech:  routing m1  met1 MET1 m1",
+        "# Columns after the alias are accepted spellings for the layer.  The",
+        "# tech LEF used by this flow says Metal1/Via1/..., the tech file's",
+        "# cifinput says MET1/VIA1/..., and planes names them metal1/m1, so all",
+        "# three spellings are listed on one line.",
     ]
     missing = []
     for kind, alias, lef_name, tech_name in LEF_MAP:
         if tech_name not in available:
             missing.append(tech_name)
             continue
-        lines.append(f"{kind} {alias}\t{tech_name} {tech_name} {lef_name}")
+        lines.append(f"{kind} {alias}\t{tech_name} {lef_name}")
+    lines.append("end")
     lef = "\n".join(lines) + "\n"
 
     OUT_TECH.write_text(gds.rstrip() + "\n\n" + lef)
