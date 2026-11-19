@@ -156,6 +156,95 @@ if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
     }
 }
 
+# ---------------------------------------------------------------------------
+# FLL front-end divided clock
+# ---------------------------------------------------------------------------
+# frequency_counter_frontend toggles `clk_div` on MID_OUT and then clocks the
+# whole counter (cnt, gray_q) from `always @(posedge clk_div)`.  That makes
+# clk_div a real clock domain inside pll_dig.flock, but it had no
+# create_generated_clock -- so 82 registers were reported as
+# "unclocked register/latch pins" in checks.rpt and were never timed at all.
+# In the full top they are the FLL frequency counter, i.e. the loop that
+# produces FREQ_LOCKED, so leaving them unchecked is a real signoff hole.
+#
+# PRESCALE is 2 in the signoff build (pll_logic instantiates
+# .PRESCALE(2)), and div_cnt runs off MID_OUT, so clk_div is MID_OUT/2.
+set frontend_prescale 2
+if {[llength [get_clocks -quiet FE_CLK_DIV]] == 0} {
+    # clk_div is a *net* name, not an instance name, so match the pin by
+    # walking from the net.  A pin-name wildcard finds nothing here (measured:
+    # "FE_CLK_DIV not created (pin 0, src 1)"), which is why the 82 registers
+    # stayed unclocked.
+    set clkdiv_net [lindex [get_nets -quiet *static_frontend.clk_div] 0]
+    set clkdiv_pin ""
+    if {$clkdiv_net ne ""} {
+        set clkdiv_pin [get_pins -quiet -of_objects $clkdiv_net -filter "direction==output"]
+    }
+    set mid_src_fe [get_ports -quiet MID_OUT]
+    if {[llength $mid_src_fe] == 0} {
+        set mid_src_fe [get_pins -quiet *pll_ana/MID_OUT]
+    }
+    if {[llength $clkdiv_pin] > 0 && [llength $mid_src_fe] > 0} {
+        create_generated_clock -name FE_CLK_DIV \
+            -source [lindex $mid_src_fe 0] \
+            -divide_by $frontend_prescale [lindex $clkdiv_pin 0]
+        puts "adpll.sdc: FE_CLK_DIV = MID_OUT/$frontend_prescale at [lindex $clkdiv_pin 0]"
+    } else {
+        puts "WARNING: adpll.sdc: FE_CLK_DIV not created (pin [llength $clkdiv_pin], src [llength $mid_src_fe])"
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Derived clocks that were also never declared
+# ---------------------------------------------------------------------------
+# Both of these are register outputs used as clocks in pll_logic, and both were
+# part of the same "unclocked register/latch pins" report:
+#
+#   out_div2 : toggles on OUT, then clocks out_edges_gray
+#              (always @(posedge out_div2)).  It is OUT/2, i.e. MID_OUT.
+#   CKR      : REF sampled on the falling edge of MID_OUT, then clocks the
+#              COARSE_MUX / MID_MUX / FINE_MUX write registers.  Those are the
+#              DCO control words, so leaving them unchecked is worse than a
+#              bookkeeping gap -- the capture of the control word was invisible.
+#
+# CKR's period is MID_OUT's (it is a register in that domain, launched by
+# MID_OUT and capturing REF), so declaring it relative to MID_OUT is right.
+
+proc _genclk_on_net {name net_pat src_list div} {
+    if {[llength [get_clocks -quiet $name]] > 0} { return 1 }
+    set net [lindex [get_nets -quiet $net_pat] 0]
+    if {$net eq ""} {
+        puts "WARNING: adpll.sdc: $name skipped (net $net_pat not found)"
+        return 0
+    }
+    set pin [get_pins -quiet -of_objects $net -filter "direction==output"]
+    if {[llength $pin] == 0 || [llength $src_list] == 0} {
+        puts "WARNING: adpll.sdc: $name skipped (pin [llength $pin], src [llength $src_list])"
+        return 0
+    }
+    create_generated_clock -name $name -source [lindex $src_list 0] \
+        -divide_by $div [lindex $pin 0]
+    puts "adpll.sdc: $name created (divide_by $div) at [lindex $pin 0]"
+    return 1
+}
+
+set mid_src_d [get_ports -quiet MID_OUT]
+if {[llength $mid_src_d] == 0} {
+    set mid_src_d [get_pins -quiet *pll_ana/MID_OUT]
+}
+
+# out_div2: OUT/2, and OUT is 2.5 ns, so this is the MID_OUT rate.
+_genclk_on_net OUT_DIV2_CLK *pll_dig.out_div2* $mid_src_d 1
+# CKR: a MID_OUT-domain register capturing REF; keep the MID_OUT period.
+_genclk_on_net CKR_CLK *pll_dig.CKR $mid_src_d 1
+# DSM_CK (ungated): the 2FF synchroniser that carries LOCKED into the DSM
+# domain is clocked by dsm_impl.DSM_CK directly, while the loop itself runs on
+# DSM_CK_G_CLK (the ICG output).  Without a clock on DSM_CK those two flops
+# (_4615_/_4613_, locked_dsm_s1/s2) were the last entries in the unclocked
+# report, so the LOCKED hand-off into the DSM was never timed.  Same rate as
+# DSM_CK_G_CLK: MID_OUT/DSM_DIV.
+_genclk_on_net DSM_CK_CLK *pll_dig.dsm_impl.DSM_CK $mid_src_d $dsm_div
+
 # REF_G is REF gated by the FLL ICG: same frequency, small insertion delay.
 # It stays in the REF group so REF -> REF_G transfers are analysed (the ICG
 # setup requirement is real), while the CDC synchronizers inside both domains
@@ -163,7 +252,7 @@ if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
 set_clock_groups -asynchronous \
     -group {REF REF_G_CLK} \
     -group {OUT} \
-    -group {MID_OUT DSM_CK_G_CLK} \
+    -group {MID_OUT DSM_CK_G_CLK DSM_CK_CLK FE_CLK_DIV OUT_DIV2_CLK CKR_CLK} \
     -group {INJ_EDGE}
 
 # ---------------------------------------------------------------------------
@@ -269,13 +358,44 @@ set_output_delay -min 0.000 -clock INJ_EDGE [get_ports {LOCKED ERR}]
 # reg->reg timing (the use_clk -> high_count path) is checked separately in
 # the OUT group.
 if {[llength [get_clocks -quiet OUT_DIV_CLK]] == 0} {
-    create_generated_clock -name OUT_DIV_CLK -source [get_ports OUT] \
-        -divide_by 2 [get_ports OUT_DIV]
+    # -source wants the *clock source*, and in the full top OUT is a macro pin,
+    # not a port: [get_ports OUT] does not resolve there.  Passing an
+    # unresolved source makes OpenSTA invent a second clock object whose name
+    # is the master's plus a prime (OUT'), which then captures flops that the
+    # real OUT group should own -- measured as `Endpoint: _4338_ (flip-flop
+    # clocked by OUT')` on the worst TT path, i.e. those paths silently left
+    # the OUT group.  Use the existing OUT clock's source instead.
+    set out_src2 [get_ports -quiet OUT]
+    if {[llength $out_src2] == 0} {
+        set out_src2 [get_pins -quiet *pll_ana/OUT]
+    }
+    set out_div_pin [get_ports -quiet OUT_DIV]
+    if {[llength $out_div_pin] == 0} {
+        set out_div_pin [get_pins -quiet *OUT_DIV* -filter "direction==output"]
+    }
+    if {[llength $out_src2] > 0 && [llength $out_div_pin] > 0} {
+        create_generated_clock -name OUT_DIV_CLK \
+            -source [lindex $out_src2 0] -divide_by 2 [lindex $out_div_pin 0]
+    } else {
+        puts "WARNING: adpll.sdc: OUT_DIV_CLK not created (src [llength $out_src2], pin [llength $out_div_pin])"
+    }
 }
 # CK (the DDR pad clock) is the same divided clock, gated by LOCKED.
 if {[llength [get_clocks -quiet CK_CLK]] == 0} {
-    create_generated_clock -name CK_CLK -source [get_ports OUT] \
-        -divide_by 2 [get_ports CK]
+    set out_src3 [get_ports -quiet OUT]
+    if {[llength $out_src3] == 0} {
+        set out_src3 [get_pins -quiet *pll_ana/OUT]
+    }
+    set ck_pin [get_ports -quiet CK]
+    if {[llength $ck_pin] == 0} {
+        set ck_pin [get_pins -quiet *CK -filter "direction==output"]
+    }
+    if {[llength $out_src3] > 0 && [llength $ck_pin] > 0} {
+        create_generated_clock -name CK_CLK \
+            -source [lindex $out_src3 0] -divide_by 2 [lindex $ck_pin 0]
+    } else {
+        puts "WARNING: adpll.sdc: CK_CLK not created (src [llength $out_src3], pin [llength $ck_pin])"
+    }
 }
 
 
