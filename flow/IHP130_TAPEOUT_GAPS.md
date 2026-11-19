@@ -239,6 +239,54 @@ phase noise.  It also records that SPEF-annotated STA was not run because the
 SPEF names do not match the netlist.  For a PLL tapeout, phase noise and
 jitter are the headline specs; neither exists.
 
+
+### B9. PnR stalls in `OpenROAD.STAPrePNR` on the DSM-fixed netlist (OPEN)
+
+The signoff PnR run that was supposed to produce the three-corner numbers
+never got past the *second* step.  It hung in `STAPrePNR`: three `sta`
+processes at 100% CPU for 5 h 50 min, `sta.log` and `min.rpt` both 0 bytes.
+It was not slow -- `staprepnr` takes 7 s on the previous netlist.
+
+Diagnosis, narrowed by single-variable replay with the real `corner.tcl`,
+the real `_env*.tcl` and the real PDK libs:
+
+| variable changed | result |
+| --- | --- |
+| old env + old netlist | completes, writes SDF, **0.8 s** |
+| old env + **new** netlist | hangs in the first `report_checks` |
+| Liberty: single TT vs per-corner | no effect (both hang) |
+| Liberty: `SS_BBPD` arc present vs absent | no effect (both hang) |
+| 3 corners vs TT-only | not the trigger -- the hang is per-corner and happens at TT too |
+
+So the trigger is the **new netlist** (the one carrying the DSM `FILTER_DEC`
+register fix): 517 -> 538 `sg13g2_dfrbpq_1`, 2667 instances.  Ruled out along
+the way, each by measurement rather than reasoning:
+
+- The `SS_BBPD` clock-to-Q arc is *not* the cause (a netlist with the arc
+  stripped hangs identically).
+- `report_checks` itself is fast on both netlists when driven from a plain
+  `read_liberty` + `read_sdc` script: ~100 ms for the full design, ~70 ms per
+  clock group, ideal *and* propagated clocks.
+- Clock count is not it: the successful run also had all eight clocks
+  (`REF OUT MID_OUT INJ_EDGE REF_G_CLK DSM_CK_G_CLK OUT_DIV_CLK CK_CLK`).
+- Parasitics are not it: `_CURRENT_CORNER_SPEFS` is empty at this step.
+- CDC exemptions resolve identically (93 sink pins on both).
+
+What remains is a difference inside `corner.tcl`'s own path that the plain
+script does not reproduce (`read_timing_info` + `read_current_netlist` +
+`read_current_sdc`'s `set_propagated_clock`, then the
+`-format full_clock_expanded -group_path_count 1000` report).  A truncated
+`corner.tcl` that stops after the first `report_checks` runs the old netlist
+in 143 ms and hangs on the new one, which localises it to that one command
+under that one driver path.
+
+Next step is *not* more diagnosis: it is to make this step survivable and
+compare.  Two candidates, both cheap to test:
+1. lower the per-corner report cost for the pre-PnR check only
+   (`group_path_count`, drop `full_clock_expanded`), and
+2. re-synthesise without the DSM `FILTER_DEC` change to confirm the netlist
+   delta is really the trigger rather than a coincidence of that run.
+
 ### B8. Known open DCO tuning defect
 
 `flow/PERFORMANCE.md` records 15 non-monotonic fine steps in the IHP fine
