@@ -102,13 +102,18 @@ proc _drv_pin {net} {
 }
 
 if {[llength [get_clocks -quiet REF_G_CLK]] == 0} {
-    set refg_net [lindex [get_nets -quiet *flock.REF_G*] 0]
-    if {$refg_net ne ""} {
-        set refg_pin [_drv_pin $refg_net]
-        if {$refg_pin ne ""} {
-            create_generated_clock -name REF_G_CLK -source [get_ports REF] \
-                -divide_by 1 $refg_pin
-        }
+    # Anchor on the ICG's GCLK output, not on a net wildcard: the wildcard also
+    # matches the CTS-inserted clknet_* nets, and lindex 0 then picks a tree
+    # buffer instead of the clock root.  That made the clock `Virtual: yes` with
+    # a mid-tree source, so its phase was referred to the wrong node (the DSM
+    # clock derived the same way produced a data required time of -8.4187 ns,
+    # i.e. a capture edge before the launch edge).
+    set refg_pin [get_pins -quiet *u_fll_icg*/GCLK]
+    if {[llength $refg_pin] > 0} {
+        create_generated_clock -name REF_G_CLK -source [get_ports REF] \
+            -divide_by 1 [lindex $refg_pin 0]
+    } else {
+        puts "WARNING: adpll.sdc: REF_G_CLK not created (icg pin not found)"
     }
 }
 
@@ -128,17 +133,26 @@ if {[llength [get_clocks -quiet REF_G_CLK]] == 0} {
 # source pin, and the Q pin of a flop is data, not a clock root.
 set dsm_div 2
 if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
-    set dsmg_net [lindex [get_nets -quiet *dsm_impl.DSM_CK_G*] 0]
+    # Anchor on the ICG's GCLK output, NOT on a net wildcard.  The wildcard
+    # *dsm_impl.DSM_CK_G* also matches the CTS-inserted nets
+    # (clknet_0_pll_dig.dsm_impl.DSM_CK_G, clknet_4_*...), and taking lindex 0
+    # picked whichever came first -- after CTS that is a clock-tree buffer's
+    # output, not the clock root.  The clock then came out
+    # `Virtual: yes` with `Sources: clkbuf_0_....DSM_CK_G/X`, and its phase was
+    # referred to a mid-tree node: STA reported data required time
+    # -8.4187 ns on the DSM path, i.e. the capture edge was placed before the
+    # launch edge.  That single defect accounted for the residual SS/TT setup
+    # violation after the /2 fix.
+    set dsmg_pin [get_pins -quiet *u_dsm_icg*/GCLK]
     set mid_src [get_ports -quiet MID_OUT]
     if {[llength $mid_src] == 0} {
         set mid_src [get_pins -quiet *pll_ana/MID_OUT]
     }
-    if {$dsmg_net ne "" && [llength $mid_src] > 0} {
-        set dsmg_pin [_drv_pin $dsmg_net]
-        if {$dsmg_pin ne ""} {
-            create_generated_clock -name DSM_CK_G_CLK \
-                -source [lindex $mid_src 0] -divide_by $dsm_div $dsmg_pin
-        }
+    if {[llength $dsmg_pin] > 0 && [llength $mid_src] > 0} {
+        create_generated_clock -name DSM_CK_G_CLK \
+            -source [lindex $mid_src 0] -divide_by $dsm_div [lindex $dsmg_pin 0]
+    } else {
+        puts "WARNING: adpll.sdc: DSM_CK_G_CLK not created (icg pin [llength $dsmg_pin], mid src [llength $mid_src])"
     }
 }
 

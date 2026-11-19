@@ -241,44 +241,77 @@ jitter are the headline specs; neither exists.
 
 
 
-### B10. First complete IHP top PnR: three-corner timing, and what is left
+### B10. First complete IHP top PnR: three-corner timing, and the real setup gap
 
-The full flow now runs end to end (`RUN_2026-11-19_19-39-40`) -- the first time
-the assembled top has reached post-PnR STA.  Everything after place-and-route
-is clean; setup is the one real gap.
+The full flow runs end to end.  Two RTL/SDC defects were found and fixed on the
+way; what remains is a genuine architecture limit, not a flow problem.
 
-| Corner | Hold WS | Hold TNS | Hold viol | Setup WS | Setup TNS | Setup viol |
-| --- | --- | --- | --- | --- | --- | --- |
-| TT (`nom_tt_025C_1v20`) | +0.2033 | 0 | **0** | -2.3824 | -27.3640 | 36 |
-| SS (`nom_ss_125C_1v08`) | +0.3474 | 0 | **0** | -5.0151 | -108.4087 | 96 |
-| FF (`nom_ff_n40C_1v32`) | +0.1167 | 0 | **0** | -0.8209 | -4.2889 | 7 |
+#### Timing after both fixes (`RUN_2026-11-19_20-19-11`)
 
-Also clean: max cap violations 0, max slew violations 0, detailed-route
-violations 0, antenna net violations 0, antenna pin violations 0, hold buffers
-106, setup buffers 99.  Area 307 910 um^2 (macro 16 800 um^2), 23 784
-instances, 23.3 % utilization, TT power 11.46 mW.  No unmapped instances.
+| Corner | Hold WS | Hold viol | Setup WS | Setup viol | Setup TNS |
+| --- | --- | --- | --- | --- | --- |
+| TT | +0.2033 | **0** | -0.5027 | 10 | -3.649 |
+| SS | +0.3474 | **0** | -2.5391 | 67 | -45.065 |
+| FF | +0.1167 | **0** | **+0.0037** | **0** | **0** |
 
-**All three corners violate on the same path**: `_4252_ -> _4644_`, both
-`sg13g2_dfrbpq_1` clocked by `DSM_CK_G_CLK`, 49-55 logic stages.  The clock is
-declared `-period 2.500` (400 MHz).  That is not a place-and-route failure --
-the path is 49 stages of the DSM adder tree and cannot close in 2.5 ns in this
-library, at any placement.
+FF closes.  Max cap, max slew, detailed-route and antenna checks are all zero at
+every corner.  Area 307 910 um^2 (macro 16 800), 23 784 instances, 23.3 %
+utilization, TT power ~11.5 mW, no unmapped instances.
 
-Part of the loss is clock tree, not logic: the reported path spends
-`MID_OUT -> clkbuf_0_MID_OUT -> clkbuf_1_0 -> u_icg/GCLK -> clkbuf_0_DSM_CK_G
--> clkbuf_4_x` on *each* of launch and capture, about 1.35 ns per side, in a
-2.5 ns period.  `DSM_CK_G_CLK` is a generated clock with `-divide_by 1`
-relative to `MID_OUT`, so it is a second full clock tree hanging off the first
-rather than a division that would relax the period.
+Progression, same design, three runs:
 
-So the setup gap is an architecture/constraint question, not a routing one:
-either the DSM clock must genuinely be a division of `MID_OUT` (so the period
-is a multiple of 2.5 ns), or the DSM adder has to be pipelined.  Worth settling
-before spending more PnR effort, because no amount of resizing will close 5 ns.
+| | TT setup WS | SS setup WS | FF setup WS | setup violators |
+| --- | --- | --- | --- | --- |
+| DSM clock at 2.5 ns (wrong) | -2.3824 | -5.0151 | -0.8209 | 36 / 96 / 7 |
+| DSM clock at 5.0 ns (correct) | -0.5027 | -2.5391 | +0.0037 | 10 / 67 / 0 |
 
-Note on the ICG: the path passes through the new `sg13g2_lgcp_1`
-(`pll_dig.dsm_impl.u_dsm_icg.u_icg/GCLK`) and STA now handles it correctly.
-Before the B9 fix the whole run hung instead of reporting.
+#### The remaining gap is the DSM adder depth
+
+All corners violate on the same register pair (`_4252_ -> _4644_`, both
+`DSM_CK_G_CLK`).  Decomposing the SS path (50 stages):
+
+```text
+logic data delay      7.868 ns   (38 levels)
+clock tree            1.741 ns   (launch + capture, 12 stages)
+--------------------------------
+data arrival          8.419 ns
+data required         5.880 ns   (one DSM_CK_G period = 5.0 ns, less setup/uncertainty)
+slack                -2.539 ns
+```
+
+So even with the period corrected, 38 levels of DSM adder need 7.87 ns at SS
+against a 5 ns budget.  No amount of resizing closes that: it needs either a
+slower DSM clock (a real `DSM_DIV > 2`) or a pipelined adder.  That is an
+architecture decision, so it is recorded rather than patched.
+
+About 0.35 ns of the clock tree is avoidable: `MID_OUT -> clkbuf_0_MID_OUT ->
+clkbuf_1_0 -> u_icg/GCLK -> clkbuf_0_DSM_CK_G -> clkbuf_4_x` is two cascaded
+clock trees (MID_OUT's, then DSM_CK_G's), because the generated clock is a
+separate root.  Worth a look if the gap ever comes down to a few hundred ps,
+but it is not what is costing 2.5 ns.
+
+#### Two defects fixed here
+
+1. **`DSM_CK_G_CLK` was constrained at half its real period.**  The SDC
+   derived it with `-divide_by 1` from the divider flop's Q, making it
+   2.500 ns.  The divider is real (`_4277_`: D from counter logic, CLK =
+   `clknet_1_0__leaf_MID_OUT`, Q = `pll_dig.dsm_impl.DSM_CK`) and `DSM_DIV`
+   is 2, so the clock is `MID_OUT/2` = 5 ns.
+
+2. **All four generated clocks were `Virtual: yes` with CTS-buffer sources.**
+   They were anchored via `get_nets -quiet *<name>*` + `lindex 0`, and that
+   wildcard also matches the CTS-inserted `clknet_0_*` / `clknet_4_*` nets, so
+   after CTS it picked a mid-tree buffer.  Anchoring on the ICG's `GCLK` pin
+   instead gives `Virtual: no` and the correct source:
+
+   ```text
+   REF_G_CLK     Sources: pll_dig.flock.u_fll_icg.u_icg/GCLK     Virtual: no  Period 20.0
+   DSM_CK_G_CLK  Sources: pll_dig.dsm_impl.u_dsm_icg.u_icg/GCLK  Virtual: no  Period  5.0
+   ```
+
+   Fixing the anchor did not move the reported numbers (same placement), but it
+   removed the bogus phase reference: before, the SS DSM path reported a data
+   arrival and required time that straddled zero and made the report unreadable.
 
 ### B9. PnR hung in `STAPrePNR`: the IHP clock gate closed a loop in the clock graph -- FIXED
 
