@@ -138,10 +138,10 @@ GND_NETS: [VSS]
 LIB:
   nom_tt_025C_1v20:
     - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib
-
-# SS/FF cell libraries, used by scripts/sta_per_corner.tcl after the run:
-#   sg13g2_stdcell_slow_1p08V_125C.lib
-#   sg13g2_stdcell_fast_1p32V_m40C.lib
+  nom_ss_125C_1v08:
+    - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib
+  nom_ff_n40C_1v32:
+    - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p32V_m40C.lib
 
 # P&R optimises against TT only.  With three distinct macro Liberty files the
 # resizer and the bundled `sta` take >1 h per step on this 22900-instance
@@ -151,6 +151,8 @@ LIB:
 # flow/IHP130_TAPEOUT_GAPS.md section 2.7 for the measured numbers.
 STA_CORNERS:
   - nom_tt_025C_1v20
+  - nom_ss_125C_1v08
+  - nom_ff_n40C_1v32
 
 # ---------------------------------------------------------------------------
 # RC extraction (same OpenRCX rules file as the digital canary)

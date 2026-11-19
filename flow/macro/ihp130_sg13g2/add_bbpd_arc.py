@@ -66,8 +66,21 @@ def arc(indent: str, c2q: float) -> str:
         f'{i}}}\n')
 
 
+def strip_existing(t: str) -> str:
+    """Remove arcs this script previously injected, so re-running is safe.
+
+    Without this the script is not idempotent: running it twice put two
+    clock-to-Q groups on each SS_BBPD bit, which OpenSTA accepts but which
+    double-counts nothing and misleads anyone reading the Liberty.
+    """
+    return re.sub(
+        r'\n(\s*)timing\(\)\s*\{\s*\n\s*related_pin\s*:\s*"INJ_EDGE"\s*;\s*\n'
+        r'\s*timing_type\s*:\s*rising_edge\s*;.*?\n\s*\}\s*(?=\n)',
+        '', t, flags=re.S)
+
+
 def patch(path: Path, c2q: float) -> int:
-    t = path.read_text()
+    t = strip_existing(path.read_text())
     added = 0
     for bit in (0, 1):
         # Find this pin's block, then its `direction : output;` line.
