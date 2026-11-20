@@ -581,6 +581,69 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B28. Stage 3 is NOT splittable; removing DSM_CK_CLK shortens the tree instead
+
+#### Stage 3: tried, measured, reverted
+
+B27's stage-2 split (`sum2` reading `dff_err1`) worked.  The instruction was to
+apply the same to stage 3 (`sum3` reading `dff_err2`).  It does not hold up:
+
+```text
+delta_sigma_tb   order 1  24.0625  (exact)
+                 order 2  24.0625  (exact)
+                 order 3  24.0615  vs intended 24.0625, diff 9.77e-4   <-- moved
+delta_sigma_sat_tb   PASS
+400-sample stream    byte-identical to baseline
+```
+
+The two checks disagree, and the disagreement is the finding: the 400-sample
+window is too short to see an order-3 drift, while `delta_sigma_tb` runs long
+enough to.  Stage 3 is the dither-extraction point
+(`self_dither = dff_err3[BITS_DSM-1]`), so delaying it changes the loop rather
+than just its timing.  Reverted -- the evidence standard that justified stage 2
+is exactly what disqualified stage 3.
+
+#### Clock tree: one object fewer, 114 -> 96 tree stages
+
+With stage 3 rejected, took the instruction's other branch.  `DSM_CK` (the
+divider output, pre-ICG) has exactly two real sinks:
+
+```text
+sg13g2_lgcp_1  u_dsm_icg/u_icg       CLK   <- DSM_CK     (the ICG itself)
+sg13g2_buf_16  clkbuf_regs_3_DSM_CK_CLK A   <- DSM_CK     (the LOCKED 2FF tree)
+```
+
+`DSM_CK_CLK` existed for those two flops, and because CTS builds one tree per
+clock object, it put a second tree in series with `DSM_CK_G`'s -- the cascade
+B20/B23 measured.  Both clocks were already in the same
+`set_clock_groups -asynchronous` group, so nothing between them needed timing;
+the extra object only made CTS place more buffers.  Removed.
+
+Verified end to end, because B21 showed STAPrePNR alone hides this:
+
+| | before | after |
+| --- | --- | --- |
+| hold WS | +0.1835 / +0.3155 / +0.1044 | +0.1817 / +0.3156 / +0.1044 (0 viol) |
+| setup WS | -0.2829 / -1.6427 / +0.1352 | **-0.2519 / -1.5920 / +0.1573** |
+| unclocked pins | 2 | **2** (unchanged) |
+| clock-tree stages in the report | 114 | **96** |
+
+The unclocked count is the important control: B21's attempted fix *added* a
+hold violation by attaching those flops, but here they were never covered by
+`DSM_CK_CLK` in the first place (they are driven by `DSM_CK` directly), so
+removing the object costs nothing.
+
+SS per group -- every group's worst slack improves, violator counts unchanged:
+
+| group | before | after |
+| --- | --- | --- |
+| DSM_CK_G_CLK | 5 / -1.6427 | 5 / **-1.5920** |
+| OUT | 39 / -1.0005 | 39 / **-0.9524** |
+| MID_OUT | 8 / -0.4368 | 8 / **-0.4359** |
+| OUT_DIV2_CLK | 1 / -0.0307 | 1 / -0.0231 |
+| TOTAL | 56 | 56 |
+| TNS | -29.659 | -29.013 |
+
 ### B27. DSM_CK_G_CLK 10 -> 5 violators; DRC/LVS refreshed again
 
 The DSM_CK_G_CLK group was the worst block.  Its critical path, `FCWF[0]` ->
