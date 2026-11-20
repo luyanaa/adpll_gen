@@ -359,6 +359,12 @@ ignore class sg13g2_diode* byproperty
 ignore class sg13g2_dlygate4sd3_* byproperty
 # Clock-tree buffers: Verilog has 80 buf_8 + 106 buf_16, the CDL exports 1
 # buf_16.  They are the CTS/inverter chain, not logic.
+# sg13g2_buf_8 / sg13g2_buf_16: CDL carries 1 buf_16, the netlist 106 buf_16 +
+# 80 buf_8 (the CTS tree and the fanout buffers).  Ignoring the class is what
+# produces the converged 37-class comparison below; leaving it in shifts both
+# device lists against each other and netgen then reports every later instance
+# as mismatching (buf_16:clkbuf_regs_0_REF vs fanout100, and so on), which is
+# less informative than an explained count delta.
 ignore class sg13g2_buf_8 byproperty
 ignore class sg13g2_buf_16 byproperty
 # sg13g2_buf_1: 1 in the CDL vs 327 in the post-PnR netlist.  These are the

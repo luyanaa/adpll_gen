@@ -168,12 +168,23 @@ print(f"   flattened {len([p for p in ports if p in buses])} bus ports -> {len(n
 PYFLAT
 
 echo
+echo "=== 1d. append the cell definitions ==="
+# netgen needs the standard-cell subckts to have anything to compare.  Without
+# them every cell is a black box on both sides:
+#   Circuit 1 cell sg13g2_inv_1 and Circuit 2 cell sg13g2_inv_1 are black boxes
+# and the per-class table is empty even though the top-level topology is read.
+# write_cdl -masters only uses the PDK CDL to *resolve* masters during
+# extraction; it does not copy their definitions into the output.
+cat "$OUT/pll_macro_top.cdl" "$MASTERS" > "$OUT/pll_macro_top_full.cdl"
+echo "   cell definitions appended: $(grep -cE '^\.SUBCKT' "$OUT/pll_macro_top_full.cdl") subckts"
+
+echo
 echo "=== 2. netgen LVS: extracted CDL vs gate-level netlist ==="
 timeout 900s docker run --rm --entrypoint /bin/bash -v /grid:/grid \
   -e PATH=/foss/tools/bin:/usr/bin:/bin -e PDK_ROOT="$HERE/build/pdk_root" \
   hpretl/iic-osic-tools:latest -lc \
-  "netgen -batch lvs '$OUT/pll_macro_top.cdl pll_macro_top' \
-      '$GATE pll_macro_top' '$SETUP' '$OUT/lvs.log'" 2>&1 \
+  "netgen -batch lvs '$OUT/pll_macro_top_full.cdl pll_macro_top' \
+      '$OUT/nolvs/pll_macro_top.v pll_macro_top' '$SETUP' '$OUT/lvs.log'" 2>&1 \
   | tail -25
 echo
 echo "--- lvs.log summary ---"
