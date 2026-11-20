@@ -136,9 +136,24 @@ module pll_mod_divider #(
     wire [W-1:0] lo_cur = half_lo(div);
     wire [W-1:0] hi_pend = half_hi(div_pend);
     wire [W-1:0] lo_pend = half_lo(div_pend);
-    wire [W-1:0] high_count_pend = div_for_counts_is_pend ? hi_pend : hi_cur;
-    wire [W-1:0] low_count_pend  = div_for_counts_is_pend ? lo_pend : lo_cur;
-    wire div_for_counts_is_pend = (!use_clk_p && leave_req) || apply_pend;
+    // The select is combinational from two falling-edge/derived flops
+    // (use_clk_p, leave_req) plus apply_pend, and it fans out into two 12-bit
+    // muxes whose inputs are barrel shifters (half_hi/half_lo).  That whole
+    // cone sat on high_count's D input: 36 of the 53 SS OUT violators start at
+    // div.cnt[1] and end at div.high_count[*].
+    //
+    // Both mux inputs (div, div_pend) are registered and stable well before the
+    // select resolves -- the comment above the functions says so -- so the
+    // select itself can be registered.  Costs one OUT cycle of latency on a
+    // ratio *change*, which only happens on SET_DIV commits.
+    reg div_for_counts_is_pend_q;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) div_for_counts_is_pend_q <= 1'b0;
+        else        div_for_counts_is_pend_q <= (!use_clk_p && leave_req) || apply_pend;
+    end
+    wire [W-1:0] high_count_pend = div_for_counts_is_pend_q ? hi_pend : hi_cur;
+    wire [W-1:0] low_count_pend  = div_for_counts_is_pend_q ? lo_pend : lo_cur;
+    wire div_for_counts_is_pend = div_for_counts_is_pend_q;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
