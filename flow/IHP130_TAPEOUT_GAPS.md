@@ -581,6 +581,46 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B23. Remaining OUT budget: half clock tree, half logic
+
+The 53 OUT violators after B22 are all full-period now.  Decomposing the worst
+one (`_4518_` = `pll_dig.div.cnt[1]` -> `_4291_`):
+
+```text
+clock-tree delay   0.9424 ns   (6 stages)
+data delay         2.8307 ns   (16 stages)
+                  ________
+data arrival       3.3740 ns
+data required      2.5582 ns    (2.5 period - 0.25 uncertainty + margin)
+slack             -0.8158 ns
+```
+
+So the clock tree eats **38 % of the period**, and that tree is visibly two
+cascaded trees rather than one:
+
+```text
+clkbuf_regs_1_OUT/A   -> .X     0.1953 ns   <- the macro OUT buffer
+clkbuf_0_net59_regs   -> .X     0.1389
+clkbuf_4_10_net59_regs-> .X     0.1448
+                      ... repeated for the capture side as well
+```
+
+`OUT` is the macro's output pin, so `clkbuf_regs_1_OUT` is a buffer the flow
+added after the macro, and `clkbuf_0_net59_regs` + `clkbuf_4_10_net59_regs`
+are the CTS tree hanging off it.  Same shape as the `MID_OUT -> DSM_CK_G` double
+tree already noted in B10.
+
+Two levers, in order of cost:
+
+1. **Collapse the two trees** (CTS could treat `OUT` as the clock root and build
+   one tree, saving a stage or two, ~0.2-0.3 ns).
+2. **Pipeline the divider's compare** -- the 16 data stages.  Same treatment
+   `FILTER_DEC` got in the DSM (register the decode output), which is the
+   pattern that has worked twice in this design.
+
+Neither is an SDC change, so this is where the OUT group stops being a
+constraint problem and becomes floorplan/logic work.
+
 ### B22. OUT now captures on a full period -- SS setup 79 -> 75, all corners better
 
 B20 showed the OUT group's worst path captured on the 1.25 ns edge, because its
