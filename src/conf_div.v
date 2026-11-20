@@ -79,14 +79,27 @@ module pll_mod_divider #(
 
     reg [W-1:0] pcnt, ncnt;
 
+    wire [W-1:0] pcnt_inc = pcnt + 1'b1;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)      pcnt <= 'd0;
-        else if (odd_div) pcnt <= (pcnt + 1'b1 >= div) ? 'd0 : pcnt + 1'b1;
+        else if (odd_div) pcnt <= (pcnt == div_m1) ? 'd0 : pcnt_inc;
         else             pcnt <= 'd0;
     end
+    // ncnt must stay on the negative edge -- it is half of what makes an odd
+    // divisor 50 % -- so its next-state cone only has half an OUT period.
+    // The cone is `(ncnt + 1 >= div) ? 0 : ncnt + 1`: a 12-bit increment, a
+    // 12-bit compare and a mux.  `div` is quasi-static, so precompute its
+    // decrement once per ratio change and compare against ncnt directly; that
+    // removes the second 12-bit adder from the half-period path.
+    reg [W-1:0] div_m1;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)      div_m1 <= (DIV0 > 0) ? DIV0 - 1 : 0;
+        else             div_m1 <= (div > 0) ? div - 1'b1 : 'd0;
+    end
+    wire [W-1:0] ncnt_inc = ncnt + 1'b1;
     always @(negedge clk or negedge rst_n) begin
         if (!rst_n)      ncnt <= 'd0;
-        else if (odd_div) ncnt <= (ncnt + 1'b1 >= div) ? 'd0 : ncnt + 1'b1;
+        else if (odd_div) ncnt <= (ncnt == div_m1) ? 'd0 : ncnt_inc;
         else             ncnt <= 'd0;
     end
 
