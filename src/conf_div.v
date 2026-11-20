@@ -93,7 +93,7 @@ module pll_mod_divider #(
     // Pulse high while the counter is below the half width.  Registered on the
     // opposite edge so the OR has no glitch.
     reg p_hi, n_hi;
-    always @(negedge clk or negedge rst_n)
+    always @(posedge clk or negedge rst_n)
         if (!rst_n) p_hi <= 1'b0; else p_hi <= odd_div && (pcnt < odd_k);
     always @(posedge clk or negedge rst_n)
         if (!rst_n) n_hi <= 1'b0; else n_hi <= odd_div && (ncnt < odd_k);
