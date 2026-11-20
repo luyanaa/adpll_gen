@@ -132,10 +132,36 @@ module pll_mod_divider #(
             else                 half_lo = d >> 1;
         end
     endfunction
-    wire [W-1:0] hi_cur = half_hi(div);
-    wire [W-1:0] lo_cur = half_lo(div);
-    wire [W-1:0] hi_pend = half_hi(div_pend);
-    wire [W-1:0] lo_pend = half_lo(div_pend);
+    // Pre-decode into registers, not wires.
+    //
+    // `div` and `div_pend` are both registers, so half_hi()/half_lo() of them
+    // only change when the divisor does -- yet as wires the barrel shifters sit
+    // in the cycle that consumes them, in series with the mux that picks between
+    // them and with high_count's own next-state logic.  Registering the four
+    // pre-decoded values moves that whole cone off the critical path at the cost
+    // of one cycle of latency, which the `div`/`div_pend` handshake already
+    // absorbs (a new ratio stays pending until the current period ends).
+    //
+    // Note the reset values must match half_hi(DIV0)/half_lo(DIV0), because
+    // these registers are read on the cycle *after* div is initialised.
+    reg [W-1:0] hi_cur_q, lo_cur_q, hi_pend_q, lo_pend_q;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            hi_cur_q  <= DIV0_HIGH[W-1:0];
+            lo_cur_q  <= DIV0_LOW[W-1:0];
+            hi_pend_q <= DIV0_HIGH[W-1:0];
+            lo_pend_q <= DIV0_LOW[W-1:0];
+        end else begin
+            hi_cur_q  <= half_hi(div);
+            lo_cur_q  <= half_lo(div);
+            hi_pend_q <= half_hi(div_pend);
+            lo_pend_q <= half_lo(div_pend);
+        end
+    end
+    wire [W-1:0] hi_cur  = hi_cur_q;
+    wire [W-1:0] lo_cur  = lo_cur_q;
+    wire [W-1:0] hi_pend = hi_pend_q;
+    wire [W-1:0] lo_pend = lo_pend_q;
     // The select is combinational from two falling-edge/derived flops
     // (use_clk_p, leave_req) plus apply_pend, and it fans out into two 12-bit
     // muxes whose inputs are barrel shifters (half_hi/half_lo).  That whole
