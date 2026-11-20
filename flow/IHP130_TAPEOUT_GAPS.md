@@ -581,6 +581,65 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B29. Tail of the DSM clock path is not splittable; DRC/LVS refreshed again
+
+#### DSM_OUT internal register: tried, rejected
+
+Following the instruction to consider registering `DSM_OUT` inside
+`delta_sigma` (its declaration says "Register outside", and `pll_logic`
+already registers it as `FILTER_DEC_Q`), the experiment failed three ways:
+
+```text
+delta_sigma_tb   order 1  24.0625  exact
+                 order 2  24.0635  vs intended 24.0625, diff 9.77e-4  <-- moved
+                 order 3  24.0625  exact
+delta_sigma_sat_tb   FAIL: DSM_OUT = xxxxx for both polarities
+400-sample stream    byte-identical to baseline
+```
+
+The saturation bench returning `x` is the decisive one: registering the output
+stage turns `DSM_OUT` from a combinational observation into a flop output, so the
+bench's forced-input check sees an undriven value.  Reverted.
+
+**Why it could not have helped anyway**: stage-by-stage accounting of the worst
+`DSM_CK_G_CLK` path (45 stages: 8 clock-tree / 1.328 ns, 37 data / 7.475 ns)
+shows the 37 data stages are almost entirely the three 12-bit adders
+(~11 stages each), leaving ~4 stages in the whole tail
+`dout -> dout_ext -> DSM_OUT_D -> DSM_CAP_P/N -> DSM_OUT`.  Registering a 4-stage
+tail to save at most 0.5 ns, while introducing a cycle of loop latency, is the
+wrong trade.
+
+Both RTL levers available on this path are now measured and rejected: stage 3
+(B28, changes the dither semantics) and the output stage (this one, breaks the
+saturation observation).  Stage 2 is the only one that was both effective and
+behaviour-neutral.
+
+#### DRC / LVS refreshed on RUN_2026-11-20_11-30-42
+
+KLayout DRC (exit 0): `items 69,627`, **real violations 5,574** -- macro 4,988,
+top level 586.  Identical to the `10-44-01` measurement, which is the expected
+result for removing a clock object: it changes the STA view, not the geometry.
+
+netgen LVS: **37 classes compared, zero count deltas, 2729 vs 2729 devices,
+82 equivalent verdicts.**
+
+Getting the script to reproduce that took two more real fixes (B27 had only ever
+been obtained by invoking netgen by hand):
+
+1. the script passed the **original** gate-level netlist to netgen instead of
+   the filtered `nolvs/` one, so netgen compared the CDL against 17k
+   decap/fill instances and never produced a class table;
+2. `write_cdl -masters` uses the PDK CDL to *resolve* masters during extraction
+   but does not copy their definitions into its output, so every cell was a black
+   box on both sides (`Circuit 1 cell sg13g2_inv_1 and Circuit 2 cell sg13g2_inv_1
+   are black boxes`) and the per-class table stayed empty.  The cell subckts are
+   now appended to the extracted CDL.
+
+`buf_8`/`buf_16` stay ignored and the reason is now written down: the CDL carries
+one `buf_16`, the netlist 106 + 80, and leaving the class in aligns the device
+lists badly enough that netgen reports every subsequent instance as mismatching
+(`buf_16:clkbuf_regs_0_REF` vs `fanout100`).
+
 ### B28. Stage 3 is NOT splittable; removing DSM_CK_CLK shortens the tree instead
 
 #### Stage 3: tried, measured, reverted
