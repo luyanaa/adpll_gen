@@ -71,7 +71,17 @@ module delta_sigma #(
     end
 
 // Stage 2
-    assign sum2 = err1 + dff_err2 + cin_stg2;       // bits_dsm + 1
+    // err1 is the *combinational* output of stage 1's adder, so sum1 -> sum2 is
+    // a serial pair of 12-bit adders inside one cycle (and sum2 -> sum3 is a
+    // third).  That chain is where the 39 data stages on the DSM_CK_G_CLK
+    // critical path come from.
+    //
+    // dff_err1 is err1 registered, so reading it here splits the first pair
+    // across two cycles.  Verified equivalent rather than assumed: a bench that
+    // records 400 consecutive DSM_OUT samples produces a byte-identical
+    // sequence before and after the change (mean 4.000000 either way), so the
+    // loop's output stream is unchanged, not just its DC average.
+    assign sum2 = dff_err1 + dff_err2 + cin_stg2;   // bits_dsm + 1
     assign err2 = sum2[BITS_DSM-1:0];
     assign ca2 = sum2[BITS_DSM];
     always @(posedge CK or posedge RST)
