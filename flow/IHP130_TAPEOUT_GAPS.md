@@ -581,6 +581,57 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B21. The last 2 unclocked pins: physically connected, and attaching them costs hold
+
+B20 established that `net59_regs` (the tree `pll_dig.div` is clocked from) is
+connected.  The same is true for the two remaining unclocked pins.
+
+#### They are not floating
+
+`_4703_`/`_4705_` are the `(* ASYNC_REG *)` LOCKED synchroniser of B12, clocked
+from `clknet_1_*_leaf_pll_dig.dsm_impl.DSM_CK_regs`.  Following that tree:
+
+```verilog
+sg13g2_buf_16 clkbuf_0_...DSM_CK_regs (.X(clknet_0_...DSM_CK_regs),
+                                       .A(pll_dig.dsm_impl.DSM_CK_regs));
+sg13g2_buf_16 clkbuf_regs_3_DSM_CK_CLK (.X(pll_dig.dsm_impl.DSM_CK_regs),
+                                        .A(pll_dig.dsm_impl.DSM_CK));
+```
+
+i.e. `<divider output DSM_CK>` -> `clkbuf_regs_3` -> `DSM_CK_regs` -> CTS ->
+the two flops.  Exactly the shape of `net59_regs` (B20).  So the geometry is
+fine; STA simply had no clock object covering the `DSM_CK_regs` half, because
+`_genclk_on_net` takes `lindex 0` of the matching nets and `*pll_dig.dsm_impl.DSM_CK`
+matches both `DSM_CK` and `DSM_CK_regs`.
+
+#### Attempted fix, and why it was reverted
+
+Made `_genclk_on_net` declare a clock on *every* distinct driver (suffixing
+`_1`, `_2`, the same shape the negedge helper uses).  It parses, runs, and
+STAPrePNR still shows 100 clocks with `DSM_CK_CLK` correctly not split into 13.
+Full flow result:
+
+| | hold WS | hold viol | setup WS | setup viol |
+| --- | --- | --- | --- | --- |
+| before (07-19-47) | **+0.1855 / +0.3187 / +0.1055** | **0** | -0.4193 / -2.6245 / +0.0880 | 9 / 79 / 0 |
+| after | **-0.2942 / -0.4327 / -0.2168** | **1** | -0.3837 / -2.6310 / +0.1113 | 9 / 79 / 0 |
+
+Attaching the two flops creates a hold violation on the path into them instead
+of removing a blind spot, and setup does not improve.  Reverted.
+
+#### Reading
+
+Two flops out of 537 were not timed, they are the first stage of an
+`ASYNC_REG` synchroniser (so there is no data path to close through them), and
+making them visible costs a hold violation.  The value is in the *record*, not
+in the change: the undriven-looking `DSM_CK_regs` of B12/B17 is in fact driven
+by the divider output, so there is no missing clock tree to repair.  Anyone
+re-attempting this should know both facts before spending another run on it.
+
+If the 2 pins must be zero, the clean route is the same as the OUT group in
+B20: give the LOCKED synchroniser a full-period capture (both stages on the
+rising edge) rather than splitting the clock object.
+
 ### B20. Where the 79 SS setup violators actually are
 
 Now that the NE_CLK paths are visible, attributed `RUN_2026-11-20_07-19-47`
