@@ -581,6 +581,86 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B27. DSM_CK_G_CLK 10 -> 5 violators; DRC/LVS refreshed again
+
+The DSM_CK_G_CLK group was the worst block.  Its critical path, `FCWF[0]` ->
+`FILTER_DEC_RAW[0]`, decomposed as:
+
+```text
+clock-tree  1.990 ns  (12 stages)   <- the cascaded MID_OUT -> DSM_CK -> ICG -> DSM_CK_G trees (B20/B23)
+data        7.938 ns  (39 stages)
+arrival 8.391, required 6.279, slack -2.112
+```
+
+The data chain is **three 12-bit adders in series** -- `sum1` feeds `sum2`
+through the *combinational* `err1`, `sum2` feeds `sum3` through `err2`, all
+inside one cycle -- while `dff_err1/dff_err2/dff_err3` sit there as unused
+pipeline registers.
+
+Stage 2 now reads `dff_err1` instead of `err1`, splitting the first adder pair
+across two cycles.
+
+#### Equivalence was verified, not assumed
+
+This file is the sigma-delta loop and the existing benches only check DC
+averages, so a third check was written:
+
+| check | result |
+| --- | --- |
+| `delta_sigma_tb` | all three orders `24.0625` = intended, diff ~1e-14 |
+| `delta_sigma_sat_tb` | positive 31, negative 0, PASS |
+| **400-sample output stream** | **byte-identical before and after** (mean 4.000000 both) |
+
+The third one is the one that matters: it shows the loop's *output stream* is
+unchanged, not merely its average.
+
+#### Result (RUN 2026-11-20_10-44-01 vs 2026-11-20_10-15-33, SS per group)
+
+| group | before | after |
+| --- | --- | --- |
+| **DSM_CK_G_CLK** | **10 / -2.1122** | **5 / -1.6427** |
+| OUT | 40 / -0.9026 | 39 / -1.0005 |
+| MID_OUT | 7 / -0.1949 | 8 / -0.4368 |
+| **TOTAL** | 57 | **56** |
+| **TNS** | -36.909 | **-29.659** (-19.6 %) |
+
+Corner setup `-0.2829 (9) / -1.6427 (56) / +0.1352 (0)`, hold 0 violators
+everywhere (`+0.1835 / +0.3155 / +0.1044`).
+
+#### DRC / LVS refreshed on this netlist
+
+KLayout DRC (`RUN_2026-11-20_10-44-01`, exit 0):
+
+```text
+items 69,627   macro 69,041   top 586
+real violations 5,574   macro 4,988   top 586
+```
+
+Compared with B24's 5,525 / top 560 this is +49 total and +26 top-level.  The
+macro is unchanged within noise, so the increase is in the new logic -- the
+registers added by the last three changes (cin_stg, half_hi/half_lo, dff_err1)
+and the routing they pulled in.  Recorded rather than characterised further:
+99 % of the violations are still the macro's own layout.
+
+netgen LVS: **37 classes, zero count deltas, 2729 vs 2729, 74 equivalent
+verdicts** on this netlist.  Three real bugs were found and fixed in
+`scripts/lvs_openroad.sh` to get there:
+
+1. the filtered netlist was reused from a previous run (so netgen compared the
+   current CDL against the old design) -- now regenerated per run;
+2. the bus-port flattening from B19 was lost in a rewrite, so every vector port
+   reported `(no matching pin)` and the class comparison never ran -- restored
+   (5 bus ports -> 61 pins);
+3. `write_cdl` lists `VDD`/`VSS` in the `.SUBCKT` header but the gate-level
+   netlist has no power ports, which misaligned netgen's pin list and produced
+   ten spurious unmatched pins -- supply pins are dropped in normalisation.
+
+`Final result: Top level cell failed pin matching` still prints, and it is now
+attributable: the ten unmatched pins are `OUT_DIV`, `RST_N`, `SET_DIV[0..7]`,
+which appear nowhere in the CDL body (write_cdl lists them and connects
+nothing).  The per-class comparison converges regardless, so this is a
+report-line difference on straps, not a connectivity failure.
+
 ### B26. half_hi/half_lo pre-decoded: OUT worst -1.0947 -> -0.9026
 
 B25 named this as the next lever.  `div` and `div_pend` are both registers, so
