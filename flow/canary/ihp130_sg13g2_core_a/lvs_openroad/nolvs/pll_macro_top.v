@@ -262,7 +262,7 @@ module pll_macro_top (CK,
  wire _0007_;
  wire _0008_;
  wire _0009_;
- wire net353;
+ wire net352;
  wire _0011_;
  wire _0012_;
  wire _0013_;
@@ -551,7 +551,7 @@ module pll_macro_top (CK,
  wire _0296_;
  wire _0297_;
  wire _0298_;
- wire net352;
+ wire _0299_;
  wire _0300_;
  wire _0301_;
  wire _0302_;
@@ -3021,7 +3021,7 @@ module pll_macro_top (CK,
  wire net147;
  wire net148;
  wire net149;
- wire net484;
+ wire net482;
  wire net151;
  wire net152;
  wire net153;
@@ -3118,7 +3118,6 @@ module pll_macro_top (CK,
  wire net;
  wire net59_regs;
  wire net60_regs;
- wire \pll_dig.dsm_impl.DSM_CK_regs ;
  wire clknet_0_REF;
  wire clknet_1_0__leaf_REF;
  wire clknet_1_1__leaf_REF;
@@ -3302,16 +3301,12 @@ module pll_macro_top (CK,
  wire \clknet_3_5__leaf_pll_dig.CKR ;
  wire \clknet_3_6__leaf_pll_dig.CKR ;
  wire \clknet_3_7__leaf_pll_dig.CKR ;
- wire \clknet_0_pll_dig.dsm_impl.DSM_CK ;
- wire \clknet_1_0__leaf_pll_dig.dsm_impl.DSM_CK ;
- wire \clknet_0_pll_dig.dsm_impl.DSM_CK_regs ;
- wire \clknet_1_0__leaf_pll_dig.dsm_impl.DSM_CK_regs ;
- wire \clknet_1_1__leaf_pll_dig.dsm_impl.DSM_CK_regs ;
  wire delaynet_0_REF;
  wire delaynet_1_REF;
  wire delaynet_2_REF;
  wire delaynet_3_REF;
  wire delaynet_4_REF;
+ wire net353;
  wire net354;
  wire net355;
  wire net356;
@@ -3344,9 +3339,9 @@ module pll_macro_top (CK,
  wire net383;
  wire net384;
  wire net385;
- wire net386;
+ wire net437;
  wire net387;
- wire net439;
+ wire net388;
  wire net389;
  wire net390;
  wire net391;
@@ -3368,8 +3363,8 @@ module pll_macro_top (CK,
  wire net407;
  wire net408;
  wire net409;
- wire net410;
  wire net411;
+ wire net412;
  wire net413;
  wire net414;
  wire net415;
@@ -3384,15 +3379,15 @@ module pll_macro_top (CK,
  wire net424;
  wire net425;
  wire net426;
- wire net427;
- wire net428;
- wire net483;
+ wire net481;
+ wire net432;
+ wire net433;
  wire net434;
  wire net435;
  wire net436;
- wire net437;
- wire net438;
- wire net441;
+ wire net439;
+ wire net467;
+ wire net468;
  wire net469;
  wire net470;
  wire net471;
@@ -3402,8 +3397,8 @@ module pll_macro_top (CK,
  wire net475;
  wire net476;
  wire net477;
- wire net478;
- wire net479;
+ wire net483;
+ wire net484;
  wire net485;
  wire net486;
  wire net487;
@@ -3692,32 +3687,9 @@ module pll_macro_top (CK,
  wire net770;
  wire net771;
  wire net772;
- wire net773;
- wire net774;
- wire net775;
- wire net776;
- wire net777;
- wire net778;
- wire net779;
- wire net780;
- wire net781;
- wire net782;
- wire net783;
- wire net784;
- wire net785;
- wire net786;
- wire net787;
- wire net788;
- wire net789;
- wire net790;
- wire net791;
- wire net792;
- wire net793;
- wire net794;
- wire net795;
 
  sg13g2_inv_1 _2106_ (.Y(_0479_),
-    .A(net402));
+    .A(net400));
  sg13g2_inv_1 _2107_ (.Y(_0480_),
     .A(\pll_dig.div.ncnt[3] ));
  sg13g2_inv_1 _2108_ (.Y(_0489_),
@@ -3729,7 +3701,7 @@ module pll_macro_top (CK,
     .Y(_1332_));
  sg13g2_nand2_1 _2111_ (.Y(_1333_),
     .A(_0529_),
-    .B(net424));
+    .B(net422));
  sg13g2_xnor2_1 _2112_ (.Y(_1334_),
     .A(\pll_dig.flock.cnt[12] ),
     .B(_1333_));
@@ -3761,19 +3733,19 @@ module pll_macro_top (CK,
     .Y(_0429_),
     .B1(_1337_));
  sg13g2_inv_1 _2120_ (.Y(_0575_),
-    .A(net694));
+    .A(net690));
  sg13g2_a21o_1 _2121_ (.A2(net124),
-    .A1(net428),
+    .A1(net426),
     .B1(_0912_),
     .X(_0428_));
- sg13g2_nor2_2 _2122_ (.A(net414),
+ sg13g2_nor2_2 _2122_ (.A(net412),
     .B(_0529_),
     .Y(_1339_));
  sg13g2_xnor2_1 _2123_ (.Y(_0427_),
     .A(_0529_),
     .B(_1328_));
  sg13g2_nor2_1 _2124_ (.A(\pll_dig.flock.cnt[4] ),
-    .B(net420),
+    .B(net418),
     .Y(_1340_));
  sg13g2_nor2_1 _2125_ (.A(\pll_dig.flock.cnt_gray[3] ),
     .B(net126),
@@ -3789,13 +3761,13 @@ module pll_macro_top (CK,
     .B(net128),
     .Y(_1343_));
  sg13g2_nor2_2 _2129_ (.A(\pll_dig.flock.cnt[12] ),
-    .B(net421),
+    .B(net419),
     .Y(_1344_));
  sg13g2_xnor2_1 _2130_ (.Y(_1345_),
     .A(_1344_),
     .B(_0528_));
  sg13g2_inv_1 _2131_ (.Y(_0576_),
-    .A(net676));
+    .A(net672));
  sg13g2_a21oi_1 _2132_ (.A1(net128),
     .A2(_1345_),
     .Y(_0425_),
@@ -3987,7 +3959,7 @@ module pll_macro_top (CK,
     .B(_0142_),
     .A(_0579_));
  sg13g2_inv_1 _2186_ (.Y(_0581_),
-    .A(net639));
+    .A(net635));
  sg13g2_nand2b_1 _2187_ (.Y(_1384_),
     .B(_0141_),
     .A_N(\pll_dig.flock.cnt_bin[4] ));
@@ -4175,7 +4147,7 @@ module pll_macro_top (CK,
     .A1(_1372_),
     .A2(_1409_));
  sg13g2_inv_1 _2242_ (.Y(_0586_),
-    .A(net734));
+    .A(\pll_dig.locked_q ));
  sg13g2_nor2_1 _2243_ (.A(_1410_),
     .B(_1427_),
     .Y(_0070_));
@@ -4247,7 +4219,7 @@ module pll_macro_top (CK,
     .A1(net70),
     .A2(_1441_));
  sg13g2_inv_1 _2264_ (.Y(_0588_),
-    .A(net591));
+    .A(net587));
  sg13g2_nand3_1 _2265_ (.B(net114),
     .C(_1435_),
     .A(\pll_dig.flock.cnt_err[6] ),
@@ -4378,7 +4350,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _2301_ (.B1(_1462_),
     .Y(_0413_),
     .A1(net113),
-    .A2(net360));
+    .A2(net359));
  sg13g2_nand3_1 _2302_ (.B(_1034_),
     .C(_1035_),
     .A(_1027_),
@@ -4391,7 +4363,7 @@ module pll_macro_top (CK,
     .A2(net108),
     .Y(_0412_),
     .B1(_1464_));
- sg13g2_nand3_1 _2305_ (.B(net368),
+ sg13g2_nand3_1 _2305_ (.B(net367),
     .C(_1045_),
     .A(_1016_),
     .Y(_1465_));
@@ -4456,7 +4428,7 @@ module pll_macro_top (CK,
  sg13g2_a22oi_1 _2324_ (.Y(_1473_),
     .B1(net66),
     .B2(_1472_),
-    .A2(net670),
+    .A2(net666),
     .A1(net133));
  sg13g2_xnor2_1 _2325_ (.Y(_1474_),
     .A(_0717_),
@@ -4464,10 +4436,10 @@ module pll_macro_top (CK,
  sg13g2_a22oi_1 _2326_ (.Y(\pll_dig.dlf.OUT_C[5] ),
     .B1(_1474_),
     .B2(net62),
-    .A2(net671),
+    .A2(net667),
     .A1(net131));
  sg13g2_mux2_1 _2327_ (.A0(\pll_dig.dsm_impl.dsm.dff_err2[11] ),
-    .A1(net355),
+    .A1(net354),
     .S(net98),
     .X(_0406_));
  sg13g2_o21ai_1 _2328_ (.B1(net94),
@@ -4509,7 +4481,7 @@ module pll_macro_top (CK,
     .B2(net131),
     .A2(_1477_),
     .A1(net61));
- sg13g2_a21o_1 _2340_ (.A2(net658),
+ sg13g2_a21o_1 _2340_ (.A2(net654),
     .A1(net133),
     .B1(_1480_),
     .X(\pll_dig.dlf.OUT_C[14] ));
@@ -4533,7 +4505,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _2346_ (.B1(_0752_),
     .Y(_1485_),
     .A1(\SS_BBPD[0] ),
-    .A2(net665));
+    .A2(net661));
  sg13g2_a22oi_1 _2347_ (.Y(\pll_dig.dlf.OUT_C[12] ),
     .B1(_1484_),
     .B2(_1485_),
@@ -4556,7 +4528,7 @@ module pll_macro_top (CK,
     .Y(_0400_));
  sg13g2_inv_1 _2353_ (.Y(_0596_),
     .A(net122));
- sg13g2_mux2_1 _2354_ (.A0(net405),
+ sg13g2_mux2_1 _2354_ (.A0(net403),
     .A1(\pll_dig.div.div_pend[0] ),
     .S(net82),
     .X(_0399_));
@@ -4596,7 +4568,7 @@ module pll_macro_top (CK,
     .A2(_1494_),
     .Y(_0396_),
     .B1(_1490_));
- sg13g2_a21o_1 _2366_ (.A2(net423),
+ sg13g2_a21o_1 _2366_ (.A2(net421),
     .A1(net126),
     .B1(\pll_dig.flock.cnt[6] ),
     .X(_1495_));
@@ -4614,7 +4586,7 @@ module pll_macro_top (CK,
     .B(net130),
     .Y(_1497_));
  sg13g2_nor2_1 _2371_ (.A(\pll_dig.flock.cnt[9] ),
-    .B(net419),
+    .B(net417),
     .Y(_1498_));
  sg13g2_xor2_1 _2372_ (.B(_1498_),
     .A(\pll_dig.flock.cnt[10] ),
@@ -4678,7 +4650,7 @@ module pll_macro_top (CK,
     .B(\pll_dig.flock.FCW_PA[8] ),
     .A_N(\pll_dig.flock.cnt_cap[8] ));
  sg13g2_inv_1 _2386_ (.Y(_0599_),
-    .A(net623));
+    .A(net619));
  sg13g2_nor2_1 _2387_ (.A(_0555_),
     .B(\pll_dig.flock.FCW_PA[7] ),
     .Y(_1511_));
@@ -4730,7 +4702,7 @@ module pll_macro_top (CK,
     .B(\pll_dig.flock.cnt_cap[8] ),
     .A_N(\pll_dig.flock.FCW_PA[8] ));
  sg13g2_inv_1 _2397_ (.Y(_0600_),
-    .A(net636));
+    .A(net632));
  sg13g2_nor4_1 _2398_ (.A(\pll_dig.flock.FCW_NA[10] ),
     .B(\pll_dig.flock.cnt_cap[15] ),
     .C(\pll_dig.flock.cnt_cap[14] ),
@@ -4774,7 +4746,7 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.freq_miss[2] ));
  sg13g2_nand2_1 _2409_ (.Y(_1528_),
     .A(_0508_),
-    .B(net416));
+    .B(net414));
  sg13g2_xnor2_1 _2410_ (.Y(_1529_),
     .A(\pll_dig.flock.cnt[9] ),
     .B(_1528_));
@@ -4796,7 +4768,7 @@ module pll_macro_top (CK,
     .B(_1532_),
     .Y(_0389_));
  sg13g2_a21oi_1 _2416_ (.A1(\pll_dig.flock.cnt[6] ),
-    .A2(net423),
+    .A2(net421),
     .Y(_1533_),
     .B1(\pll_dig.flock.cnt[7] ));
  sg13g2_xnor2_1 _2417_ (.Y(_1534_),
@@ -4826,10 +4798,10 @@ module pll_macro_top (CK,
     .A(_1538_));
  sg13g2_xnor2_1 _2425_ (.Y(_0173_),
     .A(_1234_),
-    .B(net541));
+    .B(net537));
  sg13g2_xnor2_1 _2426_ (.Y(_0185_),
     .A(_1225_),
-    .B(net529));
+    .B(net525));
  sg13g2_o21ai_1 _2427_ (.B1(net123),
     .Y(_1539_),
     .A1(\pll_dig.ref_wd.cnt[6] ),
@@ -4842,7 +4814,7 @@ module pll_macro_top (CK,
     .Y(_1540_));
  sg13g2_inv_1 _2430_ (.Y(_0603_),
     .A(\pll_dig.div.pend ));
- sg13g2_a21oi_1 _2431_ (.A1(net426),
+ sg13g2_a21oi_1 _2431_ (.A1(net424),
     .A2(net129),
     .Y(_0385_),
     .B1(_1540_));
@@ -4882,13 +4854,13 @@ module pll_macro_top (CK,
     .B(net124),
     .Y(_1545_));
  sg13g2_a21oi_1 _2440_ (.A1(\pll_dig.flock.cnt[14] ),
-    .A2(net425),
+    .A2(net423),
     .Y(_1546_),
     .B1(\pll_dig.flock.cnt[15] ));
  sg13g2_inv_1 _2441_ (.Y(_0492_),
     .A(\pll_dig.FILTER_DEC[4] ));
  sg13g2_inv_1 _2442_ (.Y(_0604_),
-    .A(net428));
+    .A(net426));
  sg13g2_nand3_1 _2443_ (.B(\pll_dig.flock.cnt[14] ),
     .C(\pll_dig.flock.cnt[15] ),
     .A(_1545_),
@@ -4907,12 +4879,12 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _2447_ (.A(_0921_),
     .B(_1549_),
     .Y(_0380_));
- sg13g2_xor2_1 _2448_ (.B(net418),
+ sg13g2_xor2_1 _2448_ (.B(net416),
     .A(\pll_dig.flock.cnt[14] ),
     .X(_0379_));
  sg13g2_xnor2_1 _2449_ (.Y(_0172_),
-    .A(net559),
-    .B(net537));
+    .A(net555),
+    .B(net533));
  sg13g2_a21o_1 _2450_ (.A2(net30),
     .A1(\pll_dig.dlf.INT[0] ),
     .B1(_0707_),
@@ -4932,7 +4904,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _2455_ (.B1(_0752_),
     .Y(_1554_),
     .A1(\SS_BBPD[0] ),
-    .A2(net684));
+    .A2(net680));
  sg13g2_a22oi_1 _2456_ (.Y(\pll_dig.dlf.OUT_C[1] ),
     .B1(_1553_),
     .B2(_1554_),
@@ -4941,7 +4913,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _2457_ (.B1(_0508_),
     .Y(_1555_),
     .A1(net124),
-    .A2(net416));
+    .A2(net414));
  sg13g2_and2_1 _2458_ (.A(_0907_),
     .B(_1555_),
     .X(_0377_));
@@ -5038,14 +5010,14 @@ module pll_macro_top (CK,
     .A1(_1566_),
     .A2(_1568_));
  sg13g2_xnor2_1 _2484_ (.Y(_0178_),
-    .A(net503),
+    .A(net501),
     .B(_1209_));
  sg13g2_xnor2_1 _2485_ (.Y(_0171_),
-    .A(net558),
-    .B(net533));
+    .A(net554),
+    .B(net529));
  sg13g2_inv_1 _2486_ (.Y(_0608_),
     .A(net33));
- sg13g2_a21oi_1 _2487_ (.A1(net522),
+ sg13g2_a21oi_1 _2487_ (.A1(net518),
     .A2(_1239_),
     .Y(_1569_),
     .B1(_1238_));
@@ -5056,16 +5028,16 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.cnt_filt[14] ),
     .X(_1571_));
  sg13g2_xnor2_1 _2490_ (.Y(_1572_),
-    .A(net544),
+    .A(net540),
     .B(_1571_));
- sg13g2_nor2_1 _2491_ (.A(net523),
+ sg13g2_nor2_1 _2491_ (.A(net519),
     .B(_1572_),
     .Y(_1573_));
  sg13g2_xor2_1 _2492_ (.B(_1572_),
-    .A(net523),
+    .A(net519),
     .X(_1574_));
- sg13g2_a21oi_1 _2493_ (.A1(net561),
-    .A2(net741),
+ sg13g2_a21oi_1 _2493_ (.A1(net557),
+    .A2(net733),
     .Y(_1575_),
     .B1(_1241_));
  sg13g2_inv_1 _2494_ (.Y(_1576_),
@@ -5073,8 +5045,8 @@ module pll_macro_top (CK,
  sg13g2_a21oi_1 _2495_ (.A1(_1574_),
     .A2(_1576_),
     .Y(_1577_),
-    .B1(net524));
- sg13g2_a21oi_1 _2496_ (.A1(net510),
+    .B1(net520));
+ sg13g2_a21oi_1 _2496_ (.A1(net506),
     .A2(_1571_),
     .Y(_1578_),
     .B1(_1570_));
@@ -5084,42 +5056,42 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.cnt_filt[14] ),
     .X(_1579_));
  sg13g2_xnor2_1 _2499_ (.Y(_1580_),
-    .A(net507),
+    .A(net503),
     .B(_1579_));
  sg13g2_xor2_1 _2500_ (.B(_1580_),
-    .A(net511),
+    .A(net507),
     .X(_1581_));
  sg13g2_xnor2_1 _2501_ (.Y(_0176_),
-    .A(net525),
+    .A(net521),
     .B(_1581_));
  sg13g2_a21oi_1 _2502_ (.A1(\pll_dig.flock.cnt_filt[14] ),
-    .A2(net507),
+    .A2(net503),
     .Y(_1582_),
     .B1(\pll_dig.flock.cnt_filt[15] ));
  sg13g2_o21ai_1 _2503_ (.B1(\pll_dig.flock.cnt_filt[15] ),
     .Y(_1583_),
     .A1(\pll_dig.flock.cnt_filt[14] ),
-    .A2(net507));
+    .A2(net503));
  sg13g2_nand2b_1 _2504_ (.Y(_1584_),
-    .B(net508),
+    .B(net504),
     .A_N(_1582_));
  sg13g2_a21o_1 _2505_ (.A2(_1580_),
-    .A1(net511),
+    .A1(net507),
     .B1(_1577_),
     .X(_1585_));
  sg13g2_o21ai_1 _2506_ (.B1(_1585_),
     .Y(_1586_),
-    .A1(net511),
+    .A1(net507),
     .A2(_1580_));
  sg13g2_inv_1 _2507_ (.Y(_1587_),
-    .A(net512));
+    .A(net508));
  sg13g2_inv_1 _2508_ (.Y(_0610_),
     .A(net28));
  sg13g2_xnor2_1 _2509_ (.Y(_0177_),
     .A(_1584_),
-    .B(net512));
+    .B(net508));
  sg13g2_xnor2_1 _2510_ (.Y(_0175_),
-    .A(net545),
+    .A(net541),
     .B(_1575_));
  sg13g2_nand2_1 _2511_ (.Y(_1588_),
     .A(net110),
@@ -5127,7 +5099,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _2512_ (.B1(_1588_),
     .Y(_0370_),
     .A1(net110),
-    .A2(net356));
+    .A2(net355));
  sg13g2_nand3_1 _2513_ (.B(_1036_),
     .C(_1037_),
     .A(_1025_),
@@ -5148,7 +5120,7 @@ module pll_macro_top (CK,
     .B(_1591_),
     .X(_0126_));
  sg13g2_mux2_1 _2518_ (.A0(\pll_dig.dsm_impl.dsm.dff_sum_sd23[1] ),
-    .A1(net380),
+    .A1(net378),
     .S(net98),
     .X(_0368_));
  sg13g2_inv_1 _2519_ (.Y(_0611_),
@@ -5162,7 +5134,7 @@ module pll_macro_top (CK,
     .B(\pll_dig.dsm_impl.dsm.dff_err3[10] ));
  sg13g2_nand2_1 _2522_ (.Y(_1594_),
     .A(net98),
-    .B(net361));
+    .B(net360));
  sg13g2_o21ai_1 _2523_ (.B1(_1593_),
     .Y(_0367_),
     .A1(_1592_),
@@ -5177,24 +5149,24 @@ module pll_macro_top (CK,
  sg13g2_nand2_1 _2526_ (.Y(_1595_),
     .A(_0497_),
     .B(\pll_dig.FREQ_LOCKED ));
- sg13g2_nor2_1 _2527_ (.A(net622),
+ sg13g2_nor2_1 _2527_ (.A(net618),
     .B(\pll_dig.flock.u_fll_icg.EN ),
     .Y(_1596_));
  sg13g2_nand2_1 _2528_ (.Y(_1597_),
     .A(\pll_dig.state[3] ),
     .B(_1276_));
- sg13g2_nor2b_1 _2529_ (.A(net587),
-    .B_N(net633),
+ sg13g2_nor2b_1 _2529_ (.A(net583),
+    .B_N(net629),
     .Y(_1598_));
  sg13g2_inv_1 _2530_ (.Y(_0612_),
     .A(\pll_dig.MID_MUX_D[3] ));
- sg13g2_nor2_1 _2531_ (.A(net636),
-    .B(net630),
+ sg13g2_nor2_1 _2531_ (.A(net632),
+    .B(net626),
     .Y(_1599_));
  sg13g2_or2_1 _2532_ (.X(_1600_),
-    .B(net630),
-    .A(net636));
- sg13g2_nor2b_1 _2533_ (.A(net589),
+    .B(net626),
+    .A(net632));
+ sg13g2_nor2b_1 _2533_ (.A(net585),
     .B_N(\pll_dig.FREQ_OK ),
     .Y(_1601_));
  sg13g2_inv_1 _2534_ (.Y(_1602_),
@@ -5203,12 +5175,12 @@ module pll_macro_top (CK,
     .A2(_1602_),
     .Y(_1603_),
     .B1(_1598_));
- sg13g2_o21ai_1 _2536_ (.B1(net634),
+ sg13g2_o21ai_1 _2536_ (.B1(net630),
     .Y(_0049_),
     .A1(_1596_),
     .A2(_1597_));
  sg13g2_mux2_1 _2537_ (.A0(\pll_dig.dsm_impl.dsm.dff_err2[8] ),
-    .A1(net354),
+    .A1(net353),
     .S(net97),
     .X(_0365_));
  sg13g2_a21oi_1 _2538_ (.A1(\pll_dig.ref_wd.cnt[2] ),
@@ -5221,11 +5193,11 @@ module pll_macro_top (CK,
     .Y(_0364_));
  sg13g2_nand2_1 _2540_ (.Y(_1605_),
     .A(\SS_BBPD[0] ),
-    .B(net623));
+    .B(net619));
  sg13g2_inv_1 _2541_ (.Y(_0613_),
     .A(\pll_dig.MID_MUX_D[2] ));
- sg13g2_nor2_1 _2542_ (.A(net611),
-    .B(net614),
+ sg13g2_nor2_1 _2542_ (.A(net607),
+    .B(net610),
     .Y(_1606_));
  sg13g2_and2_1 _2543_ (.A(\SS_BBPD[0] ),
     .B(_1606_),
@@ -5233,20 +5205,20 @@ module pll_macro_top (CK,
  sg13g2_nand3b_1 _2544_ (.B(_1607_),
     .C(\pll_dig.ENABLE ),
     .Y(_1608_),
-    .A_N(net606));
+    .A_N(net602));
  sg13g2_and3_1 _2545_ (.X(_1609_),
-    .A(net635),
-    .B(net601),
-    .C(net596));
+    .A(net631),
+    .B(net597),
+    .C(net592));
  sg13g2_a21o_1 _2546_ (.A2(_1609_),
-    .A1(net653),
-    .B1(net607),
+    .A1(net649),
+    .B1(net603),
     .X(_1610_));
  sg13g2_nor2_1 _2547_ (.A(\pll_dig.lock_detector.win_cnt[0] ),
-    .B(net607),
+    .B(net603),
     .Y(_0057_));
  sg13g2_xnor2_1 _2548_ (.Y(_1611_),
-    .A(net601),
+    .A(net597),
     .B(\pll_dig.lock_detector.win_cnt[1] ));
  sg13g2_nor2_1 _2549_ (.A(_1608_),
     .B(_1611_),
@@ -5260,8 +5232,8 @@ module pll_macro_top (CK,
     .Y(_0056_));
  sg13g2_inv_1 _2552__330 (.Y(net329),
     .A(clknet_4_1_0_INJ_EDGE));
- sg13g2_inv_1 _2553__352 (.Y(net351),
-    .A(\clknet_1_0__leaf_pll_dig.dsm_impl.DSM_CK_regs ));
+ sg13g2_inv_1 _2553_ (.Y(_0299_),
+    .A(\pll_dig.dsm_impl.DSM_CK ));
  sg13g2_nor2_1 _2554_ (.A(\pll_dig.lock_detector.win_cnt[3] ),
     .B(_1609_),
     .Y(_1613_));
@@ -5269,24 +5241,24 @@ module pll_macro_top (CK,
     .B(_1613_),
     .Y(_0060_));
  sg13g2_a21oi_1 _2556_ (.A1(\pll_dig.lock_detector.win_cnt[0] ),
-    .A2(net596),
+    .A2(net592),
     .Y(_1614_),
     .B1(\pll_dig.lock_detector.win_cnt[2] ));
  sg13g2_nor3_1 _2557_ (.A(_1608_),
     .B(_1609_),
-    .C(net597),
+    .C(net593),
     .Y(_0059_));
  sg13g2_mux2_1 _2558_ (.A0(\pll_dig.div.low_count[3] ),
     .A1(\pll_dig.div.high_count[3] ),
     .S(\pll_dig.div.high_phase ),
     .X(_1615_));
  sg13g2_nand2_1 _2559_ (.Y(_1616_),
-    .A(net390),
+    .A(net388),
     .B(_1615_));
  sg13g2_nor2_1 _2560_ (.A(\pll_dig.div.high_count[2] ),
-    .B(net396),
+    .B(net394),
     .Y(_1617_));
- sg13g2_nor2_1 _2561_ (.A(net400),
+ sg13g2_nor2_1 _2561_ (.A(net398),
     .B(\pll_dig.div.high_count[1] ),
     .Y(_1618_));
  sg13g2_nor3_1 _2562_ (.A(_0479_),
@@ -5294,13 +5266,13 @@ module pll_macro_top (CK,
     .C(_1618_),
     .Y(_1619_));
  sg13g2_a21oi_1 _2563_ (.A1(\pll_dig.div.high_count[1] ),
-    .A2(net435),
+    .A2(net433),
     .Y(_1620_),
     .B1(_1619_));
  sg13g2_inv_1 _2564_ (.Y(\pll_dig.dsm_impl.u_dsm_icg.EN ),
     .A(\pll_dig.dsm_impl.locked_dsm_s2 ));
  sg13g2_a21oi_1 _2565_ (.A1(\pll_dig.div.high_count[2] ),
-    .A2(net396),
+    .A2(net394),
     .Y(_1621_),
     .B1(_0494_));
  sg13g2_o21ai_1 _2566_ (.B1(_1621_),
@@ -5315,7 +5287,7 @@ module pll_macro_top (CK,
     .A1(\pll_dig.div.high_count[4] ),
     .S(\pll_dig.div.high_phase ),
     .X(_1624_));
- sg13g2_nor2_1 _2569_ (.A(net393),
+ sg13g2_nor2_1 _2569_ (.A(net391),
     .B(_1624_),
     .Y(_1625_));
  sg13g2_a21oi_2 _2570_ (.B1(_1625_),
@@ -5324,7 +5296,7 @@ module pll_macro_top (CK,
     .A1(_1623_));
  sg13g2_o21ai_1 _2571_ (.B1(_1626_),
     .Y(_1627_),
-    .A1(net391),
+    .A1(net389),
     .A2(_1615_));
  sg13g2_mux2_1 _2572_ (.A0(\pll_dig.div.low_count[5] ),
     .A1(\pll_dig.div.high_count[5] ),
@@ -5332,12 +5304,12 @@ module pll_macro_top (CK,
     .X(_1628_));
  sg13g2_a22oi_1 _2573_ (.Y(_1629_),
     .B1(_1628_),
-    .B2(net398),
+    .B2(net396),
     .A2(_1624_),
-    .A1(net392));
+    .A1(net390));
  sg13g2_or2_1 _2574_ (.X(_1630_),
     .B(_1628_),
-    .A(net434));
+    .A(net432));
  sg13g2_inv_1 _2575__351 (.Y(net350),
     .A(clknet_3_4__leaf_MID_OUT));
  sg13g2_mux2_1 _2576_ (.A0(\pll_dig.div.low_count[6] ),
@@ -5355,10 +5327,10 @@ module pll_macro_top (CK,
  sg13g2_and2_1 _2579_ (.A(\pll_dig.div.high_phase ),
     .B(\pll_dig.div.high_count[7] ),
     .X(_1634_));
- sg13g2_a221oi_1 _2580_ (.B2(net389),
+ sg13g2_a221oi_1 _2580_ (.B2(net387),
     .C1(_1633_),
     .B1(_1634_),
-    .A1(net387),
+    .A1(net385),
     .Y(_1635_),
     .A2(_1631_));
  sg13g2_nor3_2 _2581_ (.A(\pll_dig.div.leave_req ),
@@ -5367,11 +5339,11 @@ module pll_macro_top (CK,
     .Y(_1636_));
  sg13g2_o21ai_1 _2582_ (.B1(_1636_),
     .Y(_1637_),
-    .A1(net389),
+    .A1(net387),
     .A2(_1634_));
  sg13g2_nand2_1 _2583_ (.Y(_1638_),
     .A(\pll_dig.div.out_reg ),
-    .B(net395));
+    .B(net393));
  sg13g2_nor2_1 _2584_ (.A(\pll_dig.div.div_pend[2] ),
     .B(\pll_dig.div.div_pend[3] ),
     .Y(_1639_));
@@ -5392,7 +5364,7 @@ module pll_macro_top (CK,
     .A(\pll_dig.div.div_pend[0] ),
     .B(_1642_));
  sg13g2_nor2_2 _2590_ (.A(_1643_),
-    .B(net399),
+    .B(net397),
     .Y(_1644_));
  sg13g2_nor2_2 _2591_ (.A(\pll_dig.div.use_clk_p ),
     .B(_1644_),
@@ -5413,7 +5385,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _2596_ (.A(\pll_dig.div.use_clk_p ),
     .B(_1647_),
     .Y(_0356_));
- sg13g2_inv_1 _2597__353 (.Y(net352),
+ sg13g2_inv_1 _2597__352 (.Y(net351),
     .A(\clknet_2_2__leaf_pll_dig.out_div2 ));
  sg13g2_nor2_1 _2598_ (.A(net243),
     .B(_0157_),
@@ -5481,7 +5453,7 @@ module pll_macro_top (CK,
     .B_N(\pll_dig.div.use_clk_p ),
     .Y(_0338_));
  sg13g2_nand4_1 _2615_ (.B(\pll_dig.FREQ_ERR ),
-    .C(net594),
+    .C(net590),
     .A(_0497_),
     .Y(_1654_),
     .D(\pll_dig.flock.u_fll_icg.EN ));
@@ -5489,79 +5461,79 @@ module pll_macro_top (CK,
     .B(_1654_),
     .A_N(\pll_dig.state[1] ));
  sg13g2_and2_1 _2617_ (.A(\pll_dig.lock_detector.bad_cnt[1] ),
-    .B(net599),
+    .B(net595),
     .X(_1655_));
  sg13g2_nor4_1 _2618_ (.A(_0599_),
-    .B(net617),
+    .B(net613),
     .C(_1607_),
     .D(_1655_),
     .Y(_1656_));
  sg13g2_inv_1 _2619_ (.Y(_0616_),
     .A(\pll_dig.flock.FCW_PA[2] ));
  sg13g2_nor2b_1 _2620_ (.A(\pll_dig.lock_detector.bad_cnt[0] ),
-    .B_N(net618),
+    .B_N(net614),
     .Y(_0052_));
- sg13g2_nor2_1 _2621_ (.A(net664),
+ sg13g2_nor2_1 _2621_ (.A(net660),
     .B(_1602_),
     .Y(_1657_));
  sg13g2_nand2b_1 _2622_ (.Y(_1658_),
     .B(_1601_),
-    .A_N(net664));
+    .A_N(net660));
  sg13g2_nand2_1 _2623_ (.Y(_1659_),
-    .A(net630),
+    .A(net626),
     .B(_1657_));
  sg13g2_or4_1 _2624_ (.A(\pll_dig.cnt[3] ),
     .B(\pll_dig.cnt[2] ),
     .C(\pll_dig.cnt[0] ),
-    .D(net603),
+    .D(net599),
     .X(_1660_));
  sg13g2_nor3_1 _2625_ (.A(\pll_dig.cnt[7] ),
     .B(\pll_dig.cnt[4] ),
     .C(_1660_),
     .Y(_1661_));
- sg13g2_nand4_1 _2626_ (.B(net608),
-    .C(net625),
+ sg13g2_nand4_1 _2626_ (.B(net604),
+    .C(net621),
     .A(_0581_),
     .Y(_1662_),
     .D(_1661_));
  sg13g2_nand3_1 _2627_ (.B(_1657_),
     .C(_1662_),
-    .A(net630),
+    .A(net626),
     .Y(_1663_));
  sg13g2_nand2_1 _2628_ (.Y(_1664_),
-    .A(net594),
+    .A(net590),
     .B(_1596_));
  sg13g2_nand2b_1 _2629_ (.Y(_1665_),
-    .B(net625),
-    .A_N(net664));
+    .B(net621),
+    .A_N(net660));
  sg13g2_inv_1 _2630_ (.Y(_0617_),
     .A(\pll_dig.flock.FCW_PA[6] ));
  sg13g2_nand3_1 _2631_ (.B(_1601_),
     .C(_1665_),
-    .A(net636),
+    .A(net632),
     .Y(_1666_));
  sg13g2_nand3_1 _2632_ (.B(\pll_dig.LOCK_LOST ),
     .C(_1601_),
     .A(\pll_dig.state[2] ),
     .Y(_1667_));
  sg13g2_nand4_1 _2633_ (.B(_1664_),
-    .C(net637),
+    .C(net633),
     .A(_1663_),
     .Y(_0048_),
     .D(_1667_));
  sg13g2_o21ai_1 _2634_ (.B1(_1656_),
     .Y(_1668_),
     .A1(\pll_dig.lock_detector.bad_cnt[1] ),
-    .A2(net599));
+    .A2(net595));
  sg13g2_inv_1 _2635_ (.Y(_0053_),
-    .A(net600));
+    .A(net596));
  sg13g2_xnor2_1 _2636_ (.Y(_1669_),
     .A(_0727_),
     .B(_0764_));
  sg13g2_a22oi_1 _2637_ (.Y(_1670_),
     .B1(net66),
     .B2(_1669_),
-    .A2(net678),
+    .A2(net676),
     .A1(net133));
  sg13g2_xnor2_1 _2638_ (.Y(_1671_),
     .A(_0724_),
@@ -5582,10 +5554,10 @@ module pll_macro_top (CK,
  sg13g2_a22oi_1 _2643_ (.Y(_1674_),
     .B1(net66),
     .B2(_1673_),
-    .A2(net667),
+    .A2(net663),
     .A1(net133));
  sg13g2_a22oi_1 _2644_ (.Y(\pll_dig.dlf.OUT_C[6] ),
-    .B1(net668),
+    .B1(net664),
     .B2(net132),
     .A2(_1672_),
     .A1(net62));
@@ -5598,16 +5570,16 @@ module pll_macro_top (CK,
  sg13g2_a22oi_1 _2647_ (.Y(_1677_),
     .B1(net66),
     .B2(_1676_),
-    .A2(net673),
+    .A2(net669),
     .A1(net133));
  sg13g2_a22oi_1 _2648_ (.Y(\pll_dig.dlf.OUT_C[4] ),
-    .B1(net674),
+    .B1(net670),
     .B2(net132),
     .A2(_1675_),
     .A1(net62));
  sg13g2_nand2_1 _2649_ (.Y(_1678_),
     .A(net107),
-    .B(net381));
+    .B(net379));
  sg13g2_xnor2_1 _2650_ (.Y(_1679_),
     .A(\pll_dig.dsm_impl.dsm.cin_stg1 ),
     .B(_0944_));
@@ -5618,15 +5590,15 @@ module pll_macro_top (CK,
  sg13g2_inv_1 _2652_ (.Y(_0619_),
     .A(\pll_dig.div.cnt[3] ));
  sg13g2_mux2_1 _2653_ (.A0(\pll_dig.dsm_impl.dsm.dff_err2[7] ),
-    .A1(net358),
+    .A1(net357),
     .S(net97),
     .X(_0336_));
  sg13g2_and3_1 _2654_ (.X(_1680_),
     .A(_1010_),
-    .B(net361),
-    .C(net370));
+    .B(net360),
+    .C(net369));
  sg13g2_nor3_1 _2655_ (.A(net105),
-    .B(net372),
+    .B(net371),
     .C(_1680_),
     .Y(_1681_));
  sg13g2_a21o_1 _2656_ (.A2(net105),
@@ -5665,7 +5637,7 @@ module pll_macro_top (CK,
     .A2(_1003_),
     .Y(_0332_),
     .B1(_1685_));
- sg13g2_a21o_1 _2666_ (.A2(net382),
+ sg13g2_a21o_1 _2666_ (.A2(net380),
     .A1(net108),
     .B1(_1292_),
     .X(_0331_));
@@ -5688,20 +5660,20 @@ module pll_macro_top (CK,
     .A(_1687_));
  sg13g2_o21ai_1 _2672_ (.B1(_1688_),
     .Y(_0050_),
-    .A1(net631),
+    .A1(net627),
     .A2(_1662_));
  sg13g2_nand2_1 _2673_ (.Y(_1689_),
-    .A(net553),
+    .A(net549),
     .B(_1204_));
  sg13g2_xnor2_1 _2674_ (.Y(_0179_),
     .A(_1211_),
-    .B(net554));
+    .B(net550));
  sg13g2_inv_1 _2675_ (.Y(\pll_dig.FILTER_OUT[15] ),
-    .A(net727));
+    .A(net723));
  sg13g2_xnor2_1 _2676_ (.Y(_0184_),
-    .A(net739),
-    .B(net516));
- sg13g2_o21ai_1 _2677_ (.B1(net508),
+    .A(net731),
+    .B(net512));
+ sg13g2_o21ai_1 _2677_ (.B1(net504),
     .Y(_0170_),
     .A1(_1584_),
     .A2(_1587_));
@@ -5736,10 +5708,10 @@ module pll_macro_top (CK,
     .S(net82),
     .X(_0321_));
  sg13g2_inv_1 _2686_ (.Y(_0262_),
-    .A(net731));
+    .A(net726));
  sg13g2_mux2_1 _2687_ (.A0(net154),
     .A1(\pll_dig.div.div_pend[5] ),
-    .S(net384),
+    .S(net382),
     .X(_0320_));
  sg13g2_xnor2_1 _2688_ (.Y(_1692_),
     .A(_0740_),
@@ -5773,7 +5745,7 @@ module pll_macro_top (CK,
  sg13g2_a22oi_1 _2696_ (.Y(\pll_dig.dlf.OUT_C[9] ),
     .B1(_1698_),
     .B2(net62),
-    .A2(net689),
+    .A2(net685),
     .A1(net132));
  sg13g2_nor2b_1 _2697_ (.A(_0157_),
     .B_N(\pll_dig.div.div_pend[0] ),
@@ -5787,10 +5759,10 @@ module pll_macro_top (CK,
  sg13g2_a22oi_1 _2700_ (.Y(_1701_),
     .B1(net65),
     .B2(_1700_),
-    .A2(net661),
+    .A2(net657),
     .A1(net133));
  sg13g2_a22oi_1 _2701_ (.Y(\pll_dig.dlf.OUT_C[10] ),
-    .B1(net662),
+    .B1(net658),
     .B2(net132),
     .A2(_1699_),
     .A1(net61));
@@ -5799,7 +5771,7 @@ module pll_macro_top (CK,
     .Y(\pll_dig.FINE_MUX_D[12] ),
     .B1(net99));
  sg13g2_nor2_1 _2703_ (.A(\pll_dig.flock.cnt[6] ),
-    .B(net423),
+    .B(net421),
     .Y(_1702_));
  sg13g2_nor2_1 _2704_ (.A(\pll_dig.flock.cnt_gray[5] ),
     .B(net126),
@@ -5814,7 +5786,7 @@ module pll_macro_top (CK,
  sg13g2_and3_1 _2707_ (.X(_1705_),
     .A(\pll_dig.flock.cnt[4] ),
     .B(net127),
-    .C(net420));
+    .C(net418));
  sg13g2_and3_1 _2708_ (.X(_0622_),
     .A(\pll_dig.div.div_pend[2] ),
     .B(\pll_dig.div.div_pend[3] ),
@@ -5846,7 +5818,7 @@ module pll_macro_top (CK,
     .A(net30),
     .B(\SS_BBPD[0] ));
  sg13g2_xnor2_1 _2715_ (.Y(_1709_),
-    .A(net686),
+    .A(net682),
     .B(_1708_));
  sg13g2_nor2_1 _2716_ (.A(\pll_dig.dlf.ILL_P_C ),
     .B(_1709_),
@@ -5855,7 +5827,7 @@ module pll_macro_top (CK,
     .B(_1710_),
     .Y(\pll_dig.dlf.OUT_C[0] ));
  sg13g2_a21oi_1 _2718_ (.A1(\pll_dig.flock.cnt[4] ),
-    .A2(net420),
+    .A2(net418),
     .Y(_1711_),
     .B1(\pll_dig.flock.cnt[5] ));
  sg13g2_and2_1 _2719_ (.A(\pll_dig.div.div_pend[4] ),
@@ -5914,7 +5886,7 @@ module pll_macro_top (CK,
     .B(net128),
     .Y(_1718_));
  sg13g2_nand2b_1 _2733_ (.Y(_1719_),
-    .B(net415),
+    .B(net413),
     .A_N(\pll_dig.flock.cnt[14] ));
  sg13g2_xnor2_1 _2734_ (.Y(_1720_),
     .A(\pll_dig.flock.cnt[15] ),
@@ -5924,13 +5896,13 @@ module pll_macro_top (CK,
     .Y(_0310_),
     .B1(_1718_));
  sg13g2_nand3_1 _2736_ (.B(net128),
-    .C(net421),
+    .C(net419),
     .A(\pll_dig.flock.cnt[12] ),
     .Y(_1721_));
  sg13g2_a21oi_1 _2737_ (.A1(_0528_),
     .A2(_1721_),
     .Y(_0309_),
-    .B1(net417));
+    .B1(net415));
  sg13g2_and4_1 _2738_ (.A(\pll_dig.flock.cnt_done[2] ),
     .B(\pll_dig.flock.cnt_done[3] ),
     .C(\pll_dig.flock.cnt_done[4] ),
@@ -5958,10 +5930,10 @@ module pll_macro_top (CK,
  sg13g2_inv_1 _2744_ (.Y(_0028_),
     .A(_1726_));
  sg13g2_xnor2_1 _2745_ (.Y(_0181_),
-    .A(net570),
-    .B(net737));
+    .A(net566),
+    .B(net729));
  sg13g2_xor2_1 _2746_ (.B(_1212_),
-    .A(net565),
+    .A(net561),
     .X(_0180_));
  sg13g2_a221oi_1 _2747_ (.B2(\pll_dig.COARSE_MUX_D[7] ),
     .C1(net73),
@@ -5979,7 +5951,7 @@ module pll_macro_top (CK,
  sg13g2_a22oi_1 _2750_ (.Y(_1729_),
     .B1(net66),
     .B2(_1728_),
-    .A2(net676),
+    .A2(net672),
     .A1(_0495_));
  sg13g2_xnor2_1 _2751_ (.Y(_1730_),
     .A(_0710_),
@@ -5994,7 +5966,7 @@ module pll_macro_top (CK,
     .A1(net132));
  sg13g2_xnor2_1 _2754_ (.Y(_0182_),
     .A(_1216_),
-    .B(net549));
+    .B(net545));
  sg13g2_a221oi_1 _2755_ (.B2(\pll_dig.MID_MUX_D[1] ),
     .C1(net77),
     .B1(net86),
@@ -6011,7 +5983,7 @@ module pll_macro_top (CK,
     .B(\pll_dig.flock.cnt_gray[15] ));
  sg13g2_a21oi_2 _2758_ (.B1(\pll_dig.flock.cnt[13] ),
     .Y(_1732_),
-    .A2(net421),
+    .A2(net419),
     .A1(\pll_dig.flock.cnt[12] ));
  sg13g2_nor2_1 _2759_ (.A(\pll_dig.flock.cnt_gray[12] ),
     .B(net128),
@@ -6063,7 +6035,7 @@ module pll_macro_top (CK,
     .A1(_1737_),
     .A2(_1739_));
  sg13g2_a21oi_1 _2771_ (.A1(net127),
-    .A2(net420),
+    .A2(net418),
     .Y(_1740_),
     .B1(\pll_dig.flock.cnt[4] ));
  sg13g2_nor2_1 _2772_ (.A(_1705_),
@@ -6088,7 +6060,7 @@ module pll_macro_top (CK,
     .A2(net74),
     .Y(_0298_),
     .B1(_1741_));
- sg13g2_a21o_1 _2778_ (.A2(net421),
+ sg13g2_a21o_1 _2778_ (.A2(net419),
     .A1(net129),
     .B1(\pll_dig.flock.cnt[12] ),
     .X(_1742_));
@@ -6312,7 +6284,7 @@ module pll_macro_top (CK,
     .Y(_0285_),
     .B1(_1774_));
  sg13g2_nor2b_2 _2834_ (.A(net159),
-    .B_N(net410),
+    .B_N(net408),
     .Y(_1775_));
  sg13g2_nand2b_2 _2835_ (.Y(_1776_),
     .B(_1775_),
@@ -6345,13 +6317,13 @@ module pll_macro_top (CK,
     .B(_1775_));
  sg13g2_xnor2_1 _2844_ (.Y(_1784_),
     .A(net159),
-    .B(net410));
- sg13g2_nor2b_2 _2845_ (.A(net406),
-    .B_N(net405),
+    .B(net408));
+ sg13g2_nor2b_2 _2845_ (.A(net404),
+    .B_N(net403),
     .Y(_1785_));
  sg13g2_or2_1 _2846_ (.X(_1786_),
     .B(_1785_),
-    .A(net410));
+    .A(net408));
  sg13g2_nand2b_1 _2847_ (.Y(_1787_),
     .B(_1786_),
     .A_N(\pll_dig.div.ncnt[0] ));
@@ -6371,7 +6343,7 @@ module pll_macro_top (CK,
     .B(_1790_),
     .Y(_1791_));
  sg13g2_and2_1 _2852_ (.A(\pll_dig.div.ncnt[1] ),
-    .B(net437),
+    .B(net435),
     .X(_0626_));
  sg13g2_a21oi_2 _2853_ (.B1(_1791_),
     .Y(_1792_),
@@ -6415,33 +6387,33 @@ module pll_macro_top (CK,
     .A(\pll_dig.div.ncnt[2] ),
     .B(_0626_));
  sg13g2_nor4_2 _2864_ (.A(\pll_dig.div.ncnt[7] ),
-    .B(net409),
+    .B(net407),
     .C(_1801_),
     .Y(_0112_),
     .D(_1800_));
- sg13g2_nor2_2 _2865_ (.A(net401),
-    .B(net441),
+ sg13g2_nor2_2 _2865_ (.A(net399),
+    .B(net439),
     .Y(_0090_));
- sg13g2_nor2_2 _2866_ (.A(net435),
-    .B(net441),
+ sg13g2_nor2_2 _2866_ (.A(net433),
+    .B(net439),
     .Y(_0091_));
- sg13g2_nor2_2 _2867_ (.A(net436),
-    .B(net441),
+ sg13g2_nor2_2 _2867_ (.A(net434),
+    .B(net439),
     .Y(_0092_));
- sg13g2_nor2_2 _2868_ (.A(net390),
-    .B(net441),
+ sg13g2_nor2_2 _2868_ (.A(net388),
+    .B(net439),
     .Y(_0093_));
- sg13g2_nor2_2 _2869_ (.A(net392),
+ sg13g2_nor2_2 _2869_ (.A(net390),
     .B(net83),
     .Y(_0094_));
- sg13g2_nor2_2 _2870_ (.A(net397),
-    .B(net441),
+ sg13g2_nor2_2 _2870_ (.A(net395),
+    .B(net439),
     .Y(_0095_));
- sg13g2_nor2_1 _2871_ (.A(net387),
-    .B(net439),
+ sg13g2_nor2_1 _2871_ (.A(net385),
+    .B(net437),
     .Y(_0096_));
- sg13g2_nor2_1 _2872_ (.A(net389),
-    .B(net439),
+ sg13g2_nor2_1 _2872_ (.A(net387),
+    .B(net437),
     .Y(_0097_));
  sg13g2_or2_1 _2873_ (.X(_1802_),
     .B(_1795_),
@@ -6449,22 +6421,22 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _2874_ (.A(_0480_),
     .B(_0627_),
     .Y(_0628_));
- sg13g2_nor2_1 _2875_ (.A(net474),
+ sg13g2_nor2_1 _2875_ (.A(net472),
     .B(_1784_),
     .Y(_1803_));
  sg13g2_a21oi_1 _2876_ (.A1(_0526_),
     .A2(_1786_),
     .Y(_1804_),
     .B1(_1803_));
- sg13g2_a221oi_1 _2877_ (.B2(net474),
+ sg13g2_a221oi_1 _2877_ (.B2(net472),
     .C1(_1804_),
     .B1(_1784_),
-    .A1(net476),
+    .A1(net474),
     .Y(_1805_),
     .A2(_1783_));
  sg13g2_or2_1 _2878_ (.X(_1806_),
     .B(_1783_),
-    .A(net476));
+    .A(net474));
  sg13g2_o21ai_1 _2879_ (.B1(_1806_),
     .Y(_1807_),
     .A1(\pll_dig.div.pcnt[3] ),
@@ -6504,7 +6476,7 @@ module pll_macro_top (CK,
     .A1(_1810_),
     .A2(_1812_));
  sg13g2_nor3_1 _2889_ (.A(\pll_dig.div.pcnt[7] ),
-    .B(net409),
+    .B(net407),
     .C(_1814_),
     .Y(_0113_));
  sg13g2_nor3_1 _2890_ (.A(_0169_),
@@ -6521,7 +6493,7 @@ module pll_macro_top (CK,
  sg13g2_a21oi_1 _2893_ (.A1(net160),
     .A2(_1785_),
     .Y(_1816_),
-    .B1(net413));
+    .B1(net411));
  sg13g2_nor2_1 _2894_ (.A(_1815_),
     .B(_1816_),
     .Y(_0099_));
@@ -6586,8 +6558,8 @@ module pll_macro_top (CK,
     .S(net151),
     .X(\pll_dig.div.low_count_pend[6] ));
  sg13g2_nand2_2 _2911_ (.Y(_1820_),
-    .A(net478),
-    .B(net479));
+    .A(net476),
+    .B(net477));
  sg13g2_nand3_1 _2912_ (.B(\pll_dig.div.pcnt[2] ),
     .C(\pll_dig.div.pcnt[0] ),
     .A(\pll_dig.div.pcnt[1] ),
@@ -6600,16 +6572,16 @@ module pll_macro_top (CK,
     .B(\pll_dig.div.pcnt[4] ));
  sg13g2_nand2_1 _2915_ (.Y(_1824_),
     .A(net156),
-    .B(net470));
+    .B(net468));
  sg13g2_xor2_1 _2916_ (.B(_1820_),
-    .A(net476),
+    .A(net474),
     .X(_1825_));
- sg13g2_nor2_1 _2917_ (.A(net407),
-    .B(net474),
+ sg13g2_nor2_1 _2917_ (.A(net405),
+    .B(net472),
     .Y(_1826_));
  sg13g2_o21ai_1 _2918_ (.B1(_1826_),
     .Y(_1827_),
-    .A1(net404),
+    .A1(net402),
     .A2(_0526_));
  sg13g2_xnor2_1 _2919_ (.Y(_0632_),
     .A(\pll_dig.div.ncnt[4] ),
@@ -6617,14 +6589,14 @@ module pll_macro_top (CK,
  sg13g2_a21oi_1 _2920_ (.A1(_1820_),
     .A2(_1827_),
     .Y(_1828_),
-    .B1(net410));
+    .B1(net408));
  sg13g2_o21ai_1 _2921_ (.B1(_1828_),
     .Y(_1829_),
     .A1(net159),
     .A2(_1825_));
  sg13g2_xnor2_1 _2922_ (.Y(_1830_),
     .A(_0620_),
-    .B(net469));
+    .B(net467));
  sg13g2_a22oi_1 _2923_ (.Y(_1831_),
     .B1(net158),
     .B2(_1830_),
@@ -6640,7 +6612,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _2926_ (.B1(_1833_),
     .Y(_1834_),
     .A1(net158),
-    .A2(net471));
+    .A2(net469));
  sg13g2_nand3_1 _2927_ (.B(\pll_dig.div.pcnt[4] ),
     .C(_1822_),
     .A(\pll_dig.div.pcnt[5] ),
@@ -6685,7 +6657,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _2938_ (.A(\pll_dig.div.div[7] ),
     .B(_1844_),
     .Y(_1845_));
- sg13g2_nor4_2 _2939_ (.A(net409),
+ sg13g2_nor4_2 _2939_ (.A(net407),
     .B(_1845_),
     .C(_1843_),
     .Y(_1846_),
@@ -6694,32 +6666,32 @@ module pll_macro_top (CK,
     .Y(_1847_),
     .A2(_1844_),
     .A1(_0659_));
- sg13g2_nor2b_2 _2941_ (.A(net411),
+ sg13g2_nor2b_2 _2941_ (.A(net409),
     .B_N(_0168_),
     .Y(_0634_));
- sg13g2_nor2_2 _2942_ (.A(net472),
-    .B(net477),
+ sg13g2_nor2_2 _2942_ (.A(net470),
+    .B(net475),
     .Y(_0114_));
  sg13g2_xnor2_1 _2943_ (.Y(_1848_),
-    .A(net472),
-    .B(net475));
+    .A(net470),
+    .B(net473));
  sg13g2_nor2_2 _2944_ (.A(_1848_),
-    .B(net477),
+    .B(net475),
     .Y(_0115_));
  sg13g2_nor2_2 _2945_ (.A(_1825_),
-    .B(net477),
+    .B(net475),
     .Y(_0116_));
- sg13g2_nor2_2 _2946_ (.A(net477),
-    .B(net471),
+ sg13g2_nor2_2 _2946_ (.A(net475),
+    .B(net469),
     .Y(_0117_));
- sg13g2_nor2_2 _2947_ (.A(net470),
-    .B(net477),
+ sg13g2_nor2_2 _2947_ (.A(net468),
+    .B(net475),
     .Y(_0118_));
  sg13g2_nor2_2 _2948_ (.A(_1837_),
-    .B(net477),
+    .B(net475),
     .Y(_0119_));
  sg13g2_nor2_2 _2949_ (.A(_1841_),
-    .B(net477),
+    .B(net475),
     .Y(_0120_));
  sg13g2_nor2b_1 _2950_ (.A(_1844_),
     .B_N(_1846_),
@@ -6729,7 +6701,7 @@ module pll_macro_top (CK,
     .S(net152),
     .X(\pll_dig.div.high_count_pend[1] ));
  sg13g2_nand2b_1 _2952_ (.Y(_0635_),
-    .B(net437),
+    .B(net435),
     .A_N(\pll_dig.div.div[0] ));
  sg13g2_xor2_1 _2953_ (.B(_0621_),
     .A(\pll_dig.div.div_pend[2] ),
@@ -6749,40 +6721,40 @@ module pll_macro_top (CK,
     .A1(\pll_dig.div.hi_pend[3] ),
     .S(net152),
     .X(\pll_dig.div.high_count_pend[3] ));
- sg13g2_a21oi_1 _2958_ (.A1(net587),
+ sg13g2_a21oi_1 _2958_ (.A1(net583),
     .A2(_1599_),
     .Y(_1850_),
     .B1(_1687_));
- sg13g2_and2_1 _2959_ (.A(net660),
+ sg13g2_and2_1 _2959_ (.A(net656),
     .B(_1850_),
     .X(_1851_));
  sg13g2_and3_1 _2960_ (.X(_1852_),
-    .A(net654),
-    .B(net603),
+    .A(net650),
+    .B(net599),
     .C(_1851_));
- sg13g2_nand4_1 _2961_ (.B(net654),
-    .C(net660),
-    .A(net633),
+ sg13g2_nand4_1 _2961_ (.B(net650),
+    .C(net656),
+    .A(net629),
     .Y(_1853_),
-    .D(net603));
- sg13g2_nand3_1 _2962_ (.B(net633),
+    .D(net599));
+ sg13g2_nand3_1 _2962_ (.B(net629),
     .C(_1852_),
-    .A(net648),
+    .A(net644),
     .Y(_1854_));
- sg13g2_nor2_2 _2963_ (.A(net438),
+ sg13g2_nor2_2 _2963_ (.A(net436),
     .B(_0168_),
     .Y(_0636_));
  sg13g2_nor2_1 _2964_ (.A(_0581_),
     .B(_1854_),
     .Y(_1855_));
  sg13g2_nand2_1 _2965_ (.Y(_1856_),
-    .A(net608),
+    .A(net604),
     .B(_1855_));
- sg13g2_nor3_1 _2966_ (.A(net611),
-    .B(net614),
+ sg13g2_nor3_1 _2966_ (.A(net607),
+    .B(net610),
     .C(_1663_),
     .Y(_1857_));
- sg13g2_nor2_1 _2967_ (.A(net633),
+ sg13g2_nor2_1 _2967_ (.A(net629),
     .B(_1600_),
     .Y(_1858_));
  sg13g2_nand2b_1 _2968_ (.Y(_1859_),
@@ -6791,7 +6763,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _2969_ (.A(_1857_),
     .B(_1859_),
     .Y(_1860_));
- sg13g2_o21ai_1 _2970_ (.B1(net609),
+ sg13g2_o21ai_1 _2970_ (.B1(net605),
     .Y(_1861_),
     .A1(_1857_),
     .A2(_1859_));
@@ -6802,7 +6774,7 @@ module pll_macro_top (CK,
  sg13g2_a22oi_1 _2972_ (.Y(_0324_),
     .B1(_1861_),
     .B2(_1862_),
-    .A2(net609),
+    .A2(net605),
     .A1(_0507_));
  sg13g2_nor2_1 _2973_ (.A(\SS_BBPD[1] ),
     .B(net115),
@@ -6815,10 +6787,10 @@ module pll_macro_top (CK,
     .B(net119),
     .Y(_1864_));
  sg13g2_nand2b_1 _2976_ (.Y(_1865_),
-    .B(net658),
+    .B(net654),
     .A_N(net19));
  sg13g2_xnor2_1 _2977_ (.Y(_1866_),
-    .A(net691),
+    .A(net687),
     .B(net19));
  sg13g2_inv_1 _2978_ (.Y(_1867_),
     .A(_1866_));
@@ -6835,7 +6807,7 @@ module pll_macro_top (CK,
     .B_N(net16),
     .Y(_1871_));
  sg13g2_nand2b_1 _2983_ (.Y(_1872_),
-    .B(net693),
+    .B(net689),
     .A_N(net16));
  sg13g2_nor2_1 _2984_ (.A(_0573_),
     .B(net15),
@@ -6868,7 +6840,7 @@ module pll_macro_top (CK,
     .A(\pll_dig.dlf.INT[6] ),
     .B(net26));
  sg13g2_nand2_1 _2994_ (.Y(_1882_),
-    .A(net670),
+    .A(net666),
     .B(net25));
  sg13g2_xnor2_1 _2995_ (.Y(_1883_),
     .A(\pll_dig.dlf.INT[5] ),
@@ -6883,7 +6855,7 @@ module pll_macro_top (CK,
     .B(\pll_dig.dlf.INT[4] ),
     .A_N(net24));
  sg13g2_nand2_1 _2999_ (.Y(_1885_),
-    .A(net673),
+    .A(net669),
     .B(net24));
  sg13g2_xor2_1 _3000_ (.B(net24),
     .A(\pll_dig.dlf.INT[4] ),
@@ -6891,7 +6863,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _3001_ (.A(_0576_),
     .B(net23),
     .Y(_1887_));
- sg13g2_and2_1 _3002_ (.A(net676),
+ sg13g2_and2_1 _3002_ (.A(net672),
     .B(net23),
     .X(_1888_));
  sg13g2_xnor2_1 _3003_ (.Y(_1889_),
@@ -6901,13 +6873,13 @@ module pll_macro_top (CK,
     .B(net22),
     .Y(_1890_));
  sg13g2_nand2_1 _3005_ (.Y(_1891_),
-    .A(net682),
+    .A(net678),
     .B(net22));
  sg13g2_xor2_1 _3006_ (.B(net22),
-    .A(net687),
+    .A(net683),
     .X(_1892_));
  sg13g2_nand2b_1 _3007_ (.Y(_1893_),
-    .B(net684),
+    .B(net680),
     .A_N(net21));
  sg13g2_xnor2_1 _3008_ (.Y(_0640_),
     .A(_0480_),
@@ -6917,7 +6889,7 @@ module pll_macro_top (CK,
     .B(net21));
  sg13g2_nand2b_1 _3010_ (.Y(_1895_),
     .B(net14),
-    .A_N(net686));
+    .A_N(net682));
  sg13g2_nand2_1 _3011_ (.Y(_1896_),
     .A(_1894_),
     .B(_1895_));
@@ -7036,11 +7008,11 @@ module pll_macro_top (CK,
  sg13g2_xnor2_1 _3044_ (.Y(_1926_),
     .A(\pll_dig.dlf.INT[7] ),
     .B(net27));
- sg13g2_and2_1 _3045_ (.A(net684),
+ sg13g2_and2_1 _3045_ (.A(net680),
     .B(net21),
     .X(_1927_));
  sg13g2_nand2_1 _3046_ (.Y(_1928_),
-    .A(net686),
+    .A(net682),
     .B(net14));
  sg13g2_nor2_1 _3047_ (.A(_1894_),
     .B(_1928_),
@@ -7069,14 +7041,14 @@ module pll_macro_top (CK,
     .A2(_1933_),
     .Y(_1934_),
     .B1(_1881_));
- sg13g2_a21oi_1 _3054_ (.A1(net667),
+ sg13g2_a21oi_1 _3054_ (.A1(net663),
     .A2(net26),
     .Y(_1935_),
     .B1(_1934_));
  sg13g2_nor2_1 _3055_ (.A(_1926_),
     .B(_1935_),
     .Y(_1936_));
- sg13g2_a21oi_1 _3056_ (.A1(net678),
+ sg13g2_a21oi_1 _3056_ (.A1(net676),
     .A2(net27),
     .Y(_1937_),
     .B1(_1936_));
@@ -7097,7 +7069,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _3061_ (.A(_1874_),
     .B(_1941_),
     .Y(_1942_));
- sg13g2_a21oi_1 _3062_ (.A1(net661),
+ sg13g2_a21oi_1 _3062_ (.A1(net657),
     .A2(net15),
     .Y(_1943_),
     .B1(_1942_));
@@ -7108,7 +7080,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _3064_ (.A(_1923_),
     .B(_1943_),
     .Y(_1944_));
- sg13g2_a21oi_1 _3065_ (.A1(net680),
+ sg13g2_a21oi_1 _3065_ (.A1(net674),
     .A2(net16),
     .Y(_1945_),
     .B1(_1944_));
@@ -7127,7 +7099,7 @@ module pll_macro_top (CK,
     .A2(_1948_),
     .Y(_1949_),
     .B1(_1866_));
- sg13g2_a21oi_1 _3070_ (.A1(net658),
+ sg13g2_a21oi_1 _3070_ (.A1(net654),
     .A2(net19),
     .Y(_1950_),
     .B1(_1949_));
@@ -7215,8 +7187,8 @@ module pll_macro_top (CK,
     .A2(net117),
     .A1(_0575_));
  sg13g2_or2_1 _3093_ (.X(_0200_),
-    .B(net587),
-    .A(net633));
+    .B(net583),
+    .A(net629));
  sg13g2_nand3_1 _3094_ (.B(_1893_),
     .C(_1896_),
     .A(_1892_),
@@ -7267,7 +7239,7 @@ module pll_macro_top (CK,
     .C(_1977_),
     .Y(_1978_));
  sg13g2_inv_1 _3107_ (.Y(_0497_),
-    .A(net622));
+    .A(net618));
  sg13g2_xor2_1 _3108_ (.B(_0629_),
     .A(\pll_dig.div.ncnt[6] ),
     .X(_0649_));
@@ -7431,7 +7403,7 @@ module pll_macro_top (CK,
     .B(net157),
     .C(net160),
     .Y(_0653_),
-    .D(net413));
+    .D(net411));
  sg13g2_a22oi_1 _3153_ (.Y(_0357_),
     .B1(net64),
     .B2(_2011_),
@@ -7471,7 +7443,7 @@ module pll_macro_top (CK,
     .A2(_2017_));
  sg13g2_nand3_1 _3163_ (.B(_0653_),
     .C(_0652_),
-    .A(net406),
+    .A(net404),
     .Y(_0654_));
  sg13g2_a21oi_1 _3164_ (.A1(\SS_BBPD[1] ),
     .A2(_2018_),
@@ -7510,7 +7482,7 @@ module pll_macro_top (CK,
     .A(_1889_),
     .Y(_2027_));
  sg13g2_nand2_2 _3174_ (.Y(_0655_),
-    .A(net405),
+    .A(net403),
     .B(_0654_));
  sg13g2_nor2_1 _3175_ (.A(_0496_),
     .B(_1931_),
@@ -7527,7 +7499,7 @@ module pll_macro_top (CK,
     .A2(net117),
     .Y(_0363_),
     .B1(_2030_));
- sg13g2_and2_1 _3179_ (.A(net403),
+ sg13g2_and2_1 _3179_ (.A(net401),
     .B(_1786_),
     .X(_0219_));
  sg13g2_xnor2_1 _3180_ (.Y(_2031_),
@@ -7553,25 +7525,25 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _3186_ (.A(_2032_),
     .B(_2034_),
     .Y(_0225_));
- sg13g2_and2_1 _3187_ (.A(net406),
-    .B(net403),
+ sg13g2_and2_1 _3187_ (.A(net404),
+    .B(net401),
     .X(_0231_));
  sg13g2_mux2_1 _3188_ (.A0(_0162_),
     .A1(_0164_),
     .S(net152),
     .X(_0232_));
  sg13g2_nand2_1 _3189_ (.Y(_2035_),
-    .A(net589),
+    .A(net585),
     .B(_1600_));
  sg13g2_xnor2_1 _3190_ (.Y(_0374_),
     .A(\pll_dig.clr_toggle ),
-    .B(net590));
- sg13g2_nor2b_1 _3191_ (.A(net618),
+    .B(net586));
+ sg13g2_nor2b_1 _3191_ (.A(net614),
     .B_N(_1610_),
     .Y(_2036_));
  sg13g2_nand2b_1 _3192_ (.Y(_2037_),
     .B(_1610_),
-    .A_N(net618));
+    .A_N(net614));
  sg13g2_nand2_1 _3193_ (.Y(_2038_),
     .A(_1607_),
     .B(_1610_));
@@ -7596,19 +7568,19 @@ module pll_macro_top (CK,
  sg13g2_nand2b_1 _3199_ (.Y(_2042_),
     .B(_1600_),
     .A_N(_0050_));
- sg13g2_nand3_1 _3200_ (.B(net619),
-    .C(net646),
-    .A(net628),
+ sg13g2_nand3_1 _3200_ (.B(net615),
+    .C(net642),
+    .A(net624),
     .Y(_2043_));
  sg13g2_nor2_1 _3201_ (.A(_0499_),
     .B(_2043_),
     .Y(_2044_));
- sg13g2_and2_1 _3202_ (.A(net650),
-    .B(net644),
+ sg13g2_and2_1 _3202_ (.A(net646),
+    .B(net640),
     .X(_2045_));
- sg13g2_nand3_1 _3203_ (.B(net591),
+ sg13g2_nand3_1 _3203_ (.B(net587),
     .C(_2045_),
-    .A(net641),
+    .A(net637),
     .Y(_2046_));
  sg13g2_nor2_1 _3204_ (.A(\pll_dig.cntf[2] ),
     .B(\pll_dig.cntf[3] ),
@@ -7618,7 +7590,7 @@ module pll_macro_top (CK,
     .C(\pll_dig.cntf[0] ),
     .D(\pll_dig.cntf[1] ),
     .Y(_2048_));
- sg13g2_and4_1 _3206_ (.A(net650),
+ sg13g2_and4_1 _3206_ (.A(net646),
     .B(_0588_),
     .C(_2047_),
     .D(_2048_),
@@ -7627,12 +7599,12 @@ module pll_macro_top (CK,
     .B(_0657_),
     .C(_0656_),
     .Y(_0658_));
- sg13g2_nor4_1 _3208_ (.A(net636),
+ sg13g2_nor4_1 _3208_ (.A(net632),
     .B(_1606_),
     .C(_1658_),
     .D(_2049_),
     .Y(_2050_));
- sg13g2_a21oi_1 _3209_ (.A1(net642),
+ sg13g2_a21oi_1 _3209_ (.A1(net638),
     .A2(_2050_),
     .Y(_2051_),
     .B1(_2042_));
@@ -7643,7 +7615,7 @@ module pll_macro_top (CK,
     .A(_2041_),
     .B(_2050_));
  sg13g2_nor3_1 _3212_ (.A(\pll_dig.cntf[7] ),
-    .B(net642),
+    .B(net638),
     .C(_2053_),
     .Y(_2054_));
  sg13g2_or2_1 _3213_ (.X(_0402_),
@@ -7662,7 +7634,7 @@ module pll_macro_top (CK,
     .Y(_2057_),
     .D(_2050_));
  sg13g2_nand2b_1 _3217_ (.Y(_0403_),
-    .B(net651),
+    .B(net647),
     .A_N(_2056_));
  sg13g2_inv_1 _3218_ (.Y(_0481_),
     .A(\pll_dig.flock.cnt_filt[6] ));
@@ -7687,7 +7659,7 @@ module pll_macro_top (CK,
     .A(\pll_dig.cntf[1] ),
     .B(_2042_));
  sg13g2_xnor2_1 _3225_ (.Y(_2061_),
-    .A(net628),
+    .A(net624),
     .B(\pll_dig.cntf[1] ));
  sg13g2_o21ai_1 _3226_ (.B1(_2060_),
     .Y(_0405_),
@@ -7696,14 +7668,14 @@ module pll_macro_top (CK,
  sg13g2_nand2b_1 _3227_ (.Y(_2062_),
     .B(\pll_dig.FORCE_N ),
     .A_N(\pll_dig.state[2] ));
- sg13g2_nand3b_1 _3228_ (.B(net614),
+ sg13g2_nand3b_1 _3228_ (.B(net610),
     .C(_2049_),
     .Y(_2063_),
-    .A_N(net611));
+    .A_N(net607));
  sg13g2_o21ai_1 _3229_ (.B1(_2062_),
     .Y(_0407_),
     .A1(_1663_),
-    .A2(net615));
+    .A2(net611));
  sg13g2_or2_1 _3230_ (.X(_0408_),
     .B(_1598_),
     .A(\pll_dig.ENABLE ));
@@ -7718,30 +7690,30 @@ module pll_macro_top (CK,
     .S(net152),
     .X(_0260_));
  sg13g2_nand2_1 _3234_ (.Y(_0449_),
-    .A(net587),
+    .A(net583),
     .B(_0262_));
- sg13g2_a21oi_1 _3235_ (.A1(net603),
+ sg13g2_a21oi_1 _3235_ (.A1(net599),
     .A2(_1851_),
     .Y(_2064_),
     .B1(\pll_dig.cnt[2] ));
  sg13g2_nor3_1 _3236_ (.A(_1852_),
     .B(_1860_),
-    .C(net604),
+    .C(net600),
     .Y(_0450_));
  sg13g2_a21oi_1 _3237_ (.A1(_0581_),
-    .A2(net649),
+    .A2(net645),
     .Y(_2065_),
     .B1(_1860_));
- sg13g2_nor2b_1 _3238_ (.A(net640),
+ sg13g2_nor2b_1 _3238_ (.A(net636),
     .B_N(_2065_),
     .Y(_0451_));
  sg13g2_nor2_1 _3239_ (.A(\pll_dig.cnt[6] ),
-    .B(net640),
+    .B(net636),
     .Y(_2066_));
  sg13g2_nor2_1 _3240_ (.A(_1861_),
     .B(_2066_),
     .Y(_0452_));
- sg13g2_a21oi_1 _3241_ (.A1(net625),
+ sg13g2_a21oi_1 _3241_ (.A1(net621),
     .A2(_2036_),
     .Y(_2067_),
     .B1(\pll_dig.LOCK_LOST ));
@@ -7751,7 +7723,7 @@ module pll_macro_top (CK,
     .A1(_0659_));
  sg13g2_nor3_1 _3243_ (.A(_0599_),
     .B(_2039_),
-    .C(net626),
+    .C(net622),
     .Y(_0455_));
  sg13g2_a21o_1 _3244_ (.A2(\pll_dig.div.use_clk ),
     .A1(_0510_),
@@ -7759,26 +7731,26 @@ module pll_macro_top (CK,
     .X(_0461_));
  sg13g2_nand3_1 _3245_ (.B(_2041_),
     .C(_2045_),
-    .A(net591),
+    .A(net587),
     .Y(_2068_));
  sg13g2_a21oi_1 _3246_ (.A1(_0488_),
-    .A2(net592),
+    .A2(net588),
     .Y(_0464_),
     .B1(_2051_));
  sg13g2_a21oi_1 _3247_ (.A1(_2041_),
-    .A2(net644),
+    .A2(net640),
     .Y(_2069_),
     .B1(\pll_dig.cntf[4] ));
  sg13g2_a21oi_1 _3248_ (.A1(_2041_),
     .A2(_2055_),
     .Y(_0465_),
     .B1(_2069_));
- sg13g2_nand3_1 _3249_ (.B(net619),
+ sg13g2_nand3_1 _3249_ (.B(net615),
     .C(_2041_),
     .A(\pll_dig.cntf[0] ),
     .Y(_2070_));
  sg13g2_a21oi_1 _3250_ (.A1(_0498_),
-    .A2(net620),
+    .A2(net616),
     .Y(_0466_),
     .B1(_2058_));
  sg13g2_nand2_1 _3251_ (.Y(_2071_),
@@ -7793,7 +7765,7 @@ module pll_macro_top (CK,
     .Y(_0043_));
  sg13g2_nand3_1 _3254_ (.B(_1852_),
     .C(_1857_),
-    .A(net633),
+    .A(net629),
     .Y(_2072_));
  sg13g2_nor2b_1 _3255_ (.A(\pll_dig.cnt[4] ),
     .B_N(_2072_),
@@ -7820,15 +7792,15 @@ module pll_macro_top (CK,
  sg13g2_and2_1 _3261_ (.A(_0200_),
     .B(_2076_),
     .X(_2077_));
- sg13g2_a21oi_1 _3262_ (.A1(net594),
-    .A2(net587),
+ sg13g2_a21oi_1 _3262_ (.A1(net590),
+    .A2(net583),
     .Y(_2078_),
     .B1(_1598_));
  sg13g2_a22oi_1 _3263_ (.Y(_0470_),
     .B1(_2078_),
     .B2(_0497_),
     .A2(_2077_),
-    .A1(net594));
+    .A1(net590));
  sg13g2_nor2_2 _3264_ (.A(_0647_),
     .B(_0660_),
     .Y(_0042_));
@@ -7836,12 +7808,12 @@ module pll_macro_top (CK,
     .B(\pll_dig.FORCE_P ),
     .A_N(\pll_dig.state[2] ));
  sg13g2_nand2_1 _3266_ (.Y(_2080_),
-    .A(net611),
+    .A(net607),
     .B(_2049_));
  sg13g2_o21ai_1 _3267_ (.B1(_2079_),
     .Y(_0472_),
     .A1(_1663_),
-    .A2(net612));
+    .A2(net608));
  sg13g2_xnor2_1 _3268_ (.Y(_2081_),
     .A(\pll_dig.cnt[1] ),
     .B(_1851_));
@@ -7850,7 +7822,7 @@ module pll_macro_top (CK,
     .Y(_0473_));
  sg13g2_or2_1 _3270_ (.X(_0474_),
     .B(net57),
-    .A(net588));
+    .A(net584));
  sg13g2_nand2_1 _3271_ (.Y(_2082_),
     .A(_1600_),
     .B(_1663_));
@@ -7862,7 +7834,7 @@ module pll_macro_top (CK,
     .Y(_0475_),
     .B1(_2083_));
  sg13g2_nor2_1 _3274_ (.A(\pll_dig.cnt[3] ),
-    .B(net655),
+    .B(net651),
     .Y(_2084_));
  sg13g2_nor2_2 _3275_ (.A(_0632_),
     .B(_0660_),
@@ -7872,15 +7844,15 @@ module pll_macro_top (CK,
     .Y(_0476_));
  sg13g2_nor3_2 _3277_ (.A(\pll_dig.div.div_pend[0] ),
     .B(_1642_),
-    .C(net395),
+    .C(net393),
     .Y(_2085_));
- sg13g2_nor2b_1 _3278_ (.A(net405),
-    .B_N(net403),
+ sg13g2_nor2b_1 _3278_ (.A(net403),
+    .B_N(net401),
     .Y(_2086_));
  sg13g2_a21oi_2 _3279_ (.B1(_2085_),
     .Y(_0284_),
     .A2(_2086_),
-    .A1(net395));
+    .A1(net393));
  sg13g2_inv_1 _3280__336 (.Y(net335),
     .A(clknet_4_13_0_INJ_EDGE));
  sg13g2_inv_1 _3281__339 (.Y(net338),
@@ -7931,8 +7903,8 @@ module pll_macro_top (CK,
     .A(clknet_5_2__leaf_net59_regs));
  sg13g2_inv_1 _3303__289 (.Y(net288),
     .A(clknet_4_2_0_INJ_EDGE));
- sg13g2_nor2_1 _3304_ (.A(net438),
-    .B(net437),
+ sg13g2_nor2_1 _3304_ (.A(net436),
+    .B(net435),
     .Y(_0661_));
  sg13g2_inv_1 _3305__271 (.Y(net270),
     .A(clknet_4_15_0_INJ_EDGE));
@@ -7979,8 +7951,8 @@ module pll_macro_top (CK,
  sg13g2_inv_1 _3325__324 (.Y(net323),
     .A(clknet_4_7_0_INJ_EDGE));
  sg13g2_inv_1 _3326_ (.Y(_0499_),
-    .A(net643));
- sg13g2_nor2_2 _3327_ (.A(net437),
+    .A(net639));
+ sg13g2_nor2_2 _3327_ (.A(net435),
     .B(_0660_),
     .Y(_0037_));
  sg13g2_inv_1 _3328__322 (.Y(net321),
@@ -8095,7 +8067,7 @@ module pll_macro_top (CK,
     .A(clknet_5_2__leaf_net59_regs));
  sg13g2_buf_1 _3380_ (.A(net160),
     .X(_0084_));
- sg13g2_buf_1 _3381_ (.A(net413),
+ sg13g2_buf_1 _3381_ (.A(net411),
     .X(_0085_));
  sg13g2_xnor2_1 _3382_ (.Y(_0130_),
     .A(net11),
@@ -8123,7 +8095,7 @@ module pll_macro_top (CK,
     .B(_0668_),
     .A(_0667_));
  sg13g2_inv_1 _3392_ (.Y(_0500_),
-    .A(net670));
+    .A(net666));
  sg13g2_and2_1 _3393_ (.A(\pll_dig.dsm_impl.dsm.dff_err3[11] ),
     .B(net1),
     .X(_0670_));
@@ -8145,7 +8117,7 @@ module pll_macro_top (CK,
     .B(\pll_dig.dsm_impl.dsm.dff_err1[0] ),
     .A(\pll_dig.dsm_impl.dsm.dff_err2[0] ));
  sg13g2_nand2b_1 _3399_ (.Y(_0675_),
-    .B(net377),
+    .B(net376),
     .A_N(_0673_));
  sg13g2_xnor2_1 _3400_ (.Y(_0676_),
     .A(\pll_dig.dsm_impl.dsm.cin_stg2 ),
@@ -8218,7 +8190,7 @@ module pll_macro_top (CK,
  sg13g2_inv_1 _3422_ (.Y(_0693_),
     .A(_0692_));
  sg13g2_xor2_1 _3423_ (.B(net33),
-    .A(net665),
+    .A(net661),
     .X(_0694_));
  sg13g2_inv_1 _3424_ (.Y(_0695_),
     .A(_0694_));
@@ -8228,37 +8200,37 @@ module pll_macro_top (CK,
     .A(\pll_dig.dlf.INT[11] ),
     .B(net32));
  sg13g2_xnor2_1 _3427_ (.Y(_0697_),
-    .A(net680),
+    .A(net674),
     .B(net32));
  sg13g2_inv_1 _3428_ (.Y(_0698_),
     .A(_0697_));
- sg13g2_and2_1 _3429_ (.A(net661),
+ sg13g2_and2_1 _3429_ (.A(net657),
     .B(net31),
     .X(_0699_));
  sg13g2_xor2_1 _3430_ (.B(net31),
-    .A(net661),
+    .A(net657),
     .X(_0700_));
  sg13g2_xor2_1 _3431_ (.B(net44),
     .A(net122),
     .X(_0701_));
  sg13g2_xor2_1 _3432_ (.B(net42),
-    .A(net667),
+    .A(net663),
     .X(_0702_));
  sg13g2_xor2_1 _3433_ (.B(net40),
-    .A(net673),
+    .A(net669),
     .X(_0703_));
  sg13g2_nand2b_1 _3434_ (.Y(_0704_),
     .B(\pll_dig.dlf.INT[2] ),
     .A_N(net38));
  sg13g2_xnor2_1 _3435_ (.Y(_0705_),
-    .A(net682),
+    .A(net678),
     .B(net38));
  sg13g2_inv_1 _3436_ (.Y(\pll_dig.out_edges_next[0] ),
     .A(\pll_dig.out_edges[0] ));
  sg13g2_nand2_1 _3437_ (.Y(_0706_),
     .A(net37),
     .B(\pll_dig.dlf.INT[1] ));
- sg13g2_xor2_1 _3438_ (.B(net684),
+ sg13g2_xor2_1 _3438_ (.B(net680),
     .A(net37),
     .X(_0707_));
  sg13g2_nand3_1 _3439_ (.B(net30),
@@ -8273,11 +8245,11 @@ module pll_macro_top (CK,
     .A2(net38),
     .Y(_0710_),
     .B1(_0709_));
- sg13g2_nor2b_1 _3442_ (.A(net676),
+ sg13g2_nor2b_1 _3442_ (.A(net672),
     .B_N(net39),
     .Y(_0711_));
  sg13g2_nand2b_1 _3443_ (.Y(_0712_),
-    .B(net676),
+    .B(net672),
     .A_N(net39));
  sg13g2_nor2b_1 _3444_ (.A(_0711_),
     .B_N(_0712_),
@@ -8298,11 +8270,11 @@ module pll_macro_top (CK,
     .A2(net40),
     .Y(_0717_),
     .B1(_0716_));
- sg13g2_nor2b_1 _3450_ (.A(net670),
+ sg13g2_nor2b_1 _3450_ (.A(net666),
     .B_N(net41),
     .Y(_0718_));
  sg13g2_nand2b_1 _3451_ (.Y(_0719_),
-    .B(net670),
+    .B(net666),
     .A_N(net41));
  sg13g2_nor2b_1 _3452_ (.A(_0718_),
     .B_N(_0719_),
@@ -8317,17 +8289,17 @@ module pll_macro_top (CK,
  sg13g2_nor2b_1 _3455_ (.A(_0722_),
     .B_N(_0702_),
     .Y(_0723_));
- sg13g2_a21oi_1 _3456_ (.A1(net667),
+ sg13g2_a21oi_1 _3456_ (.A1(net663),
     .A2(net42),
     .Y(_0724_),
     .B1(_0723_));
- sg13g2_nor2b_1 _3457_ (.A(net678),
+ sg13g2_nor2b_1 _3457_ (.A(net676),
     .B_N(net43),
     .Y(_0725_));
  sg13g2_inv_1 _3458_ (.Y(_0504_),
     .A(\pll_dig.dco_miss_cnt[1] ));
  sg13g2_nand2b_1 _3459_ (.Y(_0726_),
-    .B(net678),
+    .B(net676),
     .A_N(net43));
  sg13g2_nor2b_1 _3460_ (.A(_0725_),
     .B_N(_0726_),
@@ -8335,7 +8307,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _3461_ (.A(_0724_),
     .B(_0727_),
     .Y(_0728_));
- sg13g2_a21oi_1 _3462_ (.A1(net678),
+ sg13g2_a21oi_1 _3462_ (.A1(net676),
     .A2(net43),
     .Y(_0729_),
     .B1(_0728_));
@@ -8375,7 +8347,7 @@ module pll_macro_top (CK,
     .A2(_0738_),
     .Y(_0739_),
     .B1(_0695_));
- sg13g2_a21oi_1 _3474_ (.A1(net665),
+ sg13g2_a21oi_1 _3474_ (.A1(net661),
     .A2(net33),
     .Y(_0740_),
     .B1(_0739_));
@@ -8391,7 +8363,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _3478_ (.A(_0740_),
     .B(_0743_),
     .Y(_0744_));
- sg13g2_a21oi_1 _3479_ (.A1(net690),
+ sg13g2_a21oi_1 _3479_ (.A1(net686),
     .A2(net34),
     .Y(_0745_),
     .B1(_0744_));
@@ -8402,7 +8374,7 @@ module pll_macro_top (CK,
  sg13g2_nor2_1 _3482_ (.A(_0693_),
     .B(_0745_),
     .Y(_0746_));
- sg13g2_a21oi_1 _3483_ (.A1(net658),
+ sg13g2_a21oi_1 _3483_ (.A1(net654),
     .A2(net35),
     .Y(_0747_),
     .B1(_0746_));
@@ -8462,7 +8434,7 @@ module pll_macro_top (CK,
  sg13g2_nor2b_1 _3500_ (.A(_0702_),
     .B_N(_0762_),
     .Y(_0763_));
- sg13g2_a21oi_1 _3501_ (.A1(net667),
+ sg13g2_a21oi_1 _3501_ (.A1(net663),
     .A2(_0605_),
     .Y(_0764_),
     .B1(_0763_));
@@ -8475,7 +8447,7 @@ module pll_macro_top (CK,
  sg13g2_nor2b_1 _3504_ (.A(_0701_),
     .B_N(_0765_),
     .Y(_0766_));
- sg13g2_a21oi_1 _3505_ (.A1(net688),
+ sg13g2_a21oi_1 _3505_ (.A1(net684),
     .A2(_0597_),
     .Y(_0767_),
     .B1(_0766_));
@@ -8497,7 +8469,7 @@ module pll_macro_top (CK,
     .A2(_0771_),
     .Y(_0772_),
     .B1(_0694_));
- sg13g2_a21oi_1 _3511_ (.A1(net692),
+ sg13g2_a21oi_1 _3511_ (.A1(net688),
     .A2(_0608_),
     .Y(_0773_),
     .B1(_0772_));
@@ -8519,7 +8491,7 @@ module pll_macro_top (CK,
     .A(net36));
  sg13g2_o21ai_1 _3517_ (.B1(_0777_),
     .Y(_0778_),
-    .A1(net657),
+    .A1(net653),
     .A2(_0776_));
  sg13g2_nor2b_1 _3518_ (.A(_0752_),
     .B_N(_0778_),
@@ -8535,7 +8507,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _3521_ (.B1(_0752_),
     .Y(_0782_),
     .A1(\SS_BBPD[0] ),
-    .A2(net680));
+    .A2(net674));
  sg13g2_a22oi_1 _3522_ (.Y(\pll_dig.dlf.OUT_C[11] ),
     .B1(_0781_),
     .B2(_0782_),
@@ -8702,10 +8674,10 @@ module pll_macro_top (CK,
     .C(_0818_),
     .Y(_0819_));
  sg13g2_nand2_1 _3572_ (.Y(_0820_),
-    .A(net581),
+    .A(net577),
     .B(\pll_dig.PHASE_LOCK ));
  sg13g2_a21oi_1 _3573_ (.A1(_0819_),
-    .A2(net582),
+    .A2(net578),
     .Y(_0821_),
     .B1(\pll_dig.FORCE_N ));
  sg13g2_nand2_1 _3574_ (.Y(_0822_),
@@ -8728,7 +8700,7 @@ module pll_macro_top (CK,
  sg13g2_a221oi_1 _3578_ (.B2(_0825_),
     .C1(_0819_),
     .B1(_0824_),
-    .A1(net581),
+    .A1(net577),
     .Y(_0826_),
     .A2(\pll_dig.PHASE_LOCK ));
  sg13g2_nor2_1 _3579_ (.A(\pll_dig.FORCE_P ),
@@ -8744,7 +8716,7 @@ module pll_macro_top (CK,
     .X(_0829_));
  sg13g2_nand2_1 _3583_ (.Y(_0830_),
     .A(\pll_dig.MID_MUX_D[14] ),
-    .B(net583));
+    .B(net579));
  sg13g2_nor2_1 _3584_ (.A(\pll_dig.flock.cnt_coarse_wait[0] ),
     .B(\pll_dig.flock.cnt_coarse_wait[1] ),
     .Y(_0831_));
@@ -8939,23 +8911,23 @@ module pll_macro_top (CK,
     .B(_0619_),
     .Y(_0873_));
  sg13g2_xnor2_1 _3641_ (.Y(_0874_),
-    .A(net383),
+    .A(net381),
     .B(_0619_));
  sg13g2_a21o_1 _3642_ (.A2(\pll_dig.div.cnt[1] ),
     .A1(\pll_dig.div.cnt[0] ),
     .B1(\pll_dig.div.cnt[2] ),
     .X(_0875_));
  sg13g2_nand2_2 _3643_ (.Y(_0876_),
-    .A(net385),
+    .A(net383),
     .B(_0875_));
  sg13g2_nor2_1 _3644_ (.A(\pll_dig.div.low_count[2] ),
-    .B(net436),
+    .B(net434),
     .Y(_0877_));
  sg13g2_xnor2_1 _3645_ (.Y(_0878_),
-    .A(net400),
-    .B(net402));
+    .A(net398),
+    .B(net400));
  sg13g2_nor2_1 _3646_ (.A(\pll_dig.div.low_count[1] ),
-    .B(net400),
+    .B(net398),
     .Y(_0879_));
  sg13g2_inv_1 _3647_ (.Y(_0520_),
     .A(net105));
@@ -8988,13 +8960,13 @@ module pll_macro_top (CK,
     .C(\pll_dig.div.cnt[4] ),
     .A(_0873_),
     .Y(_0886_));
- sg13g2_a21o_1 _3655_ (.A2(net386),
+ sg13g2_a21o_1 _3655_ (.A2(net384),
     .A1(\pll_dig.div.cnt[4] ),
     .B1(\pll_dig.div.cnt[5] ),
     .X(_0887_));
  sg13g2_nand2_2 _3656_ (.Y(_0888_),
     .A(_0887_),
-    .B(net394));
+    .B(net392));
  sg13g2_nor2_1 _3657_ (.A(\pll_dig.div.low_count[4] ),
     .B(_0884_),
     .Y(_0889_));
@@ -9010,7 +8982,7 @@ module pll_macro_top (CK,
     .A2(\pll_dig.div.low_count[5] ));
  sg13g2_nand4_1 _3661_ (.B(\pll_dig.div.cnt[5] ),
     .C(\pll_dig.div.cnt[6] ),
-    .A(net386),
+    .A(net384),
     .Y(_0892_),
     .D(\pll_dig.div.cnt[4] ));
  sg13g2_xor2_1 _3662_ (.B(\pll_dig.div.cnt[6] ),
@@ -9049,9 +9021,9 @@ module pll_macro_top (CK,
  sg13g2_nor2_2 _3671_ (.A(_0900_),
     .B(\pll_dig.div.use_clk_p ),
     .Y(_0062_));
- sg13g2_mux2_1 _3672_ (.A0(net406),
+ sg13g2_mux2_1 _3672_ (.A0(net404),
     .A1(_0157_),
-    .S(net384),
+    .S(net382),
     .X(_0460_));
  sg13g2_nor2_1 _3673_ (.A(\pll_dig.flock.counter_frontend.genblk1.genblk1.static_frontend.div_cnt[0] ),
     .B(\pll_dig.flock.counter_frontend.genblk1.genblk1.static_frontend.div_cnt[1] ),
@@ -9060,7 +9032,7 @@ module pll_macro_top (CK,
     .B(\pll_dig.flock.counter_frontend.genblk1.genblk1.static_frontend.div_cnt[1] ),
     .A(\pll_dig.flock.counter_frontend.genblk1.genblk1.static_frontend.div_cnt[0] ));
  sg13g2_xnor2_1 _3675_ (.Y(_0459_),
-    .A(net427),
+    .A(net425),
     .B(net124));
  sg13g2_and3_2 _3676_ (.X(_0903_),
     .A(\pll_dig.flock.cnt[1] ),
@@ -9081,26 +9053,26 @@ module pll_macro_top (CK,
     .A(\pll_dig.dsm_impl.dsm.dff_err3[8] ));
  sg13g2_nand2_1 _3681_ (.Y(_0907_),
     .A(net127),
-    .B(net419));
+    .B(net417));
  sg13g2_nand3_1 _3682_ (.B(net126),
-    .C(net423),
+    .C(net421),
     .A(\pll_dig.flock.cnt[6] ),
     .Y(_0908_));
  sg13g2_xnor2_1 _3683_ (.Y(_0458_),
     .A(\pll_dig.flock.cnt[9] ),
     .B(_0907_));
  sg13g2_xnor2_1 _3684_ (.Y(_0909_),
-    .A(net427),
-    .B(net426));
- sg13g2_a21oi_1 _3685_ (.A1(net427),
-    .A2(net426),
+    .A(net425),
+    .B(net424));
+ sg13g2_a21oi_1 _3685_ (.A1(net425),
+    .A2(net424),
     .Y(_0910_),
-    .B1(net428));
+    .B1(net426));
  sg13g2_nor2_1 _3686_ (.A(net125),
     .B(_0910_),
     .Y(_0911_));
  sg13g2_nor3_1 _3687_ (.A(net125),
-    .B(net420),
+    .B(net418),
     .C(_0910_),
     .Y(_0912_));
  sg13g2_nor2_1 _3688_ (.A(net125),
@@ -9121,7 +9093,7 @@ module pll_macro_top (CK,
     .B(net130),
     .Y(_0915_));
  sg13g2_a21oi_1 _3693_ (.A1(\pll_dig.flock.cnt[9] ),
-    .A2(net419),
+    .A2(net417),
     .Y(_0916_),
     .B1(\pll_dig.flock.cnt[10] ));
  sg13g2_xnor2_1 _3694_ (.Y(_0917_),
@@ -9191,9 +9163,9 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _3713_ (.B1(_0752_),
     .Y(_0932_),
     .A1(\SS_BBPD[0] ),
-    .A2(net682));
+    .A2(net678));
  sg13g2_inv_1 _3714_ (.Y(_0526_),
-    .A(net473));
+    .A(net471));
  sg13g2_a22oi_1 _3715_ (.Y(\pll_dig.dlf.OUT_C[2] ),
     .B1(_0931_),
     .B2(_0932_),
@@ -9245,10 +9217,10 @@ module pll_macro_top (CK,
     .A(\pll_dig.dsm_impl.dsm.dff_err1[1] ),
     .B(\pll_dig.dsm_impl.FCWF[1] ));
  sg13g2_nand2_1 _3732_ (.Y(_0943_),
-    .A(net381),
+    .A(net379),
     .B(\pll_dig.dsm_impl.FCWF[0] ));
  sg13g2_xor2_1 _3733_ (.B(\pll_dig.dsm_impl.FCWF[0] ),
-    .A(net381),
+    .A(net379),
     .X(_0944_));
  sg13g2_nand2_1 _3734_ (.Y(_0945_),
     .A(\pll_dig.dsm_impl.dsm.cin_stg1 ),
@@ -9457,7 +9429,7 @@ module pll_macro_top (CK,
     .X(_1001_));
  sg13g2_a21o_1 _3797_ (.A2(\pll_dig.dsm_impl.dsm.dff_err2[11] ),
     .A1(\pll_dig.dsm_impl.dsm.dff_err1[11] ),
-    .B1(net371),
+    .B1(net370),
     .X(_1002_));
  sg13g2_o21ai_1 _3798_ (.B1(_1002_),
     .Y(_1003_),
@@ -9482,7 +9454,7 @@ module pll_macro_top (CK,
     .A(_1000_),
     .B(_0972_));
  sg13g2_inv_1 _3805_ (.Y(_1009_),
-    .A(net357));
+    .A(net356));
  sg13g2_nand2_1 _3806_ (.Y(_1010_),
     .A(\pll_dig.dsm_impl.dsm.dff_err3[10] ),
     .B(_1009_));
@@ -9499,7 +9471,7 @@ module pll_macro_top (CK,
     .A(_0998_),
     .B(_0977_));
  sg13g2_and2_1 _3811_ (.A(\pll_dig.dsm_impl.dsm.dff_err3[8] ),
-    .B(net354),
+    .B(net353),
     .X(_1015_));
  sg13g2_inv_1 _3812_ (.Y(_1016_),
     .A(_1015_));
@@ -9515,12 +9487,12 @@ module pll_macro_top (CK,
     .B(_0997_));
  sg13g2_nand2_1 _3817_ (.Y(_1019_),
     .A(\pll_dig.dsm_impl.dsm.dff_err3[7] ),
-    .B(net358));
+    .B(net357));
  sg13g2_xnor2_1 _3818_ (.Y(_1020_),
     .A(_0996_),
     .B(_0995_));
  sg13g2_or2_1 _3819_ (.X(_1021_),
-    .B(net356),
+    .B(net355),
     .A(_0615_));
  sg13g2_xnor2_1 _3820_ (.Y(_1022_),
     .A(_0992_),
@@ -9532,7 +9504,7 @@ module pll_macro_top (CK,
     .A(_0991_),
     .B(_0990_));
  sg13g2_or2_1 _3823_ (.X(_1025_),
-    .B(net363),
+    .B(net362),
     .A(_0518_));
  sg13g2_xnor2_1 _3824_ (.Y(_1026_),
     .A(_0987_),
@@ -9546,7 +9518,7 @@ module pll_macro_top (CK,
     .A(_0986_),
     .B(_0985_));
  sg13g2_or2_1 _3828_ (.X(_1029_),
-    .B(net362),
+    .B(net361),
     .A(_0539_));
  sg13g2_o21ai_1 _3829_ (.B1(_0683_),
     .Y(_1030_),
@@ -9627,7 +9599,7 @@ module pll_macro_top (CK,
     .A1(_1048_));
  sg13g2_a21oi_2 _3852_ (.B1(_1050_),
     .Y(_1051_),
-    .A2(net355),
+    .A2(net354),
     .A1(\pll_dig.dsm_impl.dsm.dff_err3[11] ));
  sg13g2_xor2_1 _3853_ (.B(\pll_dig.dsm_impl.dsm.dff_ca3 ),
     .A(_1051_),
@@ -9644,7 +9616,7 @@ module pll_macro_top (CK,
     .C(\pll_dig.dsm_impl.dsm.dff_ca3 ));
  sg13g2_nor3_1 _3857_ (.A(\pll_dig.dsm_impl.dsm.dff_ca3 ),
     .B(_1003_),
-    .C(net367),
+    .C(net366),
     .Y(_1056_));
  sg13g2_inv_1 _3858_ (.Y(_0538_),
     .A(net8));
@@ -9652,12 +9624,12 @@ module pll_macro_top (CK,
     .B(_1055_),
     .A(_1056_));
  sg13g2_nor2b_1 _3860_ (.A(\pll_dig.dsm_impl.dsm.dff_sum_sd23[1] ),
-    .B_N(net380),
+    .B_N(net378),
     .Y(_1058_));
  sg13g2_xor2_1 _3861_ (.B(_1057_),
     .A(\pll_dig.dsm_impl.dsm.dff_sum_sd23[1] ),
     .X(_1059_));
- sg13g2_nor2b_1 _3862_ (.A(net364),
+ sg13g2_nor2b_1 _3862_ (.A(net363),
     .B_N(_1054_),
     .Y(_1060_));
  sg13g2_xnor2_1 _3863_ (.Y(_1061_),
@@ -9673,11 +9645,11 @@ module pll_macro_top (CK,
     .B(_1062_),
     .Y(_1064_));
  sg13g2_nor2_1 _3867_ (.A(_0517_),
-    .B(net369),
+    .B(net368),
     .Y(_1065_));
  sg13g2_xnor2_1 _3868_ (.Y(_1066_),
     .A(\pll_dig.dsm_impl.dsm.dff_sum_sd23[2] ),
-    .B(net369));
+    .B(net368));
  sg13g2_inv_1 _3869_ (.Y(_0539_),
     .A(\pll_dig.dsm_impl.dsm.dff_err3[2] ));
  sg13g2_xnor2_1 _3870_ (.Y(_1067_),
@@ -9696,7 +9668,7 @@ module pll_macro_top (CK,
     .A2(_1066_),
     .Y(_1071_),
     .B1(_1065_));
- sg13g2_a21oi_1 _3875_ (.A1(net379),
+ sg13g2_a21oi_1 _3875_ (.A1(net377),
     .A2(_1071_),
     .Y(_1072_),
     .B1(_1005_));
@@ -9711,15 +9683,15 @@ module pll_macro_top (CK,
     .Y(_1075_),
     .A2(_1070_),
     .A1(_1074_));
- sg13g2_and2_1 _3879_ (.A(net374),
-    .B(net359),
+ sg13g2_and2_1 _3879_ (.A(net372),
+    .B(net358),
     .X(_1076_));
  sg13g2_inv_1 _3880_ (.Y(_0540_),
     .A(\pll_dig.MID_MUX_D[13] ));
  sg13g2_o21ai_1 _3881_ (.B1(_0668_),
     .Y(_1077_),
-    .A1(net375),
-    .A2(net359));
+    .A1(net374),
+    .A2(net358));
  sg13g2_nand2b_1 _3882_ (.Y(_1078_),
     .B(_0667_),
     .A_N(\pll_dig.dsm_impl.dsm.dff_ca2 ));
@@ -9734,7 +9706,7 @@ module pll_macro_top (CK,
     .Y(_1081_),
     .A1(_1076_),
     .A2(_1077_));
- sg13g2_nand2_2 _3886_ (.Y(_1082_),
+ sg13g2_nand2_1 _3886_ (.Y(_1082_),
     .A(\pll_dig.dsm_impl.FCWI[1] ),
     .B(_1081_));
  sg13g2_xnor2_1 _3887_ (.Y(_1083_),
@@ -9856,16 +9828,16 @@ module pll_macro_top (CK,
     .B2(_1110_),
     .A2(_0580_),
     .A1(\pll_dig.flock.FCW_NA[7] ));
- sg13g2_nor2_1 _3920_ (.A(net572),
+ sg13g2_nor2_1 _3920_ (.A(net568),
     .B(_0815_),
     .Y(_1112_));
  sg13g2_and2_1 _3921_ (.A(\pll_dig.flock.cnt_filt[10] ),
     .B(\pll_dig.flock.cnt_filt[11] ),
     .X(_1113_));
- sg13g2_a21oi_1 _3922_ (.A1(net572),
+ sg13g2_a21oi_1 _3922_ (.A1(net568),
     .A2(_1113_),
     .Y(_1114_),
-    .B1(net573));
+    .B1(net569));
  sg13g2_and2_1 _3923_ (.A(\pll_dig.flock.cnt_filt[9] ),
     .B(\pll_dig.flock.cnt_filt[10] ),
     .X(_1115_));
@@ -9933,28 +9905,28 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _3940_ (.B1(_1128_),
     .Y(_1129_),
     .A1(_0580_),
-    .A2(net578));
+    .A2(net574));
  sg13g2_a21oi_1 _3941_ (.A1(\pll_dig.flock.cnt_filt[6] ),
     .A2(_0617_),
     .Y(_1130_),
     .B1(_1129_));
  sg13g2_a221oi_1 _3942_ (.B2(_0580_),
     .C1(_1130_),
-    .B1(net578),
+    .B1(net574),
     .A1(\pll_dig.flock.FCW_PA[8] ),
     .Y(_1131_),
     .A2(_0606_));
  sg13g2_nand2b_1 _3943_ (.Y(_1132_),
     .B(\pll_dig.flock.cnt_filt[8] ),
     .A_N(\pll_dig.flock.FCW_PA[8] ));
- sg13g2_nand3_1 _3944_ (.B(net573),
+ sg13g2_nand3_1 _3944_ (.B(net569),
     .C(_1132_),
     .A(_0814_),
     .Y(_1133_));
  sg13g2_nor4_1 _3945_ (.A(\pll_dig.flock.cnt_filt[9] ),
     .B(_1119_),
-    .C(net579),
-    .D(net574),
+    .C(net575),
+    .D(net570),
     .Y(_1134_));
  sg13g2_inv_1 _3946_ (.Y(_1135_),
     .A(net81));
@@ -10034,7 +10006,7 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.FCW_NA[5] ));
  sg13g2_xnor2_1 _3970_ (.Y(_1153_),
     .A(_1082_),
-    .B(net365));
+    .B(net364));
  sg13g2_a21o_1 _3971_ (.A2(_1153_),
     .A1(_1092_),
     .B1(_1090_),
@@ -10049,7 +10021,7 @@ module pll_macro_top (CK,
  sg13g2_xor2_1 _3974_ (.B(\pll_dig.flock.cnt_filt[11] ),
     .A(\pll_dig.flock.cnt_filt[10] ),
     .X(_1155_));
- sg13g2_a21oi_1 _3975_ (.A1(net535),
+ sg13g2_a21oi_1 _3975_ (.A1(net531),
     .A2(_0815_),
     .Y(_1156_),
     .B1(_1113_));
@@ -10060,32 +10032,32 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.cnt_filt[12] ),
     .X(_1158_));
  sg13g2_nand2_1 _3978_ (.Y(_1159_),
-    .A(net539),
+    .A(net535),
     .B(_1158_));
  sg13g2_xnor2_1 _3979_ (.Y(_1160_),
-    .A(net539),
+    .A(net535),
     .B(_1158_));
  sg13g2_inv_1 _3980_ (.Y(_0549_),
     .A(\pll_dig.flock.FCW_PA[4] ));
- sg13g2_a21oi_1 _3981_ (.A1(net531),
+ sg13g2_a21oi_1 _3981_ (.A1(net527),
     .A2(_1116_),
     .Y(_1161_),
     .B1(_1115_));
  sg13g2_xnor2_1 _3982_ (.Y(_1162_),
-    .A(net535),
+    .A(net531),
     .B(_1155_));
  sg13g2_nor2_1 _3983_ (.A(_1161_),
-    .B(net536),
+    .B(net532),
     .Y(_1163_));
- sg13g2_a21oi_1 _3984_ (.A1(net527),
+ sg13g2_a21oi_1 _3984_ (.A1(net523),
     .A2(_1118_),
     .Y(_1164_),
     .B1(_1117_));
  sg13g2_xnor2_1 _3985_ (.Y(_1165_),
-    .A(net531),
+    .A(net527),
     .B(_1116_));
  sg13g2_nor2_1 _3986_ (.A(_1164_),
-    .B(net532),
+    .B(net528),
     .Y(_1166_));
  sg13g2_nor2_1 _3987_ (.A(_0580_),
     .B(_0606_),
@@ -10093,17 +10065,17 @@ module pll_macro_top (CK,
  sg13g2_xor2_1 _3988_ (.B(\pll_dig.flock.cnt_filt[8] ),
     .A(\pll_dig.flock.cnt_filt[7] ),
     .X(_1168_));
- sg13g2_a21oi_1 _3989_ (.A1(net556),
+ sg13g2_a21oi_1 _3989_ (.A1(net552),
     .A2(_1168_),
     .Y(_1169_),
     .B1(_1167_));
  sg13g2_xnor2_1 _3990_ (.Y(_1170_),
-    .A(net527),
+    .A(net523),
     .B(_1118_));
  sg13g2_inv_1 _3991_ (.Y(_0550_),
     .A(\pll_dig.MID_MUX_D[11] ));
- sg13g2_nor2_1 _3992_ (.A(net557),
-    .B(net528),
+ sg13g2_nor2_1 _3992_ (.A(net553),
+    .B(net524),
     .Y(_1171_));
  sg13g2_nor2_1 _3993_ (.A(_0481_),
     .B(_0580_),
@@ -10111,14 +10083,14 @@ module pll_macro_top (CK,
  sg13g2_xor2_1 _3994_ (.B(\pll_dig.flock.cnt_filt[7] ),
     .A(\pll_dig.flock.cnt_filt[6] ),
     .X(_1173_));
- sg13g2_a21oi_1 _3995_ (.A1(net514),
+ sg13g2_a21oi_1 _3995_ (.A1(net510),
     .A2(_1173_),
     .Y(_1174_),
     .B1(_1172_));
  sg13g2_xnor2_1 _3996_ (.Y(_1175_),
-    .A(net556),
+    .A(net552),
     .B(_1168_));
- sg13g2_nor2_1 _3997_ (.A(net515),
+ sg13g2_nor2_1 _3997_ (.A(net511),
     .B(_1175_),
     .Y(_1176_));
  sg13g2_nor2_1 _3998_ (.A(_0481_),
@@ -10127,16 +10099,16 @@ module pll_macro_top (CK,
  sg13g2_xor2_1 _3999_ (.B(\pll_dig.flock.cnt_filt[5] ),
     .A(\pll_dig.flock.cnt_filt[6] ),
     .X(_1178_));
- sg13g2_a21oi_1 _4000_ (.A1(net518),
+ sg13g2_a21oi_1 _4000_ (.A1(net514),
     .A2(_1178_),
     .Y(_1179_),
     .B1(_1177_));
  sg13g2_xnor2_1 _4001_ (.Y(_1180_),
-    .A(net514),
+    .A(net510),
     .B(_1173_));
  sg13g2_inv_1 _4002_ (.Y(_0551_),
     .A(\pll_dig.MID_MUX_D[10] ));
- sg13g2_nor2_1 _4003_ (.A(net519),
+ sg13g2_nor2_1 _4003_ (.A(net515),
     .B(_1180_),
     .Y(_1181_));
  sg13g2_nor2_1 _4004_ (.A(_0482_),
@@ -10145,14 +10117,14 @@ module pll_macro_top (CK,
  sg13g2_xor2_1 _4005_ (.B(\pll_dig.flock.cnt_filt[5] ),
     .A(\pll_dig.flock.cnt_filt[4] ),
     .X(_1183_));
- sg13g2_a21oi_1 _4006_ (.A1(net547),
+ sg13g2_a21oi_1 _4006_ (.A1(net543),
     .A2(_1183_),
     .Y(_1184_),
     .B1(_1182_));
  sg13g2_xnor2_1 _4007_ (.Y(_1185_),
-    .A(net518),
+    .A(net514),
     .B(_1178_));
- sg13g2_nor2_1 _4008_ (.A(net548),
+ sg13g2_nor2_1 _4008_ (.A(net544),
     .B(_1185_),
     .Y(_1186_));
  sg13g2_nor2_1 _4009_ (.A(_0482_),
@@ -10161,12 +10133,12 @@ module pll_macro_top (CK,
  sg13g2_xor2_1 _4010_ (.B(\pll_dig.flock.cnt_filt[3] ),
     .A(\pll_dig.flock.cnt_filt[4] ),
     .X(_1188_));
- sg13g2_a21oi_1 _4011_ (.A1(net563),
+ sg13g2_a21oi_1 _4011_ (.A1(net559),
     .A2(_1188_),
     .Y(_1189_),
     .B1(_1187_));
  sg13g2_xnor2_1 _4012_ (.Y(_1190_),
-    .A(net547),
+    .A(net543),
     .B(_1183_));
  sg13g2_inv_1 _4013_ (.Y(_0552_),
     .A(\pll_dig.COARSE_MUX_D[8] ));
@@ -10179,18 +10151,18 @@ module pll_macro_top (CK,
  sg13g2_xor2_1 _4016_ (.B(\pll_dig.flock.cnt_filt[2] ),
     .A(\pll_dig.flock.cnt_filt[3] ),
     .X(_1193_));
- sg13g2_a21oi_1 _4017_ (.A1(net567),
+ sg13g2_a21oi_1 _4017_ (.A1(net563),
     .A2(_1193_),
     .Y(_1194_),
     .B1(_1192_));
  sg13g2_xnor2_1 _4018_ (.Y(_1195_),
-    .A(net563),
+    .A(net559),
     .B(_1188_));
- sg13g2_nor2_1 _4019_ (.A(net568),
-    .B(net564),
+ sg13g2_nor2_1 _4019_ (.A(net564),
+    .B(net560),
     .Y(_1196_));
- sg13g2_xor2_1 _4020_ (.B(net564),
-    .A(net568),
+ sg13g2_xor2_1 _4020_ (.B(net560),
+    .A(net564),
     .X(_1197_));
  sg13g2_nand2_1 _4021_ (.Y(_1198_),
     .A(\pll_dig.flock.cnt_filt[2] ),
@@ -10199,19 +10171,19 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.cnt_filt[2] ),
     .X(_1199_));
  sg13g2_nand2_1 _4023_ (.Y(_1200_),
-    .A(net551),
+    .A(net547),
     .B(_1199_));
  sg13g2_inv_1 _4024_ (.Y(_0553_),
     .A(\pll_dig.COARSE_MUX_D[7] ));
  sg13g2_xnor2_1 _4025_ (.Y(_1201_),
-    .A(net567),
+    .A(net563),
     .B(_1193_));
- sg13g2_nand3_1 _4026_ (.B(net552),
+ sg13g2_nand3_1 _4026_ (.B(net548),
     .C(_1201_),
     .A(_1198_),
     .Y(_1202_));
  sg13g2_a21oi_1 _4027_ (.A1(_1198_),
-    .A2(net552),
+    .A2(net548),
     .Y(_1203_),
     .B1(_1201_));
  sg13g2_inv_1 _4028_ (.Y(_1204_),
@@ -10220,12 +10192,12 @@ module pll_macro_top (CK,
     .B(\pll_dig.flock.cnt_filt[1] ),
     .Y(_1205_));
  sg13g2_xnor2_1 _4030_ (.Y(_1206_),
-    .A(net551),
+    .A(net547),
     .B(_1199_));
  sg13g2_nor2_1 _4031_ (.A(_0486_),
     .B(_0487_),
     .Y(_1207_));
- sg13g2_o21ai_1 _4032_ (.B1(net502),
+ sg13g2_o21ai_1 _4032_ (.B1(net500),
     .Y(_1208_),
     .A1(_1205_),
     .A2(_1207_));
@@ -10234,7 +10206,7 @@ module pll_macro_top (CK,
     .X(_1209_));
  sg13g2_nand2b_1 _4034_ (.Y(_1210_),
     .B(_1209_),
-    .A_N(net503));
+    .A_N(net501));
  sg13g2_inv_1 _4035_ (.Y(_0487_),
     .A(\pll_dig.flock.cnt_filt[1] ));
  sg13g2_inv_1 _4036_ (.Y(_0554_),
@@ -10244,91 +10216,91 @@ module pll_macro_top (CK,
     .A1(_1205_),
     .A2(_1206_));
  sg13g2_a21o_1 _4038_ (.A2(_1211_),
-    .A1(net553),
+    .A1(net549),
     .B1(_1203_),
     .X(_1212_));
- sg13g2_a21oi_1 _4039_ (.A1(net565),
+ sg13g2_a21oi_1 _4039_ (.A1(net561),
     .A2(_1212_),
     .Y(_1213_),
-    .B1(net569));
+    .B1(net565));
  sg13g2_inv_1 _4040_ (.Y(_1214_),
     .A(_1213_));
  sg13g2_xor2_1 _4041_ (.B(_1190_),
     .A(_1189_),
     .X(_1215_));
  sg13g2_a21oi_1 _4042_ (.A1(_1214_),
-    .A2(net737),
+    .A2(net729),
     .Y(_1216_),
     .B1(_1191_));
  sg13g2_xor2_1 _4043_ (.B(_1185_),
-    .A(net548),
+    .A(net544),
     .X(_1217_));
  sg13g2_nor2b_1 _4044_ (.A(_1216_),
-    .B_N(net549),
+    .B_N(net545),
     .Y(_1218_));
  sg13g2_nor2_1 _4045_ (.A(_1186_),
     .B(_1218_),
     .Y(_1219_));
  sg13g2_xor2_1 _4046_ (.B(_1180_),
-    .A(net519),
+    .A(net515),
     .X(_1220_));
  sg13g2_inv_1 _4047_ (.Y(_0555_),
     .A(\pll_dig.flock.cnt_cap[7] ));
  sg13g2_nor2b_1 _4048_ (.A(_1219_),
-    .B_N(net520),
+    .B_N(net516),
     .Y(_1221_));
  sg13g2_nor2_1 _4049_ (.A(_1181_),
     .B(_1221_),
     .Y(_1222_));
  sg13g2_xor2_1 _4050_ (.B(_1175_),
-    .A(net515),
+    .A(net511),
     .X(_1223_));
  sg13g2_nor2b_1 _4051_ (.A(_1222_),
-    .B_N(net516),
+    .B_N(net512),
     .Y(_1224_));
  sg13g2_nor2_1 _4052_ (.A(_1176_),
     .B(_1224_),
     .Y(_1225_));
- sg13g2_xor2_1 _4053_ (.B(net528),
+ sg13g2_xor2_1 _4053_ (.B(net524),
     .A(_1169_),
     .X(_1226_));
  sg13g2_nor2b_1 _4054_ (.A(_1225_),
-    .B_N(net529),
+    .B_N(net525),
     .Y(_1227_));
  sg13g2_nor2_1 _4055_ (.A(_1171_),
     .B(_1227_),
     .Y(_1228_));
- sg13g2_xor2_1 _4056_ (.B(net532),
+ sg13g2_xor2_1 _4056_ (.B(net528),
     .A(_1164_),
     .X(_1229_));
- sg13g2_nor2b_1 _4057_ (.A(net558),
-    .B_N(net533),
+ sg13g2_nor2b_1 _4057_ (.A(net554),
+    .B_N(net529),
     .Y(_1230_));
  sg13g2_inv_1 _4058_ (.Y(_0556_),
     .A(\pll_dig.flock.cnt_cap[3] ));
  sg13g2_nor2_1 _4059_ (.A(_1166_),
     .B(_1230_),
     .Y(_1231_));
- sg13g2_xor2_1 _4060_ (.B(net536),
+ sg13g2_xor2_1 _4060_ (.B(net532),
     .A(_1161_),
     .X(_1232_));
- sg13g2_nor2b_1 _4061_ (.A(net559),
-    .B_N(net537),
+ sg13g2_nor2b_1 _4061_ (.A(net555),
+    .B_N(net533),
     .Y(_1233_));
  sg13g2_nor2_1 _4062_ (.A(_1163_),
     .B(_1233_),
     .Y(_1234_));
- sg13g2_xor2_1 _4063_ (.B(net540),
+ sg13g2_xor2_1 _4063_ (.B(net536),
     .A(_1156_),
     .X(_1235_));
- sg13g2_o21ai_1 _4064_ (.B1(net541),
+ sg13g2_o21ai_1 _4064_ (.B1(net537),
     .Y(_1236_),
     .A1(_1163_),
     .A2(_1233_));
- sg13g2_o21ai_1 _4065_ (.B1(net560),
+ sg13g2_o21ai_1 _4065_ (.B1(net556),
     .Y(_1237_),
     .A1(_1156_),
-    .A2(net540));
+    .A2(net536));
  sg13g2_and2_1 _4066_ (.A(\pll_dig.flock.cnt_filt[13] ),
     .B(\pll_dig.flock.cnt_filt[12] ),
     .X(_1238_));
@@ -10336,7 +10308,7 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.cnt_filt[13] ),
     .X(_1239_));
  sg13g2_xnor2_1 _4068_ (.Y(_1240_),
-    .A(net522),
+    .A(net518),
     .B(_1239_));
  sg13g2_inv_1 _4069_ (.Y(_0557_),
     .A(\pll_dig.flock.cnt_cap[4] ));
@@ -10349,11 +10321,11 @@ module pll_macro_top (CK,
     .A(_1157_),
     .Y(_1242_));
  sg13g2_nand2b_1 _4072_ (.Y(_1243_),
-    .B(net741),
+    .B(net733),
     .A_N(_1241_));
  sg13g2_xnor2_1 _4073_ (.Y(_0174_),
-    .A(net561),
-    .B(net742));
+    .A(net557),
+    .B(net734));
  sg13g2_nand2_1 _4074_ (.Y(_1244_),
     .A(\pll_dig.COARSE_MUX_D[0] ),
     .B(_0837_));
@@ -10400,7 +10372,7 @@ module pll_macro_top (CK,
     .X(_1257_));
  sg13g2_o21ai_1 _4089_ (.B1(_1255_),
     .Y(_1258_),
-    .A1(net583),
+    .A1(net579),
     .A2(net85));
  sg13g2_inv_1 _4090_ (.Y(_1259_),
     .A(_1258_));
@@ -10606,10 +10578,10 @@ module pll_macro_top (CK,
     .A2(_1287_));
  sg13g2_nor3_1 _4152_ (.A(\pll_dig.div.p_hi ),
     .B(\pll_dig.div.n_hi ),
-    .C(net408),
+    .C(net406),
     .Y(_1288_));
- sg13g2_a21oi_1 _4153_ (.A1(net405),
-    .A2(net403),
+ sg13g2_a21oi_1 _4153_ (.A1(net403),
+    .A2(net401),
     .Y(_1289_),
     .B1(\pll_dig.div.out_reg ));
  sg13g2_nor3_1 _4154_ (.A(\pll_dig.div.use_clk ),
@@ -10620,7 +10592,7 @@ module pll_macro_top (CK,
     .A1(clknet_1_1__leaf_net59),
     .B1(_1290_),
     .X(net60));
- sg13g2_inv_1 _4156__354 (.Y(net353),
+ sg13g2_inv_1 _4156__353 (.Y(net352),
     .A(clknet_1_0__leaf_net60_regs));
  sg13g2_nor2_1 _4157_ (.A(_0536_),
     .B(_0665_),
@@ -10661,7 +10633,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _4168_ (.B1(_1295_),
     .Y(_0444_),
     .A1(net108),
-    .A2(net362));
+    .A2(net361));
  sg13g2_inv_1 _4169_ (.Y(_0566_),
     .A(\pll_dig.out_edges_g2[0] ));
  sg13g2_mux2_1 _4170_ (.A0(\pll_dig.dsm_impl.dsm.dff_err2[9] ),
@@ -10701,10 +10673,10 @@ module pll_macro_top (CK,
  sg13g2_inv_1 _4180_ (.Y(_0567_),
     .A(\pll_dig.dlf.INT[14] ));
  sg13g2_nand3_1 _4181_ (.B(_1042_),
-    .C(net376),
+    .C(net375),
     .A(_1019_),
     .Y(_1300_));
- sg13g2_a21oi_1 _4182_ (.A1(net368),
+ sg13g2_a21oi_1 _4182_ (.A1(net367),
     .A2(_1300_),
     .Y(_1301_),
     .B1(net112));
@@ -10722,7 +10694,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _4186_ (.B1(_1302_),
     .Y(_0438_),
     .A1(net106),
-    .A2(net357));
+    .A2(net356));
  sg13g2_nor3_1 _4187_ (.A(net7),
     .B(net5),
     .C(net6),
@@ -10770,7 +10742,7 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.cnt_gray_s2[6] ),
     .B(_0144_));
  sg13g2_inv_1 _4202_ (.Y(_0569_),
-    .A(net692));
+    .A(net688));
  sg13g2_inv_1 _4203_ (.Y(_0143_),
     .A(_1309_));
  sg13g2_xnor2_1 _4204_ (.Y(_0142_),
@@ -10833,14 +10805,14 @@ module pll_macro_top (CK,
     .Y(\pll_dig.FINE_MUX_D[24] ));
  sg13g2_nand2_1 _4222_ (.Y(\pll_dig.flock.u_fll_icg.EN ),
     .A(\pll_dig.FREQ_LOCKED ),
-    .B(net585));
+    .B(net581));
  sg13g2_o21ai_1 _4223_ (.B1(net94),
     .Y(\pll_dig.FINE_MUX_D[21] ),
     .A1(net103),
     .A2(_1151_));
  sg13g2_inv_1 _4224_ (.Y(_0571_),
-    .A(net695));
- sg13g2_nor2_1 _4225_ (.A(net505),
+    .A(net691));
+ sg13g2_nor2_1 _4225_ (.A(_0586_),
     .B(_0051_),
     .Y(net58));
  sg13g2_xor2_1 _4226_ (.B(_0663_),
@@ -10864,7 +10836,7 @@ module pll_macro_top (CK,
  sg13g2_o21ai_1 _4231_ (.B1(_1320_),
     .Y(_0436_),
     .A1(net109),
-    .A2(net363));
+    .A2(net362));
  sg13g2_nand2_1 _4232_ (.Y(_1321_),
     .A(\pll_dig.flock.cnt_done[1] ),
     .B(_1101_));
@@ -10872,14 +10844,14 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.cnt_done[1] ),
     .B(\pll_dig.flock.cnt_done[0] ));
  sg13g2_xnor2_1 _4234_ (.Y(_1323_),
-    .A(net575),
+    .A(net571),
     .B(_1322_));
  sg13g2_inv_1 _4235_ (.Y(_0572_),
     .A(\pll_dig.dlf.INT[11] ));
  sg13g2_o21ai_1 _4236_ (.B1(_1321_),
     .Y(_0022_),
     .A1(_1142_),
-    .A2(net576));
+    .A2(net572));
  sg13g2_o21ai_1 _4237_ (.B1(net95),
     .Y(\pll_dig.FINE_MUX_D[22] ),
     .A1(_1270_),
@@ -10897,7 +10869,7 @@ module pll_macro_top (CK,
     .Y(_0435_),
     .B1(_1325_));
  sg13g2_a21oi_1 _4241_ (.A1(_1073_),
-    .A2(net366),
+    .A2(net365),
     .Y(\pll_dig.FILTER_DEC_RAW[4] ),
     .B1(_1091_));
  sg13g2_nand2b_1 _4242_ (.Y(\pll_dig.FINE_MUX_D[3] ),
@@ -10911,7 +10883,7 @@ module pll_macro_top (CK,
     .B(_1275_));
  sg13g2_xnor2_1 _4245_ (.Y(_0183_),
     .A(_1219_),
-    .B(net520));
+    .B(net516));
  sg13g2_inv_1 _4246_ (.Y(_0573_),
     .A(\pll_dig.dlf.INT[10] ));
  sg13g2_xnor2_1 _4247_ (.Y(_1326_),
@@ -10922,7 +10894,7 @@ module pll_macro_top (CK,
     .A1(_0846_),
     .A2(_1326_));
  sg13g2_a21o_1 _4249_ (.A2(net125),
-    .A1(net426),
+    .A1(net424),
     .B1(_0913_),
     .X(_0434_));
  sg13g2_nand3_1 _4250_ (.B(_0906_),
@@ -10930,7 +10902,7 @@ module pll_macro_top (CK,
     .A(\pll_dig.flock.cnt[9] ),
     .Y(_1327_));
  sg13g2_nor2_1 _4251_ (.A(net125),
-    .B(net424),
+    .B(net422),
     .Y(_1328_));
  sg13g2_nor2_1 _4252_ (.A(\pll_dig.flock.cnt[10] ),
     .B(net130),
@@ -11099,7 +11071,7 @@ module pll_macro_top (CK,
     .Q(\pll_dig.ENABLE ),
     .CLK(net337));
  sg13g2_dfrbpq_1 _4294_ (.RESET_B(net179),
-    .D(net595),
+    .D(net591),
     .Q(\pll_dig.START ),
     .CLK(net336));
  sg13g2_dfrbpq_1 _4295_ (.RESET_B(net221),
@@ -11107,11 +11079,11 @@ module pll_macro_top (CK,
     .Q(\pll_dig.locked_q ),
     .CLK(net335));
  sg13g2_dfrbpq_1 _4296_ (.RESET_B(net184),
-    .D(net613),
+    .D(net609),
     .Q(\pll_dig.FORCE_P ),
     .CLK(net334));
  sg13g2_dfrbpq_1 _4297_ (.RESET_B(net180),
-    .D(net616),
+    .D(net612),
     .Q(\pll_dig.FORCE_N ),
     .CLK(net333));
  sg13g2_dfrbpq_1 _4298_ (.RESET_B(net195),
@@ -11123,11 +11095,11 @@ module pll_macro_top (CK,
     .Q(\pll_dig.cnt[1] ),
     .CLK(net331));
  sg13g2_dfrbpq_1 _4300_ (.RESET_B(net179),
-    .D(net605),
+    .D(net601),
     .Q(\pll_dig.cnt[2] ),
     .CLK(net330));
  sg13g2_dfrbpq_1 _4301_ (.RESET_B(net179),
-    .D(net656),
+    .D(net652),
     .Q(\pll_dig.cnt[3] ),
     .CLK(net329));
  sg13g2_dfrbpq_1 _4302_ (.RESET_B(net180),
@@ -11143,7 +11115,7 @@ module pll_macro_top (CK,
     .Q(\pll_dig.cnt[6] ),
     .CLK(net326));
  sg13g2_dfrbpq_1 _4305_ (.RESET_B(net184),
-    .D(net610),
+    .D(net606),
     .Q(\pll_dig.cnt[7] ),
     .CLK(net325));
  sg13g2_dfrbpq_1 _4306_ (.RESET_B(net198),
@@ -11151,27 +11123,27 @@ module pll_macro_top (CK,
     .Q(\pll_dig.cntf[0] ),
     .CLK(net324));
  sg13g2_dfrbpq_1 _4307_ (.RESET_B(net221),
-    .D(net629),
+    .D(net625),
     .Q(\pll_dig.cntf[1] ),
     .CLK(net323));
  sg13g2_dfrbpq_1 _4308_ (.RESET_B(net221),
-    .D(net621),
+    .D(net617),
     .Q(\pll_dig.cntf[2] ),
     .CLK(net322));
  sg13g2_dfrbpq_1 _4309_ (.RESET_B(net222),
-    .D(net647),
+    .D(net643),
     .Q(\pll_dig.cntf[3] ),
     .CLK(net321));
  sg13g2_dfrbpq_1 _4310_ (.RESET_B(net184),
-    .D(net645),
+    .D(net641),
     .Q(\pll_dig.cntf[4] ),
     .CLK(net320));
  sg13g2_dfrbpq_1 _4311_ (.RESET_B(net184),
-    .D(net652),
+    .D(net648),
     .Q(\pll_dig.cntf[5] ),
     .CLK(net319));
  sg13g2_dfrbpq_1 _4312_ (.RESET_B(net184),
-    .D(net593),
+    .D(net589),
     .Q(\pll_dig.cntf[6] ),
     .CLK(net318));
  sg13g2_dfrbpq_1 _4313_ (.RESET_B(net198),
@@ -11524,7 +11496,7 @@ module pll_macro_top (CK,
     .Q(\pll_dig.dsm_impl.dsm.dff_err1[11] ),
     .CLK(\clknet_4_6_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4400_ (.RESET_B(net182),
-    .D(net351),
+    .D(_0299_),
     .Q(\pll_dig.dsm_impl.DSM_CK ),
     .CLK(clknet_3_2__leaf_MID_OUT));
  sg13g2_dfrbpq_1 _4401_ (.RESET_B(net169),
@@ -11792,11 +11764,11 @@ module pll_macro_top (CK,
     .Q(\pll_dig.flock.cnt_gray[15] ),
     .CLK(clknet_3_7__leaf_MID_OUT));
  sg13g2_dfrbpq_1 _4467_ (.RESET_B(net181),
-    .D(net624),
+    .D(net620),
     .Q(\pll_dig.PHASE_LOCK ),
     .CLK(net300));
  sg13g2_dfrbpq_1 _4468_ (.RESET_B(net181),
-    .D(net627),
+    .D(net623),
     .Q(\pll_dig.LOCK_LOST ),
     .CLK(net299));
  sg13g2_dfrbpq_1 _4469_ (.RESET_B(net225),
@@ -11852,7 +11824,7 @@ module pll_macro_top (CK,
     .Q(\pll_dig.state[1] ),
     .CLK(net297));
  sg13g2_dfrbpq_1 _4482_ (.RESET_B(net180),
-    .D(net638),
+    .D(net634),
     .Q(\pll_dig.state[2] ),
     .CLK(net296));
  sg13g2_dfrbpq_1 _4483_ (.RESET_B(net179),
@@ -11860,29 +11832,29 @@ module pll_macro_top (CK,
     .Q(\pll_dig.state[3] ),
     .CLK(net295));
  sg13g2_dfrbpq_1 _4484_ (.RESET_B(net184),
-    .D(net632),
+    .D(net628),
     .Q(\pll_dig.state[4] ),
     .CLK(net294));
  sg13g2_dfrbpq_1 _4485_ (.RESET_B(net224),
-    .D(net697),
+    .D(net693),
     .Q(\pll_dig.dsm_impl.FCWI[1] ),
     .CLK(\clknet_4_6_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4486_ (.RESET_B(net220),
-    .D(net701),
+    .D(net697),
     .Q(\pll_dig.dsm_impl.FCWI[2] ),
     .CLK(\clknet_4_6_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4487_ (.RESET_B(net220),
-    .D(net699),
+    .D(net695),
     .Q(\pll_dig.dsm_impl.FCWI[3] ),
     .CLK(\clknet_4_7_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4488_ (.RESET_B(net219),
-    .D(net729),
+    .D(net497),
     .Q(\pll_dig.dsm_impl.FCWI[4] ),
     .CLK(\clknet_4_6_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4489_ (.RESET_B(\pll_dig.div.rst_n ),
     .D(_0122_),
     .Q(\pll_dig.u_ddr_ck.ck_en ),
-    .CLK(net353));
+    .CLK(net352));
  sg13g2_dfrbpq_2 _4490_ (.RESET_B(net140),
     .D(_0037_),
     .Q(\pll_dig.div.ncnt[0] ),
@@ -11992,7 +11964,7 @@ module pll_macro_top (CK,
     .Q(_0169_),
     .CLK(clknet_5_3__leaf_net59_regs));
  sg13g2_dfrbpq_1 _4517_ (.RESET_B(net140),
-    .D(net384),
+    .D(net382),
     .Q(\pll_dig.div.div_for_counts_is_pend ),
     .CLK(clknet_5_26__leaf_net59_regs));
  sg13g2_dfrbpq_1 _4518_ (.RESET_B(net140),
@@ -12188,67 +12160,67 @@ module pll_macro_top (CK,
     .Q(\pll_dig.FREQ_ERR ),
     .CLK(\clknet_4_7_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4566_ (.RESET_B(net189),
-    .D(net504),
+    .D(net502),
     .Q(\pll_dig.flock.cnt_filt[0] ),
     .CLK(\clknet_4_10_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4567_ (.RESET_B(net189),
-    .D(net555),
+    .D(net551),
     .Q(\pll_dig.flock.cnt_filt[1] ),
     .CLK(\clknet_4_10_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4568_ (.RESET_B(net189),
-    .D(net566),
+    .D(net562),
     .Q(\pll_dig.flock.cnt_filt[2] ),
     .CLK(\clknet_4_10_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4569_ (.RESET_B(net190),
-    .D(net571),
+    .D(net567),
     .Q(\pll_dig.flock.cnt_filt[3] ),
     .CLK(\clknet_4_11_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4570_ (.RESET_B(net190),
-    .D(net550),
+    .D(net546),
     .Q(\pll_dig.flock.cnt_filt[4] ),
     .CLK(\clknet_4_11_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4571_ (.RESET_B(net190),
-    .D(net521),
+    .D(net517),
     .Q(\pll_dig.flock.cnt_filt[5] ),
     .CLK(\clknet_4_11_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4572_ (.RESET_B(net188),
-    .D(net517),
+    .D(net513),
     .Q(\pll_dig.flock.cnt_filt[6] ),
     .CLK(\clknet_4_14_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4573_ (.RESET_B(net197),
-    .D(net530),
+    .D(net526),
     .Q(\pll_dig.flock.cnt_filt[7] ),
     .CLK(\clknet_4_14_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4574_ (.RESET_B(net195),
-    .D(net534),
+    .D(net530),
     .Q(\pll_dig.flock.cnt_filt[8] ),
     .CLK(\clknet_4_13_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4575_ (.RESET_B(net197),
-    .D(net538),
+    .D(net534),
     .Q(\pll_dig.flock.cnt_filt[9] ),
     .CLK(\clknet_4_15_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4576_ (.RESET_B(net197),
-    .D(net542),
+    .D(net538),
     .Q(\pll_dig.flock.cnt_filt[10] ),
     .CLK(\clknet_4_15_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4577_ (.RESET_B(net201),
-    .D(net562),
+    .D(net558),
     .Q(\pll_dig.flock.cnt_filt[11] ),
     .CLK(\clknet_4_15_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4578_ (.RESET_B(net201),
-    .D(net546),
+    .D(net542),
     .Q(\pll_dig.flock.cnt_filt[12] ),
     .CLK(\clknet_4_15_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4579_ (.RESET_B(net205),
-    .D(net526),
+    .D(net522),
     .Q(\pll_dig.flock.cnt_filt[13] ),
     .CLK(\clknet_4_14_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4580_ (.RESET_B(net210),
-    .D(net513),
+    .D(net509),
     .Q(\pll_dig.flock.cnt_filt[14] ),
     .CLK(\clknet_4_14_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4581_ (.RESET_B(net201),
-    .D(net509),
+    .D(net505),
     .Q(\pll_dig.flock.cnt_filt[15] ),
     .CLK(\clknet_4_14_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4582_ (.RESET_B(net188),
@@ -12256,7 +12228,7 @@ module pll_macro_top (CK,
     .Q(\pll_dig.flock.cnt_done[0] ),
     .CLK(\clknet_4_12_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4583_ (.RESET_B(net188),
-    .D(net577),
+    .D(net573),
     .Q(\pll_dig.flock.cnt_done[1] ),
     .CLK(\clknet_4_12_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4584_ (.RESET_B(net195),
@@ -12284,7 +12256,7 @@ module pll_macro_top (CK,
     .Q(\pll_dig.flock.cnt_done[7] ),
     .CLK(\clknet_4_9_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4590_ (.RESET_B(net170),
-    .D(net584),
+    .D(net580),
     .Q(\pll_dig.flock.cnt_err[0] ),
     .CLK(\clknet_4_6_0_pll_dig.flock.REF_G ));
  sg13g2_dfrbpq_1 _4591_ (.RESET_B(net187),
@@ -12586,11 +12558,11 @@ module pll_macro_top (CK,
     .Q(\pll_dig.lock_detector.win_cnt[0] ),
     .CLK(net291));
  sg13g2_dfrbpq_1 _4661_ (.RESET_B(net183),
-    .D(net602),
+    .D(net598),
     .Q(\pll_dig.lock_detector.win_cnt[1] ),
     .CLK(net290));
  sg13g2_dfrbpq_1 _4662_ (.RESET_B(net183),
-    .D(net598),
+    .D(net594),
     .Q(\pll_dig.lock_detector.win_cnt[2] ),
     .CLK(net289));
  sg13g2_dfrbpq_1 _4663_ (.RESET_B(net183),
@@ -12636,31 +12608,31 @@ module pll_macro_top (CK,
     .Q(\pll_dig.FILTER_OUT[0] ),
     .CLK(net282));
  sg13g2_dfrbpq_1 _4673_ (.RESET_B(net229),
-    .D(net685),
+    .D(net681),
     .Q(\pll_dig.FILTER_OUT[1] ),
     .CLK(net281));
  sg13g2_dfrbpq_1 _4674_ (.RESET_B(net230),
-    .D(net683),
+    .D(net679),
     .Q(\pll_dig.FILTER_OUT[2] ),
     .CLK(net280));
  sg13g2_dfrbpq_1 _4675_ (.RESET_B(net230),
-    .D(net677),
+    .D(net673),
     .Q(\pll_dig.FILTER_OUT[3] ),
     .CLK(net279));
  sg13g2_dfrbpq_1 _4676_ (.RESET_B(net230),
-    .D(net675),
+    .D(net671),
     .Q(\pll_dig.FILTER_OUT[4] ),
     .CLK(net278));
  sg13g2_dfrbpq_1 _4677_ (.RESET_B(net230),
-    .D(net672),
+    .D(net668),
     .Q(\pll_dig.FILTER_OUT[5] ),
     .CLK(net277));
  sg13g2_dfrbpq_1 _4678_ (.RESET_B(net230),
-    .D(net669),
+    .D(net665),
     .Q(\pll_dig.FILTER_OUT[6] ),
     .CLK(net276));
  sg13g2_dfrbpq_1 _4679_ (.RESET_B(net231),
-    .D(net679),
+    .D(net677),
     .Q(\pll_dig.FILTER_OUT[7] ),
     .CLK(net275));
  sg13g2_dfrbpq_1 _4680_ (.RESET_B(net235),
@@ -12672,15 +12644,15 @@ module pll_macro_top (CK,
     .Q(\pll_dig.FILTER_OUT[9] ),
     .CLK(net273));
  sg13g2_dfrbpq_1 _4682_ (.RESET_B(net224),
-    .D(net663),
+    .D(net659),
     .Q(\pll_dig.FILTER_OUT[10] ),
     .CLK(net272));
  sg13g2_dfrbpq_1 _4683_ (.RESET_B(net224),
-    .D(net681),
+    .D(net675),
     .Q(\pll_dig.FILTER_OUT[11] ),
     .CLK(net271));
  sg13g2_dfrbpq_1 _4684_ (.RESET_B(net220),
-    .D(net666),
+    .D(net662),
     .Q(\pll_dig.FILTER_OUT[12] ),
     .CLK(net270));
  sg13g2_dfrbpq_1 _4685_ (.RESET_B(net220),
@@ -12688,7 +12660,7 @@ module pll_macro_top (CK,
     .Q(\pll_dig.FILTER_OUT[13] ),
     .CLK(net269));
  sg13g2_dfrbpq_1 _4686_ (.RESET_B(net220),
-    .D(net659),
+    .D(net655),
     .Q(\pll_dig.FILTER_OUT[14] ),
     .CLK(net268));
  sg13g2_dfrbpq_1 _4687_ (.RESET_B(net219),
@@ -12708,7 +12680,7 @@ module pll_macro_top (CK,
     .Q(\pll_dig.dco_fail ),
     .CLK(clknet_5_21__leaf_REF_regs));
  sg13g2_dfrbpq_1 _4691_ (.RESET_B(net221),
-    .D(net586),
+    .D(net582),
     .Q(\pll_dig.fail_qq ),
     .CLK(net265));
  sg13g2_dfrbpq_1 _4692_ (.RESET_B(net201),
@@ -12940,21 +12912,21 @@ module pll_macro_top (CK,
     .Q(\pll_dig.div.rst_n ),
     .CLK(clknet_5_1__leaf_net59_regs));
  sg13g2_dfrbpq_1 _4749_ (.RESET_B(net201),
-    .D(net352),
+    .D(net351),
     .Q(\pll_dig.out_div2 ),
     .CLK(clknet_5_10__leaf_net59_regs));
  sg13g2_dfrbpq_1 _4750_ (.RESET_B(net219),
     .D(\pll_dig.dsm_impl.locked_dsm_s1 ),
     .Q(\pll_dig.dsm_impl.locked_dsm_s2 ),
-    .CLK(\clknet_1_1__leaf_pll_dig.dsm_impl.DSM_CK_regs ));
+    .CLK(\pll_dig.dsm_impl.DSM_CK ));
  sg13g2_dfrbpq_1 _4751_ (.RESET_B(net221),
     .D(\pll_dig.clr_r2 ),
     .Q(\pll_dig.clr_r3 ),
     .CLK(clknet_5_21__leaf_REF_regs));
  sg13g2_dfrbpq_1 _4752_ (.RESET_B(net219),
-    .D(net506),
+    .D(net58),
     .Q(\pll_dig.dsm_impl.locked_dsm_s1 ),
-    .CLK(\clknet_1_0__leaf_pll_dig.dsm_impl.DSM_CK_regs ));
+    .CLK(\pll_dig.dsm_impl.DSM_CK ));
  sg13g2_dfrbpq_1 _4753_ (.RESET_B(net168),
     .D(\pll_dig.MID_MUX_D[0] ),
     .Q(\MID_MUX[0] ),
@@ -13020,7 +12992,7 @@ module pll_macro_top (CK,
     .Q(_0167_),
     .CLK(\clknet_4_7_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4769_ (.RESET_B(net184),
-    .D(net733),
+    .D(net499),
     .Q(_0166_),
     .CLK(\clknet_4_5_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4770_ (.RESET_B(net221),
@@ -13028,51 +13000,51 @@ module pll_macro_top (CK,
     .Q(\pll_dig.clr_r2 ),
     .CLK(clknet_5_20__leaf_REF_regs));
  sg13g2_dfrbpq_1 _4771_ (.RESET_B(net229),
-    .D(net709),
+    .D(net705),
     .Q(\pll_dig.dsm_impl.FCWF[0] ),
     .CLK(\clknet_4_8_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4772_ (.RESET_B(net234),
-    .D(net705),
+    .D(net701),
     .Q(\pll_dig.dsm_impl.FCWF[1] ),
     .CLK(\clknet_4_8_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4773_ (.RESET_B(net230),
-    .D(net717),
+    .D(net713),
     .Q(\pll_dig.dsm_impl.FCWF[2] ),
     .CLK(\clknet_4_9_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4774_ (.RESET_B(net230),
-    .D(net719),
+    .D(net715),
     .Q(\pll_dig.dsm_impl.FCWF[3] ),
     .CLK(\clknet_4_9_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4775_ (.RESET_B(net230),
-    .D(net713),
+    .D(net709),
     .Q(\pll_dig.dsm_impl.FCWF[4] ),
     .CLK(\clknet_4_9_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4776_ (.RESET_B(net231),
-    .D(net715),
+    .D(net711),
     .Q(\pll_dig.dsm_impl.FCWF[5] ),
     .CLK(\clknet_4_9_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4777_ (.RESET_B(net231),
-    .D(net721),
+    .D(net717),
     .Q(\pll_dig.dsm_impl.FCWF[6] ),
     .CLK(\clknet_4_12_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4778_ (.RESET_B(net231),
-    .D(net711),
+    .D(net707),
     .Q(\pll_dig.dsm_impl.FCWF[7] ),
     .CLK(\clknet_4_12_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4779_ (.RESET_B(net235),
-    .D(net725),
+    .D(net721),
     .Q(\pll_dig.dsm_impl.FCWF[8] ),
     .CLK(\clknet_4_12_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4780_ (.RESET_B(net235),
-    .D(net723),
+    .D(net719),
     .Q(\pll_dig.dsm_impl.FCWF[9] ),
     .CLK(\clknet_4_12_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4781_ (.RESET_B(net227),
-    .D(net707),
+    .D(net703),
     .Q(\pll_dig.dsm_impl.FCWF[10] ),
     .CLK(\clknet_4_6_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4782_ (.RESET_B(net224),
-    .D(net703),
+    .D(net699),
     .Q(\pll_dig.dsm_impl.FCWF[11] ),
     .CLK(\clknet_4_6_0_pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_dfrbpq_1 _4783_ (.RESET_B(net182),
@@ -13277,12 +13249,8 @@ module pll_macro_top (CK,
     .A(net60_regs));
  sg13g2_buf_16 \clkbuf_0_pll_dig.CKR  (.X(\clknet_0_pll_dig.CKR ),
     .A(\pll_dig.CKR ));
- sg13g2_buf_16 \clkbuf_0_pll_dig.dsm_impl.DSM_CK  (.X(\clknet_0_pll_dig.dsm_impl.DSM_CK ),
-    .A(\pll_dig.dsm_impl.DSM_CK ));
  sg13g2_buf_16 \clkbuf_0_pll_dig.dsm_impl.DSM_CK_G  (.X(\clknet_0_pll_dig.dsm_impl.DSM_CK_G ),
     .A(\pll_dig.dsm_impl.DSM_CK_G ));
- sg13g2_buf_16 \clkbuf_0_pll_dig.dsm_impl.DSM_CK_regs  (.X(\clknet_0_pll_dig.dsm_impl.DSM_CK_regs ),
-    .A(\pll_dig.dsm_impl.DSM_CK_regs ));
  sg13g2_buf_16 \clkbuf_0_pll_dig.flock.REF_G  (.X(\clknet_0_pll_dig.flock.REF_G ),
     .A(\pll_dig.flock.REF_G ));
  sg13g2_buf_16 \clkbuf_0_pll_dig.out_div2  (.X(\clknet_0_pll_dig.out_div2 ),
@@ -13295,18 +13263,12 @@ module pll_macro_top (CK,
     .A(clknet_0_net60));
  sg13g2_buf_16 clkbuf_1_0__f_net60_regs (.X(clknet_1_0__leaf_net60_regs),
     .A(clknet_0_net60_regs));
- sg13g2_buf_16 \clkbuf_1_0__f_pll_dig.dsm_impl.DSM_CK  (.X(\clknet_1_0__leaf_pll_dig.dsm_impl.DSM_CK ),
-    .A(\clknet_0_pll_dig.dsm_impl.DSM_CK ));
- sg13g2_buf_16 \clkbuf_1_0__f_pll_dig.dsm_impl.DSM_CK_regs  (.X(\clknet_1_0__leaf_pll_dig.dsm_impl.DSM_CK_regs ),
-    .A(\clknet_0_pll_dig.dsm_impl.DSM_CK_regs ));
  sg13g2_buf_16 clkbuf_1_1__f_REF (.X(clknet_1_1__leaf_REF),
     .A(clknet_0_REF));
  sg13g2_buf_16 clkbuf_1_1__f_net59 (.X(clknet_1_1__leaf_net59),
     .A(clknet_0_net59));
  sg13g2_buf_16 clkbuf_1_1__f_net60 (.X(clknet_1_1__leaf_net60),
     .A(clknet_0_net60));
- sg13g2_buf_16 \clkbuf_1_1__f_pll_dig.dsm_impl.DSM_CK_regs  (.X(\clknet_1_1__leaf_pll_dig.dsm_impl.DSM_CK_regs ),
-    .A(\clknet_0_pll_dig.dsm_impl.DSM_CK_regs ));
  sg13g2_buf_16 \clkbuf_2_0__f_pll_dig.out_div2  (.X(\clknet_2_0__leaf_pll_dig.out_div2 ),
     .A(\clknet_0_pll_dig.out_div2 ));
  sg13g2_buf_16 \clkbuf_2_1__f_pll_dig.out_div2  (.X(\clknet_2_1__leaf_pll_dig.out_div2 ),
@@ -13641,8 +13603,6 @@ module pll_macro_top (CK,
     .A(net59));
  sg13g2_buf_16 clkbuf_regs_2_OUT (.X(net60_regs),
     .A(net60));
- sg13g2_buf_16 clkbuf_regs_3_DSM_CK_CLK (.X(\pll_dig.dsm_impl.DSM_CK_regs ),
-    .A(\pll_dig.dsm_impl.DSM_CK ));
  sg13g2_buf_16 delaybuf_0_REF (.X(delaynet_0_REF),
     .A(REF));
  sg13g2_buf_16 delaybuf_1_REF (.X(delaynet_1_REF),
@@ -13691,13 +13651,13 @@ module pll_macro_top (CK,
     .X(net117));
  sg13g2_buf_1 fanout118 (.A(_1605_),
     .X(net118));
- sg13g2_buf_1 fanout119 (.A(net657),
+ sg13g2_buf_1 fanout119 (.A(net653),
     .X(net119));
- sg13g2_buf_1 fanout120 (.A(net690),
+ sg13g2_buf_1 fanout120 (.A(net686),
     .X(net120));
  sg13g2_buf_1 fanout121 (.A(\pll_dig.dlf.INT[9] ),
     .X(net121));
- sg13g2_buf_1 fanout122 (.A(net688),
+ sg13g2_buf_1 fanout122 (.A(net684),
     .X(net122));
  sg13g2_buf_1 fanout123 (.A(_0926_),
     .X(net123));
@@ -13979,7 +13939,7 @@ module pll_macro_top (CK,
     .X(net79));
  sg13g2_buf_1 fanout80 (.A(_1252_),
     .X(net80));
- sg13g2_buf_1 fanout81 (.A(net575),
+ sg13g2_buf_1 fanout81 (.A(net571),
     .X(net81));
  sg13g2_buf_8 fanout82 (.A(_0062_),
     .X(net82));
@@ -14017,632 +13977,590 @@ module pll_macro_top (CK,
     .X(net98));
  sg13g2_buf_1 fanout99 (.A(net100),
     .X(net99));
- sg13g2_dlygate4sd3_1 hold484 (.A(net761),
+ sg13g2_dlygate4sd3_1 hold482 (.A(net750),
+    .X(net481));
+ sg13g2_dlygate4sd3_1 hold483 (.A(net748),
+    .X(net482));
+ sg13g2_dlygate4sd3_1 hold484 (.A(net754),
     .X(net483));
- sg13g2_dlygate4sd3_1 hold485 (.A(net758),
+ sg13g2_dlygate4sd3_1 hold485 (.A(net746),
     .X(net484));
- sg13g2_dlygate4sd3_1 hold486 (.A(net767),
+ sg13g2_dlygate4sd3_1 hold486 (.A(net758),
     .X(net485));
- sg13g2_dlygate4sd3_1 hold487 (.A(net755),
+ sg13g2_dlygate4sd3_1 hold487 (.A(net744),
     .X(net486));
- sg13g2_dlygate4sd3_1 hold488 (.A(net773),
+ sg13g2_dlygate4sd3_1 hold488 (.A(net762),
     .X(net487));
- sg13g2_dlygate4sd3_1 hold489 (.A(net752),
+ sg13g2_dlygate4sd3_1 hold489 (.A(net756),
     .X(net488));
- sg13g2_dlygate4sd3_1 hold490 (.A(net779),
+ sg13g2_dlygate4sd3_1 hold490 (.A(net766),
     .X(net489));
- sg13g2_dlygate4sd3_1 hold491 (.A(net770),
+ sg13g2_dlygate4sd3_1 hold491 (.A(net752),
     .X(net490));
- sg13g2_dlygate4sd3_1 hold492 (.A(net785),
+ sg13g2_dlygate4sd3_1 hold492 (.A(net764),
     .X(net491));
- sg13g2_dlygate4sd3_1 hold493 (.A(net764),
+ sg13g2_dlygate4sd3_1 hold493 (.A(net768),
     .X(net492));
- sg13g2_dlygate4sd3_1 hold494 (.A(net782),
+ sg13g2_dlygate4sd3_1 hold494 (.A(net770),
     .X(net493));
- sg13g2_dlygate4sd3_1 hold495 (.A(net788),
+ sg13g2_dlygate4sd3_1 hold495 (.A(net760),
     .X(net494));
- sg13g2_dlygate4sd3_1 hold496 (.A(net791),
+ sg13g2_dlygate4sd3_1 hold496 (.A(net772),
     .X(net495));
- sg13g2_dlygate4sd3_1 hold497 (.A(net776),
+ sg13g2_dlygate4sd3_1 hold497 (.A(net722),
     .X(net496));
- sg13g2_dlygate4sd3_1 hold498 (.A(net794),
+ sg13g2_dlygate4sd3_1 hold498 (.A(net724),
     .X(net497));
- sg13g2_dlygate4sd3_1 hold499 (.A(net726),
+ sg13g2_dlygate4sd3_1 hold499 (.A(net725),
     .X(net498));
- sg13g2_dlygate4sd3_1 hold500 (.A(net728),
+ sg13g2_dlygate4sd3_1 hold500 (.A(_0262_),
     .X(net499));
- sg13g2_dlygate4sd3_1 hold501 (.A(net730),
+ sg13g2_dlygate4sd3_1 hold501 (.A(\pll_dig.flock.cnt_cap[1] ),
     .X(net500));
- sg13g2_dlygate4sd3_1 hold502 (.A(net732),
+ sg13g2_dlygate4sd3_1 hold502 (.A(_1208_),
     .X(net501));
- sg13g2_dlygate4sd3_1 hold503 (.A(\pll_dig.flock.cnt_cap[1] ),
+ sg13g2_dlygate4sd3_1 hold503 (.A(_0178_),
     .X(net502));
- sg13g2_dlygate4sd3_1 hold504 (.A(_1208_),
+ sg13g2_dlygate4sd3_1 hold504 (.A(net727),
     .X(net503));
- sg13g2_dlygate4sd3_1 hold505 (.A(_0178_),
+ sg13g2_dlygate4sd3_1 hold505 (.A(_1583_),
     .X(net504));
- sg13g2_dlygate4sd3_1 hold506 (.A(_0586_),
+ sg13g2_dlygate4sd3_1 hold506 (.A(_0170_),
     .X(net505));
- sg13g2_dlygate4sd3_1 hold507 (.A(net58),
+ sg13g2_dlygate4sd3_1 hold507 (.A(net539),
     .X(net506));
- sg13g2_dlygate4sd3_1 hold508 (.A(net735),
+ sg13g2_dlygate4sd3_1 hold508 (.A(_1578_),
     .X(net507));
- sg13g2_dlygate4sd3_1 hold509 (.A(_1583_),
+ sg13g2_dlygate4sd3_1 hold509 (.A(_1586_),
     .X(net508));
- sg13g2_dlygate4sd3_1 hold510 (.A(_0170_),
+ sg13g2_dlygate4sd3_1 hold510 (.A(_0177_),
     .X(net509));
- sg13g2_dlygate4sd3_1 hold511 (.A(net543),
+ sg13g2_dlygate4sd3_1 hold511 (.A(net730),
     .X(net510));
- sg13g2_dlygate4sd3_1 hold512 (.A(_1578_),
+ sg13g2_dlygate4sd3_1 hold512 (.A(_1174_),
     .X(net511));
- sg13g2_dlygate4sd3_1 hold513 (.A(_1586_),
+ sg13g2_dlygate4sd3_1 hold513 (.A(_1223_),
     .X(net512));
- sg13g2_dlygate4sd3_1 hold514 (.A(_0177_),
+ sg13g2_dlygate4sd3_1 hold514 (.A(_0184_),
     .X(net513));
- sg13g2_dlygate4sd3_1 hold515 (.A(net738),
+ sg13g2_dlygate4sd3_1 hold515 (.A(net740),
     .X(net514));
- sg13g2_dlygate4sd3_1 hold516 (.A(_1174_),
+ sg13g2_dlygate4sd3_1 hold516 (.A(_1179_),
     .X(net515));
- sg13g2_dlygate4sd3_1 hold517 (.A(_1223_),
+ sg13g2_dlygate4sd3_1 hold517 (.A(_1220_),
     .X(net516));
- sg13g2_dlygate4sd3_1 hold518 (.A(_0184_),
+ sg13g2_dlygate4sd3_1 hold518 (.A(_0183_),
     .X(net517));
- sg13g2_dlygate4sd3_1 hold519 (.A(net748),
+ sg13g2_dlygate4sd3_1 hold519 (.A(net737),
     .X(net518));
- sg13g2_dlygate4sd3_1 hold520 (.A(_1179_),
+ sg13g2_dlygate4sd3_1 hold520 (.A(_1569_),
     .X(net519));
- sg13g2_dlygate4sd3_1 hold521 (.A(_1220_),
+ sg13g2_dlygate4sd3_1 hold521 (.A(_1573_),
     .X(net520));
- sg13g2_dlygate4sd3_1 hold522 (.A(_0183_),
+ sg13g2_dlygate4sd3_1 hold522 (.A(_1577_),
     .X(net521));
- sg13g2_dlygate4sd3_1 hold523 (.A(net745),
+ sg13g2_dlygate4sd3_1 hold523 (.A(_0176_),
     .X(net522));
- sg13g2_dlygate4sd3_1 hold524 (.A(_1569_),
+ sg13g2_dlygate4sd3_1 hold524 (.A(\pll_dig.flock.cnt_cap[9] ),
     .X(net523));
- sg13g2_dlygate4sd3_1 hold525 (.A(_1573_),
+ sg13g2_dlygate4sd3_1 hold525 (.A(_1170_),
     .X(net524));
- sg13g2_dlygate4sd3_1 hold526 (.A(_1577_),
+ sg13g2_dlygate4sd3_1 hold526 (.A(_1226_),
     .X(net525));
- sg13g2_dlygate4sd3_1 hold527 (.A(_0176_),
+ sg13g2_dlygate4sd3_1 hold527 (.A(_0185_),
     .X(net526));
- sg13g2_dlygate4sd3_1 hold528 (.A(\pll_dig.flock.cnt_cap[9] ),
+ sg13g2_dlygate4sd3_1 hold528 (.A(net736),
     .X(net527));
- sg13g2_dlygate4sd3_1 hold529 (.A(_1170_),
+ sg13g2_dlygate4sd3_1 hold529 (.A(_1165_),
     .X(net528));
- sg13g2_dlygate4sd3_1 hold530 (.A(_1226_),
+ sg13g2_dlygate4sd3_1 hold530 (.A(_1229_),
     .X(net529));
- sg13g2_dlygate4sd3_1 hold531 (.A(_0185_),
+ sg13g2_dlygate4sd3_1 hold531 (.A(_0171_),
     .X(net530));
- sg13g2_dlygate4sd3_1 hold532 (.A(net744),
+ sg13g2_dlygate4sd3_1 hold532 (.A(\pll_dig.flock.cnt_cap[11] ),
     .X(net531));
- sg13g2_dlygate4sd3_1 hold533 (.A(_1165_),
+ sg13g2_dlygate4sd3_1 hold533 (.A(_1162_),
     .X(net532));
- sg13g2_dlygate4sd3_1 hold534 (.A(_1229_),
+ sg13g2_dlygate4sd3_1 hold534 (.A(_1232_),
     .X(net533));
- sg13g2_dlygate4sd3_1 hold535 (.A(_0171_),
+ sg13g2_dlygate4sd3_1 hold535 (.A(_0172_),
     .X(net534));
- sg13g2_dlygate4sd3_1 hold536 (.A(\pll_dig.flock.cnt_cap[11] ),
+ sg13g2_dlygate4sd3_1 hold536 (.A(net732),
     .X(net535));
- sg13g2_dlygate4sd3_1 hold537 (.A(_1162_),
+ sg13g2_dlygate4sd3_1 hold537 (.A(_1160_),
     .X(net536));
- sg13g2_dlygate4sd3_1 hold538 (.A(_1232_),
+ sg13g2_dlygate4sd3_1 hold538 (.A(_1235_),
     .X(net537));
- sg13g2_dlygate4sd3_1 hold539 (.A(_0172_),
+ sg13g2_dlygate4sd3_1 hold539 (.A(_0173_),
     .X(net538));
- sg13g2_dlygate4sd3_1 hold540 (.A(net740),
+ sg13g2_dlygate4sd3_1 hold540 (.A(\pll_dig.flock.cnt_cap[14] ),
     .X(net539));
- sg13g2_dlygate4sd3_1 hold541 (.A(_1160_),
+ sg13g2_dlygate4sd3_1 hold541 (.A(net506),
     .X(net540));
- sg13g2_dlygate4sd3_1 hold542 (.A(_1235_),
+ sg13g2_dlygate4sd3_1 hold542 (.A(_1574_),
     .X(net541));
- sg13g2_dlygate4sd3_1 hold543 (.A(_0173_),
+ sg13g2_dlygate4sd3_1 hold543 (.A(_0175_),
     .X(net542));
- sg13g2_dlygate4sd3_1 hold544 (.A(\pll_dig.flock.cnt_cap[14] ),
+ sg13g2_dlygate4sd3_1 hold544 (.A(net738),
     .X(net543));
- sg13g2_dlygate4sd3_1 hold545 (.A(net510),
+ sg13g2_dlygate4sd3_1 hold545 (.A(_1184_),
     .X(net544));
- sg13g2_dlygate4sd3_1 hold546 (.A(_1574_),
+ sg13g2_dlygate4sd3_1 hold546 (.A(_1217_),
     .X(net545));
- sg13g2_dlygate4sd3_1 hold547 (.A(_0175_),
+ sg13g2_dlygate4sd3_1 hold547 (.A(_0182_),
     .X(net546));
- sg13g2_dlygate4sd3_1 hold548 (.A(net746),
+ sg13g2_dlygate4sd3_1 hold548 (.A(net735),
     .X(net547));
- sg13g2_dlygate4sd3_1 hold549 (.A(_1184_),
+ sg13g2_dlygate4sd3_1 hold549 (.A(_1200_),
     .X(net548));
- sg13g2_dlygate4sd3_1 hold550 (.A(_1217_),
+ sg13g2_dlygate4sd3_1 hold550 (.A(_1202_),
     .X(net549));
- sg13g2_dlygate4sd3_1 hold551 (.A(_0182_),
+ sg13g2_dlygate4sd3_1 hold551 (.A(_1689_),
     .X(net550));
- sg13g2_dlygate4sd3_1 hold552 (.A(net743),
+ sg13g2_dlygate4sd3_1 hold552 (.A(_0179_),
     .X(net551));
- sg13g2_dlygate4sd3_1 hold553 (.A(_1200_),
+ sg13g2_dlygate4sd3_1 hold553 (.A(net739),
     .X(net552));
- sg13g2_dlygate4sd3_1 hold554 (.A(_1202_),
+ sg13g2_dlygate4sd3_1 hold554 (.A(_1169_),
     .X(net553));
- sg13g2_dlygate4sd3_1 hold555 (.A(_1689_),
+ sg13g2_dlygate4sd3_1 hold555 (.A(_1228_),
     .X(net554));
- sg13g2_dlygate4sd3_1 hold556 (.A(_0179_),
+ sg13g2_dlygate4sd3_1 hold556 (.A(_1231_),
     .X(net555));
- sg13g2_dlygate4sd3_1 hold557 (.A(net747),
+ sg13g2_dlygate4sd3_1 hold557 (.A(_1236_),
     .X(net556));
- sg13g2_dlygate4sd3_1 hold558 (.A(_1169_),
+ sg13g2_dlygate4sd3_1 hold558 (.A(_1237_),
     .X(net557));
- sg13g2_dlygate4sd3_1 hold559 (.A(_1228_),
+ sg13g2_dlygate4sd3_1 hold559 (.A(_0174_),
     .X(net558));
- sg13g2_dlygate4sd3_1 hold560 (.A(_1231_),
+ sg13g2_dlygate4sd3_1 hold560 (.A(net728),
     .X(net559));
- sg13g2_dlygate4sd3_1 hold561 (.A(_1236_),
+ sg13g2_dlygate4sd3_1 hold561 (.A(_1195_),
     .X(net560));
- sg13g2_dlygate4sd3_1 hold562 (.A(_1237_),
+ sg13g2_dlygate4sd3_1 hold562 (.A(_1197_),
     .X(net561));
- sg13g2_dlygate4sd3_1 hold563 (.A(_0174_),
+ sg13g2_dlygate4sd3_1 hold563 (.A(_0180_),
     .X(net562));
- sg13g2_dlygate4sd3_1 hold564 (.A(net736),
+ sg13g2_dlygate4sd3_1 hold564 (.A(net741),
     .X(net563));
- sg13g2_dlygate4sd3_1 hold565 (.A(_1195_),
+ sg13g2_dlygate4sd3_1 hold565 (.A(_1194_),
     .X(net564));
- sg13g2_dlygate4sd3_1 hold566 (.A(_1197_),
+ sg13g2_dlygate4sd3_1 hold566 (.A(_1196_),
     .X(net565));
- sg13g2_dlygate4sd3_1 hold567 (.A(_0180_),
+ sg13g2_dlygate4sd3_1 hold567 (.A(_1213_),
     .X(net566));
- sg13g2_dlygate4sd3_1 hold568 (.A(net749),
+ sg13g2_dlygate4sd3_1 hold568 (.A(_0181_),
     .X(net567));
- sg13g2_dlygate4sd3_1 hold569 (.A(_1194_),
+ sg13g2_dlygate4sd3_1 hold569 (.A(\pll_dig.flock.FCW_NA[10] ),
     .X(net568));
- sg13g2_dlygate4sd3_1 hold570 (.A(_1196_),
+ sg13g2_dlygate4sd3_1 hold570 (.A(_1112_),
     .X(net569));
- sg13g2_dlygate4sd3_1 hold571 (.A(_1213_),
+ sg13g2_dlygate4sd3_1 hold571 (.A(_1133_),
     .X(net570));
- sg13g2_dlygate4sd3_1 hold572 (.A(_0181_),
+ sg13g2_dlygate4sd3_1 hold572 (.A(net576),
     .X(net571));
- sg13g2_dlygate4sd3_1 hold573 (.A(\pll_dig.flock.FCW_NA[10] ),
+ sg13g2_dlygate4sd3_1 hold573 (.A(_1323_),
     .X(net572));
- sg13g2_dlygate4sd3_1 hold574 (.A(_1112_),
+ sg13g2_dlygate4sd3_1 hold574 (.A(_0022_),
     .X(net573));
- sg13g2_dlygate4sd3_1 hold575 (.A(_1133_),
+ sg13g2_dlygate4sd3_1 hold575 (.A(\pll_dig.flock.FCW_PA[7] ),
     .X(net574));
- sg13g2_dlygate4sd3_1 hold576 (.A(net580),
+ sg13g2_dlygate4sd3_1 hold576 (.A(_1131_),
     .X(net575));
- sg13g2_dlygate4sd3_1 hold577 (.A(_1323_),
+ sg13g2_dlygate4sd3_1 hold577 (.A(_1134_),
     .X(net576));
- sg13g2_dlygate4sd3_1 hold578 (.A(_0022_),
+ sg13g2_dlygate4sd3_1 hold578 (.A(net581),
     .X(net577));
- sg13g2_dlygate4sd3_1 hold579 (.A(\pll_dig.flock.FCW_PA[7] ),
+ sg13g2_dlygate4sd3_1 hold579 (.A(_0820_),
     .X(net578));
- sg13g2_dlygate4sd3_1 hold580 (.A(_1131_),
+ sg13g2_dlygate4sd3_1 hold580 (.A(_0829_),
     .X(net579));
- sg13g2_dlygate4sd3_1 hold581 (.A(_1134_),
+ sg13g2_dlygate4sd3_1 hold581 (.A(_0029_),
     .X(net580));
- sg13g2_dlygate4sd3_1 hold582 (.A(net585),
+ sg13g2_dlygate4sd3_1 hold582 (.A(\pll_dig.FREQ_OK ),
     .X(net581));
- sg13g2_dlygate4sd3_1 hold583 (.A(_0820_),
+ sg13g2_dlygate4sd3_1 hold583 (.A(net742),
     .X(net582));
- sg13g2_dlygate4sd3_1 hold584 (.A(_0829_),
+ sg13g2_dlygate4sd3_1 hold584 (.A(_0156_),
     .X(net583));
- sg13g2_dlygate4sd3_1 hold585 (.A(_0029_),
+ sg13g2_dlygate4sd3_1 hold585 (.A(\pll_dig.state[1] ),
     .X(net584));
- sg13g2_dlygate4sd3_1 hold586 (.A(\pll_dig.FREQ_OK ),
+ sg13g2_dlygate4sd3_1 hold586 (.A(\pll_dig.fail_qq ),
     .X(net585));
- sg13g2_dlygate4sd3_1 hold587 (.A(net750),
+ sg13g2_dlygate4sd3_1 hold587 (.A(_2035_),
     .X(net586));
- sg13g2_dlygate4sd3_1 hold588 (.A(_0156_),
+ sg13g2_dlygate4sd3_1 hold588 (.A(\pll_dig.cntf[5] ),
     .X(net587));
- sg13g2_dlygate4sd3_1 hold589 (.A(\pll_dig.state[1] ),
+ sg13g2_dlygate4sd3_1 hold589 (.A(_2068_),
     .X(net588));
- sg13g2_dlygate4sd3_1 hold590 (.A(\pll_dig.fail_qq ),
+ sg13g2_dlygate4sd3_1 hold590 (.A(_0464_),
     .X(net589));
- sg13g2_dlygate4sd3_1 hold591 (.A(_2035_),
+ sg13g2_dlygate4sd3_1 hold591 (.A(\pll_dig.state[3] ),
     .X(net590));
- sg13g2_dlygate4sd3_1 hold592 (.A(\pll_dig.cntf[5] ),
+ sg13g2_dlygate4sd3_1 hold592 (.A(_0470_),
     .X(net591));
- sg13g2_dlygate4sd3_1 hold593 (.A(_2068_),
+ sg13g2_dlygate4sd3_1 hold593 (.A(\pll_dig.lock_detector.win_cnt[1] ),
     .X(net592));
- sg13g2_dlygate4sd3_1 hold594 (.A(_0464_),
+ sg13g2_dlygate4sd3_1 hold594 (.A(_1614_),
     .X(net593));
- sg13g2_dlygate4sd3_1 hold595 (.A(\pll_dig.state[3] ),
+ sg13g2_dlygate4sd3_1 hold595 (.A(_0059_),
     .X(net594));
- sg13g2_dlygate4sd3_1 hold596 (.A(_0470_),
+ sg13g2_dlygate4sd3_1 hold596 (.A(\pll_dig.lock_detector.bad_cnt[0] ),
     .X(net595));
- sg13g2_dlygate4sd3_1 hold597 (.A(\pll_dig.lock_detector.win_cnt[1] ),
+ sg13g2_dlygate4sd3_1 hold597 (.A(_1668_),
     .X(net596));
- sg13g2_dlygate4sd3_1 hold598 (.A(_1614_),
+ sg13g2_dlygate4sd3_1 hold598 (.A(\pll_dig.lock_detector.win_cnt[0] ),
     .X(net597));
- sg13g2_dlygate4sd3_1 hold599 (.A(_0059_),
+ sg13g2_dlygate4sd3_1 hold599 (.A(_0058_),
     .X(net598));
- sg13g2_dlygate4sd3_1 hold600 (.A(\pll_dig.lock_detector.bad_cnt[0] ),
+ sg13g2_dlygate4sd3_1 hold600 (.A(\pll_dig.cnt[1] ),
     .X(net599));
- sg13g2_dlygate4sd3_1 hold601 (.A(_1668_),
+ sg13g2_dlygate4sd3_1 hold601 (.A(_2064_),
     .X(net600));
- sg13g2_dlygate4sd3_1 hold602 (.A(\pll_dig.lock_detector.win_cnt[0] ),
+ sg13g2_dlygate4sd3_1 hold602 (.A(_0450_),
     .X(net601));
- sg13g2_dlygate4sd3_1 hold603 (.A(_0058_),
+ sg13g2_dlygate4sd3_1 hold603 (.A(\pll_dig.lock_detector.win_cnt[4] ),
     .X(net602));
- sg13g2_dlygate4sd3_1 hold604 (.A(\pll_dig.cnt[1] ),
+ sg13g2_dlygate4sd3_1 hold604 (.A(_1608_),
     .X(net603));
- sg13g2_dlygate4sd3_1 hold605 (.A(_2064_),
+ sg13g2_dlygate4sd3_1 hold605 (.A(\pll_dig.cnt[6] ),
     .X(net604));
- sg13g2_dlygate4sd3_1 hold606 (.A(_0450_),
+ sg13g2_dlygate4sd3_1 hold606 (.A(_1856_),
     .X(net605));
- sg13g2_dlygate4sd3_1 hold607 (.A(\pll_dig.lock_detector.win_cnt[4] ),
+ sg13g2_dlygate4sd3_1 hold607 (.A(_0324_),
     .X(net606));
- sg13g2_dlygate4sd3_1 hold608 (.A(_1608_),
+ sg13g2_dlygate4sd3_1 hold608 (.A(\pll_dig.ILL_P ),
     .X(net607));
- sg13g2_dlygate4sd3_1 hold609 (.A(\pll_dig.cnt[6] ),
+ sg13g2_dlygate4sd3_1 hold609 (.A(_2080_),
     .X(net608));
- sg13g2_dlygate4sd3_1 hold610 (.A(_1856_),
+ sg13g2_dlygate4sd3_1 hold610 (.A(_0472_),
     .X(net609));
- sg13g2_dlygate4sd3_1 hold611 (.A(_0324_),
+ sg13g2_dlygate4sd3_1 hold611 (.A(\pll_dig.ILL_N ),
     .X(net610));
- sg13g2_dlygate4sd3_1 hold612 (.A(\pll_dig.ILL_P ),
+ sg13g2_dlygate4sd3_1 hold612 (.A(_2063_),
     .X(net611));
- sg13g2_dlygate4sd3_1 hold613 (.A(_2080_),
+ sg13g2_dlygate4sd3_1 hold613 (.A(_0407_),
     .X(net612));
- sg13g2_dlygate4sd3_1 hold614 (.A(_0472_),
+ sg13g2_dlygate4sd3_1 hold614 (.A(\pll_dig.lock_detector.bad_cnt[2] ),
     .X(net613));
- sg13g2_dlygate4sd3_1 hold615 (.A(\pll_dig.ILL_N ),
+ sg13g2_dlygate4sd3_1 hold615 (.A(_1656_),
     .X(net614));
- sg13g2_dlygate4sd3_1 hold616 (.A(_2063_),
+ sg13g2_dlygate4sd3_1 hold616 (.A(\pll_dig.cntf[1] ),
     .X(net615));
- sg13g2_dlygate4sd3_1 hold617 (.A(_0407_),
+ sg13g2_dlygate4sd3_1 hold617 (.A(_2070_),
     .X(net616));
- sg13g2_dlygate4sd3_1 hold618 (.A(\pll_dig.lock_detector.bad_cnt[2] ),
+ sg13g2_dlygate4sd3_1 hold618 (.A(_0466_),
     .X(net617));
- sg13g2_dlygate4sd3_1 hold619 (.A(_1656_),
+ sg13g2_dlygate4sd3_1 hold619 (.A(\pll_dig.START ),
     .X(net618));
- sg13g2_dlygate4sd3_1 hold620 (.A(\pll_dig.cntf[1] ),
+ sg13g2_dlygate4sd3_1 hold620 (.A(\pll_dig.ENABLE ),
     .X(net619));
- sg13g2_dlygate4sd3_1 hold621 (.A(_2070_),
+ sg13g2_dlygate4sd3_1 hold621 (.A(_0378_),
     .X(net620));
- sg13g2_dlygate4sd3_1 hold622 (.A(_0466_),
+ sg13g2_dlygate4sd3_1 hold622 (.A(\pll_dig.PHASE_LOCK ),
     .X(net621));
- sg13g2_dlygate4sd3_1 hold623 (.A(\pll_dig.START ),
+ sg13g2_dlygate4sd3_1 hold623 (.A(_2067_),
     .X(net622));
- sg13g2_dlygate4sd3_1 hold624 (.A(\pll_dig.ENABLE ),
+ sg13g2_dlygate4sd3_1 hold624 (.A(_0455_),
     .X(net623));
- sg13g2_dlygate4sd3_1 hold625 (.A(_0378_),
+ sg13g2_dlygate4sd3_1 hold625 (.A(\pll_dig.cntf[0] ),
     .X(net624));
- sg13g2_dlygate4sd3_1 hold626 (.A(\pll_dig.PHASE_LOCK ),
+ sg13g2_dlygate4sd3_1 hold626 (.A(_0405_),
     .X(net625));
- sg13g2_dlygate4sd3_1 hold627 (.A(_2067_),
+ sg13g2_dlygate4sd3_1 hold627 (.A(\pll_dig.state[2] ),
     .X(net626));
- sg13g2_dlygate4sd3_1 hold628 (.A(_0455_),
+ sg13g2_dlygate4sd3_1 hold628 (.A(_1659_),
     .X(net627));
- sg13g2_dlygate4sd3_1 hold629 (.A(\pll_dig.cntf[0] ),
+ sg13g2_dlygate4sd3_1 hold629 (.A(_0050_),
     .X(net628));
- sg13g2_dlygate4sd3_1 hold630 (.A(_0405_),
+ sg13g2_dlygate4sd3_1 hold630 (.A(\pll_dig.cnt[3] ),
     .X(net629));
- sg13g2_dlygate4sd3_1 hold631 (.A(\pll_dig.state[2] ),
+ sg13g2_dlygate4sd3_1 hold631 (.A(_1603_),
     .X(net630));
- sg13g2_dlygate4sd3_1 hold632 (.A(_1659_),
+ sg13g2_dlygate4sd3_1 hold632 (.A(\pll_dig.lock_detector.win_cnt[2] ),
     .X(net631));
- sg13g2_dlygate4sd3_1 hold633 (.A(_0050_),
+ sg13g2_dlygate4sd3_1 hold633 (.A(\pll_dig.state[4] ),
     .X(net632));
- sg13g2_dlygate4sd3_1 hold634 (.A(\pll_dig.cnt[3] ),
+ sg13g2_dlygate4sd3_1 hold634 (.A(_1666_),
     .X(net633));
- sg13g2_dlygate4sd3_1 hold635 (.A(_1603_),
+ sg13g2_dlygate4sd3_1 hold635 (.A(_0048_),
     .X(net634));
- sg13g2_dlygate4sd3_1 hold636 (.A(\pll_dig.lock_detector.win_cnt[2] ),
+ sg13g2_dlygate4sd3_1 hold636 (.A(\pll_dig.cnt[5] ),
     .X(net635));
- sg13g2_dlygate4sd3_1 hold637 (.A(\pll_dig.state[4] ),
+ sg13g2_dlygate4sd3_1 hold637 (.A(_1855_),
     .X(net636));
- sg13g2_dlygate4sd3_1 hold638 (.A(_1666_),
+ sg13g2_dlygate4sd3_1 hold638 (.A(\pll_dig.cntf[6] ),
     .X(net637));
- sg13g2_dlygate4sd3_1 hold639 (.A(_0048_),
+ sg13g2_dlygate4sd3_1 hold639 (.A(_2046_),
     .X(net638));
- sg13g2_dlygate4sd3_1 hold640 (.A(\pll_dig.cnt[5] ),
+ sg13g2_dlygate4sd3_1 hold640 (.A(\pll_dig.cntf[3] ),
     .X(net639));
- sg13g2_dlygate4sd3_1 hold641 (.A(_1855_),
+ sg13g2_dlygate4sd3_1 hold641 (.A(_2044_),
     .X(net640));
- sg13g2_dlygate4sd3_1 hold642 (.A(\pll_dig.cntf[6] ),
+ sg13g2_dlygate4sd3_1 hold642 (.A(_0465_),
     .X(net641));
- sg13g2_dlygate4sd3_1 hold643 (.A(_2046_),
+ sg13g2_dlygate4sd3_1 hold643 (.A(\pll_dig.cntf[2] ),
     .X(net642));
- sg13g2_dlygate4sd3_1 hold644 (.A(\pll_dig.cntf[3] ),
+ sg13g2_dlygate4sd3_1 hold644 (.A(_0404_),
     .X(net643));
- sg13g2_dlygate4sd3_1 hold645 (.A(_2044_),
+ sg13g2_dlygate4sd3_1 hold645 (.A(\pll_dig.cnt[4] ),
     .X(net644));
- sg13g2_dlygate4sd3_1 hold646 (.A(_0465_),
+ sg13g2_dlygate4sd3_1 hold646 (.A(_1854_),
     .X(net645));
- sg13g2_dlygate4sd3_1 hold647 (.A(\pll_dig.cntf[2] ),
+ sg13g2_dlygate4sd3_1 hold647 (.A(\pll_dig.cntf[4] ),
     .X(net646));
- sg13g2_dlygate4sd3_1 hold648 (.A(_0404_),
+ sg13g2_dlygate4sd3_1 hold648 (.A(_2057_),
     .X(net647));
- sg13g2_dlygate4sd3_1 hold649 (.A(\pll_dig.cnt[4] ),
+ sg13g2_dlygate4sd3_1 hold649 (.A(_0403_),
     .X(net648));
- sg13g2_dlygate4sd3_1 hold650 (.A(_1854_),
+ sg13g2_dlygate4sd3_1 hold650 (.A(\pll_dig.lock_detector.win_cnt[3] ),
     .X(net649));
- sg13g2_dlygate4sd3_1 hold651 (.A(\pll_dig.cntf[4] ),
+ sg13g2_dlygate4sd3_1 hold651 (.A(\pll_dig.cnt[2] ),
     .X(net650));
- sg13g2_dlygate4sd3_1 hold652 (.A(_2057_),
+ sg13g2_dlygate4sd3_1 hold652 (.A(_1852_),
     .X(net651));
- sg13g2_dlygate4sd3_1 hold653 (.A(_0403_),
+ sg13g2_dlygate4sd3_1 hold653 (.A(_0476_),
     .X(net652));
- sg13g2_dlygate4sd3_1 hold654 (.A(\pll_dig.lock_detector.win_cnt[3] ),
+ sg13g2_dlygate4sd3_1 hold654 (.A(_0158_),
     .X(net653));
- sg13g2_dlygate4sd3_1 hold655 (.A(\pll_dig.cnt[2] ),
+ sg13g2_dlygate4sd3_1 hold655 (.A(\pll_dig.dlf.INT[14] ),
     .X(net654));
- sg13g2_dlygate4sd3_1 hold656 (.A(_1852_),
+ sg13g2_dlygate4sd3_1 hold656 (.A(\pll_dig.dlf.OUT_C[14] ),
     .X(net655));
- sg13g2_dlygate4sd3_1 hold657 (.A(_0476_),
+ sg13g2_dlygate4sd3_1 hold657 (.A(\pll_dig.cnt[0] ),
     .X(net656));
- sg13g2_dlygate4sd3_1 hold658 (.A(_0158_),
+ sg13g2_dlygate4sd3_1 hold658 (.A(\pll_dig.dlf.INT[10] ),
     .X(net657));
- sg13g2_dlygate4sd3_1 hold659 (.A(\pll_dig.dlf.INT[14] ),
+ sg13g2_dlygate4sd3_1 hold659 (.A(_1701_),
     .X(net658));
- sg13g2_dlygate4sd3_1 hold660 (.A(\pll_dig.dlf.OUT_C[14] ),
+ sg13g2_dlygate4sd3_1 hold660 (.A(\pll_dig.dlf.OUT_C[10] ),
     .X(net659));
- sg13g2_dlygate4sd3_1 hold661 (.A(\pll_dig.cnt[0] ),
+ sg13g2_dlygate4sd3_1 hold661 (.A(\pll_dig.LOCK_LOST ),
     .X(net660));
- sg13g2_dlygate4sd3_1 hold662 (.A(\pll_dig.dlf.INT[10] ),
+ sg13g2_dlygate4sd3_1 hold662 (.A(\pll_dig.dlf.INT[12] ),
     .X(net661));
- sg13g2_dlygate4sd3_1 hold663 (.A(_1701_),
+ sg13g2_dlygate4sd3_1 hold663 (.A(\pll_dig.dlf.OUT_C[12] ),
     .X(net662));
- sg13g2_dlygate4sd3_1 hold664 (.A(\pll_dig.dlf.OUT_C[10] ),
+ sg13g2_dlygate4sd3_1 hold664 (.A(\pll_dig.dlf.INT[6] ),
     .X(net663));
- sg13g2_dlygate4sd3_1 hold665 (.A(\pll_dig.LOCK_LOST ),
+ sg13g2_dlygate4sd3_1 hold665 (.A(_1674_),
     .X(net664));
- sg13g2_dlygate4sd3_1 hold666 (.A(\pll_dig.dlf.INT[12] ),
+ sg13g2_dlygate4sd3_1 hold666 (.A(\pll_dig.dlf.OUT_C[6] ),
     .X(net665));
- sg13g2_dlygate4sd3_1 hold667 (.A(\pll_dig.dlf.OUT_C[12] ),
+ sg13g2_dlygate4sd3_1 hold667 (.A(\pll_dig.dlf.INT[5] ),
     .X(net666));
- sg13g2_dlygate4sd3_1 hold668 (.A(\pll_dig.dlf.INT[6] ),
+ sg13g2_dlygate4sd3_1 hold668 (.A(_1473_),
     .X(net667));
- sg13g2_dlygate4sd3_1 hold669 (.A(_1674_),
+ sg13g2_dlygate4sd3_1 hold669 (.A(\pll_dig.dlf.OUT_C[5] ),
     .X(net668));
- sg13g2_dlygate4sd3_1 hold670 (.A(\pll_dig.dlf.OUT_C[6] ),
+ sg13g2_dlygate4sd3_1 hold670 (.A(\pll_dig.dlf.INT[4] ),
     .X(net669));
- sg13g2_dlygate4sd3_1 hold671 (.A(\pll_dig.dlf.INT[5] ),
+ sg13g2_dlygate4sd3_1 hold671 (.A(_1677_),
     .X(net670));
- sg13g2_dlygate4sd3_1 hold672 (.A(_1473_),
+ sg13g2_dlygate4sd3_1 hold672 (.A(\pll_dig.dlf.OUT_C[4] ),
     .X(net671));
- sg13g2_dlygate4sd3_1 hold673 (.A(\pll_dig.dlf.OUT_C[5] ),
+ sg13g2_dlygate4sd3_1 hold673 (.A(\pll_dig.dlf.INT[3] ),
     .X(net672));
- sg13g2_dlygate4sd3_1 hold674 (.A(\pll_dig.dlf.INT[4] ),
+ sg13g2_dlygate4sd3_1 hold674 (.A(\pll_dig.dlf.OUT_C[3] ),
     .X(net673));
- sg13g2_dlygate4sd3_1 hold675 (.A(_1677_),
+ sg13g2_dlygate4sd3_1 hold675 (.A(\pll_dig.dlf.INT[11] ),
     .X(net674));
- sg13g2_dlygate4sd3_1 hold676 (.A(\pll_dig.dlf.OUT_C[4] ),
+ sg13g2_dlygate4sd3_1 hold676 (.A(\pll_dig.dlf.OUT_C[11] ),
     .X(net675));
- sg13g2_dlygate4sd3_1 hold677 (.A(\pll_dig.dlf.INT[3] ),
+ sg13g2_dlygate4sd3_1 hold677 (.A(\pll_dig.dlf.INT[7] ),
     .X(net676));
- sg13g2_dlygate4sd3_1 hold678 (.A(\pll_dig.dlf.OUT_C[3] ),
+ sg13g2_dlygate4sd3_1 hold678 (.A(\pll_dig.dlf.OUT_C[7] ),
     .X(net677));
- sg13g2_dlygate4sd3_1 hold679 (.A(\pll_dig.dlf.INT[7] ),
+ sg13g2_dlygate4sd3_1 hold679 (.A(\pll_dig.dlf.INT[2] ),
     .X(net678));
- sg13g2_dlygate4sd3_1 hold680 (.A(\pll_dig.dlf.OUT_C[7] ),
+ sg13g2_dlygate4sd3_1 hold680 (.A(\pll_dig.dlf.OUT_C[2] ),
     .X(net679));
- sg13g2_dlygate4sd3_1 hold681 (.A(\pll_dig.dlf.INT[11] ),
+ sg13g2_dlygate4sd3_1 hold681 (.A(\pll_dig.dlf.INT[1] ),
     .X(net680));
- sg13g2_dlygate4sd3_1 hold682 (.A(\pll_dig.dlf.OUT_C[11] ),
+ sg13g2_dlygate4sd3_1 hold682 (.A(\pll_dig.dlf.OUT_C[1] ),
     .X(net681));
- sg13g2_dlygate4sd3_1 hold683 (.A(\pll_dig.dlf.INT[2] ),
+ sg13g2_dlygate4sd3_1 hold683 (.A(\pll_dig.dlf.INT[0] ),
     .X(net682));
- sg13g2_dlygate4sd3_1 hold684 (.A(\pll_dig.dlf.OUT_C[2] ),
+ sg13g2_dlygate4sd3_1 hold684 (.A(\pll_dig.dlf.INT[2] ),
     .X(net683));
- sg13g2_dlygate4sd3_1 hold685 (.A(\pll_dig.dlf.INT[1] ),
+ sg13g2_dlygate4sd3_1 hold685 (.A(\pll_dig.dlf.INT[8] ),
     .X(net684));
- sg13g2_dlygate4sd3_1 hold686 (.A(\pll_dig.dlf.OUT_C[1] ),
+ sg13g2_dlygate4sd3_1 hold686 (.A(_1697_),
     .X(net685));
- sg13g2_dlygate4sd3_1 hold687 (.A(\pll_dig.dlf.INT[0] ),
+ sg13g2_dlygate4sd3_1 hold687 (.A(\pll_dig.dlf.INT[13] ),
     .X(net686));
- sg13g2_dlygate4sd3_1 hold688 (.A(\pll_dig.dlf.INT[2] ),
+ sg13g2_dlygate4sd3_1 hold688 (.A(\pll_dig.dlf.INT[14] ),
     .X(net687));
- sg13g2_dlygate4sd3_1 hold689 (.A(\pll_dig.dlf.INT[8] ),
+ sg13g2_dlygate4sd3_1 hold689 (.A(\pll_dig.dlf.INT[12] ),
     .X(net688));
- sg13g2_dlygate4sd3_1 hold690 (.A(_1697_),
+ sg13g2_dlygate4sd3_1 hold690 (.A(\pll_dig.dlf.INT[11] ),
     .X(net689));
- sg13g2_dlygate4sd3_1 hold691 (.A(\pll_dig.dlf.INT[13] ),
+ sg13g2_dlygate4sd3_1 hold691 (.A(\pll_dig.dlf.INT[6] ),
     .X(net690));
- sg13g2_dlygate4sd3_1 hold692 (.A(\pll_dig.dlf.INT[14] ),
+ sg13g2_dlygate4sd3_1 hold692 (.A(\pll_dig.dlf.INT[7] ),
     .X(net691));
- sg13g2_dlygate4sd3_1 hold693 (.A(\pll_dig.dlf.INT[12] ),
+ sg13g2_dlygate4sd3_1 hold693 (.A(net743),
     .X(net692));
- sg13g2_dlygate4sd3_1 hold694 (.A(\pll_dig.dlf.INT[11] ),
+ sg13g2_dlygate4sd3_1 hold694 (.A(net486),
     .X(net693));
- sg13g2_dlygate4sd3_1 hold695 (.A(\pll_dig.dlf.INT[6] ),
+ sg13g2_dlygate4sd3_1 hold695 (.A(net745),
     .X(net694));
- sg13g2_dlygate4sd3_1 hold696 (.A(\pll_dig.dlf.INT[7] ),
+ sg13g2_dlygate4sd3_1 hold696 (.A(net484),
     .X(net695));
- sg13g2_dlygate4sd3_1 hold697 (.A(net751),
+ sg13g2_dlygate4sd3_1 hold697 (.A(net747),
     .X(net696));
- sg13g2_dlygate4sd3_1 hold698 (.A(net753),
+ sg13g2_dlygate4sd3_1 hold698 (.A(net482),
     .X(net697));
- sg13g2_dlygate4sd3_1 hold699 (.A(net754),
+ sg13g2_dlygate4sd3_1 hold699 (.A(net749),
     .X(net698));
- sg13g2_dlygate4sd3_1 hold700 (.A(net756),
+ sg13g2_dlygate4sd3_1 hold700 (.A(net481),
     .X(net699));
- sg13g2_dlygate4sd3_1 hold701 (.A(net757),
+ sg13g2_dlygate4sd3_1 hold701 (.A(net753),
     .X(net700));
- sg13g2_dlygate4sd3_1 hold702 (.A(net759),
+ sg13g2_dlygate4sd3_1 hold702 (.A(net483),
     .X(net701));
- sg13g2_dlygate4sd3_1 hold703 (.A(net760),
+ sg13g2_dlygate4sd3_1 hold703 (.A(net751),
     .X(net702));
- sg13g2_dlygate4sd3_1 hold704 (.A(net762),
+ sg13g2_dlygate4sd3_1 hold704 (.A(net490),
     .X(net703));
- sg13g2_dlygate4sd3_1 hold705 (.A(net766),
+ sg13g2_dlygate4sd3_1 hold705 (.A(net755),
     .X(net704));
- sg13g2_dlygate4sd3_1 hold706 (.A(net768),
+ sg13g2_dlygate4sd3_1 hold706 (.A(net488),
     .X(net705));
- sg13g2_dlygate4sd3_1 hold707 (.A(net763),
+ sg13g2_dlygate4sd3_1 hold707 (.A(net757),
     .X(net706));
- sg13g2_dlygate4sd3_1 hold708 (.A(net765),
+ sg13g2_dlygate4sd3_1 hold708 (.A(net485),
     .X(net707));
- sg13g2_dlygate4sd3_1 hold709 (.A(net769),
+ sg13g2_dlygate4sd3_1 hold709 (.A(net763),
     .X(net708));
- sg13g2_dlygate4sd3_1 hold710 (.A(net771),
+ sg13g2_dlygate4sd3_1 hold710 (.A(net491),
     .X(net709));
- sg13g2_dlygate4sd3_1 hold711 (.A(net772),
+ sg13g2_dlygate4sd3_1 hold711 (.A(net767),
     .X(net710));
- sg13g2_dlygate4sd3_1 hold712 (.A(net774),
+ sg13g2_dlygate4sd3_1 hold712 (.A(net492),
     .X(net711));
- sg13g2_dlygate4sd3_1 hold713 (.A(net781),
+ sg13g2_dlygate4sd3_1 hold713 (.A(net761),
     .X(net712));
- sg13g2_dlygate4sd3_1 hold714 (.A(net783),
+ sg13g2_dlygate4sd3_1 hold714 (.A(net487),
     .X(net713));
- sg13g2_dlygate4sd3_1 hold715 (.A(net787),
+ sg13g2_dlygate4sd3_1 hold715 (.A(net765),
     .X(net714));
- sg13g2_dlygate4sd3_1 hold716 (.A(net789),
+ sg13g2_dlygate4sd3_1 hold716 (.A(net489),
     .X(net715));
- sg13g2_dlygate4sd3_1 hold717 (.A(net778),
+ sg13g2_dlygate4sd3_1 hold717 (.A(net769),
     .X(net716));
- sg13g2_dlygate4sd3_1 hold718 (.A(net780),
+ sg13g2_dlygate4sd3_1 hold718 (.A(net493),
     .X(net717));
- sg13g2_dlygate4sd3_1 hold719 (.A(net784),
+ sg13g2_dlygate4sd3_1 hold719 (.A(net759),
     .X(net718));
- sg13g2_dlygate4sd3_1 hold720 (.A(net786),
+ sg13g2_dlygate4sd3_1 hold720 (.A(net494),
     .X(net719));
- sg13g2_dlygate4sd3_1 hold721 (.A(net790),
+ sg13g2_dlygate4sd3_1 hold721 (.A(net771),
     .X(net720));
- sg13g2_dlygate4sd3_1 hold722 (.A(net792),
+ sg13g2_dlygate4sd3_1 hold722 (.A(net495),
     .X(net721));
- sg13g2_dlygate4sd3_1 hold723 (.A(net775),
+ sg13g2_dlygate4sd3_1 hold723 (.A(_0161_),
     .X(net722));
- sg13g2_dlygate4sd3_1 hold724 (.A(net777),
+ sg13g2_dlygate4sd3_1 hold724 (.A(net496),
     .X(net723));
- sg13g2_dlygate4sd3_1 hold725 (.A(net793),
+ sg13g2_dlygate4sd3_1 hold725 (.A(\pll_dig.FILTER_OUT[15] ),
     .X(net724));
- sg13g2_dlygate4sd3_1 hold726 (.A(net795),
+ sg13g2_dlygate4sd3_1 hold726 (.A(DCO_EN),
     .X(net725));
- sg13g2_dlygate4sd3_1 hold727 (.A(_0161_),
+ sg13g2_dlygate4sd3_1 hold727 (.A(net498),
     .X(net726));
- sg13g2_dlygate4sd3_1 hold728 (.A(net498),
+ sg13g2_dlygate4sd3_1 hold728 (.A(\pll_dig.flock.cnt_cap[15] ),
     .X(net727));
- sg13g2_dlygate4sd3_1 hold729 (.A(\pll_dig.FILTER_OUT[15] ),
+ sg13g2_dlygate4sd3_1 hold729 (.A(\pll_dig.flock.cnt_cap[4] ),
     .X(net728));
- sg13g2_dlygate4sd3_1 hold730 (.A(net499),
+ sg13g2_dlygate4sd3_1 hold730 (.A(_1215_),
     .X(net729));
- sg13g2_dlygate4sd3_1 hold731 (.A(DCO_EN),
+ sg13g2_dlygate4sd3_1 hold731 (.A(\pll_dig.flock.cnt_cap[7] ),
     .X(net730));
- sg13g2_dlygate4sd3_1 hold732 (.A(net500),
+ sg13g2_dlygate4sd3_1 hold732 (.A(_1222_),
     .X(net731));
- sg13g2_dlygate4sd3_1 hold733 (.A(_0262_),
+ sg13g2_dlygate4sd3_1 hold733 (.A(\pll_dig.flock.cnt_cap[12] ),
     .X(net732));
- sg13g2_dlygate4sd3_1 hold734 (.A(net501),
+ sg13g2_dlygate4sd3_1 hold734 (.A(_1242_),
     .X(net733));
- sg13g2_dlygate4sd3_1 hold735 (.A(\pll_dig.locked_q ),
+ sg13g2_dlygate4sd3_1 hold735 (.A(_1243_),
     .X(net734));
- sg13g2_dlygate4sd3_1 hold736 (.A(\pll_dig.flock.cnt_cap[15] ),
+ sg13g2_dlygate4sd3_1 hold736 (.A(\pll_dig.flock.cnt_cap[2] ),
     .X(net735));
- sg13g2_dlygate4sd3_1 hold737 (.A(\pll_dig.flock.cnt_cap[4] ),
+ sg13g2_dlygate4sd3_1 hold737 (.A(\pll_dig.flock.cnt_cap[10] ),
     .X(net736));
- sg13g2_dlygate4sd3_1 hold738 (.A(_1215_),
+ sg13g2_dlygate4sd3_1 hold738 (.A(\pll_dig.flock.cnt_cap[13] ),
     .X(net737));
- sg13g2_dlygate4sd3_1 hold739 (.A(\pll_dig.flock.cnt_cap[7] ),
+ sg13g2_dlygate4sd3_1 hold739 (.A(\pll_dig.flock.cnt_cap[5] ),
     .X(net738));
- sg13g2_dlygate4sd3_1 hold740 (.A(_1222_),
+ sg13g2_dlygate4sd3_1 hold740 (.A(\pll_dig.flock.cnt_cap[8] ),
     .X(net739));
- sg13g2_dlygate4sd3_1 hold741 (.A(\pll_dig.flock.cnt_cap[12] ),
+ sg13g2_dlygate4sd3_1 hold741 (.A(\pll_dig.flock.cnt_cap[6] ),
     .X(net740));
- sg13g2_dlygate4sd3_1 hold742 (.A(_1242_),
+ sg13g2_dlygate4sd3_1 hold742 (.A(\pll_dig.flock.cnt_cap[3] ),
     .X(net741));
- sg13g2_dlygate4sd3_1 hold743 (.A(_1243_),
+ sg13g2_dlygate4sd3_1 hold743 (.A(\pll_dig.fail_q ),
     .X(net742));
- sg13g2_dlygate4sd3_1 hold744 (.A(\pll_dig.flock.cnt_cap[2] ),
+ sg13g2_dlygate4sd3_1 hold744 (.A(\pll_dig.FILTER_OUT[12] ),
     .X(net743));
- sg13g2_dlygate4sd3_1 hold745 (.A(\pll_dig.flock.cnt_cap[10] ),
+ sg13g2_dlygate4sd3_1 hold745 (.A(net692),
     .X(net744));
- sg13g2_dlygate4sd3_1 hold746 (.A(\pll_dig.flock.cnt_cap[13] ),
+ sg13g2_dlygate4sd3_1 hold746 (.A(\pll_dig.FILTER_OUT[14] ),
     .X(net745));
- sg13g2_dlygate4sd3_1 hold747 (.A(\pll_dig.flock.cnt_cap[5] ),
+ sg13g2_dlygate4sd3_1 hold747 (.A(net694),
     .X(net746));
- sg13g2_dlygate4sd3_1 hold748 (.A(\pll_dig.flock.cnt_cap[8] ),
+ sg13g2_dlygate4sd3_1 hold748 (.A(\pll_dig.FILTER_OUT[13] ),
     .X(net747));
- sg13g2_dlygate4sd3_1 hold749 (.A(\pll_dig.flock.cnt_cap[6] ),
+ sg13g2_dlygate4sd3_1 hold749 (.A(net696),
     .X(net748));
- sg13g2_dlygate4sd3_1 hold750 (.A(\pll_dig.flock.cnt_cap[3] ),
+ sg13g2_dlygate4sd3_1 hold750 (.A(\pll_dig.FILTER_OUT[11] ),
     .X(net749));
- sg13g2_dlygate4sd3_1 hold751 (.A(\pll_dig.fail_q ),
+ sg13g2_dlygate4sd3_1 hold751 (.A(net698),
     .X(net750));
- sg13g2_dlygate4sd3_1 hold752 (.A(\pll_dig.FILTER_OUT[12] ),
+ sg13g2_dlygate4sd3_1 hold752 (.A(\pll_dig.FILTER_OUT[10] ),
     .X(net751));
- sg13g2_dlygate4sd3_1 hold753 (.A(net696),
+ sg13g2_dlygate4sd3_1 hold753 (.A(net702),
     .X(net752));
- sg13g2_dlygate4sd3_1 hold754 (.A(net488),
+ sg13g2_dlygate4sd3_1 hold754 (.A(\pll_dig.FILTER_OUT[1] ),
     .X(net753));
- sg13g2_dlygate4sd3_1 hold755 (.A(\pll_dig.FILTER_OUT[14] ),
+ sg13g2_dlygate4sd3_1 hold755 (.A(net700),
     .X(net754));
- sg13g2_dlygate4sd3_1 hold756 (.A(net698),
+ sg13g2_dlygate4sd3_1 hold756 (.A(\pll_dig.FILTER_OUT[0] ),
     .X(net755));
- sg13g2_dlygate4sd3_1 hold757 (.A(net486),
+ sg13g2_dlygate4sd3_1 hold757 (.A(net704),
     .X(net756));
- sg13g2_dlygate4sd3_1 hold758 (.A(\pll_dig.FILTER_OUT[13] ),
+ sg13g2_dlygate4sd3_1 hold758 (.A(\pll_dig.FILTER_OUT[7] ),
     .X(net757));
- sg13g2_dlygate4sd3_1 hold759 (.A(net700),
+ sg13g2_dlygate4sd3_1 hold759 (.A(net706),
     .X(net758));
- sg13g2_dlygate4sd3_1 hold760 (.A(net484),
+ sg13g2_dlygate4sd3_1 hold760 (.A(\pll_dig.FILTER_OUT[9] ),
     .X(net759));
- sg13g2_dlygate4sd3_1 hold761 (.A(\pll_dig.FILTER_OUT[11] ),
+ sg13g2_dlygate4sd3_1 hold761 (.A(net718),
     .X(net760));
- sg13g2_dlygate4sd3_1 hold762 (.A(net702),
+ sg13g2_dlygate4sd3_1 hold762 (.A(\pll_dig.FILTER_OUT[2] ),
     .X(net761));
- sg13g2_dlygate4sd3_1 hold763 (.A(net483),
+ sg13g2_dlygate4sd3_1 hold763 (.A(net712),
     .X(net762));
- sg13g2_dlygate4sd3_1 hold764 (.A(\pll_dig.FILTER_OUT[10] ),
+ sg13g2_dlygate4sd3_1 hold764 (.A(\pll_dig.FILTER_OUT[4] ),
     .X(net763));
- sg13g2_dlygate4sd3_1 hold765 (.A(net706),
+ sg13g2_dlygate4sd3_1 hold765 (.A(net708),
     .X(net764));
- sg13g2_dlygate4sd3_1 hold766 (.A(net492),
+ sg13g2_dlygate4sd3_1 hold766 (.A(\pll_dig.FILTER_OUT[3] ),
     .X(net765));
- sg13g2_dlygate4sd3_1 hold767 (.A(\pll_dig.FILTER_OUT[1] ),
+ sg13g2_dlygate4sd3_1 hold767 (.A(net714),
     .X(net766));
- sg13g2_dlygate4sd3_1 hold768 (.A(net704),
+ sg13g2_dlygate4sd3_1 hold768 (.A(\pll_dig.FILTER_OUT[5] ),
     .X(net767));
- sg13g2_dlygate4sd3_1 hold769 (.A(net485),
+ sg13g2_dlygate4sd3_1 hold769 (.A(net710),
     .X(net768));
- sg13g2_dlygate4sd3_1 hold770 (.A(\pll_dig.FILTER_OUT[0] ),
+ sg13g2_dlygate4sd3_1 hold770 (.A(\pll_dig.FILTER_OUT[6] ),
     .X(net769));
- sg13g2_dlygate4sd3_1 hold771 (.A(net708),
+ sg13g2_dlygate4sd3_1 hold771 (.A(net716),
     .X(net770));
- sg13g2_dlygate4sd3_1 hold772 (.A(net490),
+ sg13g2_dlygate4sd3_1 hold772 (.A(\pll_dig.FILTER_OUT[8] ),
     .X(net771));
- sg13g2_dlygate4sd3_1 hold773 (.A(\pll_dig.FILTER_OUT[7] ),
+ sg13g2_dlygate4sd3_1 hold773 (.A(net720),
     .X(net772));
- sg13g2_dlygate4sd3_1 hold774 (.A(net710),
-    .X(net773));
- sg13g2_dlygate4sd3_1 hold775 (.A(net487),
-    .X(net774));
- sg13g2_dlygate4sd3_1 hold776 (.A(\pll_dig.FILTER_OUT[9] ),
-    .X(net775));
- sg13g2_dlygate4sd3_1 hold777 (.A(net722),
-    .X(net776));
- sg13g2_dlygate4sd3_1 hold778 (.A(net496),
-    .X(net777));
- sg13g2_dlygate4sd3_1 hold779 (.A(\pll_dig.FILTER_OUT[2] ),
-    .X(net778));
- sg13g2_dlygate4sd3_1 hold780 (.A(net716),
-    .X(net779));
- sg13g2_dlygate4sd3_1 hold781 (.A(net489),
-    .X(net780));
- sg13g2_dlygate4sd3_1 hold782 (.A(\pll_dig.FILTER_OUT[4] ),
-    .X(net781));
- sg13g2_dlygate4sd3_1 hold783 (.A(net712),
-    .X(net782));
- sg13g2_dlygate4sd3_1 hold784 (.A(net493),
-    .X(net783));
- sg13g2_dlygate4sd3_1 hold785 (.A(\pll_dig.FILTER_OUT[3] ),
-    .X(net784));
- sg13g2_dlygate4sd3_1 hold786 (.A(net718),
-    .X(net785));
- sg13g2_dlygate4sd3_1 hold787 (.A(net491),
-    .X(net786));
- sg13g2_dlygate4sd3_1 hold788 (.A(\pll_dig.FILTER_OUT[5] ),
-    .X(net787));
- sg13g2_dlygate4sd3_1 hold789 (.A(net714),
-    .X(net788));
- sg13g2_dlygate4sd3_1 hold790 (.A(net494),
-    .X(net789));
- sg13g2_dlygate4sd3_1 hold791 (.A(\pll_dig.FILTER_OUT[6] ),
-    .X(net790));
- sg13g2_dlygate4sd3_1 hold792 (.A(net720),
-    .X(net791));
- sg13g2_dlygate4sd3_1 hold793 (.A(net495),
-    .X(net792));
- sg13g2_dlygate4sd3_1 hold794 (.A(\pll_dig.FILTER_OUT[8] ),
-    .X(net793));
- sg13g2_dlygate4sd3_1 hold795 (.A(net724),
-    .X(net794));
- sg13g2_dlygate4sd3_1 hold796 (.A(net497),
-    .X(net795));
  sg13g2_buf_1 input1 (.A(DSM_EN_DT),
     .X(net1));
  sg13g2_buf_1 input10 (.A(FCW[5]),
@@ -14833,191 +14751,189 @@ module pll_macro_top (CK,
     .SS_BBPD({\SS_BBPD[1] ,
     \SS_BBPD[0] }));
  sg13g2_lgcp_1 \pll_dig.dsm_impl.u_dsm_icg.u_icg  (.GATE(\pll_dig.dsm_impl.u_dsm_icg.EN ),
-    .CLK(\clknet_1_0__leaf_pll_dig.dsm_impl.DSM_CK ),
+    .CLK(\pll_dig.dsm_impl.DSM_CK ),
     .GCLK(\pll_dig.dsm_impl.DSM_CK_G ));
  sg13g2_lgcp_1 \pll_dig.flock.u_fll_icg.u_icg  (.GATE(\pll_dig.flock.u_fll_icg.EN ),
     .CLK(clknet_1_1__leaf_REF),
     .GCLK(\pll_dig.flock.REF_G ));
- sg13g2_buf_1 rebuffer355 (.A(_1014_),
+ sg13g2_buf_1 rebuffer354 (.A(_1014_),
+    .X(net353));
+ sg13g2_buf_1 rebuffer355 (.A(_1007_),
     .X(net354));
- sg13g2_buf_1 rebuffer356 (.A(_1007_),
+ sg13g2_buf_1 rebuffer356 (.A(_1020_),
     .X(net355));
- sg13g2_buf_1 rebuffer357 (.A(_1020_),
+ sg13g2_buf_1 rebuffer357 (.A(_1008_),
     .X(net356));
- sg13g2_buf_1 rebuffer358 (.A(_1008_),
+ sg13g2_buf_1 rebuffer358 (.A(_1018_),
     .X(net357));
- sg13g2_buf_1 rebuffer359 (.A(_1018_),
+ sg13g2_buf_1 rebuffer359 (.A(_1063_),
     .X(net358));
- sg13g2_buf_1 rebuffer360 (.A(_1063_),
+ sg13g2_buf_1 rebuffer360 (.A(_1053_),
     .X(net359));
- sg13g2_buf_1 rebuffer361 (.A(_1053_),
+ sg13g2_buf_1 rebuffer361 (.A(_1048_),
     .X(net360));
- sg13g2_buf_1 rebuffer362 (.A(_1048_),
+ sg13g2_buf_1 rebuffer362 (.A(_1028_),
     .X(net361));
- sg13g2_buf_1 rebuffer363 (.A(_1028_),
+ sg13g2_buf_1 rebuffer363 (.A(_1024_),
     .X(net362));
- sg13g2_buf_1 rebuffer364 (.A(_1024_),
+ sg13g2_buf_1 rebuffer364 (.A(_1059_),
     .X(net363));
- sg13g2_buf_1 rebuffer365 (.A(_1059_),
+ sg13g2_buf_1 rebuffer365 (.A(_1083_),
     .X(net364));
- sg13g2_buf_1 rebuffer366 (.A(net378),
+ sg13g2_buf_1 rebuffer366 (.A(_1089_),
     .X(net365));
- sg13g2_buf_1 rebuffer367 (.A(_1089_),
+ sg13g2_buf_1 rebuffer367 (.A(_1051_),
     .X(net366));
- sg13g2_buf_1 rebuffer368 (.A(_1051_),
+ sg13g2_buf_1 rebuffer368 (.A(_1044_),
     .X(net367));
- sg13g2_buf_1 rebuffer369 (.A(_1044_),
+ sg13g2_buf_1 rebuffer369 (.A(_1055_),
     .X(net368));
- sg13g2_buf_1 rebuffer370 (.A(_1055_),
+ sg13g2_buf_1 rebuffer370 (.A(_1049_),
     .X(net369));
- sg13g2_buf_1 rebuffer371 (.A(_1049_),
+ sg13g2_buf_1 rebuffer371 (.A(_1001_),
     .X(net370));
- sg13g2_buf_1 rebuffer372 (.A(_1001_),
+ sg13g2_buf_1 rebuffer372 (.A(_1050_),
     .X(net371));
- sg13g2_buf_1 rebuffer373 (.A(_1050_),
+ sg13g2_buf_1 rebuffer373 (.A(_1062_),
     .X(net372));
  sg13g2_buf_1 rebuffer374 (.A(_0682_),
     .X(net373));
  sg13g2_buf_1 rebuffer375 (.A(_1062_),
     .X(net374));
- sg13g2_buf_1 rebuffer376 (.A(_1062_),
+ sg13g2_buf_1 rebuffer376 (.A(_1043_),
     .X(net375));
- sg13g2_buf_1 rebuffer377 (.A(_1043_),
+ sg13g2_buf_1 rebuffer377 (.A(_0674_),
     .X(net376));
- sg13g2_buf_1 rebuffer378 (.A(_0674_),
+ sg13g2_buf_1 rebuffer378 (.A(_1070_),
     .X(net377));
- sg13g2_buf_1 rebuffer379 (.A(_1083_),
+ sg13g2_buf_1 rebuffer379 (.A(_1057_),
     .X(net378));
- sg13g2_buf_1 rebuffer380 (.A(_1070_),
+ sg13g2_buf_1 rebuffer380 (.A(\pll_dig.dsm_impl.dsm.dff_err1[0] ),
     .X(net379));
- sg13g2_buf_1 rebuffer381 (.A(_1057_),
+ sg13g2_buf_1 rebuffer381 (.A(\pll_dig.dsm_impl.dsm.dff_err2[0] ),
     .X(net380));
- sg13g2_buf_1 rebuffer382 (.A(\pll_dig.dsm_impl.dsm.dff_err1[0] ),
+ sg13g2_buf_1 rebuffer382 (.A(_0872_),
     .X(net381));
- sg13g2_buf_1 rebuffer383 (.A(\pll_dig.dsm_impl.dsm.dff_err2[0] ),
+ sg13g2_buf_8 rebuffer383 (.A(_0062_),
     .X(net382));
  sg13g2_buf_1 rebuffer384 (.A(_0872_),
     .X(net383));
- sg13g2_buf_8 rebuffer385 (.A(_0062_),
+ sg13g2_buf_1 rebuffer385 (.A(_0873_),
     .X(net384));
- sg13g2_buf_1 rebuffer386 (.A(_0872_),
+ sg13g2_buf_1 rebuffer386 (.A(_0893_),
     .X(net385));
- sg13g2_buf_1 rebuffer387 (.A(_0873_),
-    .X(net386));
- sg13g2_buf_1 rebuffer388 (.A(_0893_),
+ sg13g2_buf_1 rebuffer388 (.A(_0895_),
     .X(net387));
- sg13g2_buf_1 rebuffer390 (.A(_0895_),
+ sg13g2_buf_1 rebuffer389 (.A(_0874_),
+    .X(net388));
+ sg13g2_buf_1 rebuffer390 (.A(_0874_),
     .X(net389));
- sg13g2_buf_1 rebuffer391 (.A(_0874_),
+ sg13g2_buf_1 rebuffer391 (.A(_0884_),
     .X(net390));
- sg13g2_buf_1 rebuffer392 (.A(_0874_),
+ sg13g2_buf_1 rebuffer392 (.A(_0884_),
     .X(net391));
- sg13g2_buf_1 rebuffer393 (.A(_0884_),
+ sg13g2_buf_1 rebuffer393 (.A(_0886_),
     .X(net392));
- sg13g2_buf_1 rebuffer394 (.A(_0884_),
+ sg13g2_buf_8 rebuffer394 (.A(_0900_),
     .X(net393));
- sg13g2_buf_1 rebuffer395 (.A(_0886_),
+ sg13g2_buf_1 rebuffer395 (.A(net434),
     .X(net394));
- sg13g2_buf_8 rebuffer396 (.A(_0900_),
+ sg13g2_buf_1 rebuffer396 (.A(net432),
     .X(net395));
- sg13g2_buf_1 rebuffer397 (.A(net436),
+ sg13g2_buf_1 rebuffer397 (.A(net432),
     .X(net396));
- sg13g2_buf_1 rebuffer398 (.A(net434),
+ sg13g2_buf_1 rebuffer398 (.A(_0899_),
     .X(net397));
- sg13g2_buf_1 rebuffer399 (.A(net434),
+ sg13g2_buf_1 rebuffer399 (.A(\pll_dig.div.cnt[1] ),
     .X(net398));
- sg13g2_buf_1 rebuffer400 (.A(_0899_),
+ sg13g2_buf_1 rebuffer400 (.A(\pll_dig.div.cnt[0] ),
     .X(net399));
- sg13g2_buf_1 rebuffer401 (.A(\pll_dig.div.cnt[1] ),
+ sg13g2_buf_1 rebuffer401 (.A(\pll_dig.div.cnt[0] ),
     .X(net400));
- sg13g2_buf_1 rebuffer402 (.A(\pll_dig.div.cnt[0] ),
+ sg13g2_buf_1 rebuffer402 (.A(_0654_),
     .X(net401));
- sg13g2_buf_1 rebuffer403 (.A(\pll_dig.div.cnt[0] ),
+ sg13g2_buf_1 rebuffer403 (.A(\pll_dig.div.div[0] ),
     .X(net402));
- sg13g2_buf_1 rebuffer404 (.A(_0654_),
+ sg13g2_buf_1 rebuffer404 (.A(net409),
     .X(net403));
- sg13g2_buf_1 rebuffer405 (.A(\pll_dig.div.div[0] ),
+ sg13g2_buf_1 rebuffer405 (.A(_0168_),
     .X(net404));
- sg13g2_buf_1 rebuffer406 (.A(net411),
+ sg13g2_buf_1 rebuffer406 (.A(_0168_),
     .X(net405));
- sg13g2_buf_1 rebuffer407 (.A(_0168_),
+ sg13g2_buf_1 rebuffer407 (.A(_0655_),
     .X(net406));
- sg13g2_buf_1 rebuffer408 (.A(_0168_),
+ sg13g2_buf_1 rebuffer408 (.A(_0655_),
     .X(net407));
- sg13g2_buf_1 rebuffer409 (.A(_0655_),
+ sg13g2_buf_8 rebuffer409 (.A(_0634_),
     .X(net408));
- sg13g2_buf_1 rebuffer410 (.A(_0655_),
+ sg13g2_buf_2 rebuffer410 (.A(\pll_dig.div.div[0] ),
     .X(net409));
- sg13g2_buf_8 rebuffer411 (.A(_0634_),
-    .X(net410));
- sg13g2_buf_2 rebuffer412 (.A(\pll_dig.div.div[0] ),
+ sg13g2_buf_1 rebuffer412 (.A(\pll_dig.div.div[3] ),
     .X(net411));
- sg13g2_buf_1 rebuffer414 (.A(\pll_dig.div.div[3] ),
+ sg13g2_buf_2 rebuffer413 (.A(_1327_),
+    .X(net412));
+ sg13g2_buf_1 rebuffer414 (.A(_1491_),
     .X(net413));
- sg13g2_buf_2 rebuffer415 (.A(_1327_),
+ sg13g2_buf_1 rebuffer415 (.A(_0905_),
     .X(net414));
- sg13g2_buf_1 rebuffer416 (.A(_1491_),
+ sg13g2_buf_1 rebuffer416 (.A(_1545_),
     .X(net415));
- sg13g2_buf_1 rebuffer417 (.A(_0905_),
+ sg13g2_buf_1 rebuffer417 (.A(_1545_),
     .X(net416));
- sg13g2_buf_1 rebuffer418 (.A(_1545_),
+ sg13g2_buf_1 rebuffer418 (.A(net420),
     .X(net417));
- sg13g2_buf_1 rebuffer419 (.A(_1545_),
+ sg13g2_buf_1 rebuffer419 (.A(_0903_),
     .X(net418));
- sg13g2_buf_1 rebuffer420 (.A(net422),
+ sg13g2_buf_8 rebuffer420 (.A(_1339_),
     .X(net419));
- sg13g2_buf_1 rebuffer421 (.A(_0903_),
+ sg13g2_buf_1 rebuffer421 (.A(_0906_),
     .X(net420));
- sg13g2_buf_8 rebuffer422 (.A(_1339_),
+ sg13g2_buf_1 rebuffer422 (.A(_0904_),
     .X(net421));
- sg13g2_buf_1 rebuffer423 (.A(_0906_),
+ sg13g2_buf_1 rebuffer423 (.A(net412),
     .X(net422));
- sg13g2_buf_1 rebuffer424 (.A(_0904_),
+ sg13g2_buf_1 rebuffer424 (.A(_1545_),
     .X(net423));
- sg13g2_buf_1 rebuffer425 (.A(net414),
+ sg13g2_buf_1 rebuffer425 (.A(\pll_dig.flock.cnt[2] ),
     .X(net424));
- sg13g2_buf_1 rebuffer426 (.A(_1545_),
+ sg13g2_buf_1 rebuffer426 (.A(\pll_dig.flock.cnt[1] ),
     .X(net425));
- sg13g2_buf_1 rebuffer427 (.A(\pll_dig.flock.cnt[2] ),
+ sg13g2_buf_1 rebuffer427 (.A(\pll_dig.flock.cnt[3] ),
     .X(net426));
- sg13g2_buf_1 rebuffer428 (.A(\pll_dig.flock.cnt[1] ),
-    .X(net427));
- sg13g2_buf_1 rebuffer429 (.A(\pll_dig.flock.cnt[3] ),
-    .X(net428));
- sg13g2_buf_8 rebuffer435 (.A(_0888_),
+ sg13g2_buf_8 rebuffer433 (.A(_0888_),
+    .X(net432));
+ sg13g2_buf_1 rebuffer434 (.A(_0878_),
+    .X(net433));
+ sg13g2_buf_2 rebuffer435 (.A(_0876_),
     .X(net434));
- sg13g2_buf_1 rebuffer436 (.A(_0878_),
+ sg13g2_buf_2 rebuffer436 (.A(\pll_dig.div.ncnt[0] ),
     .X(net435));
- sg13g2_buf_2 rebuffer437 (.A(_0876_),
+ sg13g2_buf_1 rebuffer437 (.A(\pll_dig.div.ncnt[1] ),
     .X(net436));
- sg13g2_buf_2 rebuffer438 (.A(\pll_dig.div.ncnt[0] ),
+ sg13g2_buf_1 rebuffer438 (.A(_1637_),
     .X(net437));
- sg13g2_buf_1 rebuffer439 (.A(\pll_dig.div.ncnt[1] ),
-    .X(net438));
- sg13g2_buf_1 rebuffer440 (.A(_1637_),
-    .X(net439));
- sg13g2_buf_16 rebuffer442 (.X(net441),
+ sg13g2_buf_16 rebuffer440 (.X(net439),
     .A(net83));
- sg13g2_buf_1 rebuffer470 (.A(_1821_),
+ sg13g2_buf_1 rebuffer468 (.A(_1821_),
+    .X(net467));
+ sg13g2_buf_2 rebuffer469 (.A(_1823_),
+    .X(net468));
+ sg13g2_buf_1 rebuffer470 (.A(_1830_),
     .X(net469));
- sg13g2_buf_2 rebuffer471 (.A(_1823_),
+ sg13g2_buf_1 rebuffer471 (.A(net476),
     .X(net470));
- sg13g2_buf_1 rebuffer472 (.A(_1830_),
+ sg13g2_buf_1 rebuffer472 (.A(net476),
     .X(net471));
- sg13g2_buf_1 rebuffer473 (.A(net478),
+ sg13g2_buf_1 rebuffer473 (.A(\pll_dig.div.pcnt[1] ),
     .X(net472));
- sg13g2_buf_1 rebuffer474 (.A(net478),
+ sg13g2_buf_1 rebuffer474 (.A(net477),
     .X(net473));
- sg13g2_buf_1 rebuffer475 (.A(\pll_dig.div.pcnt[1] ),
+ sg13g2_buf_1 rebuffer475 (.A(\pll_dig.div.pcnt[2] ),
     .X(net474));
- sg13g2_buf_1 rebuffer476 (.A(net479),
+ sg13g2_buf_8 rebuffer476 (.A(_1847_),
     .X(net475));
- sg13g2_buf_1 rebuffer477 (.A(\pll_dig.div.pcnt[2] ),
+ sg13g2_buf_1 rebuffer477 (.A(\pll_dig.div.pcnt[0] ),
     .X(net476));
- sg13g2_buf_8 rebuffer478 (.A(_1847_),
+ sg13g2_buf_1 rebuffer478 (.A(\pll_dig.div.pcnt[1] ),
     .X(net477));
- sg13g2_buf_1 rebuffer479 (.A(\pll_dig.div.pcnt[0] ),
-    .X(net478));
- sg13g2_buf_1 rebuffer480 (.A(\pll_dig.div.pcnt[1] ),
-    .X(net479));
 endmodule
