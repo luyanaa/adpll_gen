@@ -581,6 +581,59 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B25. OUT 53 -> 41 violators by registering the ratio-change select
+
+B23 measured OUT's worst path as `_4450_` (`div.cnt[1]`) -> `_4466_`
+(`div.high_count[1]`), and 36 of the 53 violators shared that startpoint.  The
+cone between them:
+
+```verilog
+wire div_for_counts_is_pend = (!use_clk_p && leave_req) || apply_pend;
+wire high_count_pend = div_for_counts_is_pend ? hi_pend : hi_cur;
+wire low_count_pend  = div_for_counts_is_pend ? lo_pend : lo_cur;
+```
+
+Both mux arms come from `half_hi()`/`half_lo()` barrel shifters, so a
+combinational select fanned into two 12-bit muxes sat directly on
+`high_count`'s D input.  Both arms are registered (`div`, `div_pend`) and the
+block's own comment says they are "stable well before the select resolves", so
+the select is what can move into a flop.
+
+Applied: one register on `div_for_counts_is_pend`, costing one OUT cycle of
+latency on a *ratio change* (SET_DIV commits only).
+
+#### Functional
+
+`divider_duty_tb` PASS with exact `50.00 %` for every divisor 2..15, and the
+stricter +-1 % bench also 50.00 % on 1/3/5/7/9/11/13/15.
+
+#### Result (RUN 2026-11-20_09-48-17 vs 2026-11-20_09-19-04, SS per group)
+
+| group | before | after |
+| --- | --- | --- |
+| **OUT** | **53 / -1.0517** | **41 / -1.0947** |
+| DSM_CK_G_CLK | 9 / -2.0840 | 9 / -2.1531 |
+| MID_OUT | 9 / -0.3612 | 9 / -0.3790 |
+| NE_CLK_6x | 5 violators | **0** |
+| **TOTAL** | **71** | **59** |
+| **TNS** | **-51.438** | **-34.714** (-32 %) |
+
+Corner summary: hold `+0.1776 / +0.3125 / +0.1015` with **0 violators at all
+three**; setup `-0.3168 (8) / -2.1531 (59) / +0.1305 (0)`.  TT violators 9 -> 8.
+
+Stated plainly: the violator count and TNS improved a lot, while the SS *worst*
+slack moved slightly the other way (-2.0840 -> -2.1531) and OUT's worst from
+-1.0517 to -1.0947.  That is the usual shape when a shared cone is pipelined --
+the many paths through it get much better and the single deepest one gets one
+register of latency.  DSM_CK_G_CLK remains the worst single path either way.
+
+#### Remaining OUT shape
+
+41 violators, worst -1.0947, and the group is now dominated by logic depth
+rather than the ratio-change cone.  Next lever on this group would be the
+`half_hi`/`half_lo` shifters themselves (compute both halves one cycle ahead
+instead of in the cycle that consumes them).
+
 ### B24. DRC and LVS refreshed against the current netlist
 
 Both had been skipped since the RTL changes began (B16/B19 were measured on
