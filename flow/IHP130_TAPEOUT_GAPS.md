@@ -581,6 +581,58 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B26. half_hi/half_lo pre-decoded: OUT worst -1.0947 -> -0.9026
+
+B25 named this as the next lever.  `div` and `div_pend` are both registers, so
+`half_hi()`/`half_lo()` of them only change when the divisor does -- but as
+wires the two barrel shifters sat in the cycle that consumes them, in series
+with the mux that picks between them and with `high_count`'s next-state logic.
+
+The four pre-decoded values are now registers.  Reset values must equal
+`half_hi(DIV0)`/`half_lo(DIV0)` since they are read the cycle after `div` is
+initialised.
+
+#### Three benches, all PASS
+
+| bench | what it proves |
+| --- | --- |
+| `divider_duty_tb` | exact `50.00 %` for divisors 2..15 |
+| strict +-1 % bench | `50.00 %` on 1/3/5/7/9/11/13/15 |
+| `ratio_change_tb` (new) | 2 -> 3 -> 5 -> 7 -> 9 -> 2, each commit takes effect and `div_even` follows |
+
+The third one matters: duty alone does not catch a broken ratio handshake, and
+this change sits right next to it.  The bench commits a sequence of divisors and
+asserts `div_q`/`div_even` after each, which is what would have broken if the
+added latency had swallowed a commit.
+
+#### Result (RUN 2026-11-20_10-15-33 vs 2026-11-20_09-48-17)
+
+| | hold WS | hold viol | setup WS | setup viol |
+| --- | --- | --- | --- | --- |
+| before | +0.1776 / +0.3125 / +0.1015 | 0 | -0.3168 / -2.1531 / +0.1305 | 8 / 59 / 0 |
+| after | **+0.1990 / +0.3410 / +0.1138** | **0** | **-0.2108 / -2.1122 / +0.1959** | 9 / **57** / 0 |
+
+Every corner's hold and setup worst slack improves.  SS per group:
+
+| group | before | after |
+| --- | --- | --- |
+| **OUT** | 41 / -1.0947 | **40 / -0.9026** |
+| **MID_OUT** | 9 / -0.3790 | **7 / -0.1949** |
+| DSM_CK_G_CLK | 9 / -2.1531 | 10 / -2.1122 |
+| TNS | -34.714 | -36.909 |
+
+Two caveats stated plainly: TT violators went 8 -> 9 and total TNS moved
+-34.714 -> -36.909, because `DSM_CK_G_CLK` gained one violator (9 -> 10) even
+though its worst slack improved.  The OUT and MID_OUT groups -- the ones this
+change targets -- both improved in count and in worst slack.
+
+#### Where OUT stands now
+
+40 violators, worst -0.9026, down from 54/-1.2334 at B14-FIX.  The remaining
+paths are no longer dominated by any single shared cone (the ratio select and
+the pre-decode are both registered), so the next step is a real pipelining or
+retiming decision rather than another register.
+
 ### B25. OUT 53 -> 41 violators by registering the ratio-change select
 
 B23 measured OUT's worst path as `_4450_` (`div.cnt[1]`) -> `_4466_`
