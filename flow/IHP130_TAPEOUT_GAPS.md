@@ -581,6 +581,66 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B30. Pre-decoded terminal compare: SS violators 56 -> 48, TT 9 -> 7
+
+The instruction (and B29) pointed at the 56 SS violators outside the DSM.
+Breaking OUT down by startpoint gave `_4500_` (22), `_4323_` (7), `_4533_` (7),
+i.e. all of `pll_dig.div`'s counters, and following one path to its end showed
+why:
+
+```text
+Endpoint: _4493_ (flip-flop clocked by OUT')
+clock OUT' (rise edge)  1.250000
+clock uncertainty       -0.250000
+library setup           -0.206511
+data required            1.500333
+data arrival             2.452701   (only 11 data stages / 1.843 ns)
+slack                   -0.952368
+```
+
+`_4493_` is `pll_dig.div.ncnt[3]` -- the **negative-edge** counter.  `ncnt` has
+to stay on that edge (it is half of what makes an odd divisor 50 %), so its
+next-state cone only gets half a period while the same-shaped `pcnt` cone gets a
+full one.  That asymmetry, not logic depth, is what OUT's violators were.
+
+The cone was `(ncnt + 1 >= div) ? 0 : ncnt + 1`: a 12-bit increment, a 12-bit
+compare and a mux, all inside half a period.  `div` is quasi-static, so `div_m1
+= div - 1` is now precomputed once per ratio change and both counters compare
+against it directly -- the second 12-bit adder leaves the half-period path.
+Applied to `pcnt` too so it does not become the next bottleneck.
+
+#### Verified
+
+| bench | result |
+| --- | --- |
+| `divider_duty_tb` | exact `50.00 %` for divisors 2..15 |
+| strict +-1 % bench | `50.00 %` on 1/3/5/7/9/11/13/15 |
+| `ratio_change_tb` | 2 -> 3 -> 5 -> 7 -> 9 -> 2, each takes effect |
+
+#### Result (RUN 2026-11-20_12-16-02 vs 2026-11-20_11-30-42)
+
+| | hold WS | hold viol | setup WS | setup viol |
+| --- | --- | --- | --- | --- |
+| before | +0.1817 / +0.3156 / +0.1044 | 0 | -0.2519 / -1.5920 / +0.1573 | 9 / 56 / 0 |
+| after | +0.1823 / +0.3182 / +0.1046 | **0** | **-0.0533** / **-1.5121** / **+0.2878** | **7** / **48** / 0 |
+
+SS per group:
+
+| group | before | after |
+| --- | --- | --- |
+| **OUT** | 39 / -0.9524 | **32 / -0.7779** |
+| **MID_OUT** | 8 / -0.4359 | **7 / -0.3408** |
+| DSM_CK_G_CLK | 5 / -1.5920 | 5 / -1.5121 |
+| OUT_DIV2_CLK | 1 / -0.0231 | 0 |
+| gated | -- | **2 / -0.4313** (newly visible) |
+| TOTAL | 56 | **48** |
+| TNS | -29.013 | -27.675 |
+
+The two `gated` violators are `_4298_`/`_4300_` (`div` registers) into `_3702_`.
+They were not introduced by this change: the `div_m1` cone used to mask them,
+and they are clock-gating hold paths into the FLL counter.  Recorded rather than
+claimed as a regression.
+
 ### B29. Tail of the DSM clock path is not splittable; DRC/LVS refreshed again
 
 #### DSM_OUT internal register: tried, rejected
