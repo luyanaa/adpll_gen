@@ -225,7 +225,11 @@ _genclk_on_net CKR_CLK *pll_dig.CKR $mid_src_d 1
 # (_4615_/_4613_, locked_dsm_s1/s2) were the last entries in the unclocked
 # report, so the LOCKED hand-off into the DSM was never timed.  Same rate as
 # DSM_CK_G_CLK: MID_OUT/DSM_DIV.
-_genclk_on_net DSM_CK_CLK *pll_dig.dsm_impl.DSM_CK $mid_src_d $dsm_div
+# EXPERIMENT: DSM_CK_CLK removed.  DSM_CK is only the ICG input plus the LOCKED
+# 2FF tree, and both clocks are in the same asynchronous group, so the separate
+# clock object existed only to make CTS build a second tree -- which is then
+# cascaded with the DSM_CK_G tree (B20/B23: 1.99 ns of a 5 ns period).
+#_genclk_on_net DSM_CK_CLK *pll_dig.dsm_impl.DSM_CK $mid_src_d $dsm_div
 
 # REF_G is REF gated by the FLL ICG: same frequency, small insertion delay.
 # It stays in the REF group so REF -> REF_G transfers are analysed (the ICG
