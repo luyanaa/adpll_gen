@@ -581,6 +581,45 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B31. DRC refreshed; DSM_DIV=4 quantified and handed to the spec owner
+
+#### KLayout DRC on RUN_2026-11-20_12-16-02 (exit 0)
+
+```text
+items 69,651   real violations 5,598   macro 5,000, top level 598
+```
+
+Against B29's 5,574 / 586 this is +24 and +12 top-level.  The `div_m1` and
+terminal-compare registers added a handful of cells and routed them; the macro,
+which is 89 % of the count, is unchanged within noise.  Recorded as measured, not
+minimised: 99 % of the remaining violations are still the macro's own layout and
+have nothing to do with this flow.
+
+#### DSM_DIV = 4: what it would buy, and why it is not mine to set
+
+`DSM_DIV` divides `MID_OUT` before the sigma-delta, so it sets the
+noise-shaping sample rate.  The arithmetic for the last DSM violators:
+
+```text
+now   (DSM_DIV=2, 5 ns):  data ~7.5 ns vs required ~6.3 -> -1.5121, 5 violators
+DSM_DIV=4   (10 ns)     :  data ~7.5 ns vs required ~11.3 -> about +2.9, closed
+```
+
+So it is the only lever left that fully closes `DSM_CK_G_CLK`, and B28/B29 have
+already measured and rejected every register-level option on that path
+(stage 3 changes the dither semantics, the output stage breaks the saturation
+observation).
+
+It also **halves the noise-shaping sample rate**, which is a design parameter,
+not a timing fix.  `delta_sigma_tb` cannot gate it -- that bench is
+DSM-internal and clock-agnostic, so its three exact averages stay exact under
+any `DSM_DIV`.  Confirming it would need the loop's noise transfer function,
+i.e. a phase-noise run, which is the B7 item still blocked on ngspice.
+
+**This is a spec decision (is the DSM rate a requirement?), so it is left to the
+owner rather than applied.**  If yes, the change is one parameter and every DSM
+violator closes; if no, the DSM group stays at 5 violators and -1.51.
+
 ### B30. Pre-decoded terminal compare: SS violators 56 -> 48, TT 9 -> 7
 
 The instruction (and B29) pointed at the 56 SS violators outside the DSM.
