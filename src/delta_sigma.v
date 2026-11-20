@@ -121,8 +121,24 @@ module delta_sigma #(
     end
 
 // Output process
-    assign cin_stg1 = EN_DSM & (SEL_DSM_2ND || SEL_DSM_3RD) & EN_DSM_DT & (~EN_DSM_SHDT) & self_dither;
-    assign cin_stg2 = EN_DSM & (SEL_DSM_2ND || SEL_DSM_3RD) & EN_DSM_DT & ( EN_DSM_SHDT) & self_dither;
+    // cin_stg1/2 sit directly in the carry-in of the stage-1/2 adders, so the
+    // whole 5-term AND (EN_DSM, order decode, EN_DSM_DT, EN_DSM_SHDT,
+    // self_dither) is in series with the adders in the same cycle.  Every
+    // input is a registered value, so register the AND itself: one DSM_CK of
+    // latency on the dither injection, which is a noise-shaping detail, in
+    // exchange for removing ~5 levels from the critical path.
+    reg cin_stg1_q, cin_stg2_q;
+    always @(posedge CK or posedge RST) begin
+        if (RST) begin
+            cin_stg1_q <= 1'b0;
+            cin_stg2_q <= 1'b0;
+        end else if (EN_DSM) begin
+            cin_stg1_q <= EN_DSM & (SEL_DSM_2ND || SEL_DSM_3RD) & EN_DSM_DT & (~EN_DSM_SHDT) & self_dither;
+            cin_stg2_q <= EN_DSM & (SEL_DSM_2ND || SEL_DSM_3RD) & EN_DSM_DT & ( EN_DSM_SHDT) & self_dither;
+        end
+    end
+    assign cin_stg1 = cin_stg1_q;
+    assign cin_stg2 = cin_stg2_q;
     
     assign sum_sd23 = {3'b000, ca2} + {3'b000, ca3} - {3'b000, dff_ca3};                            // 4b
     

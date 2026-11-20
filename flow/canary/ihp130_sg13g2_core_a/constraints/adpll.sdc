@@ -472,10 +472,23 @@ set_clock_uncertainty -hold  0.050 [all_clocks]
 # Inputs
 # ---------------------------------------------------------------------------
 # REF-sampled configuration.  KP/KI/FCW are quasi-static during lock; DSM_* are
-# mode straps.  They are timed as if driven by a REF-domain register; false-path
-# them instead if they are hard-tied in the final SoC.
-set_input_delay -max 5.000 -clock REF [get_ports {KP[*] KI[*] FCW[*]}]
-set_input_delay -min 1.000 -clock REF [get_ports {KP[*] KI[*] FCW[*]}]
+# mode straps.  They are timed as if driven by a REF-domain register.
+#
+# KP/KI are the loop-filter coefficients and they are consumed by
+# pll_digital_loop_filter, whose clock is `.CLK(!INJ_EDGE)` -- i.e. they are
+# sampled in the INJ_EDGE domain, on the inverted edge.  Constraining them
+# against REF produced 14 hold violators once the negedge clocks were declared
+# (KI[1]/KP[1] -> dlf.INT[*] / FILTER_OUT[*], -0.007 .. -0.153), which are
+# cross-domain input paths rather than data flow: a coefficient does not change
+# while the loop is locked.
+#
+# Declare them where they are actually sampled and exempt the crossing.  FCW
+# stays on REF because it *is* re-read each REF cycle by the frequency counter.
+set_input_delay -max 5.000 -clock REF [get_ports {FCW[*]}]
+set_input_delay -min 1.000 -clock REF [get_ports {FCW[*]}]
+set_input_delay -max 5.000 -clock INJ_EDGE [get_ports {KP[*] KI[*]}]
+set_input_delay -min 1.000 -clock INJ_EDGE [get_ports {KP[*] KI[*]}]
+set_false_path -from [get_ports {KP[*] KI[*]}]
 set_input_delay -max 5.000 -clock REF [get_ports {DSM_EN_DT DSM_EN_SHDT DSM_ORDER[*]}]
 set_input_delay -min 1.000 -clock REF [get_ports {DSM_EN_DT DSM_EN_SHDT DSM_ORDER[*]}]
 
