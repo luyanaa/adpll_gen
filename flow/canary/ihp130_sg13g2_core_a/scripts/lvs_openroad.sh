@@ -9,7 +9,9 @@
 # Usage: lvs_openroad.sh [run_dir]
 set -u
 HERE=$(cd "$(dirname "$0")/.." && pwd)
-RUN=${1:-$HERE/runs/RUN_2026-11-19_23-01-46}
+# Accept a relative run path and make it absolute: the netlist arguments are
+# passed into the container, where a relative path resolves against /grid.
+RUN=$(cd "${1:-$HERE/runs/RUN_2026-11-19_23-01-46}" && pwd)
 OUT=$HERE/lvs_openroad
 PDK=$HERE/build/pdk_root/ihp-sg13g2
 SETUP=$PDK/libs.tech/netgen/ihp-sg13g2_setup.tcl

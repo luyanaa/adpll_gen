@@ -361,6 +361,13 @@ ignore class sg13g2_dlygate4sd3_* byproperty
 # buf_16.  They are the CTS/inverter chain, not logic.
 ignore class sg13g2_buf_8 byproperty
 ignore class sg13g2_buf_16 byproperty
+# sg13g2_buf_1: 1 in the CDL vs 327 in the post-PnR netlist.  These are the
+# input/repair buffers that synthesis and repair_design added around the ports
+# and along the nets; the CDL is the logical view and does not carry them.
+ignore class sg13g2_buf_1 byproperty
+# tielo: one tie-off in the CDL, two in the netlist (the second drives an
+# unnamed net, i.e. an isolated constant).  Same as B19.
+ignore class sg13g2_tielo byproperty
 
 # ---------------------------------------------------------------------------
 # Remaining per-class deltas after the exclusions above

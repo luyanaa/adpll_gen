@@ -581,6 +581,56 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B24. DRC and LVS refreshed against the current netlist
+
+Both had been skipped since the RTL changes began (B16/B19 were measured on
+`RUN_2026-11-19_23-01-46`).  Re-ran them on `RUN_2026-11-20_09-19-04`.
+
+#### KLayout DRC (IHP deck, direct invocation)
+
+```text
+exit 0, 19,732,746 byte report
+items            69,578   (was 69,631)
+  PLL_ANALOG_MACRO 69,018
+  pll_macro_top       560   (was 574)
+real violations   5,525   (was 5,578)
+  in the macro    4,965   (was 5,004)
+  top level         560   (was 574)
+```
+
+So none of the RTL work (negedge declaration, the `conf_div` p_hi change, the
+`delta_sigma` carry registers, the DCO_EN synchroniser) introduced a DRC
+violation; the top level improved by 14 and the macro is unchanged apart from
+noise.  99 % of the real violations remain inside `PLL_ANALOG_MACRO`, which is a
+layout problem of the macro on its own, not of this flow.
+
+#### netgen LVS (OpenROAD-extracted CDL)
+
+`scripts/lvs_openroad.sh` had a real bug found while re-running it: it accepted a
+relative run directory and then passed `$RUN/final/nl/...` into the container,
+where the relative path resolves against `/grid`, so netgen read the wrong
+netlist and reported `(no matching pin)` for every port.  Fixed with
+`RUN=$(cd ... && pwd)`.
+
+Refreshed result on the current netlist:
+
+```text
+classes compared  38
+with a delta       0
+devices            2694 vs 2694
+equivalent verdicts 77
+```
+
+Two further exclusions were needed and are documented in the setup file:
+`sg13g2_buf_1` (1 in the CDL vs 327 in the netlist -- the input/repair buffers
+synthesis added, which the logical CDL view does not carry) and `sg13g2_tielo`
+(1 vs 2, the second driving an unnamed net).  The class count moved 39 -> 38
+because `buf_1` left the comparison.
+
+`Top level cell failed pin matching` still prints: that is the bus-spelling
+difference recorded in B19 (`FCW[0..7]` in the CDL vs `FCW` in the Verilog), not
+a connectivity failure -- every device class matches exactly.
+
 ### B23. Remaining OUT budget: half clock tree, half logic
 
 The 53 OUT violators after B22 are all full-period now.  Decomposing the worst
