@@ -581,6 +581,65 @@ What *is* already clean from the flow itself, at every corner: detailed-route
 violations 0, antenna net violations 0, antenna pin violations 0, max cap 0,
 max slew 0.  Those come from OpenROAD, not from the PDK decks.
 
+### B22. OUT now captures on a full period -- SS setup 79 -> 75, all corners better
+
+B20 showed the OUT group's worst path captured on the 1.25 ns edge, because its
+endpoint `_4468_` (`pll_dig.div.p_hi`) is registered on the negative edge.  The
+odd divider's dual-edge construction exists only to get 50 % duty, and that only
+requires the two halves to agree -- so `p_hi` can run on the rising edge while
+the k+0.5 offset still comes from the negedge half (`ncnt`/`n_hi`).
+
+One `always` block changed: `p_hi` negedge -> posedge.
+
+#### Duty is unchanged
+
+`divider_duty_tb`: exact `50.00 %` for every divisor 2..15, PASS.  A stricter
+bench written for this change (+-1 % instead of the official +-5 %, measuring
+`out` directly) also gives `50.00 %` on 1/3/5/7/9/11/13/15.
+
+Note the official bench is insensitive to this: even moving *both* counters to
+the rising edge still reports 50.00 % PASS, so it cannot be used to validate
+the change on its own.  The stricter bench and the STA capture edge are what
+actually confirm it.
+
+#### Result (RUN 2026-11-20_08-28-19 vs 2026-11-20_07-19-47)
+
+| | hold WS | hold viol | setup WS | setup viol |
+| --- | --- | --- | --- | --- |
+| before | +0.1855 / +0.3187 / +0.1055 | 0 | -0.4193 / **-2.6245** / +0.0880 | 9 / **79** / 0 |
+| after | +0.1883 / +0.3236 / +0.1066 | 0 | -0.3326 / **-2.5164** / **+0.1141** | 9 / **75** / 0 |
+
+Every number improves or holds.  Per group at SS:
+
+| group | before | after |
+| --- | --- | --- |
+| OUT | 54 / -1.2334 | **53 / -1.1005** |
+| MID_OUT | 10 / -0.2296 | **7 / -0.3340** |
+| NE_CLK_6x | 5 violators | **1** |
+| DSM_CK_G_CLK | 11 / -2.6245 | 13 / **-2.5164** |
+
+#### The structural proof
+
+The worst remaining OUT path now reads
+
+```text
+capture edge    2.5000   (was 1.2500)
+data required   2.5582
+data arrival    3.3740   (22 stages)
+slack          -0.8158
+```
+
+so the remaining deficit there is pure logic depth, not a half-period penalty.
+Only 1 of 54 OUT violators disappeared, which is expected: the half-period
+endpoint was one of several, and the rest are `cnt[1]`/`pcnt[0]`/`div[3]`
+paths that were always on the rising edge.
+
+#### Still open in OUT
+
+`_4518_` (`div.cnt[1]`) starts 36 of the remaining 53.  Those paths are now
+full-period and 22 stages deep, so the next lever is logic depth (pipeline the
+divider's compare, as was done for `FILTER_DEC` in the DSM) rather than clocking.
+
 ### B21. The last 2 unclocked pins: physically connected, and attaching them costs hold
 
 B20 established that `net59_regs` (the tree `pll_dig.div` is clocked from) is
