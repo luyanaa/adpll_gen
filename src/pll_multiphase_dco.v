@@ -46,9 +46,22 @@
 module PLL_MULTIPHASE_DCO #(
     // DLL tap-select width: 2^PH_W phases are produced.
     parameter integer PH_W        = 3,
-    // Log2 of the total delay-line stage count.  9 -> 512 stages, i.e. 64
-    // stages per tap at PH_W=3.  Must satisfy DELAY_BITS >= PH_W.
-    parameter integer DELAY_BITS  = 9
+    // Delay stages between adjacent taps.  The line is built as
+    // NSTAGE = NPHASE*STEP + 1 stages: odd (the ring needs an odd inversion
+    // count to oscillate) AND an exact multiple of NPHASE below the closing
+    // stage, so tap k sits at exactly k*STEP stages with no floor error.
+    // STEP sets the period: ring period ~= 2*NSTAGE*stage_delay.  STEP=6 ->
+    // NSTAGE=49 (~243 MHz at ~42 ps/stage SS); STEP=3 -> NSTAGE=25
+    // (~476 MHz).  DELAY_BITS is retained only for back-compat of the
+    // parameter port; STEP takes precedence when nonzero.
+    parameter integer DELAY_BITS  = 0,
+    parameter integer STEP        = 6,
+    // Extra unit-load fingers hung on the closing node chain[NSTAGE] to pull
+    // the frequency DOWN without touching the (uniform) tap grid.  A static
+    // parameter, not a runtime port: runtime phase/frequency control is the
+    // PI's job (Stage B), this just centers the free-running period.  0 = no
+    // extra load.
+    parameter integer CLOSE_LOAD  = 0
 ) (
 `ifdef WITH_POWER
     inout  wire                 VDD, VSS,
@@ -62,24 +75,22 @@ module PLL_MULTIPHASE_DCO #(
     output wire [ (1<<PH_W)-1 : 0 ] PHASE
 );
     localparam integer NPHASE = 1 << PH_W;
-    // Odd stage count so the line both oscillates and spans one full period.
-    localparam integer NSTAGE = (1 << DELAY_BITS) | 1;
-    // Stages between two adjacent taps.  Integer by construction because
-    // DELAY_BITS >= PH_W; the elaboration check below enforces it.
-    // Tap positions are floor(k * NSTAGE / NPHASE) stages.  With an odd
-    // NSTAGE that is not a single integer, so neighbouring taps differ by one
-    // stage at most -- that one-stage quantisation is inherent to putting
-    // 2^PH_W taps on an odd-length line and is well below one tap step.
+    // NSTAGE = NPHASE*STEP + 1: odd (oscillates) and the tapped body is an
+    // exact multiple of NPHASE, so tap k is exactly k*STEP stages in.
+    // Back-compat: if STEP==0 fall back to the legacy 2^DELAY_BITS line.
+    localparam integer STEP_EFF = (STEP != 0) ? STEP : (1 << (DELAY_BITS - PH_W));
+    localparam integer NSTAGE   = NPHASE * STEP_EFF + 1;
+    // Tap positions are exact multiples of STEP_EFF -- no floor error.
     function integer tap_stage(input integer k);
         begin
-            tap_stage = (k * NSTAGE) / NPHASE;
+            tap_stage = k * STEP_EFF;
         end
     endfunction
 
     generate
-        if (DELAY_BITS < PH_W) begin : g_bad_geometry
+        if (STEP == 0 && DELAY_BITS < PH_W) begin : g_bad_geometry
             // Fail closed at elaboration time rather than silently producing
-            // a non-integer tap spacing.
+            // a non-integer tap spacing (legacy DELAY_BITS path only).
             MULTIPHASE_DCO_REQUIRES_DELAY_BITS_GE_PH_W u_error();
         end
     endgenerate
@@ -87,15 +98,15 @@ module PLL_MULTIPHASE_DCO #(
     // Loop polarity and period.
     //
     // A ring of inverting stages oscillates only with an ODD stage count, but
-    // the tap grid needs the delay line itself to span exactly ONE period so
-    // that tap k sits at k*(period/2^PH_W).  Both requirements are met by
-    // making the tapped line an odd number of stages and letting that same
-    // line be the whole loop: NSTAGE is 2^DELAY_BITS + 1 stages.
+    // the tap grid needs the delay line to span exactly ONE period with taps
+    // at exact multiples of STEP.  NSTAGE = NPHASE*STEP + 1 satisfies both:
+    // odd (oscillates) and the tapped body is NPHASE*STEP, so tap k lands at
+    // exactly k*STEP with no floor error.
     //
-    // (An earlier version used 2^DELAY_BITS stages plus a separate closing
-    // NAND.  The taps then spanned only NSTAGE/(NSTAGE+1) of a period, so the
-    // last phase was short of a full grid and the CDR's uniform-spacing
-    // assumption broke.  That is what the divided-grid check below catches.)
+    // (The previous 2^DELAY_BITS + 1 form also gave an odd line, but its tap
+    // positions were floor(k*NSTAGE/NPHASE) -- a one-stage quantisation that
+    // was harmless at NSTAGE=513 yet breaks the uniform grid on a short,
+    // fast line.  The STEP form removes it exactly.)
     wire [NSTAGE:0] chain;
     assign chain[0] = DCO_OUT;
     wire loop_back;
@@ -153,6 +164,23 @@ module PLL_MULTIPHASE_DCO #(
 `endif
         .A0(chain[NSTAGE]), .A1(DCO_EN), .ZN(loop_back)
     );
+
+    // Static frequency centering: CLOSE_LOAD extra unit loads hang on the
+    // closing node chain[NSTAGE].  That node is the ring boundary (not a tap
+    // node), so loading it shifts the period uniformly while the 8-way tap
+    // grid stays exact.  Each finger is an inverter with its input on the
+    // node and its output left open -- a load only.
+    generate
+        for (genvar f = 0; f < CLOSE_LOAD; f = f + 1) begin : close_load
+            (* keep *) (* dont_touch = "true" *)
+            PLL_CELL_INVX1 load_inv (
+`ifdef WITH_POWER
+                .VDD(VDD), .VSS(VSS),
+`endif
+                .I(chain[NSTAGE]), .ZN()
+            );
+        end
+    endgenerate
 
     // Complementary end of the line for a differential buffer, if used.
     assign DCO_OUT_N = chain[NSTAGE-1];

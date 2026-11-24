@@ -36,8 +36,13 @@ module CDR_TOP #(
     // 2^PH_W equally spaced phases.  PH_W=3 -> 8 phases, the documented
     // default (1.25 ns spacing at 100 MHz).
     parameter integer PH_W       = 3,
-    // Log2 of the delay-line stage count.  Must be >= PH_W.
-    parameter integer DELAY_BITS = 9,
+    // Stages per tap (NSTAGE = 8*STEP + 1).  6 -> ~243 MHz, 3 -> ~476 MHz at
+    // SS on sg13g2_inv_1.  For a 500 MHz-class multiphase clock use STEP=3 and
+    // pull down with CLOSE_LOAD.  DELAY_BITS is the legacy back-compat knob
+    // (ignored while STEP!=0).
+    parameter integer DELAY_BITS = 0,
+    parameter integer STEP        = 6,
+    parameter integer CLOSE_LOAD  = 0,
     // Number of reference cycles the phase mux parks low when the tap
     // changes.  1 is enough for the sampled edge to be safely away.
     parameter integer PARK_CYCLES = 1
@@ -57,7 +62,8 @@ module CDR_TOP #(
     wire dco_out, dco_out_n;
 
     PLL_MULTIPHASE_DCO #(
-        .PH_W(PH_W), .DELAY_BITS(DELAY_BITS)
+        .PH_W(PH_W), .DELAY_BITS(DELAY_BITS),
+        .STEP(STEP), .CLOSE_LOAD(CLOSE_LOAD)
     ) u_dco (
         .DCO_EN(DCO_EN),
         .DCO_OUT(dco_out), .DCO_OUT_N(dco_out_n),
