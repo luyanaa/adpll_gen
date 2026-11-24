@@ -522,13 +522,17 @@ test_p0: test_delta_sigma_sat test_divider test_lock_detector test_ssbbpd_contra
 
 # Closed-loop smoke with the macro wrapper and behavioral sim_* models.
 # This is an elaboration/connectivity smoke; it does not yet claim lock.
+# The explicit top (-s) matters: without it Icarus also elaborates unused
+# modules that have an initial/always block (sim_dco among them) as extra
+# roots, which turns a 0.5 s run into a multi-GB event generator.  The memory
+# cap makes any such regression fail fast instead of taking the box down.
 test_pll_macro_smoke: $(SIM_OUT)/pll_macro_top.out
-	cd $(SIM_OUT) && timeout 180s $(VVP) pll_macro_top.out
+	cd $(SIM_OUT) && ulimit -v 4000000 && timeout 180s $(VVP) pll_macro_top.out
 .PHONY: test_pll_macro_smoke
 
 $(SIM_OUT)/pll_macro_top.out: $(SRC_DIR)/pll_macro_top_tb.v $(SRC_DIR)/pll_macro_top.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/ref_watchdog.v $(SRC_DIR)/ddr_ck.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(ROOT_DIR)/flow/macro/ics55_h7cr/pll_analog_macro.v $(SRC_DIR)/pll_analog.v $(SRC_DIR)/il_dco.v $(SRC_DIR)/sim_dco.v $(SRC_DIR)/sim_injection.v $(SRC_DIR)/sim_sym.v $(SRC_DIR)/sim_mux.v $(SRC_DIR)/sim_SSBBPD.v $(SRC_DIR)/frequency_counter_frontend.v
 	mkdir -p $(SIM_OUT)
-	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o pll_macro_top.out -D SIMULATION  $^
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o pll_macro_top.out -D SIMULATION -D SIMULATION_FAST -s pll_macro_top_tb  $^
 
 # Behavioral Core B/C architecture models
 test_arch_models: $(SIM_OUT)/arch_models.out
