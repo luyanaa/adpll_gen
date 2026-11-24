@@ -47,15 +47,17 @@ module PLL_MULTIPHASE_DCO #(
     // DLL tap-select width: 2^PH_W phases are produced.
     parameter integer PH_W        = 3,
     // Delay stages between adjacent taps.  The line is built as
-    // NSTAGE = NPHASE*STEP + 1 stages: odd (the ring needs an odd inversion
-    // count to oscillate) AND an exact multiple of NPHASE below the closing
-    // stage, so tap k sits at exactly k*STEP stages with no floor error.
+    // NSTAGE = NPHASE*STEP + 1 stages: odd so the (non-inverting) AND
+    // closure yields an odd loop inversion count -- a clean travelling-wave
+    // ring.  The tapped body is NPHASE*STEP (an exact multiple), so tap k
+    // sits at exactly k*STEP stages with no floor error, covering a half
+    // period in 8 steps (the complementary edges complete the UI grid).
     // STEP sets the period: ring period ~= 2*NSTAGE*stage_delay.  STEP=6 ->
     // NSTAGE=49 (~243 MHz at ~42 ps/stage SS); STEP=3 -> NSTAGE=25
     // (~476 MHz).  DELAY_BITS is retained only for back-compat of the
     // parameter port; STEP takes precedence when nonzero.
     parameter integer DELAY_BITS  = 0,
-    parameter integer STEP        = 6,
+    parameter integer STEP        = 3,
     // Extra unit-load fingers hung on the closing node chain[NSTAGE] to pull
     // the frequency DOWN without touching the (uniform) tap grid.  A static
     // parameter, not a runtime port: runtime phase/frequency control is the
@@ -156,13 +158,21 @@ module PLL_MULTIPHASE_DCO #(
         end
     endgenerate
 
-    // Closing stage: inverting NAND with the enable, giving the odd inversion
-    // the ring needs without perturbing the delay grid.
-    PLL_CELL_NAND2X1 loop_close (
+    // Closing stage: NON-inverting (AND) enable so the loop inversion count
+    // is exactly NSTAGE -- odd for the STEP geometry -> a clean travelling-
+    // wave ring.  The tapped body is NPHASE*STEP stages (an exact multiple),
+    // so tap k sits at k*STEP and the grid spans the half-line; the odd
+    // NSTAGE line is the full loop period, one tap step == T/NPHASE.
+    //
+    // (The previous form closed with an inverting NAND: NSTAGE+1 inversions
+    // is EVEN, which is a relaxation/bi-stable mode, not a travelling wave --
+    // it can latch when released and its tap grid measured 0/83/166/250 deg,
+    // not the T/8 a sampler needs.  The AND closure fixes both.)
+    PLL_CELL_AND2X1 loop_close (
 `ifdef WITH_POWER
         .VDD(VDD), .VSS(VSS),
 `endif
-        .A0(chain[NSTAGE]), .A1(DCO_EN), .ZN(loop_back)
+        .A0(chain[NSTAGE]), .A1(DCO_EN), .Z(loop_back)
     );
 
     // Static frequency centering: CLOSE_LOAD extra unit loads hang on the
