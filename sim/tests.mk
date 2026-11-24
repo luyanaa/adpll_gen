@@ -304,6 +304,13 @@ $(SIM_OUT)/lock_fsm_tb.vcd: $(SRC_DIR)/lock_fsm_tb.v $(SRC_DIR)/pll_logic.v $(SR
 	mkdir -p $(SIM_OUT)
 	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
 
+# Gear shifting: KP/KI switch port->tracking at state 011 and back on loss
+test_gear: $(SIM_OUT)/tb_gear.vcd
+
+$(SIM_OUT)/tb_gear.vcd: $(SRC_DIR)/tb_gear.v $(SRC_DIR)/pll_logic.v $(SRC_DIR)/ref_watchdog.v $(SRC_DIR)/lock_detector.v $(SRC_DIR)/digital_loop_filter.v $(SRC_DIR)/term_decoder.v $(SRC_DIR)/freq_lock.v $(SRC_DIR)/delta_sigma.v $(SRC_DIR)/fix_div.v $(SRC_DIR)/conf_div.v $(SRC_DIR)/frequency_counter_frontend.v
+	mkdir -p $(SIM_OUT)
+	cd $(SIM_OUT) && $(IVERILOG) -g2012 -o a.out -D SIMULATION=1  $^ && $(VVP) a.out
+
 # Divider boundary regression
 test_divider: $(SIM_OUT)/divider_tb.vcd
 
@@ -510,7 +517,7 @@ test_ddr_phy: test_ddr_clock_phy test_dll_dcdl test_dll_full_period test_ddr_phy
 .PHONY: test_ddr_phy
 
 # P0-A correctness gate (fast RTL regressions)
-test_p0: test_delta_sigma_sat test_divider test_lock_detector test_ssbbpd_contract test_ref_watchdog test_lock_fsm test_freq_ok test_freq_lock_cdc test_freq_lock_stub test_ddr_ck test_dll_dcdl test_dll_full_period test_ddr_clock_phy test_ddr_phy_dll test_ddr_clock_phy_integration test_pll_macro_smoke
+test_p0: test_delta_sigma_sat test_divider test_lock_detector test_ssbbpd_contract test_ref_watchdog test_lock_fsm test_gear test_freq_ok test_freq_lock_cdc test_freq_lock_stub test_ddr_ck test_dll_dcdl test_dll_full_period test_ddr_clock_phy test_ddr_phy_dll test_ddr_clock_phy_integration test_pll_macro_smoke
 .PHONY: test_p0
 
 # Closed-loop smoke with the macro wrapper and behavioral sim_* models.

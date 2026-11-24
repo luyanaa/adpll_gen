@@ -11,7 +11,9 @@ module pll_macro_top #(
     parameter integer FINE_NDELS = 31,
     parameter integer FILTER_BITS = 16,
     parameter integer IS_DSM = 1,
-    parameter integer DSM_DIV = 2,
+    // Same caveat as pll.v: /4 closes DSM setup.  The halved
+    // noise-shaping sample rate has not been measured.
+    parameter integer DSM_DIV = 4,
     parameter integer LOCKED_WAIT = 64,
     parameter integer FILTER_ILL = 16,
     parameter integer LOCK_TOL = 1,
@@ -19,6 +21,11 @@ module pll_macro_top #(
     parameter integer LOSS_COUNT = 4,
     parameter integer CNT_EXTRA_BITS = 8,
     parameter integer MEAS_PERIODS = 1,
+    parameter integer LOCK_WINDOW = 256,
+    // Gear shifting passthrough (see pll_logic / dlf_design.py).
+    parameter integer GEAR_SHIFT = 1,
+    parameter integer KP_TRACK = 1148,
+    parameter integer KI_TRACK = 23,
 `ifndef PLL_WITHOUT_DIVIDER
     parameter integer DIV_BITS = 8,
     parameter integer DIV_INIT = 2,
@@ -61,8 +68,12 @@ module pll_macro_top #(
         .LOCK_TOL(LOCK_TOL),
         .LOCK_COUNT(LOCK_COUNT),
         .LOSS_COUNT(LOSS_COUNT),
+        .GEAR_SHIFT(GEAR_SHIFT),
+        .KP_TRACK(KP_TRACK),
+        .KI_TRACK(KI_TRACK),
         .CNT_EXTRA_BITS(CNT_EXTRA_BITS),
         .MEAS_PERIODS(MEAS_PERIODS),
+        .LOCK_WINDOW(LOCK_WINDOW),
 `ifndef PLL_WITHOUT_DIVIDER
         .DIV_BITS(DIV_BITS),
         .DIV_INIT(DIV_INIT),
