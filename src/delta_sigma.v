@@ -6,6 +6,15 @@
 * considered but the 3rd-stage is employed for self-dithering.
 * The dithering is only at the 2nd-stage. To meet with the 10-bit
 *
+* 2026-11-24 measured in-loop role: in the closed BBPLL the DSM is NOT
+* acting as a classical quantization-noise shaper (the measured
+* fine-code PSD *falls* with frequency, -89 dB @1 MHz -> -103 dB @700
+* MHz, the opposite of NTF shaping).  Its real job is the
+* EN_DSM_SHDT self-dither stream, which prevents the bang-bang dead
+* zone from freezing the loop: with IS_DSM=0 the post-lock code locks
+* to a 2-code {15,16} alternation (0.23 codes rms) and stops tracking.
+* Do not "optimize" it into a noise shaper; keep the dither on.
+*
 * NOTE: No LICENSE yet
 ****************************************************************/
 
