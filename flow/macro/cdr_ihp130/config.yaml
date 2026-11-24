@@ -172,121 +172,49 @@ MANUAL_GLOBAL_PLACEMENTS:
     location: [24.960, 15.120]
     orientation: N
   "u_dco.stage[13].stage_inv.impl":
-    location: [26.400, 15.120]
+    location: [23.520, 18.900]
     orientation: N
   "u_dco.stage[14].stage_inv.impl":
-    location: [27.840, 15.120]
+    location: [22.080, 18.900]
     orientation: N
   "u_dco.stage[15].stage_inv.impl":
-    location: [29.280, 15.120]
+    location: [20.640, 18.900]
     orientation: N
   "u_dco.stage[16].stage_inv.impl":
-    location: [30.720, 15.120]
+    location: [19.200, 18.900]
     orientation: N
   "u_dco.stage[17].stage_inv.impl":
-    location: [29.280, 18.900]
+    location: [17.760, 18.900]
     orientation: N
   "u_dco.stage[18].stage_inv.impl":
-    location: [27.840, 18.900]
+    location: [16.320, 18.900]
     orientation: N
   "u_dco.stage[19].stage_inv.impl":
-    location: [26.400, 18.900]
+    location: [14.880, 18.900]
     orientation: N
   "u_dco.stage[1].stage_inv.impl":
     location: [9.120, 15.120]
     orientation: N
   "u_dco.stage[20].stage_inv.impl":
-    location: [24.960, 18.900]
-    orientation: N
-  "u_dco.stage[21].stage_inv.impl":
-    location: [23.520, 18.900]
-    orientation: N
-  "u_dco.stage[22].stage_inv.impl":
-    location: [22.080, 18.900]
-    orientation: N
-  "u_dco.stage[23].stage_inv.impl":
-    location: [20.640, 18.900]
-    orientation: N
-  "u_dco.stage[24].stage_inv.impl":
-    location: [19.200, 18.900]
-    orientation: N
-  "u_dco.stage[25].stage_inv.impl":
-    location: [17.760, 18.900]
-    orientation: N
-  "u_dco.stage[26].stage_inv.impl":
-    location: [16.320, 18.900]
-    orientation: N
-  "u_dco.stage[27].stage_inv.impl":
-    location: [14.880, 18.900]
-    orientation: N
-  "u_dco.stage[28].stage_inv.impl":
     location: [13.440, 18.900]
     orientation: N
-  "u_dco.stage[29].stage_inv.impl":
+  "u_dco.stage[21].stage_inv.impl":
     location: [12.000, 18.900]
+    orientation: N
+  "u_dco.stage[22].stage_inv.impl":
+    location: [10.560, 18.900]
+    orientation: N
+  "u_dco.stage[23].stage_inv.impl":
+    location: [9.120, 18.900]
+    orientation: N
+  "u_dco.stage[24].stage_inv.impl":
+    location: [7.680, 18.900]
     orientation: N
   "u_dco.stage[2].stage_inv.impl":
     location: [10.560, 15.120]
     orientation: N
-  "u_dco.stage[30].stage_inv.impl":
-    location: [10.560, 18.900]
-    orientation: N
-  "u_dco.stage[31].stage_inv.impl":
-    location: [9.120, 18.900]
-    orientation: N
-  "u_dco.stage[32].stage_inv.impl":
-    location: [7.680, 18.900]
-    orientation: N
-  "u_dco.stage[33].stage_inv.impl":
-    location: [7.680, 22.680]
-    orientation: N
-  "u_dco.stage[34].stage_inv.impl":
-    location: [9.120, 22.680]
-    orientation: N
-  "u_dco.stage[35].stage_inv.impl":
-    location: [10.560, 22.680]
-    orientation: N
-  "u_dco.stage[36].stage_inv.impl":
-    location: [12.000, 22.680]
-    orientation: N
-  "u_dco.stage[37].stage_inv.impl":
-    location: [13.440, 22.680]
-    orientation: N
-  "u_dco.stage[38].stage_inv.impl":
-    location: [14.880, 22.680]
-    orientation: N
-  "u_dco.stage[39].stage_inv.impl":
-    location: [16.320, 22.680]
-    orientation: N
   "u_dco.stage[3].stage_inv.impl":
     location: [12.000, 15.120]
-    orientation: N
-  "u_dco.stage[40].stage_inv.impl":
-    location: [17.760, 22.680]
-    orientation: N
-  "u_dco.stage[41].stage_inv.impl":
-    location: [19.200, 22.680]
-    orientation: N
-  "u_dco.stage[42].stage_inv.impl":
-    location: [20.640, 22.680]
-    orientation: N
-  "u_dco.stage[43].stage_inv.impl":
-    location: [22.080, 22.680]
-    orientation: N
-  "u_dco.stage[44].stage_inv.impl":
-    location: [23.520, 22.680]
-    orientation: N
-  "u_dco.stage[45].stage_inv.impl":
-    location: [24.960, 22.680]
-    orientation: N
-  "u_dco.stage[46].stage_inv.impl":
-    location: [26.400, 22.680]
-    orientation: N
-  "u_dco.stage[47].stage_inv.impl":
-    location: [27.840, 22.680]
-    orientation: N
-  "u_dco.stage[48].stage_inv.impl":
-    location: [29.280, 22.680]
     orientation: N
   "u_dco.stage[4].stage_inv.impl":
     location: [13.440, 15.120]
@@ -310,23 +238,23 @@ MANUAL_GLOBAL_PLACEMENTS:
     location: [7.680, 11.340]
     orientation: N
   "u_dco.tap[1].tap_buf.impl":
-    location: [16.320, 11.340]
+    location: [12.000, 11.340]
     orientation: N
   "u_dco.tap[2].tap_buf.impl":
-    location: [24.960, 11.340]
+    location: [16.320, 11.340]
     orientation: N
   "u_dco.tap[3].tap_buf.impl":
-    location: [27.840, 26.460]
+    location: [20.640, 11.340]
     orientation: N
   "u_dco.tap[4].tap_buf.impl":
-    location: [19.200, 26.460]
+    location: [24.960, 18.900]
     orientation: N
   "u_dco.tap[5].tap_buf.impl":
-    location: [10.560, 26.460]
+    location: [20.640, 22.680]
     orientation: N
   "u_dco.tap[6].tap_buf.impl":
-    location: [12.000, 26.460]
+    location: [16.320, 22.680]
     orientation: N
   "u_dco.tap[7].tap_buf.impl":
-    location: [20.640, 26.460]
+    location: [12.000, 22.680]
     orientation: N

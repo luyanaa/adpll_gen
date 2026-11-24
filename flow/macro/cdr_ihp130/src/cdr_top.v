@@ -41,7 +41,7 @@ module CDR_TOP #(
     // pull down with CLOSE_LOAD.  DELAY_BITS is the legacy back-compat knob
     // (ignored while STEP!=0).
     parameter integer DELAY_BITS = 0,
-    parameter integer STEP        = 6,
+    parameter integer STEP        = 3,
     parameter integer CLOSE_LOAD  = 0,
     // Number of reference cycles the phase mux parks low when the tap
     // changes.  1 is enough for the sampled edge to be safely away.
