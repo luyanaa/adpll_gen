@@ -40,7 +40,11 @@ module lock_fsm_tb;
         end
     end
 
-    reg RST_N = 1'b0;
+    // Declare high, then pull low at t=0 so reset actually emits a negedge.
+    // A declaration-time 0 never transitions, so the negedge-reset flops
+    // (notably the Gray OUT-activity counter) would stay X and the DCO
+    // watchdog would false-trip forever.
+    reg RST_N = 1'b1;
     reg [1:0] SS_BBPD = 2'b00;
     reg [FILTER_BITS-1:0] KP = 0, KI = 0;
     reg [FCW_BITS-1:0] FCW = 4'd8;
@@ -70,6 +74,7 @@ module lock_fsm_tb;
         .FILTER_ILL(2),
         .REF_TIMEOUT(32),
         .DCO_TIMEOUT(4),
+        .LOCK_WINDOW(1),
         .TB_OVERRIDE(1),
 `ifndef PLL_WITHOUT_DIVIDER
         .DIV_BITS(8),
@@ -106,6 +111,7 @@ module lock_fsm_tb;
 
     initial begin
         $display("TB start");
+        RST_N = 1'b0; // 1->0 at t=0: real negedge for the async resets
         // The detectors are exercised by their own benches.  Here the FSM
         // sees the TB_OVERRIDE regs, so the transition logic is isolated.
         dut.FREQ_LOCKED_TB = 1'b1;

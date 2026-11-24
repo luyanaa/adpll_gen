@@ -376,7 +376,14 @@ module pll_logic#(
     reg locked_q;
     reg clr_toggle;
     reg fail_q, fail_qq;
-    assign LOCKED = locked_q & ~ref_fail & ~dco_fail;
+    // REF_OK is the live watchdog output (OUT domain).  It is needed in the
+    // gate because ref_fail is registered on REF: if REF stops, there is no
+    // posedge REF to latch !REF_OK, so the sticky alone can never drop
+    // LOCKED.  locked_q is in the INJ_EDGE domain, which also dies with REF.
+    // The sticky is still required for the returning-REF case: REF_OK comes
+    // back before the FSM acknowledges, and ~ref_fail holds LOCKED low until
+    // it does, so this level term cannot re-assert lock early.
+    assign LOCKED = locked_q & ~ref_fail & ~dco_fail & REF_OK;
     // clr_toggle is toggled by the INJ_EDGE-domain FSM; synchronize it into
     // REF and clear the sticky on the detected edge.
     wire clr_r_edge = clr_r2 ^ clr_r3;
