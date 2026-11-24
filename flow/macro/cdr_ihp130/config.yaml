@@ -43,5 +43,1681 @@ DIE_AREA: [0, 0, 120, 100]
 FP_CORE_UTIL: 25
 PL_TARGET_DENSITY_PCT: 40
 
-# Signoff steps that need IHP KLayout/netgen collateral are skipped by the
-# Makefile, not here; see flow/macro/ihp130_sg13g2/README.md.
+# Multi-corner standard-cell libraries.  One corner is enough for the P&R
+# optimiser, but the signoff STA and the resizer need all three so the
+# CDR_MODE=4 contract is checked at every voltage/temperature corner the
+# macro can see.  Paths resolve against this directory's own build/pdk_root;
+# point it at the shared root with a symlink (ln -s ../../build build).
+LIB:
+  nom_tt_025C_1v20:
+    - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+  nom_ss_125C_1v08:
+    - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib
+  nom_ff_n40C_1v32:
+    - dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p32V_m40C.lib
+STA_CORNERS:
+  - nom_tt_025C_1v20
+  - nom_ss_125C_1v08
+  - nom_ff_n40C_1v32
+RCX_RULESETS:
+  "nom_tt_025C_1v20": dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/rcx/IHP_rcx_patterns.rules
+  "nom_ss_125C_1v08": dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/rcx/IHP_rcx_patterns.rules
+  "nom_ff_n40C_1v32": dir::build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/rcx/IHP_rcx_patterns.rules
+
+# Signoff switches: same collateral as the canary top.  Magic.WriteLEF is
+# kept off -- it only feeds the antenna checker and the PDK GDS tech cannot
+# map the macro's unnamed 62/0 marker layer.
+RUN_MAGIC_STREAMOUT: false
+RUN_KLAYOUT_STREAMOUT: true
+RUN_MAGIC_WRITE_LEF: false
+RUN_KLAYOUT_XOR: false
+RUN_MAGIC_DRC: true
+RUN_KLAYOUT_DRC: true
+RUN_LVS: true
+RUN_EQY: false
+KLAYOUT_DRC_RUNSET: dir::build/pdk_root/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc
+
+# The vendored ihp-sg13g2-signoff.tech is unusable: its `lef` section maps
+# routing/cut layers to names (m1..m7, via1..) it never defines as magic
+# types, which makes cifinput error out and kills both `gds read` and
+# `lef read`.  The main ihp-sg13g2.tech is the complete tech -- it includes
+# cifin/cifout, the vendor drc deck, a correct lef section, and the ngspice
+# device-extract rules -- so a thin local magicrc loads it for every Magic
+# step (DRC, streamout and SPICE extraction all share it).
+MAGICRC: dir::cdr_ihp130.magicrc
+MAGIC_TECH: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2.tech
+MAGIC_LEF_WRITE_USE_GDS: true
+# GDS path for extraction: the DEF/LEF route is dead anyway (signoff tech)
+# and GDS gives ext2spice the real transistor-level netlist for LVS.
+MAGIC_EXT_USE_GDS: true
+
+# Netgen.LVS inside LibreLane does not reach the IHP setup.  This
+# directory's build/ is the canary build, whose librelane config.tcl sets
+# NETGEN_SETUP to /dev/null, so scripts/netgen/setup.tcl dies on `cells1`
+# and every sg13_lv_* fet is compared as a pinless placeholder.  Do not read
+# that run's 91 errors as a layout result.  The recomparison against
+# ihp-sg13g2_setup.tcl is in SIGNOFF.md: the netlist matches, two cells do
+# not.  A fresh LibreLane run only counts once NETGEN_SETUP points at
+# build/pdk_root/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl.
+
+# ---------------------------------------------------------------------------
+# Deterministic DCO ring placement + IO pin spacing.
+#
+# The 513-stage ring must present a *uniform* 64-stage delay per tap interval.
+# Left to the global placer the single long chain gets scattered around the
+# die, so each tap interval picks up a different routed wire length and the
+# per-tap phase residual exceeded the 30 ps budget.  MANUAL_GLOBAL_PLACEMENTS
+# lays the chain out as a compact snake: every stage abuts the next, so each
+# 64-stage interval spans the same ~100 um of wire.  Each tap buffer, its
+# PHASE observability buffer and the mux leaf are inserted next to their tap.
+#
+# IO_PIN_MIN_DISTANCE widens the right-edge pin pitch; the default two-track
+# pitch put REF within the Metal3 spacing rule of TAP[1] and RST_N.
+# ---------------------------------------------------------------------------
+IO_PIN_MIN_DISTANCE: 2.0
+MANUAL_GLOBAL_PLACEMENTS:
+  "_31_":
+    location: [5.760, 45.360]
+    orientation: N
+  "_33_":
+    location: [21.600, 49.140]
+    orientation: N
+  "_34_":
+    location: [52.320, 26.460]
+    orientation: N
+  "_36_":
+    location: [47.520, 56.700]
+    orientation: N
+  "_37_":
+    location: [55.680, 30.240]
+    orientation: N
+  "_63_":
+    location: [11.040, 15.120]
+    orientation: N
+  "_64_":
+    location: [26.880, 18.900]
+    orientation: N
+  "_65_":
+    location: [54.240, 26.460]
+    orientation: N
+  "_66_":
+    location: [53.760, 30.240]
+    orientation: N
+  "_67_":
+    location: [27.840, 37.800]
+    orientation: N
+  "_68_":
+    location: [9.600, 41.580]
+    orientation: N
+  "_69_":
+    location: [24.000, 49.140]
+    orientation: N
+  "_70_":
+    location: [49.920, 56.700]
+    orientation: N
+  "u_dco.loop_close.impl":
+    location: [5.760, 15.120]
+    orientation: N
+  "u_dco.stage[0].stage_inv.impl":
+    location: [7.680, 15.120]
+    orientation: N
+  "u_dco.stage[100].stage_inv.impl":
+    location: [36.000, 22.680]
+    orientation: N
+  "u_dco.stage[101].stage_inv.impl":
+    location: [37.440, 22.680]
+    orientation: N
+  "u_dco.stage[102].stage_inv.impl":
+    location: [38.880, 22.680]
+    orientation: N
+  "u_dco.stage[103].stage_inv.impl":
+    location: [40.320, 22.680]
+    orientation: N
+  "u_dco.stage[104].stage_inv.impl":
+    location: [41.760, 22.680]
+    orientation: N
+  "u_dco.stage[105].stage_inv.impl":
+    location: [43.200, 22.680]
+    orientation: N
+  "u_dco.stage[106].stage_inv.impl":
+    location: [44.640, 22.680]
+    orientation: N
+  "u_dco.stage[107].stage_inv.impl":
+    location: [46.080, 22.680]
+    orientation: N
+  "u_dco.stage[108].stage_inv.impl":
+    location: [47.520, 22.680]
+    orientation: N
+  "u_dco.stage[109].stage_inv.impl":
+    location: [48.960, 22.680]
+    orientation: N
+  "u_dco.stage[10].stage_inv.impl":
+    location: [25.920, 15.120]
+    orientation: N
+  "u_dco.stage[110].stage_inv.impl":
+    location: [50.400, 22.680]
+    orientation: N
+  "u_dco.stage[111].stage_inv.impl":
+    location: [51.840, 22.680]
+    orientation: N
+  "u_dco.stage[112].stage_inv.impl":
+    location: [53.280, 22.680]
+    orientation: N
+  "u_dco.stage[113].stage_inv.impl":
+    location: [54.720, 22.680]
+    orientation: N
+  "u_dco.stage[114].stage_inv.impl":
+    location: [56.160, 22.680]
+    orientation: N
+  "u_dco.stage[115].stage_inv.impl":
+    location: [57.600, 22.680]
+    orientation: N
+  "u_dco.stage[116].stage_inv.impl":
+    location: [59.040, 22.680]
+    orientation: N
+  "u_dco.stage[117].stage_inv.impl":
+    location: [60.480, 22.680]
+    orientation: N
+  "u_dco.stage[118].stage_inv.impl":
+    location: [61.920, 22.680]
+    orientation: N
+  "u_dco.stage[119].stage_inv.impl":
+    location: [63.360, 22.680]
+    orientation: N
+  "u_dco.stage[11].stage_inv.impl":
+    location: [27.360, 15.120]
+    orientation: N
+  "u_dco.stage[120].stage_inv.impl":
+    location: [64.800, 22.680]
+    orientation: N
+  "u_dco.stage[121].stage_inv.impl":
+    location: [66.240, 22.680]
+    orientation: N
+  "u_dco.stage[122].stage_inv.impl":
+    location: [66.720, 26.460]
+    orientation: N
+  "u_dco.stage[123].stage_inv.impl":
+    location: [65.280, 26.460]
+    orientation: N
+  "u_dco.stage[124].stage_inv.impl":
+    location: [63.840, 26.460]
+    orientation: N
+  "u_dco.stage[125].stage_inv.impl":
+    location: [62.400, 26.460]
+    orientation: N
+  "u_dco.stage[126].stage_inv.impl":
+    location: [60.960, 26.460]
+    orientation: N
+  "u_dco.stage[127].stage_inv.impl":
+    location: [59.520, 26.460]
+    orientation: N
+  "u_dco.stage[128].stage_inv.impl":
+    location: [58.080, 26.460]
+    orientation: N
+  "u_dco.stage[129].stage_inv.impl":
+    location: [50.880, 26.460]
+    orientation: N
+  "u_dco.stage[12].stage_inv.impl":
+    location: [28.800, 15.120]
+    orientation: N
+  "u_dco.stage[130].stage_inv.impl":
+    location: [49.440, 26.460]
+    orientation: N
+  "u_dco.stage[131].stage_inv.impl":
+    location: [48.000, 26.460]
+    orientation: N
+  "u_dco.stage[132].stage_inv.impl":
+    location: [46.560, 26.460]
+    orientation: N
+  "u_dco.stage[133].stage_inv.impl":
+    location: [45.120, 26.460]
+    orientation: N
+  "u_dco.stage[134].stage_inv.impl":
+    location: [43.680, 26.460]
+    orientation: N
+  "u_dco.stage[135].stage_inv.impl":
+    location: [42.240, 26.460]
+    orientation: N
+  "u_dco.stage[136].stage_inv.impl":
+    location: [40.800, 26.460]
+    orientation: N
+  "u_dco.stage[137].stage_inv.impl":
+    location: [39.360, 26.460]
+    orientation: N
+  "u_dco.stage[138].stage_inv.impl":
+    location: [37.920, 26.460]
+    orientation: N
+  "u_dco.stage[139].stage_inv.impl":
+    location: [36.480, 26.460]
+    orientation: N
+  "u_dco.stage[13].stage_inv.impl":
+    location: [30.240, 15.120]
+    orientation: N
+  "u_dco.stage[140].stage_inv.impl":
+    location: [35.040, 26.460]
+    orientation: N
+  "u_dco.stage[141].stage_inv.impl":
+    location: [33.600, 26.460]
+    orientation: N
+  "u_dco.stage[142].stage_inv.impl":
+    location: [32.160, 26.460]
+    orientation: N
+  "u_dco.stage[143].stage_inv.impl":
+    location: [30.720, 26.460]
+    orientation: N
+  "u_dco.stage[144].stage_inv.impl":
+    location: [29.280, 26.460]
+    orientation: N
+  "u_dco.stage[145].stage_inv.impl":
+    location: [27.840, 26.460]
+    orientation: N
+  "u_dco.stage[146].stage_inv.impl":
+    location: [26.400, 26.460]
+    orientation: N
+  "u_dco.stage[147].stage_inv.impl":
+    location: [24.960, 26.460]
+    orientation: N
+  "u_dco.stage[148].stage_inv.impl":
+    location: [23.520, 26.460]
+    orientation: N
+  "u_dco.stage[149].stage_inv.impl":
+    location: [22.080, 26.460]
+    orientation: N
+  "u_dco.stage[14].stage_inv.impl":
+    location: [31.680, 15.120]
+    orientation: N
+  "u_dco.stage[150].stage_inv.impl":
+    location: [20.640, 26.460]
+    orientation: N
+  "u_dco.stage[151].stage_inv.impl":
+    location: [19.200, 26.460]
+    orientation: N
+  "u_dco.stage[152].stage_inv.impl":
+    location: [17.760, 26.460]
+    orientation: N
+  "u_dco.stage[153].stage_inv.impl":
+    location: [16.320, 26.460]
+    orientation: N
+  "u_dco.stage[154].stage_inv.impl":
+    location: [14.880, 26.460]
+    orientation: N
+  "u_dco.stage[155].stage_inv.impl":
+    location: [13.440, 26.460]
+    orientation: N
+  "u_dco.stage[156].stage_inv.impl":
+    location: [12.000, 26.460]
+    orientation: N
+  "u_dco.stage[157].stage_inv.impl":
+    location: [10.560, 26.460]
+    orientation: N
+  "u_dco.stage[158].stage_inv.impl":
+    location: [9.120, 26.460]
+    orientation: N
+  "u_dco.stage[159].stage_inv.impl":
+    location: [7.680, 26.460]
+    orientation: N
+  "u_dco.stage[15].stage_inv.impl":
+    location: [33.120, 15.120]
+    orientation: N
+  "u_dco.stage[160].stage_inv.impl":
+    location: [6.240, 26.460]
+    orientation: N
+  "u_dco.stage[161].stage_inv.impl":
+    location: [5.760, 30.240]
+    orientation: N
+  "u_dco.stage[162].stage_inv.impl":
+    location: [7.200, 30.240]
+    orientation: N
+  "u_dco.stage[163].stage_inv.impl":
+    location: [8.640, 30.240]
+    orientation: N
+  "u_dco.stage[164].stage_inv.impl":
+    location: [10.080, 30.240]
+    orientation: N
+  "u_dco.stage[165].stage_inv.impl":
+    location: [11.520, 30.240]
+    orientation: N
+  "u_dco.stage[166].stage_inv.impl":
+    location: [12.960, 30.240]
+    orientation: N
+  "u_dco.stage[167].stage_inv.impl":
+    location: [14.400, 30.240]
+    orientation: N
+  "u_dco.stage[168].stage_inv.impl":
+    location: [15.840, 30.240]
+    orientation: N
+  "u_dco.stage[169].stage_inv.impl":
+    location: [17.280, 30.240]
+    orientation: N
+  "u_dco.stage[16].stage_inv.impl":
+    location: [34.560, 15.120]
+    orientation: N
+  "u_dco.stage[170].stage_inv.impl":
+    location: [18.720, 30.240]
+    orientation: N
+  "u_dco.stage[171].stage_inv.impl":
+    location: [20.160, 30.240]
+    orientation: N
+  "u_dco.stage[172].stage_inv.impl":
+    location: [21.600, 30.240]
+    orientation: N
+  "u_dco.stage[173].stage_inv.impl":
+    location: [23.040, 30.240]
+    orientation: N
+  "u_dco.stage[174].stage_inv.impl":
+    location: [24.480, 30.240]
+    orientation: N
+  "u_dco.stage[175].stage_inv.impl":
+    location: [25.920, 30.240]
+    orientation: N
+  "u_dco.stage[176].stage_inv.impl":
+    location: [27.360, 30.240]
+    orientation: N
+  "u_dco.stage[177].stage_inv.impl":
+    location: [28.800, 30.240]
+    orientation: N
+  "u_dco.stage[178].stage_inv.impl":
+    location: [30.240, 30.240]
+    orientation: N
+  "u_dco.stage[179].stage_inv.impl":
+    location: [31.680, 30.240]
+    orientation: N
+  "u_dco.stage[17].stage_inv.impl":
+    location: [36.000, 15.120]
+    orientation: N
+  "u_dco.stage[180].stage_inv.impl":
+    location: [33.120, 30.240]
+    orientation: N
+  "u_dco.stage[181].stage_inv.impl":
+    location: [34.560, 30.240]
+    orientation: N
+  "u_dco.stage[182].stage_inv.impl":
+    location: [36.000, 30.240]
+    orientation: N
+  "u_dco.stage[183].stage_inv.impl":
+    location: [37.440, 30.240]
+    orientation: N
+  "u_dco.stage[184].stage_inv.impl":
+    location: [38.880, 30.240]
+    orientation: N
+  "u_dco.stage[185].stage_inv.impl":
+    location: [40.320, 30.240]
+    orientation: N
+  "u_dco.stage[186].stage_inv.impl":
+    location: [41.760, 30.240]
+    orientation: N
+  "u_dco.stage[187].stage_inv.impl":
+    location: [43.200, 30.240]
+    orientation: N
+  "u_dco.stage[188].stage_inv.impl":
+    location: [44.640, 30.240]
+    orientation: N
+  "u_dco.stage[189].stage_inv.impl":
+    location: [46.080, 30.240]
+    orientation: N
+  "u_dco.stage[18].stage_inv.impl":
+    location: [37.440, 15.120]
+    orientation: N
+  "u_dco.stage[190].stage_inv.impl":
+    location: [47.520, 30.240]
+    orientation: N
+  "u_dco.stage[191].stage_inv.impl":
+    location: [48.960, 30.240]
+    orientation: N
+  "u_dco.stage[192].stage_inv.impl":
+    location: [50.400, 30.240]
+    orientation: N
+  "u_dco.stage[193].stage_inv.impl":
+    location: [58.080, 30.240]
+    orientation: N
+  "u_dco.stage[194].stage_inv.impl":
+    location: [59.520, 30.240]
+    orientation: N
+  "u_dco.stage[195].stage_inv.impl":
+    location: [60.960, 30.240]
+    orientation: N
+  "u_dco.stage[196].stage_inv.impl":
+    location: [62.400, 30.240]
+    orientation: N
+  "u_dco.stage[197].stage_inv.impl":
+    location: [63.840, 30.240]
+    orientation: N
+  "u_dco.stage[198].stage_inv.impl":
+    location: [65.280, 30.240]
+    orientation: N
+  "u_dco.stage[199].stage_inv.impl":
+    location: [66.720, 30.240]
+    orientation: N
+  "u_dco.stage[19].stage_inv.impl":
+    location: [38.880, 15.120]
+    orientation: N
+  "u_dco.stage[1].stage_inv.impl":
+    location: [12.960, 15.120]
+    orientation: N
+  "u_dco.stage[200].stage_inv.impl":
+    location: [66.720, 34.020]
+    orientation: N
+  "u_dco.stage[201].stage_inv.impl":
+    location: [65.280, 34.020]
+    orientation: N
+  "u_dco.stage[202].stage_inv.impl":
+    location: [63.840, 34.020]
+    orientation: N
+  "u_dco.stage[203].stage_inv.impl":
+    location: [62.400, 34.020]
+    orientation: N
+  "u_dco.stage[204].stage_inv.impl":
+    location: [60.960, 34.020]
+    orientation: N
+  "u_dco.stage[205].stage_inv.impl":
+    location: [59.520, 34.020]
+    orientation: N
+  "u_dco.stage[206].stage_inv.impl":
+    location: [58.080, 34.020]
+    orientation: N
+  "u_dco.stage[207].stage_inv.impl":
+    location: [56.640, 34.020]
+    orientation: N
+  "u_dco.stage[208].stage_inv.impl":
+    location: [55.200, 34.020]
+    orientation: N
+  "u_dco.stage[209].stage_inv.impl":
+    location: [53.760, 34.020]
+    orientation: N
+  "u_dco.stage[20].stage_inv.impl":
+    location: [40.320, 15.120]
+    orientation: N
+  "u_dco.stage[210].stage_inv.impl":
+    location: [52.320, 34.020]
+    orientation: N
+  "u_dco.stage[211].stage_inv.impl":
+    location: [50.880, 34.020]
+    orientation: N
+  "u_dco.stage[212].stage_inv.impl":
+    location: [49.440, 34.020]
+    orientation: N
+  "u_dco.stage[213].stage_inv.impl":
+    location: [48.000, 34.020]
+    orientation: N
+  "u_dco.stage[214].stage_inv.impl":
+    location: [46.560, 34.020]
+    orientation: N
+  "u_dco.stage[215].stage_inv.impl":
+    location: [45.120, 34.020]
+    orientation: N
+  "u_dco.stage[216].stage_inv.impl":
+    location: [43.680, 34.020]
+    orientation: N
+  "u_dco.stage[217].stage_inv.impl":
+    location: [42.240, 34.020]
+    orientation: N
+  "u_dco.stage[218].stage_inv.impl":
+    location: [40.800, 34.020]
+    orientation: N
+  "u_dco.stage[219].stage_inv.impl":
+    location: [39.360, 34.020]
+    orientation: N
+  "u_dco.stage[21].stage_inv.impl":
+    location: [41.760, 15.120]
+    orientation: N
+  "u_dco.stage[220].stage_inv.impl":
+    location: [37.920, 34.020]
+    orientation: N
+  "u_dco.stage[221].stage_inv.impl":
+    location: [36.480, 34.020]
+    orientation: N
+  "u_dco.stage[222].stage_inv.impl":
+    location: [35.040, 34.020]
+    orientation: N
+  "u_dco.stage[223].stage_inv.impl":
+    location: [33.600, 34.020]
+    orientation: N
+  "u_dco.stage[224].stage_inv.impl":
+    location: [32.160, 34.020]
+    orientation: N
+  "u_dco.stage[225].stage_inv.impl":
+    location: [30.720, 34.020]
+    orientation: N
+  "u_dco.stage[226].stage_inv.impl":
+    location: [29.280, 34.020]
+    orientation: N
+  "u_dco.stage[227].stage_inv.impl":
+    location: [27.840, 34.020]
+    orientation: N
+  "u_dco.stage[228].stage_inv.impl":
+    location: [26.400, 34.020]
+    orientation: N
+  "u_dco.stage[229].stage_inv.impl":
+    location: [24.960, 34.020]
+    orientation: N
+  "u_dco.stage[22].stage_inv.impl":
+    location: [43.200, 15.120]
+    orientation: N
+  "u_dco.stage[230].stage_inv.impl":
+    location: [23.520, 34.020]
+    orientation: N
+  "u_dco.stage[231].stage_inv.impl":
+    location: [22.080, 34.020]
+    orientation: N
+  "u_dco.stage[232].stage_inv.impl":
+    location: [20.640, 34.020]
+    orientation: N
+  "u_dco.stage[233].stage_inv.impl":
+    location: [19.200, 34.020]
+    orientation: N
+  "u_dco.stage[234].stage_inv.impl":
+    location: [17.760, 34.020]
+    orientation: N
+  "u_dco.stage[235].stage_inv.impl":
+    location: [16.320, 34.020]
+    orientation: N
+  "u_dco.stage[236].stage_inv.impl":
+    location: [14.880, 34.020]
+    orientation: N
+  "u_dco.stage[237].stage_inv.impl":
+    location: [13.440, 34.020]
+    orientation: N
+  "u_dco.stage[238].stage_inv.impl":
+    location: [12.000, 34.020]
+    orientation: N
+  "u_dco.stage[239].stage_inv.impl":
+    location: [10.560, 34.020]
+    orientation: N
+  "u_dco.stage[23].stage_inv.impl":
+    location: [44.640, 15.120]
+    orientation: N
+  "u_dco.stage[240].stage_inv.impl":
+    location: [9.120, 34.020]
+    orientation: N
+  "u_dco.stage[241].stage_inv.impl":
+    location: [7.680, 34.020]
+    orientation: N
+  "u_dco.stage[242].stage_inv.impl":
+    location: [6.240, 34.020]
+    orientation: N
+  "u_dco.stage[243].stage_inv.impl":
+    location: [5.760, 37.800]
+    orientation: N
+  "u_dco.stage[244].stage_inv.impl":
+    location: [7.200, 37.800]
+    orientation: N
+  "u_dco.stage[245].stage_inv.impl":
+    location: [8.640, 37.800]
+    orientation: N
+  "u_dco.stage[246].stage_inv.impl":
+    location: [10.080, 37.800]
+    orientation: N
+  "u_dco.stage[247].stage_inv.impl":
+    location: [11.520, 37.800]
+    orientation: N
+  "u_dco.stage[248].stage_inv.impl":
+    location: [12.960, 37.800]
+    orientation: N
+  "u_dco.stage[249].stage_inv.impl":
+    location: [14.400, 37.800]
+    orientation: N
+  "u_dco.stage[24].stage_inv.impl":
+    location: [46.080, 15.120]
+    orientation: N
+  "u_dco.stage[250].stage_inv.impl":
+    location: [15.840, 37.800]
+    orientation: N
+  "u_dco.stage[251].stage_inv.impl":
+    location: [17.280, 37.800]
+    orientation: N
+  "u_dco.stage[252].stage_inv.impl":
+    location: [18.720, 37.800]
+    orientation: N
+  "u_dco.stage[253].stage_inv.impl":
+    location: [20.160, 37.800]
+    orientation: N
+  "u_dco.stage[254].stage_inv.impl":
+    location: [21.600, 37.800]
+    orientation: N
+  "u_dco.stage[255].stage_inv.impl":
+    location: [23.040, 37.800]
+    orientation: N
+  "u_dco.stage[256].stage_inv.impl":
+    location: [24.480, 37.800]
+    orientation: N
+  "u_dco.stage[257].stage_inv.impl":
+    location: [29.760, 37.800]
+    orientation: N
+  "u_dco.stage[258].stage_inv.impl":
+    location: [31.200, 37.800]
+    orientation: N
+  "u_dco.stage[259].stage_inv.impl":
+    location: [32.640, 37.800]
+    orientation: N
+  "u_dco.stage[25].stage_inv.impl":
+    location: [47.520, 15.120]
+    orientation: N
+  "u_dco.stage[260].stage_inv.impl":
+    location: [34.080, 37.800]
+    orientation: N
+  "u_dco.stage[261].stage_inv.impl":
+    location: [35.520, 37.800]
+    orientation: N
+  "u_dco.stage[262].stage_inv.impl":
+    location: [36.960, 37.800]
+    orientation: N
+  "u_dco.stage[263].stage_inv.impl":
+    location: [38.400, 37.800]
+    orientation: N
+  "u_dco.stage[264].stage_inv.impl":
+    location: [39.840, 37.800]
+    orientation: N
+  "u_dco.stage[265].stage_inv.impl":
+    location: [41.280, 37.800]
+    orientation: N
+  "u_dco.stage[266].stage_inv.impl":
+    location: [42.720, 37.800]
+    orientation: N
+  "u_dco.stage[267].stage_inv.impl":
+    location: [44.160, 37.800]
+    orientation: N
+  "u_dco.stage[268].stage_inv.impl":
+    location: [45.600, 37.800]
+    orientation: N
+  "u_dco.stage[269].stage_inv.impl":
+    location: [47.040, 37.800]
+    orientation: N
+  "u_dco.stage[26].stage_inv.impl":
+    location: [48.960, 15.120]
+    orientation: N
+  "u_dco.stage[270].stage_inv.impl":
+    location: [48.480, 37.800]
+    orientation: N
+  "u_dco.stage[271].stage_inv.impl":
+    location: [49.920, 37.800]
+    orientation: N
+  "u_dco.stage[272].stage_inv.impl":
+    location: [51.360, 37.800]
+    orientation: N
+  "u_dco.stage[273].stage_inv.impl":
+    location: [52.800, 37.800]
+    orientation: N
+  "u_dco.stage[274].stage_inv.impl":
+    location: [54.240, 37.800]
+    orientation: N
+  "u_dco.stage[275].stage_inv.impl":
+    location: [55.680, 37.800]
+    orientation: N
+  "u_dco.stage[276].stage_inv.impl":
+    location: [57.120, 37.800]
+    orientation: N
+  "u_dco.stage[277].stage_inv.impl":
+    location: [58.560, 37.800]
+    orientation: N
+  "u_dco.stage[278].stage_inv.impl":
+    location: [60.000, 37.800]
+    orientation: N
+  "u_dco.stage[279].stage_inv.impl":
+    location: [61.440, 37.800]
+    orientation: N
+  "u_dco.stage[27].stage_inv.impl":
+    location: [50.400, 15.120]
+    orientation: N
+  "u_dco.stage[280].stage_inv.impl":
+    location: [62.880, 37.800]
+    orientation: N
+  "u_dco.stage[281].stage_inv.impl":
+    location: [64.320, 37.800]
+    orientation: N
+  "u_dco.stage[282].stage_inv.impl":
+    location: [65.760, 37.800]
+    orientation: N
+  "u_dco.stage[283].stage_inv.impl":
+    location: [66.720, 41.580]
+    orientation: N
+  "u_dco.stage[284].stage_inv.impl":
+    location: [65.280, 41.580]
+    orientation: N
+  "u_dco.stage[285].stage_inv.impl":
+    location: [63.840, 41.580]
+    orientation: N
+  "u_dco.stage[286].stage_inv.impl":
+    location: [62.400, 41.580]
+    orientation: N
+  "u_dco.stage[287].stage_inv.impl":
+    location: [60.960, 41.580]
+    orientation: N
+  "u_dco.stage[288].stage_inv.impl":
+    location: [59.520, 41.580]
+    orientation: N
+  "u_dco.stage[289].stage_inv.impl":
+    location: [58.080, 41.580]
+    orientation: N
+  "u_dco.stage[28].stage_inv.impl":
+    location: [51.840, 15.120]
+    orientation: N
+  "u_dco.stage[290].stage_inv.impl":
+    location: [56.640, 41.580]
+    orientation: N
+  "u_dco.stage[291].stage_inv.impl":
+    location: [55.200, 41.580]
+    orientation: N
+  "u_dco.stage[292].stage_inv.impl":
+    location: [53.760, 41.580]
+    orientation: N
+  "u_dco.stage[293].stage_inv.impl":
+    location: [52.320, 41.580]
+    orientation: N
+  "u_dco.stage[294].stage_inv.impl":
+    location: [50.880, 41.580]
+    orientation: N
+  "u_dco.stage[295].stage_inv.impl":
+    location: [49.440, 41.580]
+    orientation: N
+  "u_dco.stage[296].stage_inv.impl":
+    location: [48.000, 41.580]
+    orientation: N
+  "u_dco.stage[297].stage_inv.impl":
+    location: [46.560, 41.580]
+    orientation: N
+  "u_dco.stage[298].stage_inv.impl":
+    location: [45.120, 41.580]
+    orientation: N
+  "u_dco.stage[299].stage_inv.impl":
+    location: [43.680, 41.580]
+    orientation: N
+  "u_dco.stage[29].stage_inv.impl":
+    location: [53.280, 15.120]
+    orientation: N
+  "u_dco.stage[2].stage_inv.impl":
+    location: [14.400, 15.120]
+    orientation: N
+  "u_dco.stage[300].stage_inv.impl":
+    location: [42.240, 41.580]
+    orientation: N
+  "u_dco.stage[301].stage_inv.impl":
+    location: [40.800, 41.580]
+    orientation: N
+  "u_dco.stage[302].stage_inv.impl":
+    location: [39.360, 41.580]
+    orientation: N
+  "u_dco.stage[303].stage_inv.impl":
+    location: [37.920, 41.580]
+    orientation: N
+  "u_dco.stage[304].stage_inv.impl":
+    location: [36.480, 41.580]
+    orientation: N
+  "u_dco.stage[305].stage_inv.impl":
+    location: [35.040, 41.580]
+    orientation: N
+  "u_dco.stage[306].stage_inv.impl":
+    location: [33.600, 41.580]
+    orientation: N
+  "u_dco.stage[307].stage_inv.impl":
+    location: [32.160, 41.580]
+    orientation: N
+  "u_dco.stage[308].stage_inv.impl":
+    location: [30.720, 41.580]
+    orientation: N
+  "u_dco.stage[309].stage_inv.impl":
+    location: [29.280, 41.580]
+    orientation: N
+  "u_dco.stage[30].stage_inv.impl":
+    location: [54.720, 15.120]
+    orientation: N
+  "u_dco.stage[310].stage_inv.impl":
+    location: [27.840, 41.580]
+    orientation: N
+  "u_dco.stage[311].stage_inv.impl":
+    location: [26.400, 41.580]
+    orientation: N
+  "u_dco.stage[312].stage_inv.impl":
+    location: [24.960, 41.580]
+    orientation: N
+  "u_dco.stage[313].stage_inv.impl":
+    location: [23.520, 41.580]
+    orientation: N
+  "u_dco.stage[314].stage_inv.impl":
+    location: [22.080, 41.580]
+    orientation: N
+  "u_dco.stage[315].stage_inv.impl":
+    location: [20.640, 41.580]
+    orientation: N
+  "u_dco.stage[316].stage_inv.impl":
+    location: [19.200, 41.580]
+    orientation: N
+  "u_dco.stage[317].stage_inv.impl":
+    location: [17.760, 41.580]
+    orientation: N
+  "u_dco.stage[318].stage_inv.impl":
+    location: [16.320, 41.580]
+    orientation: N
+  "u_dco.stage[319].stage_inv.impl":
+    location: [14.880, 41.580]
+    orientation: N
+  "u_dco.stage[31].stage_inv.impl":
+    location: [56.160, 15.120]
+    orientation: N
+  "u_dco.stage[320].stage_inv.impl":
+    location: [13.440, 41.580]
+    orientation: N
+  "u_dco.stage[321].stage_inv.impl":
+    location: [15.840, 45.360]
+    orientation: N
+  "u_dco.stage[322].stage_inv.impl":
+    location: [17.280, 45.360]
+    orientation: N
+  "u_dco.stage[323].stage_inv.impl":
+    location: [18.720, 45.360]
+    orientation: N
+  "u_dco.stage[324].stage_inv.impl":
+    location: [20.160, 45.360]
+    orientation: N
+  "u_dco.stage[325].stage_inv.impl":
+    location: [21.600, 45.360]
+    orientation: N
+  "u_dco.stage[326].stage_inv.impl":
+    location: [23.040, 45.360]
+    orientation: N
+  "u_dco.stage[327].stage_inv.impl":
+    location: [24.480, 45.360]
+    orientation: N
+  "u_dco.stage[328].stage_inv.impl":
+    location: [25.920, 45.360]
+    orientation: N
+  "u_dco.stage[329].stage_inv.impl":
+    location: [27.360, 45.360]
+    orientation: N
+  "u_dco.stage[32].stage_inv.impl":
+    location: [57.600, 15.120]
+    orientation: N
+  "u_dco.stage[330].stage_inv.impl":
+    location: [28.800, 45.360]
+    orientation: N
+  "u_dco.stage[331].stage_inv.impl":
+    location: [30.240, 45.360]
+    orientation: N
+  "u_dco.stage[332].stage_inv.impl":
+    location: [31.680, 45.360]
+    orientation: N
+  "u_dco.stage[333].stage_inv.impl":
+    location: [33.120, 45.360]
+    orientation: N
+  "u_dco.stage[334].stage_inv.impl":
+    location: [34.560, 45.360]
+    orientation: N
+  "u_dco.stage[335].stage_inv.impl":
+    location: [36.000, 45.360]
+    orientation: N
+  "u_dco.stage[336].stage_inv.impl":
+    location: [37.440, 45.360]
+    orientation: N
+  "u_dco.stage[337].stage_inv.impl":
+    location: [38.880, 45.360]
+    orientation: N
+  "u_dco.stage[338].stage_inv.impl":
+    location: [40.320, 45.360]
+    orientation: N
+  "u_dco.stage[339].stage_inv.impl":
+    location: [41.760, 45.360]
+    orientation: N
+  "u_dco.stage[33].stage_inv.impl":
+    location: [59.040, 15.120]
+    orientation: N
+  "u_dco.stage[340].stage_inv.impl":
+    location: [43.200, 45.360]
+    orientation: N
+  "u_dco.stage[341].stage_inv.impl":
+    location: [44.640, 45.360]
+    orientation: N
+  "u_dco.stage[342].stage_inv.impl":
+    location: [46.080, 45.360]
+    orientation: N
+  "u_dco.stage[343].stage_inv.impl":
+    location: [47.520, 45.360]
+    orientation: N
+  "u_dco.stage[344].stage_inv.impl":
+    location: [48.960, 45.360]
+    orientation: N
+  "u_dco.stage[345].stage_inv.impl":
+    location: [50.400, 45.360]
+    orientation: N
+  "u_dco.stage[346].stage_inv.impl":
+    location: [51.840, 45.360]
+    orientation: N
+  "u_dco.stage[347].stage_inv.impl":
+    location: [53.280, 45.360]
+    orientation: N
+  "u_dco.stage[348].stage_inv.impl":
+    location: [54.720, 45.360]
+    orientation: N
+  "u_dco.stage[349].stage_inv.impl":
+    location: [56.160, 45.360]
+    orientation: N
+  "u_dco.stage[34].stage_inv.impl":
+    location: [60.480, 15.120]
+    orientation: N
+  "u_dco.stage[350].stage_inv.impl":
+    location: [57.600, 45.360]
+    orientation: N
+  "u_dco.stage[351].stage_inv.impl":
+    location: [59.040, 45.360]
+    orientation: N
+  "u_dco.stage[352].stage_inv.impl":
+    location: [60.480, 45.360]
+    orientation: N
+  "u_dco.stage[353].stage_inv.impl":
+    location: [61.920, 45.360]
+    orientation: N
+  "u_dco.stage[354].stage_inv.impl":
+    location: [63.360, 45.360]
+    orientation: N
+  "u_dco.stage[355].stage_inv.impl":
+    location: [64.800, 45.360]
+    orientation: N
+  "u_dco.stage[356].stage_inv.impl":
+    location: [66.240, 45.360]
+    orientation: N
+  "u_dco.stage[357].stage_inv.impl":
+    location: [66.720, 49.140]
+    orientation: N
+  "u_dco.stage[358].stage_inv.impl":
+    location: [65.280, 49.140]
+    orientation: N
+  "u_dco.stage[359].stage_inv.impl":
+    location: [63.840, 49.140]
+    orientation: N
+  "u_dco.stage[35].stage_inv.impl":
+    location: [61.920, 15.120]
+    orientation: N
+  "u_dco.stage[360].stage_inv.impl":
+    location: [62.400, 49.140]
+    orientation: N
+  "u_dco.stage[361].stage_inv.impl":
+    location: [60.960, 49.140]
+    orientation: N
+  "u_dco.stage[362].stage_inv.impl":
+    location: [59.520, 49.140]
+    orientation: N
+  "u_dco.stage[363].stage_inv.impl":
+    location: [58.080, 49.140]
+    orientation: N
+  "u_dco.stage[364].stage_inv.impl":
+    location: [56.640, 49.140]
+    orientation: N
+  "u_dco.stage[365].stage_inv.impl":
+    location: [55.200, 49.140]
+    orientation: N
+  "u_dco.stage[366].stage_inv.impl":
+    location: [53.760, 49.140]
+    orientation: N
+  "u_dco.stage[367].stage_inv.impl":
+    location: [52.320, 49.140]
+    orientation: N
+  "u_dco.stage[368].stage_inv.impl":
+    location: [50.880, 49.140]
+    orientation: N
+  "u_dco.stage[369].stage_inv.impl":
+    location: [49.440, 49.140]
+    orientation: N
+  "u_dco.stage[36].stage_inv.impl":
+    location: [63.360, 15.120]
+    orientation: N
+  "u_dco.stage[370].stage_inv.impl":
+    location: [48.000, 49.140]
+    orientation: N
+  "u_dco.stage[371].stage_inv.impl":
+    location: [46.560, 49.140]
+    orientation: N
+  "u_dco.stage[372].stage_inv.impl":
+    location: [45.120, 49.140]
+    orientation: N
+  "u_dco.stage[373].stage_inv.impl":
+    location: [43.680, 49.140]
+    orientation: N
+  "u_dco.stage[374].stage_inv.impl":
+    location: [42.240, 49.140]
+    orientation: N
+  "u_dco.stage[375].stage_inv.impl":
+    location: [40.800, 49.140]
+    orientation: N
+  "u_dco.stage[376].stage_inv.impl":
+    location: [39.360, 49.140]
+    orientation: N
+  "u_dco.stage[377].stage_inv.impl":
+    location: [37.920, 49.140]
+    orientation: N
+  "u_dco.stage[378].stage_inv.impl":
+    location: [36.480, 49.140]
+    orientation: N
+  "u_dco.stage[379].stage_inv.impl":
+    location: [35.040, 49.140]
+    orientation: N
+  "u_dco.stage[37].stage_inv.impl":
+    location: [64.800, 15.120]
+    orientation: N
+  "u_dco.stage[380].stage_inv.impl":
+    location: [33.600, 49.140]
+    orientation: N
+  "u_dco.stage[381].stage_inv.impl":
+    location: [32.160, 49.140]
+    orientation: N
+  "u_dco.stage[382].stage_inv.impl":
+    location: [30.720, 49.140]
+    orientation: N
+  "u_dco.stage[383].stage_inv.impl":
+    location: [29.280, 49.140]
+    orientation: N
+  "u_dco.stage[384].stage_inv.impl":
+    location: [27.840, 49.140]
+    orientation: N
+  "u_dco.stage[385].stage_inv.impl":
+    location: [20.160, 49.140]
+    orientation: N
+  "u_dco.stage[386].stage_inv.impl":
+    location: [18.720, 49.140]
+    orientation: N
+  "u_dco.stage[387].stage_inv.impl":
+    location: [17.280, 49.140]
+    orientation: N
+  "u_dco.stage[388].stage_inv.impl":
+    location: [15.840, 49.140]
+    orientation: N
+  "u_dco.stage[389].stage_inv.impl":
+    location: [14.400, 49.140]
+    orientation: N
+  "u_dco.stage[38].stage_inv.impl":
+    location: [66.240, 15.120]
+    orientation: N
+  "u_dco.stage[390].stage_inv.impl":
+    location: [12.960, 49.140]
+    orientation: N
+  "u_dco.stage[391].stage_inv.impl":
+    location: [11.520, 49.140]
+    orientation: N
+  "u_dco.stage[392].stage_inv.impl":
+    location: [10.080, 49.140]
+    orientation: N
+  "u_dco.stage[393].stage_inv.impl":
+    location: [8.640, 49.140]
+    orientation: N
+  "u_dco.stage[394].stage_inv.impl":
+    location: [7.200, 49.140]
+    orientation: N
+  "u_dco.stage[395].stage_inv.impl":
+    location: [5.760, 49.140]
+    orientation: N
+  "u_dco.stage[396].stage_inv.impl":
+    location: [5.760, 52.920]
+    orientation: N
+  "u_dco.stage[397].stage_inv.impl":
+    location: [7.200, 52.920]
+    orientation: N
+  "u_dco.stage[398].stage_inv.impl":
+    location: [8.640, 52.920]
+    orientation: N
+  "u_dco.stage[399].stage_inv.impl":
+    location: [10.080, 52.920]
+    orientation: N
+  "u_dco.stage[39].stage_inv.impl":
+    location: [66.720, 18.900]
+    orientation: N
+  "u_dco.stage[3].stage_inv.impl":
+    location: [15.840, 15.120]
+    orientation: N
+  "u_dco.stage[400].stage_inv.impl":
+    location: [11.520, 52.920]
+    orientation: N
+  "u_dco.stage[401].stage_inv.impl":
+    location: [12.960, 52.920]
+    orientation: N
+  "u_dco.stage[402].stage_inv.impl":
+    location: [14.400, 52.920]
+    orientation: N
+  "u_dco.stage[403].stage_inv.impl":
+    location: [15.840, 52.920]
+    orientation: N
+  "u_dco.stage[404].stage_inv.impl":
+    location: [17.280, 52.920]
+    orientation: N
+  "u_dco.stage[405].stage_inv.impl":
+    location: [18.720, 52.920]
+    orientation: N
+  "u_dco.stage[406].stage_inv.impl":
+    location: [20.160, 52.920]
+    orientation: N
+  "u_dco.stage[407].stage_inv.impl":
+    location: [21.600, 52.920]
+    orientation: N
+  "u_dco.stage[408].stage_inv.impl":
+    location: [23.040, 52.920]
+    orientation: N
+  "u_dco.stage[409].stage_inv.impl":
+    location: [24.480, 52.920]
+    orientation: N
+  "u_dco.stage[40].stage_inv.impl":
+    location: [65.280, 18.900]
+    orientation: N
+  "u_dco.stage[410].stage_inv.impl":
+    location: [25.920, 52.920]
+    orientation: N
+  "u_dco.stage[411].stage_inv.impl":
+    location: [27.360, 52.920]
+    orientation: N
+  "u_dco.stage[412].stage_inv.impl":
+    location: [28.800, 52.920]
+    orientation: N
+  "u_dco.stage[413].stage_inv.impl":
+    location: [30.240, 52.920]
+    orientation: N
+  "u_dco.stage[414].stage_inv.impl":
+    location: [31.680, 52.920]
+    orientation: N
+  "u_dco.stage[415].stage_inv.impl":
+    location: [33.120, 52.920]
+    orientation: N
+  "u_dco.stage[416].stage_inv.impl":
+    location: [34.560, 52.920]
+    orientation: N
+  "u_dco.stage[417].stage_inv.impl":
+    location: [36.000, 52.920]
+    orientation: N
+  "u_dco.stage[418].stage_inv.impl":
+    location: [37.440, 52.920]
+    orientation: N
+  "u_dco.stage[419].stage_inv.impl":
+    location: [38.880, 52.920]
+    orientation: N
+  "u_dco.stage[41].stage_inv.impl":
+    location: [63.840, 18.900]
+    orientation: N
+  "u_dco.stage[420].stage_inv.impl":
+    location: [40.320, 52.920]
+    orientation: N
+  "u_dco.stage[421].stage_inv.impl":
+    location: [41.760, 52.920]
+    orientation: N
+  "u_dco.stage[422].stage_inv.impl":
+    location: [43.200, 52.920]
+    orientation: N
+  "u_dco.stage[423].stage_inv.impl":
+    location: [44.640, 52.920]
+    orientation: N
+  "u_dco.stage[424].stage_inv.impl":
+    location: [46.080, 52.920]
+    orientation: N
+  "u_dco.stage[425].stage_inv.impl":
+    location: [47.520, 52.920]
+    orientation: N
+  "u_dco.stage[426].stage_inv.impl":
+    location: [48.960, 52.920]
+    orientation: N
+  "u_dco.stage[427].stage_inv.impl":
+    location: [50.400, 52.920]
+    orientation: N
+  "u_dco.stage[428].stage_inv.impl":
+    location: [51.840, 52.920]
+    orientation: N
+  "u_dco.stage[429].stage_inv.impl":
+    location: [53.280, 52.920]
+    orientation: N
+  "u_dco.stage[42].stage_inv.impl":
+    location: [62.400, 18.900]
+    orientation: N
+  "u_dco.stage[430].stage_inv.impl":
+    location: [54.720, 52.920]
+    orientation: N
+  "u_dco.stage[431].stage_inv.impl":
+    location: [56.160, 52.920]
+    orientation: N
+  "u_dco.stage[432].stage_inv.impl":
+    location: [57.600, 52.920]
+    orientation: N
+  "u_dco.stage[433].stage_inv.impl":
+    location: [59.040, 52.920]
+    orientation: N
+  "u_dco.stage[434].stage_inv.impl":
+    location: [60.480, 52.920]
+    orientation: N
+  "u_dco.stage[435].stage_inv.impl":
+    location: [61.920, 52.920]
+    orientation: N
+  "u_dco.stage[436].stage_inv.impl":
+    location: [63.360, 52.920]
+    orientation: N
+  "u_dco.stage[437].stage_inv.impl":
+    location: [64.800, 52.920]
+    orientation: N
+  "u_dco.stage[438].stage_inv.impl":
+    location: [66.240, 52.920]
+    orientation: N
+  "u_dco.stage[439].stage_inv.impl":
+    location: [66.720, 56.700]
+    orientation: N
+  "u_dco.stage[43].stage_inv.impl":
+    location: [60.960, 18.900]
+    orientation: N
+  "u_dco.stage[440].stage_inv.impl":
+    location: [65.280, 56.700]
+    orientation: N
+  "u_dco.stage[441].stage_inv.impl":
+    location: [63.840, 56.700]
+    orientation: N
+  "u_dco.stage[442].stage_inv.impl":
+    location: [62.400, 56.700]
+    orientation: N
+  "u_dco.stage[443].stage_inv.impl":
+    location: [60.960, 56.700]
+    orientation: N
+  "u_dco.stage[444].stage_inv.impl":
+    location: [59.520, 56.700]
+    orientation: N
+  "u_dco.stage[445].stage_inv.impl":
+    location: [58.080, 56.700]
+    orientation: N
+  "u_dco.stage[446].stage_inv.impl":
+    location: [56.640, 56.700]
+    orientation: N
+  "u_dco.stage[447].stage_inv.impl":
+    location: [55.200, 56.700]
+    orientation: N
+  "u_dco.stage[448].stage_inv.impl":
+    location: [53.760, 56.700]
+    orientation: N
+  "u_dco.stage[449].stage_inv.impl":
+    location: [46.080, 56.700]
+    orientation: N
+  "u_dco.stage[44].stage_inv.impl":
+    location: [59.520, 18.900]
+    orientation: N
+  "u_dco.stage[450].stage_inv.impl":
+    location: [44.640, 56.700]
+    orientation: N
+  "u_dco.stage[451].stage_inv.impl":
+    location: [43.200, 56.700]
+    orientation: N
+  "u_dco.stage[452].stage_inv.impl":
+    location: [41.760, 56.700]
+    orientation: N
+  "u_dco.stage[453].stage_inv.impl":
+    location: [40.320, 56.700]
+    orientation: N
+  "u_dco.stage[454].stage_inv.impl":
+    location: [38.880, 56.700]
+    orientation: N
+  "u_dco.stage[455].stage_inv.impl":
+    location: [37.440, 56.700]
+    orientation: N
+  "u_dco.stage[456].stage_inv.impl":
+    location: [36.000, 56.700]
+    orientation: N
+  "u_dco.stage[457].stage_inv.impl":
+    location: [34.560, 56.700]
+    orientation: N
+  "u_dco.stage[458].stage_inv.impl":
+    location: [33.120, 56.700]
+    orientation: N
+  "u_dco.stage[459].stage_inv.impl":
+    location: [31.680, 56.700]
+    orientation: N
+  "u_dco.stage[45].stage_inv.impl":
+    location: [58.080, 18.900]
+    orientation: N
+  "u_dco.stage[460].stage_inv.impl":
+    location: [30.240, 56.700]
+    orientation: N
+  "u_dco.stage[461].stage_inv.impl":
+    location: [28.800, 56.700]
+    orientation: N
+  "u_dco.stage[462].stage_inv.impl":
+    location: [27.360, 56.700]
+    orientation: N
+  "u_dco.stage[463].stage_inv.impl":
+    location: [25.920, 56.700]
+    orientation: N
+  "u_dco.stage[464].stage_inv.impl":
+    location: [24.480, 56.700]
+    orientation: N
+  "u_dco.stage[465].stage_inv.impl":
+    location: [23.040, 56.700]
+    orientation: N
+  "u_dco.stage[466].stage_inv.impl":
+    location: [21.600, 56.700]
+    orientation: N
+  "u_dco.stage[467].stage_inv.impl":
+    location: [20.160, 56.700]
+    orientation: N
+  "u_dco.stage[468].stage_inv.impl":
+    location: [18.720, 56.700]
+    orientation: N
+  "u_dco.stage[469].stage_inv.impl":
+    location: [17.280, 56.700]
+    orientation: N
+  "u_dco.stage[46].stage_inv.impl":
+    location: [56.640, 18.900]
+    orientation: N
+  "u_dco.stage[470].stage_inv.impl":
+    location: [15.840, 56.700]
+    orientation: N
+  "u_dco.stage[471].stage_inv.impl":
+    location: [14.400, 56.700]
+    orientation: N
+  "u_dco.stage[472].stage_inv.impl":
+    location: [12.960, 56.700]
+    orientation: N
+  "u_dco.stage[473].stage_inv.impl":
+    location: [11.520, 56.700]
+    orientation: N
+  "u_dco.stage[474].stage_inv.impl":
+    location: [10.080, 56.700]
+    orientation: N
+  "u_dco.stage[475].stage_inv.impl":
+    location: [8.640, 56.700]
+    orientation: N
+  "u_dco.stage[476].stage_inv.impl":
+    location: [7.200, 56.700]
+    orientation: N
+  "u_dco.stage[477].stage_inv.impl":
+    location: [5.760, 56.700]
+    orientation: N
+  "u_dco.stage[478].stage_inv.impl":
+    location: [5.760, 60.480]
+    orientation: N
+  "u_dco.stage[479].stage_inv.impl":
+    location: [7.200, 60.480]
+    orientation: N
+  "u_dco.stage[47].stage_inv.impl":
+    location: [55.200, 18.900]
+    orientation: N
+  "u_dco.stage[480].stage_inv.impl":
+    location: [8.640, 60.480]
+    orientation: N
+  "u_dco.stage[481].stage_inv.impl":
+    location: [10.080, 60.480]
+    orientation: N
+  "u_dco.stage[482].stage_inv.impl":
+    location: [11.520, 60.480]
+    orientation: N
+  "u_dco.stage[483].stage_inv.impl":
+    location: [12.960, 60.480]
+    orientation: N
+  "u_dco.stage[484].stage_inv.impl":
+    location: [14.400, 60.480]
+    orientation: N
+  "u_dco.stage[485].stage_inv.impl":
+    location: [15.840, 60.480]
+    orientation: N
+  "u_dco.stage[486].stage_inv.impl":
+    location: [17.280, 60.480]
+    orientation: N
+  "u_dco.stage[487].stage_inv.impl":
+    location: [18.720, 60.480]
+    orientation: N
+  "u_dco.stage[488].stage_inv.impl":
+    location: [20.160, 60.480]
+    orientation: N
+  "u_dco.stage[489].stage_inv.impl":
+    location: [21.600, 60.480]
+    orientation: N
+  "u_dco.stage[48].stage_inv.impl":
+    location: [53.760, 18.900]
+    orientation: N
+  "u_dco.stage[490].stage_inv.impl":
+    location: [23.040, 60.480]
+    orientation: N
+  "u_dco.stage[491].stage_inv.impl":
+    location: [24.480, 60.480]
+    orientation: N
+  "u_dco.stage[492].stage_inv.impl":
+    location: [25.920, 60.480]
+    orientation: N
+  "u_dco.stage[493].stage_inv.impl":
+    location: [27.360, 60.480]
+    orientation: N
+  "u_dco.stage[494].stage_inv.impl":
+    location: [28.800, 60.480]
+    orientation: N
+  "u_dco.stage[495].stage_inv.impl":
+    location: [30.240, 60.480]
+    orientation: N
+  "u_dco.stage[496].stage_inv.impl":
+    location: [31.680, 60.480]
+    orientation: N
+  "u_dco.stage[497].stage_inv.impl":
+    location: [33.120, 60.480]
+    orientation: N
+  "u_dco.stage[498].stage_inv.impl":
+    location: [34.560, 60.480]
+    orientation: N
+  "u_dco.stage[499].stage_inv.impl":
+    location: [36.000, 60.480]
+    orientation: N
+  "u_dco.stage[49].stage_inv.impl":
+    location: [52.320, 18.900]
+    orientation: N
+  "u_dco.stage[4].stage_inv.impl":
+    location: [17.280, 15.120]
+    orientation: N
+  "u_dco.stage[500].stage_inv.impl":
+    location: [37.440, 60.480]
+    orientation: N
+  "u_dco.stage[501].stage_inv.impl":
+    location: [38.880, 60.480]
+    orientation: N
+  "u_dco.stage[502].stage_inv.impl":
+    location: [40.320, 60.480]
+    orientation: N
+  "u_dco.stage[503].stage_inv.impl":
+    location: [41.760, 60.480]
+    orientation: N
+  "u_dco.stage[504].stage_inv.impl":
+    location: [43.200, 60.480]
+    orientation: N
+  "u_dco.stage[505].stage_inv.impl":
+    location: [44.640, 60.480]
+    orientation: N
+  "u_dco.stage[506].stage_inv.impl":
+    location: [46.080, 60.480]
+    orientation: N
+  "u_dco.stage[507].stage_inv.impl":
+    location: [47.520, 60.480]
+    orientation: N
+  "u_dco.stage[508].stage_inv.impl":
+    location: [48.960, 60.480]
+    orientation: N
+  "u_dco.stage[509].stage_inv.impl":
+    location: [50.400, 60.480]
+    orientation: N
+  "u_dco.stage[50].stage_inv.impl":
+    location: [50.880, 18.900]
+    orientation: N
+  "u_dco.stage[510].stage_inv.impl":
+    location: [51.840, 60.480]
+    orientation: N
+  "u_dco.stage[511].stage_inv.impl":
+    location: [53.280, 60.480]
+    orientation: N
+  "u_dco.stage[512].stage_inv.impl":
+    location: [54.720, 60.480]
+    orientation: N
+  "u_dco.stage[51].stage_inv.impl":
+    location: [49.440, 18.900]
+    orientation: N
+  "u_dco.stage[52].stage_inv.impl":
+    location: [48.000, 18.900]
+    orientation: N
+  "u_dco.stage[53].stage_inv.impl":
+    location: [46.560, 18.900]
+    orientation: N
+  "u_dco.stage[54].stage_inv.impl":
+    location: [45.120, 18.900]
+    orientation: N
+  "u_dco.stage[55].stage_inv.impl":
+    location: [43.680, 18.900]
+    orientation: N
+  "u_dco.stage[56].stage_inv.impl":
+    location: [42.240, 18.900]
+    orientation: N
+  "u_dco.stage[57].stage_inv.impl":
+    location: [40.800, 18.900]
+    orientation: N
+  "u_dco.stage[58].stage_inv.impl":
+    location: [39.360, 18.900]
+    orientation: N
+  "u_dco.stage[59].stage_inv.impl":
+    location: [37.920, 18.900]
+    orientation: N
+  "u_dco.stage[5].stage_inv.impl":
+    location: [18.720, 15.120]
+    orientation: N
+  "u_dco.stage[60].stage_inv.impl":
+    location: [36.480, 18.900]
+    orientation: N
+  "u_dco.stage[61].stage_inv.impl":
+    location: [35.040, 18.900]
+    orientation: N
+  "u_dco.stage[62].stage_inv.impl":
+    location: [33.600, 18.900]
+    orientation: N
+  "u_dco.stage[63].stage_inv.impl":
+    location: [32.160, 18.900]
+    orientation: N
+  "u_dco.stage[64].stage_inv.impl":
+    location: [30.720, 18.900]
+    orientation: N
+  "u_dco.stage[65].stage_inv.impl":
+    location: [25.440, 18.900]
+    orientation: N
+  "u_dco.stage[66].stage_inv.impl":
+    location: [24.000, 18.900]
+    orientation: N
+  "u_dco.stage[67].stage_inv.impl":
+    location: [22.560, 18.900]
+    orientation: N
+  "u_dco.stage[68].stage_inv.impl":
+    location: [21.120, 18.900]
+    orientation: N
+  "u_dco.stage[69].stage_inv.impl":
+    location: [19.680, 18.900]
+    orientation: N
+  "u_dco.stage[6].stage_inv.impl":
+    location: [20.160, 15.120]
+    orientation: N
+  "u_dco.stage[70].stage_inv.impl":
+    location: [18.240, 18.900]
+    orientation: N
+  "u_dco.stage[71].stage_inv.impl":
+    location: [16.800, 18.900]
+    orientation: N
+  "u_dco.stage[72].stage_inv.impl":
+    location: [15.360, 18.900]
+    orientation: N
+  "u_dco.stage[73].stage_inv.impl":
+    location: [13.920, 18.900]
+    orientation: N
+  "u_dco.stage[74].stage_inv.impl":
+    location: [12.480, 18.900]
+    orientation: N
+  "u_dco.stage[75].stage_inv.impl":
+    location: [11.040, 18.900]
+    orientation: N
+  "u_dco.stage[76].stage_inv.impl":
+    location: [9.600, 18.900]
+    orientation: N
+  "u_dco.stage[77].stage_inv.impl":
+    location: [8.160, 18.900]
+    orientation: N
+  "u_dco.stage[78].stage_inv.impl":
+    location: [6.720, 18.900]
+    orientation: N
+  "u_dco.stage[79].stage_inv.impl":
+    location: [5.760, 22.680]
+    orientation: N
+  "u_dco.stage[7].stage_inv.impl":
+    location: [21.600, 15.120]
+    orientation: N
+  "u_dco.stage[80].stage_inv.impl":
+    location: [7.200, 22.680]
+    orientation: N
+  "u_dco.stage[81].stage_inv.impl":
+    location: [8.640, 22.680]
+    orientation: N
+  "u_dco.stage[82].stage_inv.impl":
+    location: [10.080, 22.680]
+    orientation: N
+  "u_dco.stage[83].stage_inv.impl":
+    location: [11.520, 22.680]
+    orientation: N
+  "u_dco.stage[84].stage_inv.impl":
+    location: [12.960, 22.680]
+    orientation: N
+  "u_dco.stage[85].stage_inv.impl":
+    location: [14.400, 22.680]
+    orientation: N
+  "u_dco.stage[86].stage_inv.impl":
+    location: [15.840, 22.680]
+    orientation: N
+  "u_dco.stage[87].stage_inv.impl":
+    location: [17.280, 22.680]
+    orientation: N
+  "u_dco.stage[88].stage_inv.impl":
+    location: [18.720, 22.680]
+    orientation: N
+  "u_dco.stage[89].stage_inv.impl":
+    location: [20.160, 22.680]
+    orientation: N
+  "u_dco.stage[8].stage_inv.impl":
+    location: [23.040, 15.120]
+    orientation: N
+  "u_dco.stage[90].stage_inv.impl":
+    location: [21.600, 22.680]
+    orientation: N
+  "u_dco.stage[91].stage_inv.impl":
+    location: [23.040, 22.680]
+    orientation: N
+  "u_dco.stage[92].stage_inv.impl":
+    location: [24.480, 22.680]
+    orientation: N
+  "u_dco.stage[93].stage_inv.impl":
+    location: [25.920, 22.680]
+    orientation: N
+  "u_dco.stage[94].stage_inv.impl":
+    location: [27.360, 22.680]
+    orientation: N
+  "u_dco.stage[95].stage_inv.impl":
+    location: [28.800, 22.680]
+    orientation: N
+  "u_dco.stage[96].stage_inv.impl":
+    location: [30.240, 22.680]
+    orientation: N
+  "u_dco.stage[97].stage_inv.impl":
+    location: [31.680, 22.680]
+    orientation: N
+  "u_dco.stage[98].stage_inv.impl":
+    location: [33.120, 22.680]
+    orientation: N
+  "u_dco.stage[99].stage_inv.impl":
+    location: [34.560, 22.680]
+    orientation: N
+  "u_dco.stage[9].stage_inv.impl":
+    location: [24.480, 15.120]
+    orientation: N
+  "u_dco.tap[0].tap_buf.impl":
+    location: [9.120, 15.120]
+    orientation: N
+  "u_dco.tap[1].tap_buf.impl":
+    location: [28.800, 18.900]
+    orientation: N
+  "u_dco.tap[2].tap_buf.impl":
+    location: [56.160, 26.460]
+    orientation: N
+  "u_dco.tap[3].tap_buf.impl":
+    location: [51.840, 30.240]
+    orientation: N
+  "u_dco.tap[4].tap_buf.impl":
+    location: [25.920, 37.800]
+    orientation: N
+  "u_dco.tap[5].tap_buf.impl":
+    location: [11.520, 41.580]
+    orientation: N
+  "u_dco.tap[6].tap_buf.impl":
+    location: [25.920, 49.140]
+    orientation: N
+  "u_dco.tap[7].tap_buf.impl":
+    location: [51.840, 56.700]
+    orientation: N

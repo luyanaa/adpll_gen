@@ -120,10 +120,28 @@ module PLL_MULTIPHASE_DCO #(
 
     // Tap every STEP stages.  NSTAGE is a multiple of NPHASE, so the taps
     // partition the line and tap k is exactly k*STEP stages from DCO_OUT.
+    //
+    // Each tap is driven through its own dont_touch buffer.  Without it the
+    // tap node (chain[tap_stage]) carries the observability port AND the phase
+    // mux as direct loads, so its routed wire is whatever the placer happened
+    // to produce — measured on the routed macro that spread the tap-to-tap
+    // spacing by up to ~72 ps, over the < 30 ps budget.  Buffering gives every
+    // tap the same local load (one buffer input next to the stage + the next
+    // chain stage); the off-tap wire length then moves onto the buffer output
+    // where it does not perturb the ring's phase grid.  keep/dont_touch stops
+    // ABC collapsing the buffer back into the chain.
     genvar t;
     generate
         for (t = 0; t < NPHASE; t = t + 1) begin : tap
-            assign PHASE[t] = chain[tap_stage(t)];
+            wire tap_iso;
+            assign tap_iso = chain[tap_stage(t)];
+            (* keep *) (* dont_touch = "true" *)
+            PLL_CELL_BUFFX0 tap_buf (
+`ifdef WITH_POWER
+                .VDD(VDD), .VSS(VSS),
+`endif
+                .I(tap_iso), .Z(PHASE[t])
+            );
         end
     endgenerate
 
