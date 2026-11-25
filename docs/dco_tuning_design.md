@@ -77,13 +77,30 @@ In-tree measured MOS spread (`pex_ihp/dco_pvt.json`): ratio 2.38x → **budget
 the concave T∝C reality). If extraction shows <5x, add a 6th coarse bit (not a
 bigger bit 4 — matching risk).
 
-Targets (replace with extraction):
-| target | corner | coarse | fine |
+Targets (replace with extraction).
+
+**Correction 2026-11-25 (post-calibration): the macro is speed-GRADED, not
+500 MHz-at-SS.** Caps only slow a ring; the old signed-off ring is 335 MHz @ SS
+with ~no tuning load, so 500 MHz @ SS is architecturally impossible at
+NSTAGE=25 — the earlier target table used the liberty floor (~685 MHz) instead
+of the routed number (~335 MHz). Approved re-scope:
+
+| rate | must reach at | corners where claimed | note |
 |---|---|---|---|
-| 500 MHz | FF/TT/SS | ~24-28 / ~14-18 / ~4-8 | mid |
-| 250 MHz | FF/TT/SS | ~28-31 / ~22-26 / 31 | mid (must not rail) |
-Pass condition: 500 MHz inside range **at SS**, 250 MHz inside range **at FF**,
-≥2 fine LSB headroom each side, monotone, adjacent-code overlap ≥2 fine LSB.
+| 2 Gb/s (500 MHz) | **FF** (TT marginal) | FF, TT | not required at SS |
+| 1 Gb/s (250 MHz) | **SS** | all corners | comfortably inside range |
+
+Report the actual achievable frequency range per corner (SS/TT/FF) as the
+deliverable. Pass condition: each claimed rate inside the coarse+fine range at
+its corner with ≥2 fine LSB headroom each side, monotone, adjacent-code overlap
+≥2 fine LSB. Matches how real SerDes parts are speed-binned.
+
+**Fast-end fix**: the fine bank's 63 NAND3 `A1` pins hard-tied to the stage
+output (`pll_multiphase_dco.v:372`) cost ~35 MHz of fast-end (permanent ~170 fF
+at FINE=0). Gate or reduce the fine fingers so FINE=0 does not load the stage
+with 63 hard-tied gates; recover the SS fast end toward the old ~335 MHz. The
+fine bank only needs to cover one coarse LSB (~8–15 MHz) with 2× margin, not
+±30 MHz, so fewer fingers suffice.
 
 ## PI stays a phase actuator (separate)
 
