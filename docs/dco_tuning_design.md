@@ -122,6 +122,25 @@ drops it to ~215 routed → **fails 250 @ SS**. `inv_4` gives ~310 pre-layout �
 ~267 routed ≥ 250 with margin, and clears 500 @ FF. The ≥250 **routed** number
 is confirmed at M4 post-route.
 
+**Verified with inv_4 + one-shot kick (SS pre-layout):** inv-only 433 MHz;
+tuned c0/f−31 (fastest) **333.8 MHz**; c31/f0 **134.7 MHz and no longer dead**
+(oscillates at init 0 and X identically — risk 7 fixed). SS COARSE sweep
+0..31 = 325.9 → 134.8 MHz, so **250 MHz sits inside the SS range with
+headroom** (bracketed near c13/c14). Kick is 3 `dont_touch` inv_1 delay +
+`AND(EN, ~EN_d3)`, ORed into the closure; inversion count unchanged (an even
+delay count pinned the ring — use odd, 3).
+
+**Open (2026-11-26): coarse sweep is NON-MONOTONE at binary boundaries.**
+c7→c8 +45 MHz, c19→c20 +15, c23→c24 +34 — a high bit turning on slows *less*
+than the lower bits turning off, because bits 0–3 all use a min-width switch
+(`SW_M=1`) regardless of 1/2/4/8 fingers; the high switch-R rounds the edge
+and shrinks effective ΔC (brief risk 3). The 15–45 MHz holes exceed the fine
+bank's ±10 MHz span and break the SAR monotone assumption.
+**Decision: fix the source, not a LUT** (a LUT remap is PVT-fragile). Scale
+`SW_M` with finger count (bit4 already 4), and widen the fine span if any
+coarse step still exceeds it, so the code→freq map is monotone-by-construction
+and gap-free. Re-measure SS for monotone + every step ≤ fine span.
+
 ## PI stays a phase actuator (separate)
 
 Ring taps span a **half period** → they are not the 8 sampler phases.
