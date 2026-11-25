@@ -93,38 +93,88 @@ module frequency_counter_frontend #(
             localparam integer HALF = PS / 2;
             reg [1:0] div_cnt;
             reg clk_div;
+            // cnt is split at the byte boundary: the low byte free-runs on the
+            // divided-enable edge and the high byte only increments when the
+            // low byte is all ones.  A flat CNT_W-bit increment put the whole
+            // ripple in the self-loop and in the Gray chain (SS -0.29 ns on
+            // cnt[3] -> cnt_gray[15]).  With PRESCALE 2 or 4 the divided count
+            // toggles cnt[0] every enable, so bit 3 is the busiest bit the
+            // ripple has to climb out of.
             reg [CNT_W-1:0] cnt;
             reg [CNT_W-1:0] gray_q;
-            wire [CNT_W-1:0] cnt_inc = cnt + 1'b1;
-            always @(posedge CLK or negedge RST_N) begin
-                if (!RST_N) begin
-                    div_cnt <= 2'd0;
-                    clk_div <= 1'b0;
-                end else if (div_cnt == HALF - 1) begin
-                    div_cnt <= 2'd0;
-                    clk_div <= ~clk_div;
-                end else begin
-                    div_cnt <= div_cnt + 1'b1;
+            // Split the carry at the nibble boundary inside the low byte, not
+            // only at the byte boundary.  &cnt[7:0] is an 8-input AND tree
+            // ahead of the upper-byte increment; cnt[3] -> cnt[15] through it
+            // still measured -0.109 ns SS.  A 4-input AND plus one carry-in is
+            // the shallowest increment this counter can offer.
+            wire        cnt_ln_wrap = &cnt[3:0];
+            wire        cnt_hn_wrap = &cnt[11:8];
+            // Every nibble pre-decodes its own +1 with at most a 4-bit carry.
+            // Writing the whole vector as cascaded adds keeps a serial carry
+            // alive inside the byte adders (cnt[1] -> cnt[15] was -0.29 SS);
+            // per-nibble sums selected by the lower wrap flags cap the cone.
+            wire [3:0]  n0_inc = cnt[3:0]   + 4'b0001;
+            wire [3:0]  n1_inc = cnt[7:4]   + 4'b0001;
+            wire [3:0]  n2_inc = cnt[11:8]  + 4'b0001;
+            wire [3:0]  n3_inc = cnt[15:12] + 4'b0001;
+            if (PS == 2) begin : div2
+                // div_cnt is always 0 at HALF=1; toggling clk_div on every
+                // input edge is the whole prescaler.  Keeping div_cnt in the
+                // netlist only added a dead 2-bit compare in front of cnt_en.
+                always @(posedge CLK or negedge RST_N) begin
+                    if (!RST_N) clk_div <= 1'b0;
+                    else        clk_div <= ~clk_div;
+                end
+            end else begin : div4
+                // PS == 4 (clamped): one clk_div toggle per two input edges.
+                always @(posedge CLK or negedge RST_N) begin
+                    if (!RST_N) begin
+                        div_cnt <= 2'd0;
+                        clk_div <= 1'b0;
+                    end else if (div_cnt == HALF - 1) begin
+                        div_cnt <= 2'd0;
+                        clk_div <= ~clk_div;
+                    end else begin
+                        div_cnt <= div_cnt + 1'b1;
+                    end
                 end
             end
             // 计数寄存器的时钟统一用 CLK，改由使能脉冲控制递增。
             // 原写法 `always @(posedge clk_div)` 把寄存器输出当时钟，CTS 会为
             // 负载侧再造一棵树并把根留成悬空网（实测 ..._clk_div_regs 全
             // netlist 无驱动源），导致这 33 个寄存器在签核时根本没有被计时。
-            // 用使能门控在功能上等价：clk_div 的每个上升沿对应 div_cnt 回绕
-            // 的那一拍，因此计数条件就是 (div_cnt == HALF-1)。
-            wire cnt_en = (div_cnt == HALF - 1);
-            always @(posedge CLK or negedge RST_N) begin
+            //
+            // 2026-11-24 (MID_OUT domain fix): restore the divided clock.
+            // The enable-based structure above was a workaround for CTS not
+            // recognising clk_div; it left cnt/gray_q clocked by the raw
+            // 0.34-0.76 GHz MID_OUT ring, whose real period (1.31 ns FF,
+            // 2.94 ns SS from the corrected gate sweep) is what the MID_OUT
+            // constraint must use.  The counter increments once per two
+            // MID_OUT edges, so clocking the flops from clk_div gives them a
+            // full /2 period instead of a single ring period.  The clk_div
+            // register is now declared as the FE_CLK_DIV generated clock in
+            // constraints/adpll.sdc, which is what keeps CTS from leaving its
+            // root undriven (the failure that motivated the enable workaround).
+            //
+            // Keep the B12 nibble pre-decode/carry split: it caps the
+            // counter's own carry cone and is independent of the clocking.
+            // The former cnt_en_q/cnt_hi_en_q registers are no longer needed
+            // because there is no full-rate enable mux to drive; the -0.59 ns
+            // clk_div -> enable cone they fixed does not exist on this
+            // structure.  Do not reintroduce a full-rate CLK here.
+            wire       cnt_lo_wrap = &cnt[7:0];
+            always @(posedge clk_div or negedge RST_N) begin
                 if (!RST_N) begin
                     cnt    <= 'd0;
                     gray_q <= 'd0;
-                end else if (cnt_en) begin
-                    cnt    <= cnt_inc;
-                    // Register the Gray word in the divided-clock *phase*
-                    // (same CLK edge as clk_div's toggle); a combinational XOR
-                    // can glitch on multi-bit carries and be sampled by the
-                    // REF 2FF synchronizer.
-                    gray_q <= cnt_inc ^ (cnt_inc >> 1);
+                end else begin
+                    gray_q <= cnt ^ (cnt >> 1);
+                    cnt[7:0] <= {cnt_ln_wrap ? n1_inc : cnt[7:4],
+                                 n0_inc};
+                    cnt[CNT_W-1:8] <= cnt_lo_wrap ?
+                        {cnt_hn_wrap ? n3_inc : cnt[15:12],
+                         n2_inc}
+                                      : cnt[CNT_W-1:8];
                 end
             end
             assign COUNT = cnt << PS_SHIFT;

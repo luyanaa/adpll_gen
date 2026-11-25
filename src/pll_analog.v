@@ -11,7 +11,12 @@ module PLL_ANALOG #(
     parameter integer COARSE_NDELS = 15, // 4-bit coarse
     parameter integer MID_NDELS = 15, // 4-bit mid
     parameter integer FINE_NDELS = 31, // 5-bit fine
-    parameter integer IL_NDELS = 4
+    parameter integer IL_NDELS = 4,
+    // Fixed in-loop ring delay stages: shifts the ring's centre frequency
+    // down (tuning-range band knob only).  It does NOT fix fine-bank
+    // monotonicity — that nonlinearity lives in the dangling NAND gate-load
+    // cell, which added upstream delay cannot linearise.  0 = no base chain.
+    parameter integer BASE_NDELS = 0
 ) (
 `ifdef WITH_POWER
     inout VDD, VSS,
@@ -38,7 +43,8 @@ module PLL_ANALOG #(
     PLL_ILDCO #(
         .COARSE_NDELS(COARSE_NDELS),
         .MID_NDELS(MID_NDELS),
-        .FINE_NDELS(FINE_NDELS)
+        .FINE_NDELS(FINE_NDELS),
+        .BASE_NDELS(BASE_NDELS)
     ) dco (
 `ifdef WITH_POWER
         .VDD(VDD), .VSS(VSS),

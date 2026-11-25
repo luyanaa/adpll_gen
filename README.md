@@ -6,8 +6,12 @@ characterization.  The project is intentionally multi-PDK: ics55, GF180mcu,
 sky130, IHP SG13G2, and ETRI050.
 
 The current status is **implementation characterization**, not a product
-signoff.  Full analog DCO/PLL characterization (phase noise, injection range,
-locked jitter, full-top power) has not been completed.
+signoff.  Injection range, full-top power, and a closed-loop pnoise jitter
+have not been completed.  One estimated number is signed off: the IHP
+lock-point thermal residual, **4.0 ps rms** at an assumed 100 kHz loop
+bandwidth (`flow/characterization/JITTER_PHASE_NOISE.md`).  Flicker, other
+PDKs, and PEX/PVT stay uncharacterized, and production requests still return
+`FAIL_UNCHARACTERIZED`.
 
 > 中文版：[`README.zh-cn.md`](README.zh-cn.md)
 
@@ -111,7 +115,8 @@ now reproducible with `flow/characterization/macro_char.py` (gate-level STA at
 TT/SS/FF, ring transient PVT, deterministic period spread, and exact counter
 NCO quantization).  The sky130 ring does not oscillate in the built netlist,
 and the sky130 counter fails setup in SS at 100 MHz TICK; both are recorded as
-failures, not signoff.  No random-jitter or phase-noise signoff is claimed.
+failures, not signoff.  No pnoise signoff is claimed for these macros; the
+estimated 4.0 ps thermal residual does not apply to them.
 See `flow/characterization/macro_char/CHARACTERIZATION.md`.
 
 Routed parasitics are now extracted from both macro final databases with
@@ -341,8 +346,10 @@ setup +2.71 ns / hold +0.143 ns at 20 ns.
 ### Full PLL
 
 The complete `pll` top has not been assembled with the hard macro and
-digital-control views.  There is no full-top lock-time, jitter, phase-noise,
-or power characterization yet.
+digital-control views.  There is no full-top lock-time or power
+characterization yet.  The one jitter number is the estimated IHP
+lock-point thermal residual in `flow/characterization/JITTER_PHASE_NOISE.md`;
+it is not a full-top pnoise result.
 
 ## 8. Reproduce
 
@@ -413,10 +420,10 @@ flow/canary/ETRI050_fd_sc_core_a/
 
 ## 9. What is not characterized
 
-- DCO full-range measured frequency, tuning range, monotonicity (macro TT/SS/FF and local code steps are now covered); random jitter and phase noise
+- DCO full-range measured frequency, tuning range, monotonicity (macro TT/SS/FF and local code steps are now covered); pnoise random jitter.  The IHP lock-point thermal residual is signed off as an estimate (4.0 ps rms at an assumed 100 kHz), not as a pnoise or flicker result
 - Injection lock range, lock time, false-lock behavior
-- DCO phase noise / ISF analysis
-- Full ADPLL RMS jitter and integrated phase noise
+- DCO phase noise beyond the free-running ISF.  The ISF at c4/m9/f25 and c8/m8/f8 exists; the absolute level is synthesized because `psp103.osdi` exports no noise
+- Closed-loop pnoise RMS jitter.  The estimated thermal integral above is the signed-off stand-in; the synthesized-flicker column is not
 - Full-top power, area, lock time, BER
 - Package/board/PDN signoff
 - Foundry-qualified DRC/LVS for GF180, sky130, IHP, or ETRI050

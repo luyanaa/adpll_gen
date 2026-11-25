@@ -37,8 +37,12 @@ module arch_models_tb;
             $display("FAIL: model did not oscillate");
             $fatal(1);
         end
-        if (ring_edges1 <= ring_edges0 || counter_edges1 <= counter_edges0) begin
-            $display("FAIL: control code does not change model frequency");
+        // Real DCO polarity: more set bits = more delay = slower.  So the
+        // all-ones ring (ring1 / counter1) must oscillate SLOWER than the
+        // all-zeros ring — the code-to-frequency direction is signed, and the
+        // freq_lock loop depends on code-up = slower.  Assert strictly slower.
+        if (ring_edges1 >= ring_edges0 || counter_edges1 >= counter_edges0) begin
+            $display("FAIL: control code does not lower model frequency");
             $fatal(1);
         end
         $display("arch_models_tb: PASS ring=%0d/%0d counter=%0d/%0d",

@@ -36,7 +36,7 @@ module ddr_clock_phy_integration_tb;
         .COARSE_NDELS(15), .MID_NDELS(15), .FINE_NDELS(31),
         .FILTER_BITS(FILTER_BITS),
         .IS_DSM(1), .DSM_DIV(2),
-        .LOCKED_WAIT(64), .FILTER_ILL(16),
+        .LOCKED_WAIT(64), .FILTER_ILL(16), .LOCK_WINDOW(1),
         .DIV_BITS(DIV_BITS), .DIV_INIT(8),
         .FCW_BITS(FCW_BITS)
     ) u_pll (

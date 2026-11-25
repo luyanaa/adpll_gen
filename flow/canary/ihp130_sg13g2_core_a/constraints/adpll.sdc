@@ -34,7 +34,8 @@ if {[llength [get_clocks -quiet REF]] == 0} {
 
 # OUT / MID_OUT / INJ_EDGE: ports in the digital-only top, macro pins in the
 # full top.  Nominal periods are STA assumptions:
-#   OUT/MID_OUT : 2.5 ns (FCW=8 => 8 x 50 MHz); real period is set by the DCO
+#   OUT/MID_OUT : measured per corner (see MID_OUT below); real period is set
+#                 by the DCO, not by the FCW
 #   INJ_EDGE    : 20 ns, a delayed copy of REF
 # Prefer the macro pin in the full top: OUT/MID_OUT/INJ_EDGE are top-level
 # *outputs* there, and a clock defined on an output port would not propagate
@@ -57,8 +58,30 @@ if {[llength [get_clocks -quiet MID_OUT]] == 0} {
     if {[llength $mid_src] == 0} {
         set mid_src [get_ports -quiet MID_OUT]
     }
+    # Real per-corner minimum MID_OUT period, measured on the *corrected*
+    # macro netlist (mid LOAD 120/120) with the open-loop gate sweep in
+    # sim/outputs/ihp-sg13g2/gate:
+    #   nom_tt_025C_1v20 : 1.900 ns (526.3 MHz)
+    #   nom_ff_n40C_1v32 : 1.310 ns (763.4 MHz, the fastest)
+    #   nom_ss_125C_1v08 : 2.940 ns (340.1 MHz)
+    # The old 2.500 ns (400 MHz) both over-clocked the FLL counter and was
+    # wrong for every corner.  LibreLane exposes the active corner through
+    # ::env(_CURRENT_CORNER_NAME); guard it so a standalone OpenSTA run still
+    # gets the worst (fastest) measured period, 1.310 ns.
+    set mid_period 1.310
+    if {[info exists ::env(_CURRENT_CORNER_NAME)]} {
+        set _corner $::env(_CURRENT_CORNER_NAME)
+        if {[string match *nom_tt_025C_1v20* $_corner]} {
+            set mid_period 1.900
+        } elseif {[string match *nom_ff_n40C_1v32* $_corner]} {
+            set mid_period 1.310
+        } elseif {[string match *nom_ss_125C_1v08* $_corner]} {
+            set mid_period 2.940
+        }
+        puts "adpll.sdc: MID_OUT period $mid_period ns for corner $_corner"
+    }
     if {[llength $mid_src] > 0} {
-        create_clock -name MID_OUT -period 2.500 $mid_src
+        create_clock -name MID_OUT -period $mid_period $mid_src
     } else {
         puts "WARNING: adpll.sdc: MID_OUT not found as pll_ana/MID_OUT or a port"
     }
@@ -118,8 +141,8 @@ if {[llength [get_clocks -quiet REF_G_CLK]] == 0} {
 }
 
 # DSM_CK is MID_OUT divided by DSM_DIV (a pll_fix_divider instance; DSM_DIV
-# defaults to 2 in pll_macro_top).  DSM_CK_G is the same clock through the ICG,
-# so no further division.
+# is 4 in pll_macro_top).  DSM_CK_G is the same clock through the ICG, so no
+# further division.  /2 (5 ns) left the DSM adder at -1.51 ns; /4 is 10 ns.
 #
 # The previous version derived DSM_CK_G_CLK with -divide_by 1 from the *divider
 # register's Q pin*, which made STA report a 2.500 ns period -- the same as
@@ -131,7 +154,7 @@ if {[llength [get_clocks -quiet REF_G_CLK]] == 0} {
 #
 # Anchor must be MID_OUT itself, not the divider's Q: -source takes a clock
 # source pin, and the Q pin of a flop is data, not a clock root.
-set dsm_div 2
+set dsm_div 4
 if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
     # Anchor on the ICG's GCLK output, NOT on a net wildcard.  The wildcard
     # *dsm_impl.DSM_CK_G* also matches the CTS-inserted nets
@@ -159,22 +182,21 @@ if {[llength [get_clocks -quiet DSM_CK_G_CLK]] == 0} {
 # ---------------------------------------------------------------------------
 # FLL front-end divided clock
 # ---------------------------------------------------------------------------
-# frequency_counter_frontend toggles `clk_div` on MID_OUT and then clocks the
-# whole counter (cnt, gray_q) from 'always @(posedge clk_div)'.  That makes
-# clk_div a real clock domain inside pll_dig.flock, but it had no
-# create_generated_clock -- so 82 registers were reported as
-# "unclocked register/latch pins" in checks.rpt and were never timed at all.
-# In the full top they are the FLL frequency counter, i.e. the loop that
-# produces FREQ_LOCKED, so leaving them unchecked is a real signoff hole.
+# frequency_counter_frontend toggles `clk_div` on MID_OUT and clocks the whole
+# counter (cnt, gray_q) from 'always @(posedge clk_div)'.  That makes clk_div a
+# real clock domain inside pll_dig.flock.
+#
+# B12 moved the counter to CLK + a registered enable to avoid CTS leaving a
+# generated-clock root undriven, but that left the counter flops timed against
+# the full-rate MID_OUT period.  The 2026-11-24 fix restores posedge clk_div
+# (the counter increments once per two MID_OUT edges) and the FE_CLK_DIV
+# declaration below is what makes CTS treat the clk_div register as a clock
+# root instead of an ordinary net.  The B12 nibble pre-decode is still in the
+# RTL; only the enable muxes were removed with the divided clock.
 #
 # PRESCALE is 2 in the signoff build (pll_logic instantiates
 # .PRESCALE(2)), and div_cnt runs off MID_OUT, so clk_div is MID_OUT/2.
 set frontend_prescale 2
-# FE_CLK_DIV is no longer declared: B12 changed frequency_counter_frontend to
-# clock its counter from CLK with an enable instead of from the divided register
-# output, so there is no derived clock domain there any more.  Keeping the old
-# declaration produced "FE_CLK_DIV not created (pin 0, src 1)" because the net
-# it anchored on no longer exists.
 
 # ---------------------------------------------------------------------------
 # Derived clocks that were also never declared
@@ -215,8 +237,17 @@ if {[llength $mid_src_d] == 0} {
     set mid_src_d [get_pins -quiet *pll_ana/MID_OUT]
 }
 
-# out_div2: OUT/2, and OUT is 2.5 ns, so this is the MID_OUT rate.
-_genclk_on_net OUT_DIV2_CLK *pll_dig.out_div2* $mid_src_d 1
+# out_div2: OUT/2 (a register clocked by OUT), so derive it from the OUT
+# clock with -divide_by 2.  The old declaration used MID_OUT as the source and
+# -divide_by 1, which silently modelled it as the MID_OUT rate instead.
+set out_src_d [get_ports -quiet OUT]
+if {[llength $out_src_d] == 0} {
+    set out_src_d [get_pins -quiet *pll_ana/OUT]
+}
+_genclk_on_net OUT_DIV2_CLK *pll_dig.out_div2* $out_src_d 2
+# FE_CLK_DIV: the FLL counter clock, MID_OUT/2.  See the front-end note above;
+# declared here (before set_clock_groups) so it lands in the MID_OUT group.
+_genclk_on_net FE_CLK_DIV *clk_div* $mid_src_d 2
 # CKR: a MID_OUT-domain register capturing REF; keep the MID_OUT period.
 _genclk_on_net CKR_CLK *pll_dig.CKR $mid_src_d 1
 # DSM_CK (ungated): the 2FF synchroniser that carries LOCKED into the DSM
@@ -234,12 +265,8 @@ _genclk_on_net CKR_CLK *pll_dig.CKR $mid_src_d 1
 # REF_G is REF gated by the FLL ICG: same frequency, small insertion delay.
 # It stays in the REF group so REF -> REF_G transfers are analysed (the ICG
 # setup requirement is real), while the CDC synchronizers inside both domains
-# are exempted separately below.
-set_clock_groups -asynchronous \
-    -group {REF REF_G_CLK} \
-    -group {OUT} \
-    -group {MID_OUT DSM_CK_G_CLK DSM_CK_CLK FE_CLK_DIV OUT_DIV2_CLK CKR_CLK} \
-    -group {INJ_EDGE}
+# are exempted separately below.  The asynchronous group declaration itself is
+# made once, after every generated clock exists (see the end of this file).
 
 # ---------------------------------------------------------------------------
 # CDC synchronizers: exempt the first stage from hold repair
@@ -309,9 +336,13 @@ cdc_exempt_hold {
 # clock on that inverter output with -source set to the clock feeding the
 # inverter.
 #
-# -source keeps each generated clock inside its master's clock group, so this
-# does not split a domain into many asynchronous groups (that was the failure
-# mode recorded in B12 and it produced thirteen domains for one clock).
+# OpenSTA's -source does NOT place a generated clock into its master's clock
+# group: a clock that appears in no set_clock_groups group is related to every
+# other clock and is timed synchronously.  Each generated NE clock must
+# therefore be named explicitly in the set_clock_groups call (done after all
+# clocks are created, below), together with its master.  Leaving them out
+# would split each domain into many synchronous domains (the failure mode
+# recorded in B12, which produced thirteen groups for one clock).
 proc _declare_negedge_clocks {} {
     set made 0
     set seen {}
@@ -385,6 +416,11 @@ proc _declare_negedge_clocks {} {
             continue
         }
         incr made
+        # Remember which master clock this NE clock belongs to so the
+        # set_clock_groups call after all clocks exist can place it in the
+        # master's group explicitly (-source does not do that for us).
+        if {![info exists ::NE_CLK_GROUPS]} { set ::NE_CLK_GROUPS [dict create] }
+        dict lappend ::NE_CLK_GROUPS $clkname $cname
     }
     puts "adpll.sdc: NE_CLK diag clkpin=$_diag_clkpin drv=$_diag_drv inv=$_diag_inv src=$_diag_src made=$made"
     puts "adpll.sdc: NE_CLK declared on $made inverter clock(s)"
@@ -422,53 +458,16 @@ if {![info exists ::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)] || $::env(ADPLL_DECLARE_N
     puts "adpll.sdc: negedge clock declaration off (ADPLL_DECLARE_NEGEDGE_CLOCKS=1 to enable)"
 }
 
-# DCO_EN is synchronised into the DSM domain in RTL (pll_logic.v: 2FF on
-# DSM_CK_G before delta_sigma's EN_DSM), so no SDC exemption is needed here.
-# Six exemption variants were tried and all left the violation at -0.4039; the
-# RTL fix is what closes it.
-
-# Default-on.  The 89 negedge flops (B14) are now timed, and the DCO_EN
-# crossing that doing so exposed is closed in RTL by a 2FF synchroniser before
-# delta_sigma's EN_DSM (pll_logic.v), not by an SDC exemption -- six exemption
-# variants were tried and none moved the -0.4039.  Set
-# ADPLL_DECLARE_NEGEDGE_CLOCKS=0 to fall back to the 11-clock view.
-if {![info exists ::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)] || $::env(ADPLL_DECLARE_NEGEDGE_CLOCKS)} {
-    _declare_negedge_clocks
-} else {
-    puts "adpll.sdc: negedge clock declaration off (ADPLL_DECLARE_NEGEDGE_CLOCKS=1 to enable)"
-}
-
-# Exempt the enable crossing end to end.
-#
-# Measured path (min.rpt): _4240_/Q -> fanout116 -> _2425_/A1 -> _2425_/Y ->
-# _4316_/D.  Successive attempts narrowed what does NOT work:
-#   -from the DCO_EN net driver     -> still -0.4039
-#   -from driver, -to sink         -> -0.3986 (moved, not closed)
-#   -from _4240_/Q -to _4316_/D    -> resolved to anonymous pins
-#     (_1025ee8f5d550000_p_Pin), because plain instance names do not resolve in
-#     the post-PnR STA, and the violation stayed at -0.4039.
-# Use hierarchical globs so the same expression works at both stages.
-set _dco_en_from [get_pins -quiet -hierarchical *_4240_/Q]
-set _dco_en_to   [get_pins -quiet -hierarchical *_4316_/D]
-if {[llength $_dco_en_from] > 0 && [llength $_dco_en_to] > 0} {
-    set_false_path -from $_dco_en_from -to $_dco_en_to
-    puts "adpll.sdc: DCO_EN cone exempted ([llength $_dco_en_from] -> [llength $_dco_en_to])"
-} else {
-    set _dco_en_nets [get_nets -quiet -hierarchical *DCO_EN*]
-    set _dco_en_drv [get_pins -quiet -of_objects $_dco_en_nets -filter "direction==output"]
-    set _dco_en_snk [get_pins -quiet -of_objects $_dco_en_nets -filter "direction==input"]
-    if {[llength $_dco_en_drv] > 0} { set_false_path -from $_dco_en_drv }
-    if {[llength $_dco_en_snk] > 0} { set_false_path -to $_dco_en_snk }
-    puts "adpll.sdc: DCO_EN exempted by net (driver [llength $_dco_en_drv], sink [llength $_dco_en_snk])"
-}
-
-
 # ---------------------------------------------------------------------------
-# The ORFS ihp-sg13g2 platform does not publish these limits.  The values
-# below are the generic LibreLane/ORFS assumptions also used by the ics55 and
-# sky130 configs; they are canary assumptions, not characterised IHP limits.
-# The hold value in particular is a placeholder.
-set_clock_uncertainty -setup 0.250 [all_clocks]
+# The ORFS ihp-sg13g2 platform does not publish these limits.  The setup
+# uncertainty used to be the generic 0.250 ns placeholder, which is 13-19 % of
+# the real MID_OUT period and dominated the budget.  Replace it with 0.050 ns
+# (50 ps) for these domains.  Basis: the ISF/phase-noise work measures the
+# free-running DCO residual jitter at <~1 ps and the tracked CDR jitter is
+# bandwidth-limited (sim/outputs/ihp-sg13g2/lock/ISF_LOCK_NOTES.md §6), so
+# 50 ps is still a conservative multi-cycle corner/jitter allowance, not a
+# fully characterized period-jitter budget.
+set_clock_uncertainty -setup 0.050 [all_clocks]
 set_clock_uncertainty -hold  0.050 [all_clocks]
 # set_max_transition 0.15 [current_design]
 
@@ -506,6 +505,21 @@ set_false_path -from [get_ports RST_N]
 if {[llength [get_ports -quiet INJ_EN]] > 0} {
     set_false_path -from [get_ports INJ_EN]
 }
+# div_rst_n (pll_logic) is produced on posedge OUT; the divider's negedge
+# domain re-times the deassert through div.rst_n_n, a constant-1 synchronizer
+# flop.  Recovery of rst_n against rst_n_n only decides which negedge lifts
+# the replica; a missed edge holds the negedge domain in reset one extra
+# half cycle, harmless, so the check is disabled rather than timed.
+set rst_n_n_regs [get_cells -quiet -hierarchical *rst_n_n*]
+if {[llength $rst_n_n_regs] > 0} {
+    set_false_path -to [get_pins -of_objects $rst_n_n_regs]
+}
+# div_rst_n/div_rst_n_b (pll_logic) are two identical posedge-OUT registers
+# each feeding half the divider's async-clear pins.  Splitting the reset
+# fanout was what brought the rst_n recovery residual inside the window --
+# set_false_path/set_disable_timing do not cover a recovery check, so the
+# fix lives in the RTL, not here.  rst_n_n (above) still re-times the
+# release for the negedge domain.
 
 # ---------------------------------------------------------------------------
 # Outputs
@@ -565,6 +579,35 @@ if {[llength [get_clocks -quiet CK_CLK]] == 0} {
         puts "WARNING: adpll.sdc: CK_CLK not created (src [llength $out_src3], pin [llength $ck_pin])"
     }
 }
+
+
+# ---------------------------------------------------------------------------
+# Asynchronous clock groups (single declaration, after ALL clocks exist)
+# ---------------------------------------------------------------------------
+# Every generated clock must be listed: OpenSTA's create_generated_clock
+# -source does not add it to the master's clock group, and a clock in no group
+# is related to every other clock and timed synchronously.  The 78 NE_CLK_*
+# negedge clocks (recorded in ::NE_CLK_GROUPS by _declare_negedge_clocks) are
+# therefore appended to their master's group here.  Placing a clock in its
+# master's group only removes cross-group checks; same-group negedge<->master
+# (the CKR launch) and negedge<->negedge (INJ_EDGE) checks stay timed.
+set _grp_REF     {REF REF_G_CLK}
+set _grp_OUT     {OUT OUT_DIV_CLK CK_CLK}
+set _grp_MID_OUT {MID_OUT DSM_CK_G_CLK FE_CLK_DIV OUT_DIV2_CLK CKR_CLK}
+set _grp_INJ     {INJ_EDGE}
+if {[info exists ::NE_CLK_GROUPS]} {
+    dict for {_m _c} $::NE_CLK_GROUPS {
+        switch -- $_m {
+            REF - REF_G_CLK            { set _grp_REF     [concat $_grp_REF     $_c] }
+            OUT - OUT_DIV_CLK - CK_CLK { set _grp_OUT     [concat $_grp_OUT     $_c] }
+            INJ_EDGE                   { set _grp_INJ     [concat $_grp_INJ     $_c] }
+            default                    { set _grp_MID_OUT [concat $_grp_MID_OUT $_c] }
+        }
+    }
+}
+puts "adpll.sdc: groups REF=[llength $_grp_REF] OUT=[llength $_grp_OUT] MID_OUT=[llength $_grp_MID_OUT] INJ_EDGE=[llength $_grp_INJ]"
+set_clock_groups -asynchronous \
+    -group $_grp_REF -group $_grp_OUT -group $_grp_MID_OUT -group $_grp_INJ
 
 
 # DCO control buses only exist as ports in the digital-only top.  In the full

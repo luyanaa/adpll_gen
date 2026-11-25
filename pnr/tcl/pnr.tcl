@@ -75,6 +75,19 @@ set ::tech [[::ord::get_db] getTech]
 set ::block [$::chip getBlock]
 set dbu [$tech getDbUnitsPerMicron]
 
+# The analog macro build (TOP=PLL_ANALOG_MACRO) runs with SKIP_CLK_ISOLATE=1,
+# but its analog cells are still hand-placed analog delay lines.  OpenROAD's
+# repair_design/resizer sees the shared mid LOAD net as a high-fanout digital
+# net and clones its driver (sg13g2_inv_* clone1/clone2), moving the switched
+# NAND3 load capacitance off the ring path (taped macro: 90/120 B pins on
+# clone nets).  Protect the analog instances and nets before any resizing.
+# RTL (* dont_touch *) alone is stripped by `write_verilog -noattr`, so this
+# P&R-level keep is the effective guard.
+if {$TOP == "PLL_ANALOG_MACRO"} {
+  source ${PNR_DIR}/tcl/clk_isolate.tcl
+  protect_analog
+}
+
 # Look for the placement site in every library: it is in the tech LEF in some PDKs (ics55)
 # and in the standard cells LEF in others (ihp-sg13g2)
 set siteobj "NULL"

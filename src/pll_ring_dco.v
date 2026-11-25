@@ -11,10 +11,18 @@ module PLL_RING_DCO #(
     parameter integer COARSE_NDELS = 15,
     parameter integer MID_NDELS = 15,
     parameter integer FINE_NDELS = 31,
-    parameter real BASE_PERIOD_NS = 50.0,   // 20 MHz at code 0
-    parameter real COARSE_STEP_NS = 2.50,
-    parameter real MID_STEP_NS = 0.20,
-    parameter real FINE_STEP_NS = 0.010
+    // In the real cell (PLL_ILDCO / PLL_RING_DCO_PHYS) more set bits switch in
+    // MORE delay: the coarse tap-select folds the forward chain back through
+    // more stages, and the mid/fine dangling-NAND cells gate-load the shared
+    // node harder.  Measured (ics55 full-code scan): "increasing coarse/mid
+    // creates more delay and lowers the frequency; increasing fine also
+    // lowers the frequency".  So period grows with countones — the sign below
+    // is BASE + STEP*countones, NOT a minus.  A minus here would flip the DCO
+    // actuator against the freq_lock loop, which assumes code-up = slower.
+    parameter real MIN_PERIOD_NS = 0.5,     // fastest ring, all codes 0
+    parameter real COARSE_STEP_NS = 0.20,
+    parameter real MID_STEP_NS = 0.020,
+    parameter real FINE_STEP_NS = 0.0010
 ) (
     input [COARSE_NDELS-1:0] COARSE_MUX,
     input [MID_NDELS-1:0] MID_MUX,
@@ -30,7 +38,7 @@ module PLL_RING_DCO #(
 
     initial begin
         OUT = 1'b0;
-        period_ns = BASE_PERIOD_NS;
+        period_ns = MIN_PERIOD_NS;
         code = 0;
     end
     assign MID_OUT = OUT;
@@ -38,11 +46,11 @@ module PLL_RING_DCO #(
 
     always @* begin
         code = $countones(COARSE_MUX) + $countones(MID_MUX) + $countones(FINE_MUX);
-        period_ns = BASE_PERIOD_NS
-                  - COARSE_STEP_NS * $countones(COARSE_MUX)
-                  - MID_STEP_NS * $countones(MID_MUX)
-                  - FINE_STEP_NS * $countones(FINE_MUX);
-        if (period_ns < 3.0) period_ns = 3.0;
+        period_ns = MIN_PERIOD_NS
+                  + COARSE_STEP_NS * $countones(COARSE_MUX)
+                  + MID_STEP_NS * $countones(MID_MUX)
+                  + FINE_STEP_NS * $countones(FINE_MUX);
+        if (period_ns < 0.2) period_ns = 0.2;
     end
 
     initial begin

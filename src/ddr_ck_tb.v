@@ -21,7 +21,7 @@ module ddr_ck_tb;
     wire ck;
 
     pll_mod_divider #(.W(8), .DIV_INIT(8)) div (
-        .clk(clk), .rst_n(rst_n),
+        .clk(clk), .rst_n(rst_n), .rst_n2(rst_n),
         .set_div(set_div), .load_div(load_div),
         .out(div_clk), .div_q(div_q), .div_even(div_even)
     );

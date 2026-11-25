@@ -8,8 +8,8 @@ module PLL_ANALOG_MACRO (DCO_EN,
     FINE_MUX,
     MID_MUX,
     SS_BBPD,
-    VDD,
-    VSS);
+    VSS,
+    VDD);
  input DCO_EN;
  output INJ_EDGE;
  input INJ_EN;
@@ -20,8 +20,8 @@ module PLL_ANALOG_MACRO (DCO_EN,
  input [30:0] FINE_MUX;
  input [14:0] MID_MUX;
  output [1:0] SS_BBPD;
- inout VDD;
  inout VSS;
+ inout VDD;
 
  wire pll_ana_INJ_WIN;
  wire \pll_ana_dco/COARSE_OUT ;
@@ -188,162 +188,272 @@ module PLL_ANALOG_MACRO (DCO_EN,
  wire \pll_ana_inj/CHAIN_2_3_ ;
  wire \pll_ana_inj/CHAIN_2_4_ ;
  wire \pll_ana_inj/CHAIN_OUT ;
- wire net1;
- wire net2;
 
- sg13g2_fill_2 FILLER_0_0 ();
- sg13g2_fill_1 FILLER_0_103 ();
- sg13g2_decap_8 FILLER_0_109 ();
- sg13g2_decap_8 FILLER_0_116 ();
- sg13g2_decap_8 FILLER_0_12 ();
- sg13g2_decap_8 FILLER_0_123 ();
- sg13g2_decap_8 FILLER_0_130 ();
- sg13g2_decap_8 FILLER_0_137 ();
- sg13g2_decap_8 FILLER_0_144 ();
- sg13g2_decap_8 FILLER_0_151 ();
- sg13g2_decap_8 FILLER_0_158 ();
- sg13g2_decap_8 FILLER_0_165 ();
- sg13g2_decap_8 FILLER_0_172 ();
- sg13g2_decap_8 FILLER_0_179 ();
- sg13g2_decap_8 FILLER_0_186 ();
- sg13g2_decap_4 FILLER_0_19 ();
- sg13g2_decap_8 FILLER_0_193 ();
- sg13g2_fill_1 FILLER_0_2 ();
- sg13g2_decap_8 FILLER_0_200 ();
- sg13g2_fill_1 FILLER_0_207 ();
- sg13g2_decap_8 FILLER_0_213 ();
- sg13g2_fill_2 FILLER_0_220 ();
- sg13g2_fill_1 FILLER_0_222 ();
- sg13g2_fill_2 FILLER_0_23 ();
- sg13g2_decap_8 FILLER_0_30 ();
- sg13g2_decap_8 FILLER_0_37 ();
- sg13g2_decap_8 FILLER_0_44 ();
+ sg13g2_decap_8 FILLER_0_0 ();
+ sg13g2_decap_8 FILLER_0_105 ();
+ sg13g2_decap_8 FILLER_0_112 ();
+ sg13g2_decap_8 FILLER_0_119 ();
+ sg13g2_decap_8 FILLER_0_126 ();
+ sg13g2_decap_8 FILLER_0_133 ();
+ sg13g2_decap_8 FILLER_0_14 ();
+ sg13g2_decap_8 FILLER_0_140 ();
+ sg13g2_decap_8 FILLER_0_147 ();
+ sg13g2_decap_8 FILLER_0_154 ();
+ sg13g2_decap_8 FILLER_0_161 ();
+ sg13g2_decap_8 FILLER_0_168 ();
+ sg13g2_decap_8 FILLER_0_175 ();
+ sg13g2_decap_8 FILLER_0_182 ();
+ sg13g2_decap_8 FILLER_0_189 ();
+ sg13g2_decap_8 FILLER_0_196 ();
+ sg13g2_decap_8 FILLER_0_203 ();
+ sg13g2_decap_8 FILLER_0_21 ();
+ sg13g2_decap_8 FILLER_0_210 ();
+ sg13g2_decap_8 FILLER_0_217 ();
+ sg13g2_decap_8 FILLER_0_224 ();
+ sg13g2_decap_8 FILLER_0_231 ();
+ sg13g2_decap_8 FILLER_0_238 ();
+ sg13g2_decap_8 FILLER_0_245 ();
+ sg13g2_fill_2 FILLER_0_252 ();
+ sg13g2_fill_1 FILLER_0_254 ();
+ sg13g2_decap_8 FILLER_0_28 ();
+ sg13g2_decap_8 FILLER_0_35 ();
+ sg13g2_decap_8 FILLER_0_42 ();
+ sg13g2_decap_8 FILLER_0_49 ();
  sg13g2_decap_8 FILLER_0_56 ();
  sg13g2_decap_8 FILLER_0_63 ();
+ sg13g2_decap_8 FILLER_0_7 ();
  sg13g2_decap_8 FILLER_0_70 ();
- sg13g2_decap_8 FILLER_0_82 ();
- sg13g2_decap_8 FILLER_0_89 ();
- sg13g2_decap_8 FILLER_0_96 ();
+ sg13g2_decap_8 FILLER_0_77 ();
+ sg13g2_decap_8 FILLER_0_84 ();
+ sg13g2_decap_8 FILLER_0_91 ();
+ sg13g2_decap_8 FILLER_0_98 ();
  sg13g2_decap_8 FILLER_10_0 ();
  sg13g2_decap_8 FILLER_10_101 ();
  sg13g2_decap_8 FILLER_10_108 ();
  sg13g2_decap_8 FILLER_10_115 ();
  sg13g2_decap_8 FILLER_10_122 ();
  sg13g2_decap_8 FILLER_10_129 ();
- sg13g2_fill_1 FILLER_10_136 ();
- sg13g2_decap_8 FILLER_10_14 ();
- sg13g2_decap_8 FILLER_10_145 ();
- sg13g2_decap_8 FILLER_10_152 ();
- sg13g2_decap_8 FILLER_10_159 ();
- sg13g2_decap_4 FILLER_10_166 ();
- sg13g2_fill_1 FILLER_10_180 ();
- sg13g2_fill_1 FILLER_10_189 ();
- sg13g2_decap_8 FILLER_10_198 ();
- sg13g2_decap_4 FILLER_10_205 ();
- sg13g2_fill_2 FILLER_10_209 ();
- sg13g2_decap_8 FILLER_10_21 ();
+ sg13g2_fill_2 FILLER_10_13 ();
+ sg13g2_fill_1 FILLER_10_15 ();
+ sg13g2_decap_8 FILLER_10_151 ();
+ sg13g2_decap_8 FILLER_10_158 ();
+ sg13g2_decap_8 FILLER_10_165 ();
+ sg13g2_decap_4 FILLER_10_172 ();
+ sg13g2_fill_1 FILLER_10_176 ();
+ sg13g2_decap_8 FILLER_10_182 ();
+ sg13g2_decap_8 FILLER_10_189 ();
+ sg13g2_decap_4 FILLER_10_196 ();
+ sg13g2_decap_8 FILLER_10_20 ();
  sg13g2_decap_8 FILLER_10_216 ();
- sg13g2_decap_8 FILLER_10_28 ();
- sg13g2_decap_8 FILLER_10_35 ();
- sg13g2_decap_8 FILLER_10_42 ();
- sg13g2_decap_8 FILLER_10_49 ();
- sg13g2_decap_8 FILLER_10_56 ();
- sg13g2_decap_8 FILLER_10_63 ();
- sg13g2_decap_8 FILLER_10_7 ();
- sg13g2_decap_4 FILLER_10_70 ();
- sg13g2_decap_8 FILLER_10_80 ();
- sg13g2_decap_8 FILLER_10_87 ();
- sg13g2_decap_8 FILLER_10_94 ();
- sg13g2_decap_8 FILLER_11_0 ();
- sg13g2_decap_8 FILLER_11_104 ();
- sg13g2_decap_4 FILLER_11_111 ();
- sg13g2_fill_2 FILLER_11_115 ();
- sg13g2_decap_8 FILLER_11_125 ();
- sg13g2_decap_8 FILLER_11_132 ();
- sg13g2_fill_2 FILLER_11_139 ();
- sg13g2_fill_1 FILLER_11_141 ();
- sg13g2_decap_8 FILLER_11_16 ();
- sg13g2_decap_8 FILLER_11_171 ();
- sg13g2_decap_8 FILLER_11_178 ();
- sg13g2_decap_8 FILLER_11_185 ();
+ sg13g2_decap_8 FILLER_10_223 ();
+ sg13g2_fill_2 FILLER_10_230 ();
+ sg13g2_fill_1 FILLER_10_232 ();
+ sg13g2_decap_8 FILLER_10_244 ();
+ sg13g2_decap_4 FILLER_10_251 ();
+ sg13g2_decap_8 FILLER_10_27 ();
+ sg13g2_fill_1 FILLER_10_34 ();
+ sg13g2_decap_8 FILLER_10_64 ();
+ sg13g2_fill_2 FILLER_10_7 ();
+ sg13g2_decap_4 FILLER_11_0 ();
+ sg13g2_decap_8 FILLER_11_100 ();
+ sg13g2_decap_8 FILLER_11_107 ();
+ sg13g2_fill_2 FILLER_11_119 ();
+ sg13g2_fill_1 FILLER_11_121 ();
+ sg13g2_decap_4 FILLER_11_132 ();
+ sg13g2_fill_1 FILLER_11_15 ();
+ sg13g2_decap_8 FILLER_11_151 ();
+ sg13g2_decap_8 FILLER_11_158 ();
+ sg13g2_decap_4 FILLER_11_165 ();
  sg13g2_decap_8 FILLER_11_192 ();
- sg13g2_decap_8 FILLER_11_199 ();
- sg13g2_fill_2 FILLER_11_206 ();
- sg13g2_fill_1 FILLER_11_208 ();
- sg13g2_decap_4 FILLER_11_218 ();
- sg13g2_fill_1 FILLER_11_222 ();
- sg13g2_decap_8 FILLER_11_23 ();
- sg13g2_decap_8 FILLER_11_30 ();
- sg13g2_decap_8 FILLER_11_42 ();
- sg13g2_decap_8 FILLER_11_49 ();
- sg13g2_decap_8 FILLER_11_56 ();
- sg13g2_fill_1 FILLER_11_63 ();
- sg13g2_decap_8 FILLER_11_69 ();
- sg13g2_decap_4 FILLER_11_7 ();
- sg13g2_decap_8 FILLER_11_76 ();
- sg13g2_decap_8 FILLER_11_83 ();
- sg13g2_fill_2 FILLER_11_90 ();
- sg13g2_decap_8 FILLER_11_97 ();
- sg13g2_fill_1 FILLER_12_0 ();
- sg13g2_fill_2 FILLER_12_107 ();
- sg13g2_fill_1 FILLER_12_109 ();
- sg13g2_fill_1 FILLER_12_11 ();
- sg13g2_decap_8 FILLER_12_135 ();
- sg13g2_decap_8 FILLER_12_142 ();
- sg13g2_decap_8 FILLER_12_149 ();
- sg13g2_fill_1 FILLER_12_15 ();
- sg13g2_decap_8 FILLER_12_156 ();
- sg13g2_decap_8 FILLER_12_163 ();
- sg13g2_decap_8 FILLER_12_170 ();
- sg13g2_decap_8 FILLER_12_177 ();
+ sg13g2_fill_1 FILLER_11_199 ();
+ sg13g2_decap_8 FILLER_11_208 ();
+ sg13g2_decap_8 FILLER_11_223 ();
+ sg13g2_fill_2 FILLER_11_230 ();
+ sg13g2_decap_8 FILLER_11_25 ();
+ sg13g2_decap_4 FILLER_11_250 ();
+ sg13g2_fill_1 FILLER_11_254 ();
+ sg13g2_fill_2 FILLER_11_32 ();
+ sg13g2_fill_2 FILLER_11_4 ();
+ sg13g2_decap_4 FILLER_11_47 ();
+ sg13g2_decap_8 FILLER_11_61 ();
+ sg13g2_decap_8 FILLER_11_68 ();
+ sg13g2_decap_4 FILLER_11_75 ();
+ sg13g2_fill_2 FILLER_11_79 ();
+ sg13g2_decap_8 FILLER_11_86 ();
+ sg13g2_fill_2 FILLER_11_93 ();
+ sg13g2_decap_8 FILLER_12_0 ();
+ sg13g2_decap_4 FILLER_12_106 ();
+ sg13g2_fill_1 FILLER_12_110 ();
+ sg13g2_decap_8 FILLER_12_126 ();
+ sg13g2_decap_4 FILLER_12_133 ();
+ sg13g2_fill_1 FILLER_12_141 ();
+ sg13g2_fill_2 FILLER_12_145 ();
+ sg13g2_decap_4 FILLER_12_150 ();
+ sg13g2_fill_2 FILLER_12_158 ();
+ sg13g2_fill_1 FILLER_12_160 ();
+ sg13g2_decap_4 FILLER_12_165 ();
+ sg13g2_fill_2 FILLER_12_169 ();
+ sg13g2_fill_2 FILLER_12_17 ();
+ sg13g2_decap_8 FILLER_12_174 ();
  sg13g2_decap_8 FILLER_12_184 ();
  sg13g2_decap_8 FILLER_12_191 ();
- sg13g2_fill_2 FILLER_12_198 ();
- sg13g2_fill_1 FILLER_12_200 ();
- sg13g2_fill_1 FILLER_12_211 ();
- sg13g2_fill_1 FILLER_12_215 ();
- sg13g2_fill_2 FILLER_12_221 ();
- sg13g2_fill_1 FILLER_12_26 ();
- sg13g2_fill_2 FILLER_12_37 ();
- sg13g2_fill_2 FILLER_12_52 ();
- sg13g2_fill_2 FILLER_12_64 ();
- sg13g2_fill_2 FILLER_12_79 ();
- sg13g2_fill_1 FILLER_12_81 ();
- sg13g2_fill_1 FILLER_12_92 ();
- sg13g2_fill_1 FILLER_12_96 ();
+ sg13g2_decap_4 FILLER_12_198 ();
+ sg13g2_fill_1 FILLER_12_202 ();
+ sg13g2_decap_8 FILLER_12_211 ();
+ sg13g2_decap_8 FILLER_12_218 ();
+ sg13g2_decap_8 FILLER_12_225 ();
+ sg13g2_decap_8 FILLER_12_232 ();
+ sg13g2_decap_8 FILLER_12_24 ();
+ sg13g2_decap_8 FILLER_12_242 ();
+ sg13g2_decap_4 FILLER_12_249 ();
+ sg13g2_fill_2 FILLER_12_253 ();
+ sg13g2_decap_8 FILLER_12_31 ();
+ sg13g2_decap_4 FILLER_12_38 ();
+ sg13g2_fill_1 FILLER_12_42 ();
+ sg13g2_fill_2 FILLER_12_48 ();
+ sg13g2_decap_4 FILLER_12_53 ();
+ sg13g2_fill_1 FILLER_12_57 ();
+ sg13g2_fill_2 FILLER_12_7 ();
+ sg13g2_decap_8 FILLER_12_73 ();
+ sg13g2_decap_8 FILLER_12_80 ();
+ sg13g2_decap_4 FILLER_12_87 ();
  sg13g2_decap_4 FILLER_13_0 ();
- sg13g2_decap_8 FILLER_13_102 ();
- sg13g2_decap_4 FILLER_13_109 ();
- sg13g2_fill_2 FILLER_13_113 ();
- sg13g2_decap_8 FILLER_13_125 ();
- sg13g2_decap_8 FILLER_13_132 ();
- sg13g2_decap_8 FILLER_13_139 ();
- sg13g2_decap_8 FILLER_13_146 ();
- sg13g2_decap_8 FILLER_13_153 ();
- sg13g2_decap_8 FILLER_13_160 ();
- sg13g2_decap_8 FILLER_13_167 ();
- sg13g2_decap_8 FILLER_13_174 ();
- sg13g2_decap_8 FILLER_13_181 ();
- sg13g2_decap_8 FILLER_13_188 ();
- sg13g2_decap_8 FILLER_13_195 ();
- sg13g2_decap_8 FILLER_13_202 ();
- sg13g2_fill_2 FILLER_13_209 ();
- sg13g2_decap_8 FILLER_13_21 ();
- sg13g2_decap_8 FILLER_13_216 ();
- sg13g2_decap_4 FILLER_13_28 ();
- sg13g2_fill_2 FILLER_13_4 ();
- sg13g2_decap_8 FILLER_13_47 ();
- sg13g2_decap_4 FILLER_13_54 ();
- sg13g2_fill_1 FILLER_13_58 ();
- sg13g2_decap_8 FILLER_13_74 ();
- sg13g2_decap_4 FILLER_13_81 ();
- sg13g2_fill_2 FILLER_13_85 ();
- sg13g2_fill_2 FILLER_1_0 ();
- sg13g2_fill_1 FILLER_1_104 ();
- sg13g2_fill_1 FILLER_1_108 ();
+ sg13g2_decap_8 FILLER_13_101 ();
+ sg13g2_decap_8 FILLER_13_108 ();
+ sg13g2_decap_8 FILLER_13_115 ();
+ sg13g2_decap_8 FILLER_13_122 ();
+ sg13g2_decap_8 FILLER_13_129 ();
+ sg13g2_decap_8 FILLER_13_136 ();
+ sg13g2_decap_8 FILLER_13_143 ();
+ sg13g2_decap_8 FILLER_13_150 ();
+ sg13g2_decap_4 FILLER_13_157 ();
+ sg13g2_decap_8 FILLER_13_190 ();
+ sg13g2_decap_8 FILLER_13_197 ();
+ sg13g2_decap_8 FILLER_13_204 ();
+ sg13g2_decap_8 FILLER_13_211 ();
+ sg13g2_fill_2 FILLER_13_218 ();
+ sg13g2_decap_8 FILLER_13_228 ();
+ sg13g2_decap_8 FILLER_13_24 ();
+ sg13g2_decap_4 FILLER_13_251 ();
+ sg13g2_decap_8 FILLER_13_31 ();
+ sg13g2_decap_8 FILLER_13_53 ();
+ sg13g2_decap_8 FILLER_13_60 ();
+ sg13g2_fill_1 FILLER_13_67 ();
+ sg13g2_decap_8 FILLER_13_83 ();
+ sg13g2_decap_8 FILLER_13_90 ();
+ sg13g2_fill_1 FILLER_13_97 ();
+ sg13g2_decap_8 FILLER_14_0 ();
+ sg13g2_decap_8 FILLER_14_102 ();
+ sg13g2_decap_8 FILLER_14_109 ();
+ sg13g2_decap_8 FILLER_14_116 ();
+ sg13g2_decap_4 FILLER_14_123 ();
+ sg13g2_decap_8 FILLER_14_160 ();
+ sg13g2_decap_8 FILLER_14_167 ();
+ sg13g2_decap_8 FILLER_14_174 ();
+ sg13g2_decap_8 FILLER_14_181 ();
+ sg13g2_decap_8 FILLER_14_188 ();
+ sg13g2_decap_8 FILLER_14_195 ();
+ sg13g2_decap_8 FILLER_14_202 ();
+ sg13g2_decap_8 FILLER_14_209 ();
+ sg13g2_decap_8 FILLER_14_216 ();
+ sg13g2_decap_8 FILLER_14_223 ();
+ sg13g2_decap_8 FILLER_14_230 ();
+ sg13g2_decap_8 FILLER_14_237 ();
+ sg13g2_decap_8 FILLER_14_244 ();
+ sg13g2_decap_4 FILLER_14_251 ();
+ sg13g2_decap_8 FILLER_14_26 ();
+ sg13g2_fill_2 FILLER_14_36 ();
+ sg13g2_decap_8 FILLER_14_53 ();
+ sg13g2_decap_8 FILLER_14_60 ();
+ sg13g2_decap_8 FILLER_14_67 ();
+ sg13g2_decap_4 FILLER_14_7 ();
+ sg13g2_decap_8 FILLER_14_74 ();
+ sg13g2_decap_8 FILLER_14_81 ();
+ sg13g2_decap_8 FILLER_14_88 ();
+ sg13g2_decap_8 FILLER_14_95 ();
+ sg13g2_decap_8 FILLER_15_0 ();
+ sg13g2_decap_8 FILLER_15_105 ();
+ sg13g2_decap_8 FILLER_15_112 ();
+ sg13g2_decap_8 FILLER_15_119 ();
+ sg13g2_decap_8 FILLER_15_126 ();
+ sg13g2_decap_8 FILLER_15_133 ();
+ sg13g2_decap_8 FILLER_15_14 ();
+ sg13g2_decap_8 FILLER_15_140 ();
+ sg13g2_decap_8 FILLER_15_147 ();
+ sg13g2_decap_8 FILLER_15_154 ();
+ sg13g2_decap_8 FILLER_15_161 ();
+ sg13g2_decap_8 FILLER_15_168 ();
+ sg13g2_decap_8 FILLER_15_175 ();
+ sg13g2_decap_8 FILLER_15_182 ();
+ sg13g2_decap_8 FILLER_15_189 ();
+ sg13g2_decap_8 FILLER_15_196 ();
+ sg13g2_decap_8 FILLER_15_203 ();
+ sg13g2_decap_8 FILLER_15_21 ();
+ sg13g2_decap_8 FILLER_15_210 ();
+ sg13g2_decap_8 FILLER_15_217 ();
+ sg13g2_decap_8 FILLER_15_224 ();
+ sg13g2_decap_8 FILLER_15_231 ();
+ sg13g2_decap_8 FILLER_15_238 ();
+ sg13g2_decap_8 FILLER_15_245 ();
+ sg13g2_fill_2 FILLER_15_252 ();
+ sg13g2_fill_1 FILLER_15_254 ();
+ sg13g2_decap_8 FILLER_15_28 ();
+ sg13g2_decap_8 FILLER_15_35 ();
+ sg13g2_decap_8 FILLER_15_42 ();
+ sg13g2_decap_8 FILLER_15_49 ();
+ sg13g2_decap_8 FILLER_15_56 ();
+ sg13g2_decap_8 FILLER_15_63 ();
+ sg13g2_decap_8 FILLER_15_7 ();
+ sg13g2_decap_8 FILLER_15_70 ();
+ sg13g2_decap_8 FILLER_15_77 ();
+ sg13g2_decap_8 FILLER_15_84 ();
+ sg13g2_decap_8 FILLER_15_91 ();
+ sg13g2_decap_8 FILLER_15_98 ();
+ sg13g2_decap_8 FILLER_16_0 ();
+ sg13g2_decap_8 FILLER_16_105 ();
+ sg13g2_decap_8 FILLER_16_112 ();
+ sg13g2_decap_8 FILLER_16_119 ();
+ sg13g2_decap_8 FILLER_16_126 ();
+ sg13g2_decap_8 FILLER_16_133 ();
+ sg13g2_decap_8 FILLER_16_14 ();
+ sg13g2_decap_8 FILLER_16_140 ();
+ sg13g2_decap_8 FILLER_16_147 ();
+ sg13g2_decap_8 FILLER_16_154 ();
+ sg13g2_decap_8 FILLER_16_161 ();
+ sg13g2_decap_8 FILLER_16_168 ();
+ sg13g2_decap_8 FILLER_16_175 ();
+ sg13g2_decap_8 FILLER_16_182 ();
+ sg13g2_decap_8 FILLER_16_189 ();
+ sg13g2_decap_8 FILLER_16_196 ();
+ sg13g2_decap_8 FILLER_16_203 ();
+ sg13g2_decap_8 FILLER_16_21 ();
+ sg13g2_decap_8 FILLER_16_210 ();
+ sg13g2_decap_8 FILLER_16_217 ();
+ sg13g2_decap_8 FILLER_16_224 ();
+ sg13g2_decap_8 FILLER_16_231 ();
+ sg13g2_decap_8 FILLER_16_238 ();
+ sg13g2_decap_8 FILLER_16_245 ();
+ sg13g2_fill_2 FILLER_16_252 ();
+ sg13g2_fill_1 FILLER_16_254 ();
+ sg13g2_decap_8 FILLER_16_28 ();
+ sg13g2_decap_8 FILLER_16_35 ();
+ sg13g2_decap_8 FILLER_16_42 ();
+ sg13g2_decap_8 FILLER_16_49 ();
+ sg13g2_decap_8 FILLER_16_56 ();
+ sg13g2_decap_8 FILLER_16_63 ();
+ sg13g2_decap_8 FILLER_16_7 ();
+ sg13g2_decap_8 FILLER_16_70 ();
+ sg13g2_decap_8 FILLER_16_77 ();
+ sg13g2_decap_8 FILLER_16_84 ();
+ sg13g2_decap_8 FILLER_16_91 ();
+ sg13g2_decap_8 FILLER_16_98 ();
+ sg13g2_decap_8 FILLER_1_0 ();
+ sg13g2_decap_8 FILLER_1_105 ();
+ sg13g2_decap_8 FILLER_1_112 ();
  sg13g2_decap_8 FILLER_1_119 ();
  sg13g2_decap_8 FILLER_1_126 ();
  sg13g2_decap_8 FILLER_1_133 ();
+ sg13g2_decap_8 FILLER_1_14 ();
  sg13g2_decap_8 FILLER_1_140 ();
  sg13g2_decap_8 FILLER_1_147 ();
  sg13g2_decap_8 FILLER_1_154 ();
@@ -351,248 +461,275 @@ module PLL_ANALOG_MACRO (DCO_EN,
  sg13g2_decap_8 FILLER_1_168 ();
  sg13g2_decap_8 FILLER_1_175 ();
  sg13g2_decap_8 FILLER_1_182 ();
- sg13g2_decap_4 FILLER_1_189 ();
- sg13g2_fill_2 FILLER_1_193 ();
- sg13g2_fill_1 FILLER_1_2 ();
- sg13g2_decap_4 FILLER_1_203 ();
- sg13g2_fill_2 FILLER_1_221 ();
- sg13g2_fill_1 FILLER_1_40 ();
- sg13g2_fill_1 FILLER_1_51 ();
- sg13g2_fill_1 FILLER_1_55 ();
- sg13g2_fill_1 FILLER_1_66 ();
- sg13g2_decap_4 FILLER_1_7 ();
- sg13g2_fill_1 FILLER_1_77 ();
- sg13g2_fill_1 FILLER_1_81 ();
- sg13g2_fill_2 FILLER_1_92 ();
- sg13g2_decap_4 FILLER_2_0 ();
- sg13g2_decap_8 FILLER_2_114 ();
- sg13g2_decap_8 FILLER_2_12 ();
- sg13g2_decap_8 FILLER_2_121 ();
- sg13g2_decap_8 FILLER_2_128 ();
- sg13g2_decap_8 FILLER_2_135 ();
- sg13g2_decap_8 FILLER_2_142 ();
- sg13g2_decap_8 FILLER_2_149 ();
- sg13g2_decap_8 FILLER_2_156 ();
- sg13g2_decap_8 FILLER_2_163 ();
- sg13g2_decap_8 FILLER_2_170 ();
- sg13g2_decap_8 FILLER_2_177 ();
- sg13g2_decap_8 FILLER_2_184 ();
- sg13g2_fill_2 FILLER_2_19 ();
- sg13g2_decap_8 FILLER_2_191 ();
- sg13g2_decap_8 FILLER_2_198 ();
- sg13g2_fill_2 FILLER_2_205 ();
- sg13g2_fill_1 FILLER_2_207 ();
- sg13g2_decap_8 FILLER_2_213 ();
- sg13g2_fill_2 FILLER_2_220 ();
- sg13g2_fill_1 FILLER_2_222 ();
- sg13g2_decap_8 FILLER_2_34 ();
- sg13g2_decap_4 FILLER_2_41 ();
- sg13g2_fill_1 FILLER_2_45 ();
- sg13g2_decap_8 FILLER_2_61 ();
- sg13g2_decap_4 FILLER_2_68 ();
- sg13g2_decap_8 FILLER_2_87 ();
- sg13g2_decap_4 FILLER_2_94 ();
- sg13g2_fill_1 FILLER_2_98 ();
- sg13g2_decap_8 FILLER_3_0 ();
- sg13g2_decap_8 FILLER_3_103 ();
- sg13g2_decap_8 FILLER_3_110 ();
- sg13g2_decap_8 FILLER_3_117 ();
- sg13g2_decap_8 FILLER_3_12 ();
- sg13g2_decap_8 FILLER_3_124 ();
- sg13g2_decap_8 FILLER_3_131 ();
- sg13g2_decap_8 FILLER_3_138 ();
- sg13g2_decap_8 FILLER_3_145 ();
- sg13g2_decap_8 FILLER_3_152 ();
- sg13g2_decap_8 FILLER_3_159 ();
- sg13g2_decap_8 FILLER_3_166 ();
- sg13g2_decap_8 FILLER_3_173 ();
- sg13g2_decap_8 FILLER_3_180 ();
- sg13g2_fill_2 FILLER_3_187 ();
- sg13g2_decap_8 FILLER_3_19 ();
- sg13g2_decap_8 FILLER_3_197 ();
+ sg13g2_decap_8 FILLER_1_189 ();
+ sg13g2_decap_8 FILLER_1_196 ();
+ sg13g2_decap_8 FILLER_1_203 ();
+ sg13g2_decap_8 FILLER_1_21 ();
+ sg13g2_decap_8 FILLER_1_210 ();
+ sg13g2_decap_8 FILLER_1_217 ();
+ sg13g2_decap_8 FILLER_1_224 ();
+ sg13g2_decap_8 FILLER_1_231 ();
+ sg13g2_decap_8 FILLER_1_238 ();
+ sg13g2_decap_8 FILLER_1_245 ();
+ sg13g2_fill_2 FILLER_1_252 ();
+ sg13g2_fill_1 FILLER_1_254 ();
+ sg13g2_decap_8 FILLER_1_28 ();
+ sg13g2_decap_8 FILLER_1_35 ();
+ sg13g2_decap_8 FILLER_1_42 ();
+ sg13g2_decap_8 FILLER_1_49 ();
+ sg13g2_decap_8 FILLER_1_56 ();
+ sg13g2_decap_8 FILLER_1_63 ();
+ sg13g2_decap_8 FILLER_1_7 ();
+ sg13g2_decap_8 FILLER_1_70 ();
+ sg13g2_decap_8 FILLER_1_77 ();
+ sg13g2_decap_8 FILLER_1_84 ();
+ sg13g2_decap_8 FILLER_1_91 ();
+ sg13g2_decap_8 FILLER_1_98 ();
+ sg13g2_decap_8 FILLER_2_0 ();
+ sg13g2_decap_8 FILLER_2_105 ();
+ sg13g2_decap_8 FILLER_2_112 ();
+ sg13g2_decap_8 FILLER_2_119 ();
+ sg13g2_decap_8 FILLER_2_126 ();
+ sg13g2_decap_8 FILLER_2_133 ();
+ sg13g2_decap_8 FILLER_2_14 ();
+ sg13g2_decap_8 FILLER_2_140 ();
+ sg13g2_decap_8 FILLER_2_147 ();
+ sg13g2_decap_8 FILLER_2_154 ();
+ sg13g2_decap_8 FILLER_2_161 ();
+ sg13g2_decap_8 FILLER_2_168 ();
+ sg13g2_decap_8 FILLER_2_175 ();
+ sg13g2_decap_8 FILLER_2_182 ();
+ sg13g2_decap_8 FILLER_2_189 ();
+ sg13g2_decap_8 FILLER_2_196 ();
+ sg13g2_decap_8 FILLER_2_203 ();
+ sg13g2_decap_8 FILLER_2_21 ();
+ sg13g2_decap_8 FILLER_2_210 ();
+ sg13g2_decap_8 FILLER_2_217 ();
+ sg13g2_decap_8 FILLER_2_224 ();
+ sg13g2_decap_8 FILLER_2_231 ();
+ sg13g2_decap_8 FILLER_2_238 ();
+ sg13g2_decap_8 FILLER_2_245 ();
+ sg13g2_fill_2 FILLER_2_252 ();
+ sg13g2_fill_1 FILLER_2_254 ();
+ sg13g2_decap_4 FILLER_2_28 ();
+ sg13g2_decap_8 FILLER_2_35 ();
+ sg13g2_decap_8 FILLER_2_42 ();
+ sg13g2_decap_8 FILLER_2_49 ();
+ sg13g2_decap_8 FILLER_2_56 ();
+ sg13g2_decap_8 FILLER_2_63 ();
+ sg13g2_fill_2 FILLER_2_7 ();
+ sg13g2_decap_8 FILLER_2_70 ();
+ sg13g2_decap_8 FILLER_2_77 ();
+ sg13g2_decap_8 FILLER_2_84 ();
+ sg13g2_decap_8 FILLER_2_91 ();
+ sg13g2_decap_8 FILLER_2_98 ();
+ sg13g2_decap_4 FILLER_3_0 ();
+ sg13g2_decap_8 FILLER_3_100 ();
+ sg13g2_decap_8 FILLER_3_107 ();
+ sg13g2_decap_8 FILLER_3_114 ();
+ sg13g2_decap_8 FILLER_3_121 ();
+ sg13g2_decap_8 FILLER_3_128 ();
+ sg13g2_decap_8 FILLER_3_135 ();
+ sg13g2_fill_2 FILLER_3_14 ();
+ sg13g2_decap_8 FILLER_3_142 ();
+ sg13g2_decap_8 FILLER_3_149 ();
+ sg13g2_decap_8 FILLER_3_156 ();
+ sg13g2_decap_8 FILLER_3_163 ();
+ sg13g2_decap_8 FILLER_3_170 ();
+ sg13g2_decap_8 FILLER_3_177 ();
+ sg13g2_decap_8 FILLER_3_184 ();
+ sg13g2_decap_8 FILLER_3_191 ();
+ sg13g2_decap_8 FILLER_3_198 ();
+ sg13g2_decap_8 FILLER_3_205 ();
  sg13g2_decap_8 FILLER_3_212 ();
- sg13g2_decap_4 FILLER_3_219 ();
- sg13g2_decap_8 FILLER_3_26 ();
- sg13g2_decap_8 FILLER_3_33 ();
- sg13g2_decap_8 FILLER_3_40 ();
- sg13g2_decap_8 FILLER_3_47 ();
- sg13g2_decap_8 FILLER_3_54 ();
- sg13g2_decap_8 FILLER_3_61 ();
- sg13g2_decap_8 FILLER_3_68 ();
- sg13g2_decap_8 FILLER_3_75 ();
- sg13g2_decap_8 FILLER_3_82 ();
- sg13g2_decap_8 FILLER_3_89 ();
- sg13g2_decap_8 FILLER_3_96 ();
- sg13g2_fill_2 FILLER_4_0 ();
+ sg13g2_decap_8 FILLER_3_219 ();
+ sg13g2_decap_8 FILLER_3_226 ();
+ sg13g2_decap_8 FILLER_3_233 ();
+ sg13g2_fill_2 FILLER_3_240 ();
+ sg13g2_decap_8 FILLER_3_245 ();
+ sg13g2_fill_2 FILLER_3_252 ();
+ sg13g2_fill_1 FILLER_3_254 ();
+ sg13g2_fill_1 FILLER_3_31 ();
+ sg13g2_decap_8 FILLER_3_42 ();
+ sg13g2_decap_8 FILLER_3_49 ();
+ sg13g2_decap_8 FILLER_3_56 ();
+ sg13g2_decap_8 FILLER_3_63 ();
+ sg13g2_decap_8 FILLER_3_70 ();
+ sg13g2_decap_4 FILLER_3_77 ();
+ sg13g2_decap_8 FILLER_3_86 ();
+ sg13g2_decap_8 FILLER_3_93 ();
+ sg13g2_decap_8 FILLER_4_0 ();
  sg13g2_decap_8 FILLER_4_102 ();
  sg13g2_decap_8 FILLER_4_109 ();
- sg13g2_fill_1 FILLER_4_116 ();
- sg13g2_fill_2 FILLER_4_12 ();
- sg13g2_decap_8 FILLER_4_122 ();
- sg13g2_decap_8 FILLER_4_129 ();
- sg13g2_fill_1 FILLER_4_136 ();
- sg13g2_fill_1 FILLER_4_14 ();
- sg13g2_fill_2 FILLER_4_142 ();
- sg13g2_fill_2 FILLER_4_148 ();
- sg13g2_fill_1 FILLER_4_150 ();
- sg13g2_decap_4 FILLER_4_155 ();
- sg13g2_decap_8 FILLER_4_171 ();
- sg13g2_decap_4 FILLER_4_178 ();
- sg13g2_fill_1 FILLER_4_182 ();
- sg13g2_decap_8 FILLER_4_19 ();
- sg13g2_decap_4 FILLER_4_199 ();
- sg13g2_fill_1 FILLER_4_2 ();
- sg13g2_fill_2 FILLER_4_203 ();
- sg13g2_fill_2 FILLER_4_210 ();
- sg13g2_decap_8 FILLER_4_26 ();
- sg13g2_fill_1 FILLER_4_33 ();
- sg13g2_decap_8 FILLER_4_43 ();
- sg13g2_decap_8 FILLER_4_50 ();
- sg13g2_decap_4 FILLER_4_57 ();
- sg13g2_fill_2 FILLER_4_61 ();
- sg13g2_decap_8 FILLER_4_68 ();
- sg13g2_decap_8 FILLER_4_75 ();
- sg13g2_decap_8 FILLER_4_82 ();
- sg13g2_fill_1 FILLER_4_89 ();
+ sg13g2_decap_8 FILLER_4_126 ();
+ sg13g2_decap_8 FILLER_4_133 ();
+ sg13g2_decap_8 FILLER_4_14 ();
+ sg13g2_decap_8 FILLER_4_155 ();
+ sg13g2_decap_8 FILLER_4_162 ();
+ sg13g2_decap_8 FILLER_4_169 ();
+ sg13g2_decap_8 FILLER_4_184 ();
+ sg13g2_decap_8 FILLER_4_191 ();
+ sg13g2_decap_8 FILLER_4_198 ();
+ sg13g2_decap_8 FILLER_4_205 ();
+ sg13g2_decap_8 FILLER_4_21 ();
+ sg13g2_decap_8 FILLER_4_212 ();
+ sg13g2_decap_8 FILLER_4_219 ();
+ sg13g2_decap_8 FILLER_4_226 ();
+ sg13g2_decap_4 FILLER_4_233 ();
+ sg13g2_decap_4 FILLER_4_250 ();
+ sg13g2_fill_1 FILLER_4_254 ();
+ sg13g2_decap_8 FILLER_4_28 ();
+ sg13g2_decap_8 FILLER_4_35 ();
+ sg13g2_decap_8 FILLER_4_42 ();
+ sg13g2_fill_2 FILLER_4_49 ();
+ sg13g2_decap_8 FILLER_4_56 ();
+ sg13g2_decap_8 FILLER_4_63 ();
+ sg13g2_fill_2 FILLER_4_7 ();
+ sg13g2_decap_8 FILLER_4_70 ();
  sg13g2_decap_8 FILLER_4_95 ();
- sg13g2_fill_1 FILLER_5_0 ();
- sg13g2_fill_2 FILLER_5_105 ();
- sg13g2_fill_1 FILLER_5_117 ();
- sg13g2_fill_1 FILLER_5_121 ();
- sg13g2_fill_2 FILLER_5_132 ();
- sg13g2_decap_4 FILLER_5_137 ();
- sg13g2_fill_2 FILLER_5_14 ();
- sg13g2_fill_1 FILLER_5_141 ();
- sg13g2_fill_1 FILLER_5_154 ();
- sg13g2_fill_1 FILLER_5_166 ();
- sg13g2_decap_8 FILLER_5_185 ();
- sg13g2_decap_8 FILLER_5_192 ();
- sg13g2_decap_8 FILLER_5_199 ();
- sg13g2_fill_1 FILLER_5_206 ();
- sg13g2_decap_8 FILLER_5_215 ();
- sg13g2_fill_1 FILLER_5_222 ();
- sg13g2_fill_2 FILLER_5_24 ();
- sg13g2_fill_1 FILLER_5_26 ();
- sg13g2_fill_2 FILLER_5_55 ();
- sg13g2_fill_1 FILLER_5_57 ();
- sg13g2_fill_1 FILLER_5_63 ();
- sg13g2_fill_1 FILLER_5_67 ();
- sg13g2_fill_2 FILLER_5_78 ();
- sg13g2_fill_1 FILLER_5_90 ();
- sg13g2_fill_1 FILLER_5_94 ();
+ sg13g2_fill_2 FILLER_5_0 ();
+ sg13g2_fill_1 FILLER_5_103 ();
+ sg13g2_decap_8 FILLER_5_124 ();
+ sg13g2_decap_4 FILLER_5_131 ();
+ sg13g2_fill_1 FILLER_5_135 ();
+ sg13g2_decap_8 FILLER_5_154 ();
+ sg13g2_decap_8 FILLER_5_161 ();
+ sg13g2_decap_4 FILLER_5_168 ();
+ sg13g2_fill_1 FILLER_5_172 ();
+ sg13g2_decap_4 FILLER_5_190 ();
+ sg13g2_fill_1 FILLER_5_198 ();
+ sg13g2_fill_1 FILLER_5_20 ();
+ sg13g2_decap_8 FILLER_5_207 ();
+ sg13g2_decap_4 FILLER_5_214 ();
+ sg13g2_fill_1 FILLER_5_218 ();
+ sg13g2_fill_2 FILLER_5_227 ();
+ sg13g2_fill_1 FILLER_5_229 ();
+ sg13g2_decap_8 FILLER_5_238 ();
+ sg13g2_decap_8 FILLER_5_245 ();
+ sg13g2_fill_2 FILLER_5_252 ();
+ sg13g2_fill_1 FILLER_5_254 ();
+ sg13g2_fill_2 FILLER_5_41 ();
+ sg13g2_decap_4 FILLER_5_48 ();
+ sg13g2_decap_8 FILLER_5_65 ();
+ sg13g2_decap_4 FILLER_5_72 ();
+ sg13g2_decap_8 FILLER_5_96 ();
  sg13g2_decap_8 FILLER_6_0 ();
  sg13g2_decap_8 FILLER_6_100 ();
  sg13g2_decap_4 FILLER_6_107 ();
  sg13g2_fill_1 FILLER_6_111 ();
+ sg13g2_decap_8 FILLER_6_120 ();
  sg13g2_decap_8 FILLER_6_127 ();
- sg13g2_decap_8 FILLER_6_148 ();
- sg13g2_fill_2 FILLER_6_155 ();
- sg13g2_fill_1 FILLER_6_157 ();
- sg13g2_decap_8 FILLER_6_16 ();
- sg13g2_fill_2 FILLER_6_161 ();
- sg13g2_decap_8 FILLER_6_171 ();
- sg13g2_decap_8 FILLER_6_178 ();
- sg13g2_fill_2 FILLER_6_185 ();
- sg13g2_decap_4 FILLER_6_195 ();
- sg13g2_decap_8 FILLER_6_215 ();
- sg13g2_fill_1 FILLER_6_222 ();
- sg13g2_decap_8 FILLER_6_23 ();
- sg13g2_decap_4 FILLER_6_30 ();
- sg13g2_fill_2 FILLER_6_34 ();
- sg13g2_fill_2 FILLER_6_50 ();
- sg13g2_fill_1 FILLER_6_52 ();
- sg13g2_decap_4 FILLER_6_7 ();
- sg13g2_decap_4 FILLER_6_73 ();
- sg13g2_fill_1 FILLER_6_77 ();
- sg13g2_fill_1 FILLER_6_84 ();
- sg13g2_decap_4 FILLER_7_0 ();
- sg13g2_decap_8 FILLER_7_101 ();
- sg13g2_decap_4 FILLER_7_108 ();
- sg13g2_fill_2 FILLER_7_112 ();
+ sg13g2_decap_8 FILLER_6_134 ();
+ sg13g2_fill_1 FILLER_6_141 ();
+ sg13g2_decap_8 FILLER_6_15 ();
+ sg13g2_decap_8 FILLER_6_152 ();
+ sg13g2_decap_8 FILLER_6_159 ();
+ sg13g2_decap_4 FILLER_6_166 ();
+ sg13g2_fill_1 FILLER_6_170 ();
+ sg13g2_decap_8 FILLER_6_183 ();
+ sg13g2_decap_8 FILLER_6_190 ();
+ sg13g2_decap_4 FILLER_6_197 ();
+ sg13g2_decap_8 FILLER_6_22 ();
+ sg13g2_decap_8 FILLER_6_220 ();
+ sg13g2_decap_8 FILLER_6_227 ();
+ sg13g2_fill_1 FILLER_6_234 ();
+ sg13g2_decap_4 FILLER_6_251 ();
+ sg13g2_decap_8 FILLER_6_29 ();
+ sg13g2_fill_2 FILLER_6_36 ();
+ sg13g2_fill_1 FILLER_6_38 ();
+ sg13g2_decap_8 FILLER_6_54 ();
+ sg13g2_decap_8 FILLER_6_61 ();
+ sg13g2_decap_8 FILLER_6_68 ();
+ sg13g2_decap_8 FILLER_6_75 ();
+ sg13g2_decap_8 FILLER_6_86 ();
+ sg13g2_decap_8 FILLER_6_93 ();
+ sg13g2_fill_2 FILLER_7_0 ();
+ sg13g2_fill_2 FILLER_7_105 ();
  sg13g2_decap_8 FILLER_7_122 ();
  sg13g2_decap_8 FILLER_7_129 ();
- sg13g2_decap_4 FILLER_7_136 ();
- sg13g2_decap_8 FILLER_7_173 ();
- sg13g2_decap_8 FILLER_7_18 ();
- sg13g2_decap_8 FILLER_7_180 ();
- sg13g2_fill_1 FILLER_7_187 ();
- sg13g2_decap_8 FILLER_7_196 ();
- sg13g2_decap_4 FILLER_7_203 ();
- sg13g2_decap_8 FILLER_7_215 ();
- sg13g2_fill_1 FILLER_7_222 ();
- sg13g2_decap_8 FILLER_7_25 ();
- sg13g2_fill_1 FILLER_7_4 ();
- sg13g2_decap_8 FILLER_7_40 ();
- sg13g2_decap_8 FILLER_7_47 ();
- sg13g2_decap_8 FILLER_7_54 ();
- sg13g2_decap_8 FILLER_7_66 ();
- sg13g2_decap_8 FILLER_7_73 ();
- sg13g2_decap_8 FILLER_7_80 ();
- sg13g2_fill_2 FILLER_7_87 ();
- sg13g2_decap_8 FILLER_7_94 ();
- sg13g2_fill_1 FILLER_8_0 ();
- sg13g2_fill_2 FILLER_8_104 ();
- sg13g2_fill_1 FILLER_8_106 ();
- sg13g2_decap_8 FILLER_8_132 ();
- sg13g2_fill_2 FILLER_8_139 ();
- sg13g2_fill_1 FILLER_8_141 ();
- sg13g2_decap_8 FILLER_8_146 ();
- sg13g2_decap_4 FILLER_8_153 ();
- sg13g2_decap_8 FILLER_8_160 ();
- sg13g2_fill_2 FILLER_8_167 ();
- sg13g2_fill_2 FILLER_8_172 ();
- sg13g2_fill_2 FILLER_8_182 ();
- sg13g2_decap_4 FILLER_8_192 ();
- sg13g2_decap_8 FILLER_8_204 ();
- sg13g2_fill_1 FILLER_8_211 ();
- sg13g2_decap_8 FILLER_8_215 ();
- sg13g2_fill_1 FILLER_8_222 ();
- sg13g2_decap_4 FILLER_8_35 ();
- sg13g2_fill_2 FILLER_8_48 ();
- sg13g2_decap_4 FILLER_8_5 ();
+ sg13g2_fill_1 FILLER_7_15 ();
+ sg13g2_decap_8 FILLER_7_156 ();
+ sg13g2_decap_8 FILLER_7_163 ();
+ sg13g2_decap_4 FILLER_7_170 ();
+ sg13g2_decap_8 FILLER_7_187 ();
+ sg13g2_decap_8 FILLER_7_194 ();
+ sg13g2_decap_4 FILLER_7_201 ();
+ sg13g2_fill_1 FILLER_7_205 ();
+ sg13g2_decap_8 FILLER_7_217 ();
+ sg13g2_decap_8 FILLER_7_224 ();
+ sg13g2_decap_8 FILLER_7_247 ();
+ sg13g2_fill_1 FILLER_7_254 ();
+ sg13g2_decap_8 FILLER_7_29 ();
+ sg13g2_decap_4 FILLER_7_36 ();
+ sg13g2_fill_1 FILLER_7_40 ();
+ sg13g2_decap_8 FILLER_7_46 ();
+ sg13g2_decap_8 FILLER_7_53 ();
+ sg13g2_decap_8 FILLER_7_60 ();
+ sg13g2_fill_2 FILLER_7_67 ();
+ sg13g2_decap_8 FILLER_7_91 ();
+ sg13g2_decap_8 FILLER_7_98 ();
+ sg13g2_decap_8 FILLER_8_0 ();
+ sg13g2_fill_2 FILLER_8_100 ();
+ sg13g2_decap_8 FILLER_8_120 ();
+ sg13g2_decap_8 FILLER_8_127 ();
+ sg13g2_fill_2 FILLER_8_13 ();
+ sg13g2_decap_8 FILLER_8_134 ();
+ sg13g2_fill_1 FILLER_8_146 ();
+ sg13g2_decap_8 FILLER_8_155 ();
+ sg13g2_decap_8 FILLER_8_162 ();
+ sg13g2_decap_4 FILLER_8_169 ();
+ sg13g2_fill_2 FILLER_8_173 ();
+ sg13g2_decap_8 FILLER_8_180 ();
+ sg13g2_decap_4 FILLER_8_187 ();
+ sg13g2_fill_2 FILLER_8_19 ();
+ sg13g2_fill_2 FILLER_8_191 ();
+ sg13g2_decap_8 FILLER_8_209 ();
+ sg13g2_decap_8 FILLER_8_216 ();
+ sg13g2_decap_8 FILLER_8_223 ();
+ sg13g2_decap_4 FILLER_8_230 ();
+ sg13g2_decap_4 FILLER_8_250 ();
+ sg13g2_fill_1 FILLER_8_254 ();
+ sg13g2_decap_8 FILLER_8_30 ();
+ sg13g2_decap_4 FILLER_8_37 ();
  sg13g2_fill_1 FILLER_8_50 ();
- sg13g2_fill_1 FILLER_8_61 ();
- sg13g2_fill_1 FILLER_8_65 ();
- sg13g2_fill_2 FILLER_8_76 ();
- sg13g2_fill_1 FILLER_8_78 ();
- sg13g2_fill_1 FILLER_8_89 ();
- sg13g2_fill_1 FILLER_8_93 ();
- sg13g2_fill_2 FILLER_9_0 ();
- sg13g2_decap_4 FILLER_9_106 ();
- sg13g2_fill_2 FILLER_9_110 ();
- sg13g2_decap_8 FILLER_9_122 ();
- sg13g2_decap_8 FILLER_9_129 ();
- sg13g2_fill_2 FILLER_9_136 ();
- sg13g2_fill_1 FILLER_9_138 ();
- sg13g2_decap_8 FILLER_9_143 ();
- sg13g2_decap_4 FILLER_9_150 ();
- sg13g2_fill_1 FILLER_9_154 ();
- sg13g2_decap_8 FILLER_9_158 ();
- sg13g2_decap_8 FILLER_9_165 ();
- sg13g2_decap_8 FILLER_9_177 ();
- sg13g2_decap_4 FILLER_9_184 ();
- sg13g2_fill_1 FILLER_9_188 ();
- sg13g2_decap_8 FILLER_9_19 ();
- sg13g2_decap_4 FILLER_9_197 ();
- sg13g2_fill_2 FILLER_9_201 ();
- sg13g2_fill_1 FILLER_9_211 ();
- sg13g2_fill_1 FILLER_9_215 ();
- sg13g2_fill_2 FILLER_9_221 ();
- sg13g2_decap_4 FILLER_9_26 ();
- sg13g2_fill_1 FILLER_9_30 ();
- sg13g2_decap_8 FILLER_9_45 ();
- sg13g2_decap_4 FILLER_9_52 ();
- sg13g2_decap_8 FILLER_9_71 ();
- sg13g2_decap_4 FILLER_9_78 ();
- sg13g2_fill_2 FILLER_9_82 ();
- sg13g2_decap_8 FILLER_9_99 ();
- sg13g2_inv_4 clone1 (.A(\pll_ana_dco/COARSE_OUT ),
-    .Y(net1));
- sg13g2_inv_4 clone2 (.A(\pll_ana_dco/COARSE_OUT ),
-    .Y(net2));
+ sg13g2_decap_4 FILLER_8_59 ();
+ sg13g2_fill_1 FILLER_8_63 ();
+ sg13g2_fill_2 FILLER_8_7 ();
+ sg13g2_fill_2 FILLER_8_73 ();
+ sg13g2_fill_1 FILLER_8_75 ();
+ sg13g2_decap_8 FILLER_8_89 ();
+ sg13g2_decap_4 FILLER_8_96 ();
+ sg13g2_decap_4 FILLER_9_0 ();
+ sg13g2_decap_4 FILLER_9_101 ();
+ sg13g2_fill_2 FILLER_9_105 ();
+ sg13g2_decap_8 FILLER_9_132 ();
+ sg13g2_decap_8 FILLER_9_139 ();
+ sg13g2_decap_4 FILLER_9_146 ();
+ sg13g2_fill_2 FILLER_9_150 ();
+ sg13g2_decap_4 FILLER_9_155 ();
+ sg13g2_fill_2 FILLER_9_159 ();
+ sg13g2_decap_8 FILLER_9_191 ();
+ sg13g2_decap_8 FILLER_9_198 ();
+ sg13g2_decap_4 FILLER_9_205 ();
+ sg13g2_decap_8 FILLER_9_225 ();
+ sg13g2_decap_8 FILLER_9_23 ();
+ sg13g2_decap_8 FILLER_9_248 ();
+ sg13g2_decap_8 FILLER_9_30 ();
+ sg13g2_decap_8 FILLER_9_37 ();
+ sg13g2_fill_1 FILLER_9_4 ();
+ sg13g2_decap_8 FILLER_9_44 ();
+ sg13g2_decap_8 FILLER_9_51 ();
+ sg13g2_decap_8 FILLER_9_58 ();
+ sg13g2_fill_2 FILLER_9_65 ();
+ sg13g2_fill_1 FILLER_9_67 ();
+ sg13g2_decap_8 FILLER_9_72 ();
+ sg13g2_fill_2 FILLER_9_79 ();
+ sg13g2_fill_1 FILLER_9_81 ();
+ sg13g2_decap_8 FILLER_9_87 ();
+ sg13g2_decap_8 FILLER_9_94 ();
  sg13g2_buf_1 \pll_ana_dco/coarse/impl_last_impl  (.A(\pll_ana_dco/coarse/FCHAIN_15_ ),
     .X(\pll_ana_dco/coarse/RCHAIN_15_ ));
- sg13g2_nand2_2 \pll_ana_dco/coarse/stage_0_impl/dwn_impl  (.Y(\pll_ana_dco/COARSE_OUT ),
+ sg13g2_nand2_1 \pll_ana_dco/coarse/stage_0_impl/dwn_impl  (.Y(\pll_ana_dco/COARSE_OUT ),
     .A(\pll_ana_dco/coarse/stage_0_impl/PATH_0 ),
     .B(\pll_ana_dco/coarse/RCHAIN_1_ ));
  sg13g2_nand2b_1 \pll_ana_dco/coarse/stage_0_impl/mid_impl  (.Y(\pll_ana_dco/coarse/stage_0_impl/PATH_0 ),
@@ -741,8 +878,8 @@ module PLL_ANALOG_MACRO (DCO_EN,
  sg13g2_inv_1 \pll_ana_dco/dff_y_impl_inv  (.Y(\pll_ana_dco/dff_y_CLK ),
     .A(INJ_EDGE));
  sg13g2_tiehi \pll_ana_dco/dff_y_impl_tiehi  (.L_HI(\pll_ana_dco/dff_y_RESET_B ));
- sg13g2_inv_8 \pll_ana_dco/fine/inv_0_impl  (.Y(\pll_ana_dco/fine/LOAD ),
-    .A(MID_OUT));
+ sg13g2_inv_4 \pll_ana_dco/fine/inv_0_impl  (.A(MID_OUT),
+    .Y(\pll_ana_dco/fine/LOAD ));
  sg13g2_inv_4 \pll_ana_dco/fine/inv_1_impl  (.A(\pll_ana_dco/fine/LOAD ),
     .Y(\pll_ana_dco/FINE_OUT ));
  sg13g2_nand3_1 \pll_ana_dco/fine/stage_0_dyn_impl  (.B(\pll_ana_dco/fine/LOAD ),
@@ -931,389 +1068,389 @@ module PLL_ANALOG_MACRO (DCO_EN,
     .Y(\pll_ana_dco/fine/UNCONNECTED_9_ ));
  sg13g2_inv_1 \pll_ana_dco/fine/stage_9_inv_b_impl  (.Y(\pll_ana_dco/fine/MUXB_9_ ),
     .A(FINE_MUX[9]));
- sg13g2_inv_8 \pll_ana_dco/mid/inv_0_impl  (.Y(\pll_ana_dco/mid/LOAD ),
+ sg13g2_inv_2 \pll_ana_dco/mid/inv_0_impl  (.Y(\pll_ana_dco/mid/LOAD ),
     .A(\pll_ana_dco/COARSE_OUT ));
  sg13g2_inv_2 \pll_ana_dco/mid/inv_1_impl  (.Y(MID_OUT),
     .A(\pll_ana_dco/mid/LOAD ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_0  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[0]),
     .A(\pll_ana_dco/mid/MUXB_0_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_0_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_1  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[0]),
     .A(\pll_ana_dco/mid/MUXB_0_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_0_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_2  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[0]),
     .A(\pll_ana_dco/mid/MUXB_0_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_0_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_3  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[0]),
     .A(\pll_ana_dco/mid/MUXB_0_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_0_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_4  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[0]),
     .A(\pll_ana_dco/mid/MUXB_0_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_0_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_5  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[0]),
     .A(\pll_ana_dco/mid/MUXB_0_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_0_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_6  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[0]),
     .A(\pll_ana_dco/mid/MUXB_0_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_0_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_7  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_0_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[0]),
     .A(\pll_ana_dco/mid/MUXB_0_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_0_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_0_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_0_ ),
     .A(MID_MUX[0]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_0  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[10]),
     .A(\pll_ana_dco/mid/MUXB_10_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_10_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_1  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[10]),
     .A(\pll_ana_dco/mid/MUXB_10_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_10_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_2  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[10]),
     .A(\pll_ana_dco/mid/MUXB_10_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_10_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_3  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[10]),
     .A(\pll_ana_dco/mid/MUXB_10_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_10_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_4  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[10]),
     .A(\pll_ana_dco/mid/MUXB_10_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_10_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_5  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[10]),
     .A(\pll_ana_dco/mid/MUXB_10_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_10_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_6  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[10]),
     .A(\pll_ana_dco/mid/MUXB_10_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_10_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_7  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_10_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[10]),
     .A(\pll_ana_dco/mid/MUXB_10_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_10_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_10_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_10_ ),
     .A(MID_MUX[10]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_0  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[11]),
     .A(\pll_ana_dco/mid/MUXB_11_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_11_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_1  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[11]),
     .A(\pll_ana_dco/mid/MUXB_11_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_11_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_2  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[11]),
     .A(\pll_ana_dco/mid/MUXB_11_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_11_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_3  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[11]),
     .A(\pll_ana_dco/mid/MUXB_11_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_11_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_4  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[11]),
     .A(\pll_ana_dco/mid/MUXB_11_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_11_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_5  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[11]),
     .A(\pll_ana_dco/mid/MUXB_11_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_11_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_6  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[11]),
     .A(\pll_ana_dco/mid/MUXB_11_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_11_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_7  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_11_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[11]),
     .A(\pll_ana_dco/mid/MUXB_11_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_11_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_11_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_11_ ),
     .A(MID_MUX[11]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_0  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[12]),
     .A(\pll_ana_dco/mid/MUXB_12_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_12_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_1  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[12]),
     .A(\pll_ana_dco/mid/MUXB_12_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_12_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_2  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[12]),
     .A(\pll_ana_dco/mid/MUXB_12_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_12_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_3  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[12]),
     .A(\pll_ana_dco/mid/MUXB_12_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_12_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_4  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[12]),
     .A(\pll_ana_dco/mid/MUXB_12_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_12_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_5  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[12]),
     .A(\pll_ana_dco/mid/MUXB_12_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_12_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_6  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[12]),
     .A(\pll_ana_dco/mid/MUXB_12_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_12_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_7  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_12_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[12]),
     .A(\pll_ana_dco/mid/MUXB_12_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_12_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_12_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_12_ ),
     .A(MID_MUX[12]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_0  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[13]),
     .A(\pll_ana_dco/mid/MUXB_13_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_13_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_1  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[13]),
     .A(\pll_ana_dco/mid/MUXB_13_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_13_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_2  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[13]),
     .A(\pll_ana_dco/mid/MUXB_13_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_13_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_3  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[13]),
     .A(\pll_ana_dco/mid/MUXB_13_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_13_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_4  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[13]),
     .A(\pll_ana_dco/mid/MUXB_13_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_13_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_5  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[13]),
     .A(\pll_ana_dco/mid/MUXB_13_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_13_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_6  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[13]),
     .A(\pll_ana_dco/mid/MUXB_13_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_13_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_7  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_13_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[13]),
     .A(\pll_ana_dco/mid/MUXB_13_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_13_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_13_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_13_ ),
     .A(MID_MUX[13]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_0  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[14]),
     .A(\pll_ana_dco/mid/MUXB_14_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_14_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_1  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[14]),
     .A(\pll_ana_dco/mid/MUXB_14_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_14_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_2  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[14]),
     .A(\pll_ana_dco/mid/MUXB_14_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_14_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_3  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[14]),
     .A(\pll_ana_dco/mid/MUXB_14_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_14_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_4  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[14]),
     .A(\pll_ana_dco/mid/MUXB_14_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_14_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_5  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[14]),
     .A(\pll_ana_dco/mid/MUXB_14_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_14_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_6  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[14]),
     .A(\pll_ana_dco/mid/MUXB_14_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_14_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_7  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_14_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[14]),
     .A(\pll_ana_dco/mid/MUXB_14_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_14_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_14_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_14_ ),
     .A(MID_MUX[14]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_0  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[1]),
     .A(\pll_ana_dco/mid/MUXB_1_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_1_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_1  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[1]),
     .A(\pll_ana_dco/mid/MUXB_1_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_1_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_2  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[1]),
     .A(\pll_ana_dco/mid/MUXB_1_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_1_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_3  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[1]),
     .A(\pll_ana_dco/mid/MUXB_1_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_1_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_4  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[1]),
     .A(\pll_ana_dco/mid/MUXB_1_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_1_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_5  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[1]),
     .A(\pll_ana_dco/mid/MUXB_1_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_1_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_6  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[1]),
     .A(\pll_ana_dco/mid/MUXB_1_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_1_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_7  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_1_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[1]),
     .A(\pll_ana_dco/mid/MUXB_1_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_1_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_1_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_1_ ),
     .A(MID_MUX[1]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_0  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[2]),
     .A(\pll_ana_dco/mid/MUXB_2_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_2_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_1  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[2]),
     .A(\pll_ana_dco/mid/MUXB_2_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_2_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_2  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[2]),
     .A(\pll_ana_dco/mid/MUXB_2_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_2_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_3  (.B(net1),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[2]),
     .A(\pll_ana_dco/mid/MUXB_2_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_2_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_4  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[2]),
     .A(\pll_ana_dco/mid/MUXB_2_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_2_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_5  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[2]),
     .A(\pll_ana_dco/mid/MUXB_2_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_2_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_6  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[2]),
     .A(\pll_ana_dco/mid/MUXB_2_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_2_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_7  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_2_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[2]),
     .A(\pll_ana_dco/mid/MUXB_2_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_2_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_2_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_2_ ),
     .A(MID_MUX[2]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_0  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[3]),
     .A(\pll_ana_dco/mid/MUXB_3_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_3_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_1  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[3]),
     .A(\pll_ana_dco/mid/MUXB_3_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_3_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_2  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[3]),
     .A(\pll_ana_dco/mid/MUXB_3_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_3_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_3  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[3]),
     .A(\pll_ana_dco/mid/MUXB_3_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_3_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_4  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[3]),
     .A(\pll_ana_dco/mid/MUXB_3_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_3_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_5  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[3]),
     .A(\pll_ana_dco/mid/MUXB_3_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_3_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_6  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[3]),
     .A(\pll_ana_dco/mid/MUXB_3_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_3_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_7  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_3_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[3]),
     .A(\pll_ana_dco/mid/MUXB_3_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_3_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_3_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_3_ ),
     .A(MID_MUX[3]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_0  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[4]),
     .A(\pll_ana_dco/mid/MUXB_4_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_4_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_1  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[4]),
     .A(\pll_ana_dco/mid/MUXB_4_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_4_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_2  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[4]),
     .A(\pll_ana_dco/mid/MUXB_4_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_4_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_3  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[4]),
     .A(\pll_ana_dco/mid/MUXB_4_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_4_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_4  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[4]),
     .A(\pll_ana_dco/mid/MUXB_4_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_4_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_5  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[4]),
     .A(\pll_ana_dco/mid/MUXB_4_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_4_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_6  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[4]),
     .A(\pll_ana_dco/mid/MUXB_4_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_4_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_7  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_4_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[4]),
     .A(\pll_ana_dco/mid/MUXB_4_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_4_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_4_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_4_ ),
     .A(MID_MUX[4]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_0  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[5]),
     .A(\pll_ana_dco/mid/MUXB_5_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_5_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_1  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[5]),
     .A(\pll_ana_dco/mid/MUXB_5_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_5_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_2  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_2  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[5]),
     .A(\pll_ana_dco/mid/MUXB_5_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_5_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_3  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_3  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[5]),
     .A(\pll_ana_dco/mid/MUXB_5_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_5_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_4  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_4  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[5]),
     .A(\pll_ana_dco/mid/MUXB_5_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_5_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_5  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_5  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[5]),
     .A(\pll_ana_dco/mid/MUXB_5_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_5_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_6  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_6  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[5]),
     .A(\pll_ana_dco/mid/MUXB_5_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_5_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_7  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_5_dyn_impl_7  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[5]),
     .A(\pll_ana_dco/mid/MUXB_5_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_5_ ));
  sg13g2_inv_1 \pll_ana_dco/mid/stage_5_inv_b_impl  (.Y(\pll_ana_dco/mid/MUXB_5_ ),
     .A(MID_MUX[5]));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_6_dyn_impl_0  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_6_dyn_impl_0  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[6]),
     .A(\pll_ana_dco/mid/MUXB_6_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_6_ ));
- sg13g2_nand3_1 \pll_ana_dco/mid/stage_6_dyn_impl_1  (.B(net2),
+ sg13g2_nand3_1 \pll_ana_dco/mid/stage_6_dyn_impl_1  (.B(\pll_ana_dco/mid/LOAD ),
     .C(MID_MUX[6]),
     .A(\pll_ana_dco/mid/MUXB_6_ ),
     .Y(\pll_ana_dco/mid/UNCONNECTED_6_ ));
@@ -1466,7 +1603,7 @@ module PLL_ANALOG_MACRO (DCO_EN,
  sg13g2_nand2_1 \pll_ana_dco/sym/sym_mux/nand_inj_impl  (.Y(\pll_ana_dco/sym/sym_mux/OSC_INJ ),
     .A(\pll_ana_dco/sym/OSC_BALANCED ),
     .B(\pll_ana_dco/sym/sym_mux/DCO_EN_INJ_WIN ));
- sg13g2_nand2_2 \pll_ana_dco/sym/sym_mux/nand_pll_impl  (.Y(OUT),
+ sg13g2_nand2_1 \pll_ana_dco/sym/sym_mux/nand_pll_impl  (.Y(OUT),
     .A(\pll_ana_dco/sym/sym_mux/REF_INJ ),
     .B(\pll_ana_dco/sym/sym_mux/OSC_INJ ));
  sg13g2_nand2b_1 \pll_ana_dco/sym/sym_mux/nand_ref_impl  (.Y(\pll_ana_dco/sym/sym_mux/REF_INJ ),

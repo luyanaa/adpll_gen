@@ -30,7 +30,7 @@ module pll_macro_top_tb;
         .FINE_NDELS(31),
         .FILTER_BITS(FILTER_BITS),
         .IS_DSM(1),
-        .DSM_DIV(2),
+        .DSM_DIV(4),
         .LOCKED_WAIT(64),
         .FILTER_ILL(16),
         .DIV_BITS(DIV_BITS),
@@ -70,11 +70,12 @@ module pll_macro_top_tb;
         #20000000 INJ_EN = 1'b1;
 
         // Frequency acquisition settles in a few hundred REF cycles.
-        // Phase lock is a separate indication.  The behavioral SS-BBPD
-        // does emit both P and N, but in this netlist every N sample also
-        // asserts ILL_N: the 16-bit filter output sits at 257 and KP=3967,
-        // so the N correction rails the fine code at 0.  The stream is
-        // counted below instead of being treated as a ratio failure.
+        // Phase lock is a separate indication and is counted below rather
+        // than folded into the ratio check.  Re-run 2026-11-24 against the
+        // current sim_dco (fine span 24.8 ps, 0.8 ps/code): the loop does
+        // reach PHASE_LOCK with both P and N, ILL=0, and the fine code sits
+        // mid-bank instead of railed.  The earlier "every N asserts ILL_N,
+        // fine stuck at 0" note was measured on the 2.24 ps fine table.
         fork : wait_freq
             begin
                 wait (dut.pll_dig.FREQ_LOCKED === 1'b1);
@@ -97,8 +98,9 @@ module pll_macro_top_tb;
                  dut.pll_dig.dsm_impl.u_dsm_icg.en_l,
                  dut.pll_dig.flock.u_fll_icg.en_l,
                  dut.pll_dig.flock.fll_standby);
-        $display("pll_macro_top_tb: fll cnt_filt=%0d cnt_done=%0d FREQ_OK=%b LOCKED=%b ERR=%b FCW_NA=%0d FCW_PA=%0d",
-                 dut.pll_dig.flock.cnt_filt, dut.pll_dig.flock.cnt_done,
+        $display("pll_macro_top_tb: fll cnt_filt=%0d lock_sum=%0d cnt_done=%0d FREQ_OK=%b LOCKED=%b ERR=%b FCW_NA=%0d FCW_PA=%0d",
+                 dut.pll_dig.flock.cnt_filt, dut.pll_dig.flock.lock_sum,
+                 dut.pll_dig.flock.cnt_done,
                  dut.pll_dig.FREQ_OK, dut.pll_dig.FREQ_LOCKED,
                  dut.pll_dig.FREQ_ERR, dut.pll_dig.flock.FCW_NA,
                  dut.pll_dig.flock.FCW_PA);

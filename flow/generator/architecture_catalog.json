@@ -303,7 +303,7 @@
         "flow/macro/cdr_ihp130/src/cdr_top_tb.v"
       ],
       "hardmacro_ready": false,
-      "status_note": "RTL + TB verified: PH_W=2/3/4/5 -> 4/8/16/32 phases, uniform within 0.4%. CDR backend (cdr_ihp130) is RTL-verified only: no macro.sdc.tcl, no PnR, no DRC/LVS."
+      "status_note": "RTL + TB verified: PH_W=2/3/4/5 -> 4/8/16/32 phases, uniform within 0.4% in the testbench, not on the GDS. cdr_ihp130 has macro.sdc.tcl and a routed GDS (RUN_2026-11-21_23-28-58): post-route setup/hold and Magic/KLayout DRC are clean. LVS recompared 2026-11-24 against ihp-sg13g2_setup.tcl matches uniquely (583/583 devices, 590/590 nets, 20/20 pins) with no property errors once the CDL widths are passed through unscaled; the earlier decap_8/buf_16 width deltas came from multiplying w by ng before a setup that already sums w across merged fingers, and the LibreLane run's 91 errors came from NETGEN_SETUP=/dev/null. Not hardmacro_ready: the 0.4% phase figure is testbench-only and never entered STA."
     },
     {
       "id": "fractional_n_feedback",

@@ -5,7 +5,7 @@ module ratio_change_tb;
   reg [W-1:0] set_div=2;
   wire out; wire [W-1:0] div_q; wire div_even;
   pll_mod_divider #(.W(W), .DIV_INIT(2)) dut (
-    .clk(clk), .rst_n(rst_n), .set_div(set_div), .load_div(load_div),
+    .clk(clk), .rst_n(rst_n), .rst_n2(rst_n), .set_div(set_div), .load_div(load_div),
     .out(out), .div_q(div_q), .div_even(div_even));
   always #5000 clk = ~clk;
   integer errs=0;

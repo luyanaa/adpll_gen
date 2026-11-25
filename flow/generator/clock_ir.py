@@ -32,7 +32,7 @@ def build_clock_ir(resolved: dict[str, Any],
     out_div = int(plan.get("out_div", spec.get("out_div", 1)))
     dco_mhz = float(plan.get("dco_target_mhz", out_mhz * out_div))
     tick_mhz = spec.get("tick_frequency_mhz")
-    dsm_div = int(resolved.get("structural_parameters", {}).get("DSM_DIV", 2))
+    dsm_div = int(resolved.get("structural_parameters", {}).get("DSM_DIV", 4))
     if dsm_div < 1:
         dsm_div = 1
     is_counter = selected.get("core") == "core_c_counter" or selected.get("id") == "core_c_counter"

@@ -31,6 +31,9 @@ DEFAULT_STRUCTURAL = {
     "FCW_BITS": 8,
     "CNT_EXTRA_BITS": 8,
     "MEAS_PERIODS": 1,
+    # REF periods summed into one lock-window sample.  256 resolves about
+    # 244 ppm at FCW=16, inside the fine bank's span.
+    "LOCK_WINDOW": 256,
     # Physical Core B/C defaults; ignored by Core A.
     "BASE_NDELS": 256,
     "ACC_BITS": 16,
@@ -220,7 +223,8 @@ def resolve_spec(raw: dict[str, Any],
         if status in readyish:
             status = "NEEDS_ACC_BITS"
     for name, minimum in (("FILTER_BITS", 8), ("FCW_BITS", 1),
-                          ("CNT_EXTRA_BITS", 0), ("MEAS_PERIODS", 1)):
+                          ("CNT_EXTRA_BITS", 0), ("MEAS_PERIODS", 1),
+                          ("LOCK_WINDOW", 1)):
         if int(structural.get(name, minimum)) < minimum:
             blockers.append(f"{name} must be >= {minimum}")
             if status in readyish:

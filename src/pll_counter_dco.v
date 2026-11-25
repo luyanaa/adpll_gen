@@ -36,9 +36,15 @@ module PLL_COUNTER_DCO #(
     assign INJ_EDGE = REF;
 
     always @* begin
-        increment = 5 + 2 * $countones(COARSE_MUX)
-                      + $countones(MID_MUX)
-                      + ($countones(FINE_MUX) / 8);
+        // Match the real DCO polarity: more set bits switch in more delay, so
+        // the output runs SLOWER.  For a phase accumulator that means the
+        // increment must SHRINK with countones — start at max speed with all
+        // codes 0 and subtract.  (Was `5 + 2*countones`, i.e. code-up = faster;
+        // that flipped the actuator against the freq_lock loop.)
+        increment = PHASE_MOD / 2
+                      - 2 * $countones(COARSE_MUX)
+                      - $countones(MID_MUX)
+                      - ($countones(FINE_MUX) / 8);
         if (increment < 1) increment = 1;
         if (increment > PHASE_MOD / 2) increment = PHASE_MOD / 2;
         tick_ns = TICK_PS / 1000;

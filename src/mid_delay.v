@@ -76,8 +76,16 @@ module MID_DELAY # (
 `ifndef SIMULATION
     // Synthesizable version
     wire [NDELS-1:0] UNCONNECTED, MUXB;
+    // LOAD is the analog delay element: inv_0 drives it, every NAND3 dyn
+    // taps it as a switched capacitive load, inv_1 buffers it out.  The P&R
+    // tool saw the heavy fanout and cloned inverters to share the drive —
+    // which moves the tuning capacitance OFF the ring path and kills the mid
+    // bank (see taped PLL_ANALOG_MACRO.v: 90/120 B pins on clone1/clone2).
+    // keep/dont_touch the net AND its two buffers, as done for BASE_NDELS.
+    (* keep *) (* dont_touch = "true" *)
     wire LOAD;
 
+    (* keep *) (* dont_touch = "true" *)
     PLL_CELL_INVX2   inv_0(
 `ifdef WITH_POWER 
         .VDD(VDD), .VSS(VSS), 
@@ -87,11 +95,13 @@ module MID_DELAY # (
     genvar i;
     generate
         for(i = 0; i < NDELS; i = i + 1) begin : stage
+            (* keep *) (* dont_touch = "true" *)
             PLL_CELL_INVX1   inv_b(
 `ifdef WITH_POWER 
                 .VDD(VDD), .VSS(VSS), 
 `endif
                 .I(MUX[i]), .ZN(MUXB[i]));
+            (* keep *) (* dont_touch = "true" *)
             PLL_CELL_NAND3X8 dyn(
 `ifdef WITH_POWER 
                 .VDD(VDD), .VSS(VSS), 
@@ -100,6 +110,7 @@ module MID_DELAY # (
         end
     endgenerate
 
+    (* keep *) (* dont_touch = "true" *)
     PLL_CELL_INVX2   inv_1(
 `ifdef WITH_POWER 
         .VDD(VDD), .VSS(VSS), 

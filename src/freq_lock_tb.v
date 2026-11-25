@@ -38,7 +38,7 @@ module pll_freq_lock_tb();
         .COARSE_NDELS(COARSE_NDELS),
         .MID_NDELS(MID_NDELS),
         .CNT_BITS(CNT_BITS),
-        .LOCK_LIMIT(1)
+        .LOCK_LIMIT(1), .LOCK_WINDOW(1)
     ) dut (
         .REF(CLK_REF), .MID_OUT(CLK_VCO), .OUT(CLK_VCO), .RST_N(RST_N),
         .FCW(FCW), .START(START), .LOCK(1'b0),

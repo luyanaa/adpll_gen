@@ -44,8 +44,15 @@ set_false_path -from [get_ports DATA]
 
 # The tap comes from cdr_multiphase (the digital half) and is a plain register
 # slice there; across the macro boundary it is quasi-static on REF.
-set_input_delay -max 2.000 -clock REF [get_ports {TAP DCO_EN RST_N}]
-set_input_delay -min 0.200 -clock REF [get_ports {TAP DCO_EN RST_N}]
+set_input_delay -max 2.000 -clock REF [get_ports {TAP RST_N}]
+set_input_delay -min 0.200 -clock REF [get_ports {TAP RST_N}]
+
+# DCO_EN releases the free-running ring.  The ring is clock generation, not a
+# REF data path: STA would otherwise sum the whole 882-inverter delay line
+# into a setup check against the sampler FF (measured -12.16 ns at SS on
+# DCO_EN -> smp_q), which says nothing about the interface.  There is no
+# REF-domain timing relationship to check, so the port is exempt outright.
+set_false_path -from [get_ports DCO_EN]
 
 # Outputs: SMP is a REF-domain register, SMP_VALID likewise.
 set_output_delay -max 2.000 -clock REF [get_ports {SMP SMP_VALID}]

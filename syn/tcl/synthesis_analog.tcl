@@ -49,6 +49,23 @@ foreach src $SYN_SRC {
   read_verilog -DSYNTHESIS=1 $src
 }
 
+# Optional parameter override for the analog top (e.g. BASE_NDELS on
+# PLL_ILDCO, to push the ring off the SS-BBPD mode boundary).  Set the env
+# var to a Tcl list of NAME=VALUE pairs; absent/empty keeps the RTL default.
+# MUST run before `hierarchy -top`: hierarchy derives the top's generate
+# blocks and deletes the (now unused) base modules, so a later chparam
+# re-derives the top against modules that are no longer in the design and
+# the next hierarchy pass dies with "referenced ... is not part of the
+# design".
+if {[info exists ::env(ANA_PARAMS)] && $::env(ANA_PARAMS) ne ""} {
+  foreach kv $::env(ANA_PARAMS) {
+    set name [lindex [split $kv =] 0]
+    set val  [lindex [split $kv =] 1]
+    puts "ANA_PARAMS: chparam -set $name $val $::env(TOP)"
+    chparam -set $name $val $::env(TOP)
+  }
+}
+
 hierarchy -check -top $::env(TOP)
 
 ####################################################################

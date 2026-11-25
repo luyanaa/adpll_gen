@@ -1858,7 +1858,12 @@ Ordered so each step is verifiable before the next:
 
 Steps 1-3 are mechanical and unblock everything else.  Step 4 is the largest
 engineering item.  Steps 8-9 are the ones that decide whether the PLL meets a
-real specification rather than merely building.
+real specification rather than merely building.  Step 8 was not measured:
+ngspice-44.2 has no `.pnoise`.  On 2026-11-24 the thermal residual was signed
+off as an estimate instead, 4.0 ps rms at an assumed 100 kHz
+(`flow/characterization/JITTER_PHASE_NOISE.md`).  That stands in for the
+jitter number; it is not a spec-sheet pnoise measurement, and the flicker
+column is not included.
 
 ## 4. What is genuinely ready
 

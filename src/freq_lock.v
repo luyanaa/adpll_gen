@@ -64,13 +64,22 @@ module pll_freq_lock #(
     // Consecutive out-of-window filtered samples before the live
     // FREQ_OK flag falls.  Sticky LOCKED is not cleared by this.
     parameter integer FREQ_LOSS = 4,
+    // Judge the lock window on a sum of this many per-REF counts instead of
+    // one.  A single count resolves 1/FCW (6.25% at FCW=16), which is ~30x
+    // wider than the SerDes bang-bang can track.  256 counts of a ratio near
+    // 16 resolve about 244 ppm, inside the fine bank's ~600 ppm span, so the
+    // phase loop has an actuator left once coarse/mid freeze.  LOCK_TOL is
+    // counted on that sum, so the accepted band shrinks as the window grows.
+    // 1 keeps the old per-REF window; the measurement port is unchanged.
+    parameter integer LOCK_WINDOW = 1,
     parameter integer TOL_COARSE_WAIT = 1,  // Wait REF cycles for changing the COARSE once the MID is in the limit, 1 for always change
     // Counter frontend selection. 0 = synchronous (default), 1 = async ripple,
     // 2 = Johnson prescaler.  Ripple/Johnson require an explicit CDC review.
     // PRESCALE only changes the internal update rate; the frontend COUNT/GRAY
     // contract is normalized to actual input edges so FCW is unchanged.
     parameter integer FRONTEND_MODE = 0,
-    parameter integer PRESCALE = 1
+    parameter integer PRESCALE = 1,
+    parameter integer LOCK_W = CNT_W + ((LOCK_WINDOW > 1) ? $clog2(LOCK_WINDOW) : 0)
 ) (
     input REF, MID_OUT, OUT, RST_N, START,
     input [CNT_BITS-1:0] FCW,
@@ -83,6 +92,10 @@ module pll_freq_lock #(
     output reg FREQ_OK,
     output reg [COARSE_NDELS-1:0] COARSE_MUX,
     output reg [MID_NDELS-1:0] MID_MUX,
+    // Completed lock-window sum, LOCK_WINDOW per-REF counts wide.  The tuning
+    // FSM and FREQ_OK read this; the per-REF delta stays on cnt_cap for the
+    // existing measurement checks.
+    output reg [LOCK_W-1:0] LOCK_COUNT_Q,
     // Measurement interface (separate from acquisition control).  CNT_EXTRA_BITS
     // widens the source counter beyond the legal FCW width; MEAS_PERIODS sets
     // the REF window used for the completed SAMPLE_VALID/MEASURED_COUNT.
@@ -91,10 +104,14 @@ module pll_freq_lock #(
 );
     wire CLK_REF = REF; // NOTE: Negative injection
     wire CLK_OUT = MID_OUT;
-    // Static frontend normalization: the Gray counter runs at CLK_OUT/PS;
-    // each divided edge is PS input edges.
-    localparam integer PS_SHIFT = (PRESCALE == 2) ? 1 :
-        (PRESCALE == 4) ? 2 : 0;
+    // Static frontend normalization.  FRONTEND_MODE 3 registers a Gray word
+    // of the divided count, one bit per PS input edges, and the REF domain has
+    // to multiply the delta back (frequency_counter_frontend.v).  The other
+    // modes already report input edges, so the shift only applies here.  With
+    // it missing, PRESCALE=2 reports half the real ratio and the loop locks at
+    // FCW/2 (measured: 4 divided counts per REF against a DCO running at 8).
+    localparam integer PS_SHIFT = (FRONTEND_MODE == 3 && PRESCALE == 2) ? 1 :
+        (FRONTEND_MODE == 3 && PRESCALE == 4) ? 2 : 0;
 
     // Frequency-count CDC: constrained asynchronous Gray snapshot.
     //
@@ -125,6 +142,42 @@ module pll_freq_lock #(
     reg [CNT_W-1:0] cnt_bin;
     reg [CNT_W-1:0] sample_bin;
     reg [CNT_W-1:0] cnt_cap; // count over the last REF period (input edges)
+    // One guard bit, and a net rather than a reg.  sample_bin and cnt_bin are
+    // free-running and wrap, so the delta is a modular subtraction; taking it
+    // at CNT_W and then shifting for the prescale turns the wrap into a carry
+    // one bit above the counter (measured at the 16-bit wrap, 65527 -> 7: the
+    // shifted 16-bit difference came back as 16711920).  A blocking reg does
+    // not help: the nonblocking adds in this same block read it a cycle late,
+    // so the accumulator still took the wrapped value (224 -> 65776) while
+    // cnt_cap, which uses it directly, was already right.
+    // The delta must be taken against the sample captured on the previous REF
+    // edge.  cnt_bin cannot be that reference: it is written with a nonblocking
+    // assignment in this same block, and under iverilog 12 a read of it returns
+    // the value just written, so the subtraction collapses to zero on every
+    // edge except the counter wrap, where it comes back as 65536 plus the real
+    // count (measured: 65552 added, accumulator 224 -> 65776).  Reading cnt_bin
+    // into a second register has the same problem one edge later and doubles
+    // every count.  sample_bin is a blocking temporary, so copying it here
+    // records exactly the word used for this edge's delta.
+    reg [CNT_W-1:0] cnt_prev;
+    // Computed inside the sampler block, after sample_bin is assigned.  A
+    // continuous assignment here runs before that blocking write and subtracts
+    // a sample from itself, so every delta is zero.  The integer form is also
+    // deliberate: iverilog 12 folds `{1'b0, a} - {1'b0, b}` back to CNT_W bits,
+    // dropping the borrow at the counter wrap (measured: 7 - 65527 = 65552
+    // instead of 16), and the prescale shift doubles that into the window sum.
+    integer delta_int;
+    // The shift is applied to the sized vector, not the integer.  iverilog 12
+    // treats `<<` on an integer as arithmetic, so a delta whose top bit is set
+    // (anything at or above half the counter) comes back negative and the
+    // window sum collapses.
+    reg [CNT_W:0] delta_edges;
+    reg [CNT_W:0] delta_edges_ps;
+    // Running total of the current window.  An integer rather than a reg: the
+    // published sum is taken from it on the closing edge and it is cleared in
+    // the same pass, and doing that to a reg let iverilog 12 keep the clear.
+    integer win_sum;
+
     // FLL standby gate: once the frequency is locked and the live window is
     // good, freeze the IIR/control updates.  The Gray sampler and the live
     // cnt_cap/FREQ_OK path stay on REF, so a FREQ_OK drop reopens the gate.
@@ -132,6 +185,19 @@ module pll_freq_lock #(
     reg [CNT_W-1:0] cnt_filt; // 1/4 IIR filter for lock/tuning decisions
     reg [MEAS_W-1:0] meas_accum;
     reg [31:0] meas_count;
+    // Lock window, separate from the measurement port.  win_sum adds the
+    // per-REF deltas and lock_sum publishes the total once every LOCK_WINDOW
+    // REF edges.  FREQ_OK and the acquisition counter read lock_sum, so a
+    // single noisy REF edge cannot drop the lock; coarse/mid tuning stays on
+    // the per-REF capture, which moves a step per edge.
+    reg [31:0] lock_count;
+    reg [LOCK_W-1:0] lock_sum;
+    reg lock_sum_valid;
+    // Combinational view of the window sum on the REF edge that closes it.
+    // The IIR block reads this rather than lock_sum: both blocks are clocked
+    // by REF, and a nonblocking read of lock_sum would be the previous window.
+    reg [LOCK_W-1:0] lock_sum_now;
+    reg lock_sum_now_valid;
     reg cap_valid;
 
     initial begin
@@ -139,10 +205,19 @@ module pll_freq_lock #(
         cnt_gray_s2 = 'd0;
         cnt_bin = 'd0;
         sample_bin = 'd0;
+        cnt_prev = 'd0;
+        delta_edges_ps = 'd0;
+        win_sum = 0;
         cnt_cap = 'd0;
         cnt_filt = 'd0;
         meas_accum = 'd0;
         meas_count = 'd0;
+        lock_count = 'd0;
+        lock_sum = 'd0;
+        lock_sum_valid = 1'b0;
+        lock_sum_now = 'd0;
+        lock_sum_now_valid = 1'b0;
+        LOCK_COUNT_Q = 'd0;
         cap_valid = 1'b0;
         SAMPLE_VALID = 1'b0;
         MEASURED_COUNT = 'd0;
@@ -159,9 +234,19 @@ module pll_freq_lock #(
             cnt_gray_s2 <= 'd0;
             cnt_bin <= 'd0;
             sample_bin <= 'd0;
+            cnt_prev <= 'd0;
+            delta_edges_ps <= 'd0;
+            win_sum = 0;
             cnt_cap <= 'd0;
             meas_accum <= 'd0;
             meas_count <= 'd0;
+            lock_count <= 'd0;
+            lock_sum <= 'd0;
+            lock_sum_valid <= 1'b0;
+            lock_sum_now = 'd0;
+            lock_sum_now_valid = 1'b0;
+            LOCK_COUNT_Q <= 'd0;
+            cnt_filt <= 'd0;
             cap_valid <= 1'b0;
             SAMPLE_VALID <= 1'b0;
             MEASURED_COUNT <= 'd0;
@@ -173,34 +258,77 @@ module pll_freq_lock #(
             // Blocking temporary: the delta and the history must use the same
             // newly synchronized sample.
             sample_bin = gray_to_bin(cnt_gray_s2);
+            delta_int = sample_bin - cnt_prev;
+            if (delta_int < 0)
+                delta_int = delta_int + (1 << CNT_W);
+            delta_edges = delta_int[CNT_W:0];
+            delta_edges_ps = delta_edges << PS_SHIFT;
             if(!cap_valid) begin
                 cnt_bin <= sample_bin;
                 cnt_cap <= 'd0;
                 meas_accum <= 'd0;
                 meas_count <= 'd0;
+                lock_count <= 'd0;
+                lock_sum_now = 'd0;
+                lock_sum_now_valid = 1'b0;
+                win_sum = 0;
                 cap_valid <= 1'b1;
                 SAMPLE_VALID <= 1'b0;
                 MEASURED_COUNT <= 'd0;
             end else begin
-                cnt_cap <= (sample_bin - cnt_bin) << PS_SHIFT;
+                cnt_cap <= delta_edges_ps;
                 cnt_bin <= sample_bin;
+                cnt_prev <= sample_bin;
                 if(meas_count == MEAS_PERIODS - 1) begin
-                    MEASURED_COUNT <= meas_accum + ((sample_bin - cnt_bin) << PS_SHIFT);
+                    MEASURED_COUNT <= meas_accum + delta_edges_ps;
                     meas_accum <= 'd0;
                     meas_count <= 'd0;
                     SAMPLE_VALID <= 1'b1;
                 end else begin
-                    meas_accum <= meas_accum + ((sample_bin - cnt_bin) << PS_SHIFT);
+                    meas_accum <= meas_accum + delta_edges_ps;
                     meas_count <= meas_count + 1'b1;
                     SAMPLE_VALID <= 1'b0;
+                end
+                // One running total, published on the closing edge and cleared
+                // for the next window.  The clear and the add are in opposite
+                // arms, so a given edge only ever does one of them.
+                win_sum = win_sum + delta_edges_ps;
+                if(lock_count == LOCK_WINDOW - 1) begin
+                    lock_sum_now = win_sum;
+                    lock_sum_now_valid = 1'b1;
+                    lock_sum <= lock_sum_now;
+                    LOCK_COUNT_Q <= lock_sum_now;
+                    win_sum = 0;
+                    lock_count = 'd0;
+                    lock_sum_valid <= 1'b1;
+                    // Filter here, in the same block as the sum, and only
+                    // while the tuning clock is running.  A separate block on
+                    // REF_G reads lock_sum_now one window late: the two clocks
+                    // are the same net while the gate is open, and iverilog
+                    // runs that block first.
+                    if (!fll_standby) begin : fll_filt
+                        integer filt_next;
+                        // One expression.  Splitting this into two integer
+                        // assignments lets iverilog evaluate the second with
+                        // the first still unset, and the filter then follows
+                        // its own output instead of the window sum.
+                        filt_next = (3 * cnt_filt + lock_sum_now + 2) / 4;
+                        cnt_filt <= filt_next[LOCK_W-1:0];
+                    end
+                end else begin
+                    lock_sum_now = 'd0;
+                    lock_sum_now_valid = 1'b0;
+                    lock_count = lock_count + 1'b1;
                 end
             end
             // Live FCW window: this stays on REF even when the FLL
             // IIR/tuning clock is gated, so a FREQ_OK drop can reopen it.
-            if (!cap_valid) begin
+            // It reads the completed window sum, not the per-REF delta: one
+            // count of FCW is 1/FCW, and the phase loop cannot trim that.
+            if (!lock_sum_valid) begin
                 FREQ_OK <= 1'b0;
                 freq_miss <= 3'd0;
-            end else if ((cnt_cap >= FCW_NA) && (cnt_cap <= FCW_PA)) begin
+            end else if ((lock_sum >= FCW_NA) && (lock_sum <= FCW_PA)) begin
                 FREQ_OK <= 1'b1;
                 freq_miss <= 3'd0;
             end else if (freq_miss >= FREQ_LOSS_LIM - 1) begin
@@ -221,13 +349,25 @@ module pll_freq_lock #(
         end
     endfunction
 
-    // Register the tolerances... 
-    reg [CNT_W-1:0] FCW_PA; // FCW + TOL
-    reg [CNT_W-1:0] FCW_NA; // FCW - TOL
-    always @(posedge CLK_REF) begin
-        FCW_PA <= FCW + LOCK_TOL;
-        FCW_NA <= FCW - LOCK_TOL;
-    end
+    // Tolerances on the window sum, not on one REF count.  FCW and
+    // LOCK_TOL are both counts per REF, so the window scales both by
+    // LOCK_WINDOW: a ratio of FCW +/- LOCK_TOL stays inside, and the
+    // resolution becomes one count over the whole window.
+    // Combinational, not registered.  The live window below compares the
+    // sum on the same edge that publishes it; a registered tolerance would
+    // still be zero on that edge and accept the first window unconditionally.
+    //
+    // LOCK_TOL is counts of the window sum, not counts per REF.  Scaling it
+    // by LOCK_WINDOW would leave the band at +/-1/FCW (6.25% at FCW=16) no
+    // matter how long the window is, which is the error this window exists
+    // to remove.  With LOCK_WINDOW=1 the two readings are identical, so the
+    // per-REF tests are unchanged; with LOCK_WINDOW=256 one count is about
+    // 244 ppm at FCW=16.
+    wire [LOCK_W-1:0] FCW_PA; // LOCK_WINDOW*FCW + TOL
+    wire [LOCK_W-1:0] FCW_NA; // LOCK_WINDOW*FCW - TOL
+    wire [LOCK_W-1:0] fcw_target = FCW * LOCK_WINDOW;
+    assign FCW_PA = fcw_target + LOCK_TOL;
+    assign FCW_NA = fcw_target - LOCK_TOL;
 
     // True ICG for the IIR/tuning.  The wrapper latches EN on the falling REF
     // (or instantiates the ics55 ICG cell); the live sampler/FREQ_OK/
@@ -245,10 +385,15 @@ module pll_freq_lock #(
 `else
     wire cnt_less;
     wire cnt_more;
-    // Judge acquisition on the filtered count, not the raw single-cycle
-    // capture.  This keeps a noisy REF edge from toggling the tuning FSM.
-    assign cnt_less = cnt_filt < FCW;
-    assign cnt_more = cnt_filt > FCW;
+    // Tuning reads the per-REF capture, not the filtered window sum.  The
+    // filter settles over about twenty windows, and stepping coarse/mid only
+    // once it has settled leaves the loop a full window behind the DCO: it
+    // stops moving while the ratio is still a count away from FCW.  One REF
+    // of noise can move the code by a single step, which the next REF undoes.
+    // The lock decision stays on the window sum, where one count is the
+    // resolution the phase loop can actually trim.
+    assign cnt_less = cnt_cap < FCW;
+    assign cnt_more = cnt_cap > FCW;
 `endif
 
     reg [CNT_TOL_BITS-1:0] cnt_done;
@@ -262,7 +407,9 @@ module pll_freq_lock #(
         if(!RST_N) begin
             ERR <= 1'b0;
             LOCKED <= 1'b0;
-            cnt_filt <= 'd0;
+            // cnt_filt is reset and updated in the REF sampler block, next to
+            // the window sum it filters.  Resetting it here as well makes
+            // iverilog 12 resolve the register to X for the whole run.
             COARSE_MUX <= 'd0;
             MID_MUX <= 'd0;
             cnt_done <= 'd0;
@@ -270,8 +417,9 @@ module pll_freq_lock #(
             cnt_coarse_wait <= 'd0;
             started <= 1'b0;
         end else begin
-            // IIR is the only state that is frozen by REF_G.
-            cnt_filt <= (cnt_filt * 3 + cnt_cap + 2) >> 2;
+            // The IIR itself is updated next to the window sum, on
+            // CLK_REF, and held while fll_standby is set.  Doing it here, on
+            // REF_G, reads the sum one window late.
             // Start status
             if(!started && START) started <= 1'b1;
 
@@ -290,7 +438,12 @@ module pll_freq_lock #(
 
                 // Increase the locking counter when the frequency counter is
                 // within the range. Reset the counter when counters are different
-                if(FCW_NA <= cnt_filt && cnt_filt <= FCW_PA)
+                // Same quantity FREQ_OK judges.  cnt_filt is the IIR of the
+                // window sum and settles over about twenty windows, so a band
+                // only a few counts wide around the target (the Gray sampler
+                // already sits 6 or 7 below it) never contains it and the
+                // acquisition counter stalls at 0 while FREQ_OK is already 1.
+                if(FCW_NA <= lock_sum && lock_sum <= FCW_PA)
                     cnt_done <= cnt_done + 1;
                 else if(cnt_done != 0)
                     cnt_done <= cnt_done - 1; // leaky: one bad sample must not restart acquisition

@@ -24,7 +24,7 @@ module freq_lock_overflow_tb;
 
     pll_freq_lock #(
         .COARSE_NDELS(4), .MID_NDELS(4), .CNT_BITS(8),
-        .CNT_EXTRA_BITS(8), .MEAS_PERIODS(4), .LOCK_LIMIT(1)
+        .CNT_EXTRA_BITS(8), .MEAS_PERIODS(4), .LOCK_LIMIT(1), .LOCK_WINDOW(1)
     ) dut (
         .REF(REF), .MID_OUT(MID_OUT), .OUT(MID_OUT), .RST_N(RST_N),
         .FCW(FCW), .START(START), .LOCK(1'b0),

@@ -70,3 +70,46 @@ module PLL_CELL_DFFQX1(input D, CK, output Q);
   sky130_fd_sc_hd__dfxtp_2 impl(.D(D), .CLK(CK), .Q(Q));
 endmodule
 `default_nettype wire
+
+// ---------------------------------------------------------------------------
+// dco_stage support stubs (dco_tuning_design.md).  No-op on this PDK: the
+// tuned multiphase DCO is an ihp-sg13g2 macro; these keep the module
+// elaborating everywhere.  A real build on another PDK needs its own
+// switched-cap implementation here.
+// ---------------------------------------------------------------------------
+module PLL_CELL_COARSE_BIT #(
+    parameter integer NFINGERS = 1,
+    parameter integer SW_M     = 1
+) (
+`ifdef WITH_POWER
+    inout  wire VDD, VSS,
+`endif
+    inout  wire NODE,
+    input  wire EN
+);
+    wire [NFINGERS-1:0] bot;
+    // Inert in digital simulation: the cap bank draws no logic events.
+    assign bot = {NFINGERS{1'bz}};
+endmodule
+
+module PLL_CELL_DECAP4 (
+`ifdef WITH_POWER
+    inout wire VDD, VSS
+`endif
+);
+    // No-op.
+endmodule
+// One fine bit group: NFINGERS small sg13_moscap_n unit fingers behind one
+// switch (the fine twin of PLL_CELL_COARSE_BIT).  No-op on this PDK.
+module PLL_CELL_FINE_UNIT #(
+    parameter integer NFINGERS = 1
+) (
+`ifdef WITH_POWER
+    inout  wire VDD, VSS,
+`endif
+    inout  wire NODE,
+    input  wire EN
+);
+    wire [NFINGERS-1:0] sink;
+    assign sink = {NFINGERS{1'bz}};
+endmodule

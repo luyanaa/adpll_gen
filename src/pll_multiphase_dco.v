@@ -63,6 +63,16 @@ module PLL_MULTIPHASE_DCO #(
     // parameter, not a runtime port: runtime phase/frequency control is the
     // PI's job (Stage B), this just centers the free-running period.  0 = no
     // extra load.
+    //
+    // DEFAULT CHANGED to 0 (2026-11-25, dco_tuning_design.md): the per-stage
+    // dco_stage coarse MOS-cap bank (COARSE[4:0]) is now the runtime
+    // frequency knob and replaces the static closing-node trim.  The
+    // parameter is kept for back-compat: a consumer that pins
+    // CLOSE_LOAD>0 AND ties COARSE=0 gets the legacy centered behavior
+    // (OpenSERDES pma/rx_clk8.sv / pma/tx_clk4.sv pass CLOSE_LOAD=1 and do
+    // not connect the new tuning ports yet -- with the ports left open the
+    // DCO internally interprets them as COARSE=0/FINE=0, the fast end, and
+    // CLOSE_LOAD=1 restores the old period).
     parameter integer CLOSE_LOAD  = 0
 ) (
 `ifdef WITH_POWER
@@ -74,7 +84,23 @@ module PLL_MULTIPHASE_DCO #(
     output wire                 DCO_OUT_N,
     // 2^PH_W equally spaced phases inside one period.  PHASE[0] is the first
     // tap after DCO_OUT; PHASE[n] is n * (period / 2^PH_W) later.
-    output wire [ (1<<PH_W)-1 : 0 ] PHASE
+    output wire [ (1<<PH_W)-1 : 0 ] PHASE,
+    // Runtime frequency tuning (dco_tuning_design.md).  Both words are
+    // PSEUDO-STATIC vs the ring: change them on the quarter-rate clock,
+    // never on a ring edge.
+    //
+    // COARSE[4:0]: binary MOS-cap bank word, one bank per stage, on every
+    //   stage output.  0 = fast end, 31 = slow end (~280 fF/stage on).
+    // FINE[5:0]: signed fine word, -31..+31, applied to every stage
+    //   (63 NAND3 switched-cap fingers/stage, +32 centered -> code 0 puts
+    //   32 fingers on / 31 off; symmetric by the fixed +1).
+    //
+    // Back-compat: leaving these ports UNCONNECTED elaborates fine and the
+    // DCO treats them as COARSE=0, FINE=0 (fast end of the new range --
+    // faster than the old CLOSE_LOAD-centered period; consumers that rely
+    // on the old centering keep CLOSE_LOAD>0 until they drive the words).
+    input  wire [4:0]           COARSE,
+    input  wire signed [5:0]    FINE
 );
     localparam integer NPHASE = 1 << PH_W;
     // NSTAGE = NPHASE*STEP + 1: odd (oscillates) and the tapped body is an
@@ -115,18 +141,60 @@ module PLL_MULTIPHASE_DCO #(
     assign DCO_OUT = loop_back;
 
     genvar i;
+    // ------------------------------------------------------------------
+    // Runtime tuning decode (dco_tuning_design.md "Ports").
+    //
+    // Back-compat with consumers that do not connect the new ports (rx_clk8,
+    // tx_clk4 today): an unconnected input presents all-z in SIMULATION,
+    // so map that to COARSE=0 / FINE=0 under `define PLL_DCO_SIM (testbench
+    // builds only -- synthesis ties the words structurally, and the z-compare
+    // path must never reach Yosys/OpenSTA).
+    //
+    // FINE decode happens ONCE here, not per stage: fine_idx = FINE + 32
+    // (the fixed +1 keeps at least one finger on at the -31 rail, so the
+    // on-count is continuous across the sign boundary: 1..63 as FINE goes
+    // -31..+31, code 0 = 32 on / 31 off).  The 6 bit lines (weights
+    // 1,2,4,8,16,32 fingers of NAND3 cap) are routed once and buffered
+    // locally in every stage; a 63-line thermometer cannot be routed
+    // identically down the snake (same argument the brief makes against
+    // thermometer COARSE) and per-stage wire-length skew becomes tap skew.
+    // ------------------------------------------------------------------
+`ifdef PLL_DCO_SIM
+    wire [4:0] coarse_c = (COARSE === 5'bzzzzz) ? 5'd0 : COARSE;
+    wire signed [5:0] fine_c = (FINE === 6'bzzzzz) ? 6'sd0 : FINE;
+`else
+    wire [4:0] coarse_c = COARSE;
+    wire signed [5:0] fine_c = FINE;
+`endif
+    // Centered 6-bit fine index: -31 -> 1, 0 -> 32, +31 -> 63.
+    wire [5:0] fine_idx = fine_c + 6'sd32;
+
+    // ------------------------------------------------------------------
+    // One repeated, heavily tuned inverting stage: dco_stage replaces the
+    // bare stage_inv.  Each stage output chain[i+1] carries:
+    //   - 5-bit binary sg13_moscap_n coarse bank (1:2:4:8:16 unit fingers,
+    //     each bit buffered in-place with dont_touch buf_1 so the placer
+    //     cannot clone the driver and move the cap off the tuned node --
+    //     the mid_delay.v clone-kills-tuning failure),
+    //   - 63 sg13g2_nand3_1 fine fingers, two-level cap trick (A1 on the
+    //     stage output, A0/A2 = fine bit and its complement, output open),
+    //   - per-bit dont_touch buf_1 (+ inv_1 complement) for all 11 bits,
+    //   - one sg13g2_decap_4 (supply bounce from coherent cap switching).
+    // The tap buffers stay UNLOADED: caps land on the stage OUTPUT
+    // (chain[i+1]), never on the tap_buf input, so tap load and tune load
+    // do not sum and the tap grid does not skew with the tuning code.
+    // ------------------------------------------------------------------
     generate
         for (i = 0; i < NSTAGE; i = i + 1) begin : stage
-            // One repeated inverting stage.  Keeping every stage prevents ABC
-            // from collapsing the line, exactly as the ring DCO base chain
-            // needs (see src/il_dco.v): a collapsed line shortens the period
-            // and destroys the phase grid.
             (* keep *) (* dont_touch = "true" *)
-            PLL_CELL_INVX1 stage_inv (
+            DCO_STAGE stage (
 `ifdef WITH_POWER
                 .VDD(VDD), .VSS(VSS),
 `endif
-                .I(chain[i]), .ZN(chain[i+1])
+                .IN   (chain[i]),
+                .OUT  (chain[i+1]),
+                .COARSE(coarse_c),
+                .FINE (fine_idx)
             );
         end
     endgenerate
@@ -195,5 +263,131 @@ module PLL_MULTIPHASE_DCO #(
     // Complementary end of the line for a differential buffer, if used.
     assign DCO_OUT_N = chain[NSTAGE-1];
 
+endmodule
+
+// ============================================================================
+// DCO_STAGE -- one tuned ring stage (dco_tuning_design.md "Stage cell").
+//
+// Placed as ONE macro cell per ring stage (~50 leaf cells, abutted).  All
+// content keep/dont_touch: ABC must not retime the chain, and the placer
+// must not clone the bit drivers off the tuned node.
+//
+// Cell mapping (IHP sg13g2):
+//   inv     sg13g2_inv_1        (the ring stage itself)
+//   coarse  sg13_moscap_n fingers behind sg13_lv_nmos switches,
+//           binary 1:2:4:8:16 unit fingers; bit 4 (16 fingers behind one
+//           switch) uses a 4x wider switch (brief risk 3)
+//   fine    63 sg13_moscap_n unit fingers (0.15u x 0.5u, ~0.7 fF) in
+//           binary groups 1:2:4:8:16:32 behind per-bit switches --
+//           measured deviation from the brief's NAND3 fine: the nand3_1
+//           input pin is ~0.4 fF with ~0.05 fF on/off contrast at ring
+//           edge rates (see the dco_stage comment for the numbers)
+//   bufs    5 coarse + 6 fine sg13g2_buf_1, dont_touch
+//   decap   sg13g2_decap_4 (coherent cap-switching supply bounce)
+// ============================================================================
+module DCO_STAGE (
+`ifdef WITH_POWER
+    inout  wire              VDD, VSS,
+`endif
+    input  wire              IN,
+    output wire              OUT,
+    input  wire [4:0]        COARSE,
+    input  wire [5:0]        FINE   // centered fine index, 1..63
+);
+    // The stage itself.
+    (* keep *) (* dont_touch = "true" *)
+    PLL_CELL_INVX1 stage_inv (
+`ifdef WITH_POWER
+        .VDD(VDD), .VSS(VSS),
+`endif
+        .I(IN), .ZN(OUT)
+    );
+
+    // ------------------------------------------------------------------
+    // Coarse bank: 5 binary bits, common word.  Each bit is buffered right
+    // here (dont_touch) before the switch gate: buffer output = the local
+    // gate drive, so the routed COARSE wire load sits on the buffer input,
+    // never on the tuned node.
+    // ------------------------------------------------------------------
+    genvar b;
+    generate
+        for (b = 0; b < 5; b = b + 1) begin : coarse_bit
+            wire g;
+            // Bit 4 drives 16 unit fingers through one switch; widen the
+            // switch 4x so its residual R does not dominate the on-state
+            // (brief risk 3).
+            (* keep *) (* dont_touch = "true" *)
+            PLL_CELL_BUFFX0 gbuf (
+`ifdef WITH_POWER
+                .VDD(VDD), .VSS(VSS),
+`endif
+                .I(COARSE[b]), .Z(g)
+            );
+            (* keep *) (* dont_touch = "true" *)
+            PLL_CELL_COARSE_BIT #(
+                .NFINGERS (1 << b),
+                .SW_M     (b == 4 ? 4 : 1)
+            ) bank (
+`ifdef WITH_POWER
+                .VDD(VDD), .VSS(VSS),
+`endif
+                .NODE(OUT), .EN(g)
+            );
+        end
+    endgenerate
+
+    // ------------------------------------------------------------------
+    // Fine bank: 63 unit fingers in binary groups 1,2,4,8,16,32 driven by
+    // the centered fine index bits, structured exactly like the coarse
+    // bank: sg13_moscap_n fingers behind one series sg13_lv_nmos switch
+    // per bit.  Per-bit dont_touch buffers, local to the stage.
+    //
+    // DEVIATION from the brief's NAND3 fine, measured justification
+    // (re-scope, 2026-11-25): sg13g2_nand3_1's B input presents only
+    // ~0.4 fF and ~0.05 fF on/off contrast through the two-level trick
+    // (ramp-extracted at both 1 GHz-class and LF rates) -- 63 fingers
+    // give ~3-6 fF of range, not the ±62 fF the brief assumes, while
+    // hanging ~25 fF of permanent A1 load that caps the SS fast end
+    // ~35 MHz below the signed-off 335 MHz.  A switched moscap unit
+    // finger gives a real 2-terminal cap (~0.7 fF/finger, works at ring
+    // edge rates because both plates are contacted) with ~zero off-state
+    // residual: LSB ~0.7 fF, total fine swing ~44 fF > 4x one coarse LSB
+    // (9.2 fF), fixed +1 of the centered decode keeps >=1 finger on at
+    // the -31 rail.
+    // ------------------------------------------------------------------
+    genvar f;
+    generate
+        for (f = 0; f < 6; f = f + 1) begin : fine_bit
+            wire g;
+            (* keep *) (* dont_touch = "true" *)
+            PLL_CELL_BUFFX0 gbuf (
+`ifdef WITH_POWER
+                .VDD(VDD), .VSS(VSS),
+`endif
+                .I(FINE[f]), .Z(g)
+            );
+            // Group of 2^f unit fingers behind one switch; the centered
+            // fine index FINE+32 (1..63) is the on-count, so code 0 = 32
+            // fingers on / 31 off and the on-count is continuous across
+            // the sign boundary (the "fixed +1").
+            (* keep *) (* dont_touch = "true" *)
+            PLL_CELL_FINE_UNIT #(
+                .NFINGERS (1 << f)
+            ) bank (
+`ifdef WITH_POWER
+                .VDD(VDD), .VSS(VSS),
+`endif
+                .NODE(OUT), .EN(g)
+            );
+        end
+    endgenerate
+
+    // Supply decoupling against coherent cap switching (brief risk 4).
+    (* keep *) (* dont_touch = "true" *)
+    PLL_CELL_DECAP4 decap (
+`ifdef WITH_POWER
+        .VDD(VDD), .VSS(VSS)
+`endif
+    );
 endmodule
 `default_nettype wire

@@ -112,6 +112,15 @@ def main() -> int:
     ap.add_argument("--jobs", type=int, default=2)
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--stopsim-ns", type=float, default=30.0)
+    # ngspice caps the transient step at tmax = min(tstep, tstop/50).  With
+    # tstep >= 0.5 ns the allowed step between quiet stretches is too large
+    # for the ring's sharp edges, the LTE controller collapses to minstep,
+    # and the run aborts "Timestep too small" (e.g. fine 4/6/8/10/17/19 at
+    # c8/m0).  Gear/looser reltol/more iterations do not fix it (Gear also
+    # flattens the ring and erases the feature); the only reliable lever is a
+    # smaller tmax.  0.25 ns converged on the hard codes (~5 min/run) and the
+    # full 32-code c8/m0 sweep reached 100 ns at every point (0 aborts).
+    ap.add_argument("--tstep", type=float, default=0.25)
     ap.add_argument("--append", action="store_true")
     args = ap.parse_args()
     out = Path(args.out)
@@ -132,7 +141,7 @@ def main() -> int:
         net.write_text(
             "* IHP dense DCO transient\n"
             f".inc test_dco_code_{stem}.sp\n"
-            f".tran 10n {args.stopsim_ns}n uic\n"
+            f".tran {args.tstep}n {args.stopsim_ns}n uic\n"
             ".SAVE V(OUT) V(MID_OUT)\n"
             ".control\nrun\n"
             f"write test_dco_{stem}.raw\n"
@@ -145,6 +154,14 @@ def main() -> int:
                            cwd=out, check=True, timeout=args.timeout, env=env,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             time, tr = read_raw(out / f"test_dco_{stem}.raw")
+            # A mid-run "timestep too small" abort leaves a partial .raw whose
+            # early edges are still in the startup transient; measuring that
+            # inflates the frequency (seen: fine 17 -> 322 MHz vs the true
+            # ~295 MHz).  Require the sim to have covered ~all of the window.
+            if time and time[-1] < 0.9 * args.stopsim_ns * 1e-9:
+                raise RuntimeError(
+                    f"sim aborted at {time[-1]*1e9:.2f} ns "
+                    f"(< 0.9*{args.stopsim_ns} ns); partial raw")
             p = period_of(time, tr["v(out)"])
             if p is None:
                 raise RuntimeError("no output edges")

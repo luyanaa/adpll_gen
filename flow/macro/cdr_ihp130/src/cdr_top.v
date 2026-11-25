@@ -55,7 +55,12 @@ module CDR_TOP #(
     output wire [ (1<<PH_W)-1 : 0 ] PHASE,      // all phases (observability)
     output wire                     SMP,        // sampled bit, valid next REF
     output wire                     SMP_VALID,  // SMP updated this cycle
-    output wire                     REC_CLK     // recovered sampling clock
+    output wire                     REC_CLK,    // recovered sampling clock
+    // Runtime DCO tuning words (dco_tuning_design.md): pseudo-static vs the
+    // ring, change on the quarter-rate clock.  Pseudo-static pass-through
+    // to u_dco; the LibreLane SDC sets_case_analysis on them.
+    input  wire [4:0]               COARSE,
+    input  wire signed [5:0]        FINE
 );
     localparam integer NPHASE = 1 << PH_W;
 
@@ -67,7 +72,8 @@ module CDR_TOP #(
     ) u_dco (
         .DCO_EN(DCO_EN),
         .DCO_OUT(dco_out), .DCO_OUT_N(dco_out_n),
-        .PHASE(PHASE)
+        .PHASE(PHASE),
+        .COARSE(COARSE), .FINE(FINE)
     );
 
     // ------------------------------------------------------------------

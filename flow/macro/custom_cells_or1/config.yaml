@@ -6,6 +6,18 @@ VERILOG_FILES:
   - dir::src/dly_stage_or1.v
   - dir::src/arbiter_or1.v
   - dir::src/dual_sampler_or1.v
+# OR1-specific fixes (from the PDK's own test/librelane/config.yaml):
+# - yosys 0.70 blackbox bug -> use the port-only _bb model + skip linter.
+# - OR1 diffusion is asymmetric -> keep row orientation, no mirroring.
+# - Wide DFF cells (DFFRX1=84 sites) can't DPL among narrow cells ->
+#   pin them FIRM on reserved rows via MACRO_PLACEMENT_CFG.
+RUN_LINTER: false
+PL_OPTIMIZE_MIRRORING: false
+MACRO_PLACEMENT_CFG: dir::macro_placement.cfg
+CELL_VERILOG_MODELS:
+  - /grid/OpenRule1um/OR1PDK/OR1/libs.ref/or1_fd_sc/verilog/or1_fd_sc_bb.v
+CELL_BB_VERILOG_MODELS:
+  - /grid/OpenRule1um/OR1PDK/OR1/libs.ref/or1_fd_sc/verilog/or1_fd_sc_bb.v
 PDK: or1
 STD_CELL_LIBRARY: or1_fd_sc
 VDD_PIN: vdd

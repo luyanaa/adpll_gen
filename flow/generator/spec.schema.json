@@ -117,6 +117,10 @@
           "type": "integer",
           "minimum": 1
         },
+        "LOCK_WINDOW": {
+          "type": "integer",
+          "minimum": 1
+        },
         "BASE_NDELS": {
           "type": "integer",
           "minimum": 1

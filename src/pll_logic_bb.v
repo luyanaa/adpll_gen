@@ -5,7 +5,7 @@ module pll_logic #(
     parameter integer FINE_NDELS = 31, // 5-bit fine
     parameter integer FILTER_BITS = 16,
     parameter integer IS_DSM = 1,
-    parameter integer DSM_DIV = 2,
+    parameter integer DSM_DIV = 4,
     parameter integer LOCKED_WAIT = 64,
     parameter integer FILTER_ILL = 16,
 `ifndef PLL_WITHOUT_DIVIDER

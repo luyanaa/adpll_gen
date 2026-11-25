@@ -23,7 +23,7 @@ module freq_ok_tb;
 
     pll_freq_lock #(
         .COARSE_NDELS(4), .MID_NDELS(4), .CNT_BITS(8),
-        .LOCK_TOL(1), .FREQ_LOSS(4), .LOCK_LIMIT(8)
+        .LOCK_TOL(1), .FREQ_LOSS(4), .LOCK_LIMIT(8), .LOCK_WINDOW(1)
     ) dut (
         .REF(REF), .MID_OUT(MID_OUT), .OUT(MID_OUT), .RST_N(RST_N),
         .FCW(FCW), .START(START), .LOCK(1'b0),

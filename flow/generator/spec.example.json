@@ -22,7 +22,8 @@
     "FILTER_BITS": 16,
     "FCW_BITS": 8,
     "CNT_EXTRA_BITS": 8,
-    "MEAS_PERIODS": 1
+    "MEAS_PERIODS": 1,
+    "LOCK_WINDOW": 256
   },
   "allow_experimental": false,
   "allow_macro_rebuild": true,

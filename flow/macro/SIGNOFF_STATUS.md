@@ -37,6 +37,11 @@ Evidence: `flow/macro/ring_dco_ihp130/OFFICIAL_SIGNOFF.md`,
 `macro_char` reports.  The official IHP deck is available from the local
 CIEL checkout; the LVS pass uses a top-port naming waiver.
 
+The "not characterized" jitter rows in this file are these physical macros.
+They are not moved by the estimated thermal signoff
+(`flow/characterization/JITTER_PHASE_NOISE.md`, 4.0 ps rms at an assumed
+100 kHz), which was computed on the c4/m9/f25 lock-point netlist.
+
 ## sky130 (functional LVS topology pass; official-deck compare caveat)
 
 | Check | Ring DCO | Counter/NCO |

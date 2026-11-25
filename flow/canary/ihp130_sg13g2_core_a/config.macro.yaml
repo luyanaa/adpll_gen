@@ -114,6 +114,19 @@ MACROS:
 PDN_MACRO_CONNECTIONS:
   - "pll_ana VDD VSS VDD VSS"
 
+# The macro's density fill sits 3 um inside its outline, but its LEF
+# obstruction stops well short of the left and top edges, so the router runs
+# Metal2/Metal3 into the fill (M2Fil.c / M3Fil.c / M3.b).  These block routing
+# over the filled area only.  They are removed again before stream-out, and
+# they stay 2.5 um inside the outline so the pins, which reach 0.72 um in from
+# the edge, remain reachable.
+ROUTING_OBSTRUCTIONS:
+  - ["Metal2", 42.5, 42.5, 197.5, 142.5]
+  - ["Metal3", 42.5, 42.5, 197.5, 142.5]
+  # Metal4 is vertical, so the router drops a track in the gap between the
+  # macro outline and the fill.  Cover that gap as well as the filled area.
+  - ["Metal4", 40.0, 40.0, 200.0, 145.0]
+
 # ---------------------------------------------------------------------------
 # Clocks
 # ---------------------------------------------------------------------------
@@ -164,6 +177,13 @@ STA_CORNERS:
   - nom_ss_125C_1v08
   - nom_ff_n40C_1v32
 
+# The resizer only repairs the default (TT) corner; the SS extrapolation of
+# the divider's high-fanout control nets (phase_last/high_phase/apply_pend)
+# lands ~0.10 ns below the TT slack.  Raising the setup slack margin makes
+# repair_timing hold a TT reserve that the SS corner then spends, rather
+# than leaving SS the only place the violation shows up.
+PL_RESIZER_SETUP_SLACK_MARGIN: 0.18
+
 # ---------------------------------------------------------------------------
 # RC extraction (same OpenRCX rules file as the digital canary)
 # ---------------------------------------------------------------------------
@@ -209,8 +229,8 @@ KLAYOUT_DRC_RUNSET: dir::build/pdk_root/ihp-sg13g2/libs.tech/klayout/tech/drc/ih
 # and MAGIC_PDK_SETUP to /dev/null, so Magic started with no tech: "gds read"
 # reported 'Nothing in cifinput section of tech file', read no geometry, and
 # wrote a 211-byte LEF containing 'MACRO (UNNAMED)'.
-MAGICRC: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2-signoff.magicrc
-MAGIC_TECH: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2-signoff.tech
+MAGICRC: dir::ihp130_signoff.magicrc
+MAGIC_TECH: dir::build/pdk_root/ihp-sg13g2/libs.tech/magic/ihp-sg13g2.tech
 MAGIC_LEF_WRITE_USE_GDS: true
 
 # SPICE extraction + LVS.  The macro is a hard macro with no gate-level view
@@ -221,6 +241,6 @@ MAGIC_LEF_WRITE_USE_GDS: true
 # "gds read" aborts PLL_ANALOG_MACRO on it.  The macro is abstracted for LVS
 # anyway, so its geometry never needs to be parsed: the DEF/LEF path is both
 # correct for this comparison and much faster.
-MAGIC_EXT_USE_GDS: false
+MAGIC_EXT_USE_GDS: true
 MAGIC_EXT_ABSTRACT_CELLS:
   - PLL_ANALOG_MACRO

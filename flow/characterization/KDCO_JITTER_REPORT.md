@@ -96,5 +96,7 @@ categories separate:
 KDCO  : local table values available; counter model corrected by /2
 jitter: counter deterministic quantization + physical ring macro transient
         spread reported; sky130 ring NOR2BX1 mapping fixed, post-fix
-        43.08/27.64/13.48 MHz (FF/TT/SS); no pnoise signoff
+        43.08/27.64/13.48 MHz (FF/TT/SS); no pnoise signoff.
+        Separate estimated thermal signoff (4.0 ps rms, assumed 100 kHz)
+        is in JITTER_PHASE_NOISE.md and does not apply to these macros.
 ```

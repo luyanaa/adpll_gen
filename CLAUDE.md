@@ -148,18 +148,225 @@ jitter, drift and a period-domain PSD — useful, and still not a jitter budget.
 
 ### Group 2 — real defects, with the fix entry point
 
-**a) DCO fine bank is non-monotonic (15 rising steps).**
-`flow/characterization/ihp_l3_dense/README.md`: fine 16/17/18/19 give
-287.56 / 322.73 / 281.28 / 354.08 MHz at 100 ns, i.e. a 41 MHz *drop* at code
-18.  This is not a startup artifact (sparse and dense agree at the overlap) and
-not an averaging problem.  `src/pll_ring_dco.v` models fine as a linear
-`FINE_STEP_NS * $countones(FINE_MUX)`, which cannot express the real
-behaviour: the fine mux loading changes with the code and some codes may
-sustain a different oscillation mode.  **This is the only defect here that
-makes the PLL functionally wrong** (a non-monotonic code breaks frequency
-acquisition), so it is the first thing to fix.  Needs circuit/layout-level
-debug plus per-code relabelling, using the 31-point scan
-`flow/characterization/ihp_l3_dense.py` already provides.
+**a) ~~DCO fine bank is non-monotonic~~ — RESOLVED as a measurement artifact
+(2026-11-23).**  The "15 rising steps" (e.g. f16/17/18/19 = 287.56/322.73/
+281.28/354.08 MHz) were timestep-grid + `uic` startup noise, not the code
+step.  Re-baselined at converged tstep (0.05/0.02, edge-interpolated) the
+c4/m9 f16..f31 table is strictly monotone, and the whole fine span is only
+~12.4 ps (~1.7 MHz @370 MHz, ≈0.8 ps/code) — 6–15× smaller than the reported
+"inversions," which were larger than the bank's total range.  Frequency for a
+fixed code is non-monotone *in tstep* (f16 = 377/334/357/366 MHz at
+0.25/0.1/0.05/0.02 ns), proving the earlier tables never converged.  No
+circuit respin needed for monotonicity.  See
+`flow/characterization/ihp_l3_dense/README.md` "RESOLVED" for the corrected
+mechanism (no DC contention — `LOAD` is a gate only; the cell is a floating
+gate-cap, monotone enough at the lock point).
+
+Remaining fine-bank facts (not defects): total authority ~1.7 MHz ≈ 55
+kHz/code ≈ ~150 ppm/LSB at 370 MHz — finer than the ±1000 ppm SerDes
+bang-bang band, so resolution is adequate for tracking (coarse/mid cover
+acquisition).
+
+**Gate-level closed-loop (2026-11-24, post-PNR + SDF, Icarus).**  Full report
+`sim/outputs/ihp-sg13g2/gate/GATE_TRANSIENT.md`.  Repro harness in that dir
+(`prepare_sim_inputs.py` fixes Icarus-vs-SG13G2 issues: `delayed_*` flop wires,
+`\.` escaped instance names, separate macro SDF on `dut.pll_ana`, `-ginterconnect`
+unavailable → INTERCONNECT dropped).  Headline: **no corner reaches FREQ_LOCKED**,
+for two independent real reasons — NOT a DCO polarity bug:
+
+1. **`MID_OUT` clock-domain constraint is wrong (real signoff bug).**  Both SDCs
+   constrain `MID_OUT` at `period 2.5` (400 MHz), but the DCO drives it at
+   0.7–1.4 GHz at code 0 and post-PNR `report_clock_min_period` says the domain
+   tops out at 0.87–0.94 GHz (FF).  The counter misses edges → `cnt_cap` shows
+   impossible deltas → FLL reads "too fast" → rails C/M → ERR (the FF runaway).
+   A design clocked at 400 MHz can't be signed off running at 0.7–1.4 GHz.
+2. **`sim_dco` is ~2× optimistic → FCW=16 is unreachable.**  The behavioral model
+   counts ~1 delay/bank; the gate ring has ~9 gate delays + load, and the L3
+   transistor-level map of the same cells gives only 212–624 MHz over the whole
+   code range.  FCW=16 (1.6 GHz) is beyond this ring; FCW=6 is already near the top.
+
+The "27 edges/REF = 2.7 GHz" FF state is a **measurement phantom** (glitch/parasitic
+count in the overclocked domain), not a DCO mode — code-up=slower held in the
+pre-runaway window (C0→2: 14→13→12).  Real fine-code dither was observed at FCW=6
+(TT 30↔31 periodic, SS 28–31) proving the gate SS-BBPD is live — but unlocked, not
+a post-lock limit cycle.
+
+**Mid LOAD clobber — confirmed a real digital-opt bug, not intentional CTS.**  In the
+taped `flow/macro/ihp130_sg13g2/PLL_ANALOG_MACRO.v`, 90 of the 120 mid NAND3
+dummy-load `B` pins sit on `net1`/`net2` = outputs of two `sg13g2_inv_4` clones of
+`COARSE_OUT` (`clone1`/`clone2`), only 30 on `mid/LOAD`.  Those clone nets feed ONLY
+the NAND3 B pins and nothing else — i.e. the P&R tool saw a heavy `LOAD` net and
+cloned buffers to share the drive, not knowing those NAND3 loads ARE the analog
+delay element.  Result: mid-bank tuning is near-dead on the taped macro and the
+ring runs FASTER than the 1.0/1.4/0.7 GHz the (corrected) canary copy measured —
+treat those as lower bounds.  Same root cause `il_dco.v` documents for `BASE_NDELS`
+(digital optimization silently rewrites an analog delay line).  The canary
+`hardmacro/` copy has all 120 on `LOAD` (corrected) but its SDF/Liberty came from
+the buggy netlist → the .v/SDF/Lib views are inconsistent and must be reconciled.
+Fix (2026-11-24): `(* keep *) (* dont_touch = "true" *)` added in `src/mid_delay.v`
+on the `LOAD` net, `inv_0`, every `inv_b`/`dyn` stage, and `inv_1` (same pattern as
+`il_dco.v` BASE_NDELS / `fine_delay.v`).  Behavioral regression unchanged
+(FREQ_LOCKED @578, c4/m7/f31) — attribute only affects the synth path, SIM branch
+untouched.  **Caveat:** RTL `dont_touch` guards yosys synthesis, but the tape-out
+clone came from the P&R/CTS stage — whether it propagates to OpenROAD's optimizer
+depends on LibreLane mapping it to a physical keep/`set_dont_touch`; confirm that
+in the macro flow, and reconcile the buggy `flow/macro/` vs corrected `hardmacro/`
+macro views.  This precedes any new MID_OUT period (the freq numbers shift once
+the load is restored).
+
+**2026-11-24 resolved (same day).**  The P&R-level guard was missing: the macro
+flow runs `SKIP_CLK_ISOLATE=1`, so `protect_analog` never ran and
+`repair_design` cloned the mid LOAD driver.  `pnr/tcl/pnr.tcl` now calls
+`protect_analog` for `TOP=PLL_ANALOG_MACRO`; the rebuilt macro netlist has
+**120/120** mid NAND3 `B` pins on `mid/LOAD` and **0** `clone1/clone2`
+(`pnr/outputs/ihp-sg13g2-sg13g2_stdcell/PLL_ANALOG_MACRO.v`).  All macro views
+(`.v`/SDF/Lib/LEF/GDS, per corner) were regenerated from that routed database
+and copied to `flow/macro/ihp130_sg13g2/` and the canary `hardmacro/`.  The
+corrected open-loop ring is 0.34/0.53/0.76 GHz (SS/TT/FF) — see
+`sim/outputs/ihp-sg13g2/gate/DCO_OPENLOOP_SWEEP.md`.  The FLL counter now runs
+on a real MID_OUT/2 `clk_div` (`FE_CLK_DIV` declared in `adpll.sdc`), MID_OUT
+periods are per corner (2.94/1.90/1.31 ns SS/TT/FF), and the gate transient
+reaches `FREQ_LOCKED` at every corner with an in-range FCW (TT 5, FF 6, SS 3) —
+FCW=16 is simply out of the corrected ring's range.  See
+`sim/outputs/ihp-sg13g2/gate/GATE_TRANSIENT.md` and
+`.../STA_MID_OUT_2026-11-24.md`.
+
+**Gate-level signoff chain RESOLVED (2026-11-24).**  The full ordered fix landed —
+`gate/GATE_TRANSIENT.md`, `STA_MID_OUT_2026-11-24.md`, `DCO_OPENLOOP_SWEEP.md`:
+
+- **mid LOAD clobber fixed end-to-end.**  RTL `dont_touch` alone was stripped by
+  `write_verilog -noattr`; added `protect_analog` (set_dont_touch) sourced in
+  `pnr/tcl/pnr.tcl` before placement → **120/120 mid NAND3 B on `mid/LOAD`,
+  0 clones** post-P&R.  Macro views regenerated from one routed DB; `flow/macro/`
+  and `hardmacro/` netlists now byte-identical (md5 ef42e7cb), SDF/Lib/GDS match.
+- **Corrected ring re-measured** (open-loop, waveform period): 0.34 / 0.53 /
+  0.76 GHz at C=M=F=0 (SS/TT/FF) — slower than the buggy-load numbers, so FCW=16
+  (1.6 GHz) is out of range by design, not a counter artifact.  In-range FCW locks.
+- **Real /2 counter clock restored** in `frequency_counter_frontend.v`
+  (`always @(posedge clk_div)`, nibble pre-decode kept, B12 enable muxes removed);
+  CTS built a real `clk_div` tree.  `FE_CLK_DIV` declared `-divide_by 2`.
+- **`adpll.sdc` per-corner** MID_OUT (TT 1.900 / FF 1.310 / SS 2.940 ns, guarded
+  `_CURRENT_CORNER_NAME`), `OUT_DIV2_CLK` = OUT/2, uncertainty 0.250→0.050.
+- **Result: MID_OUT + FE_CLK_DIV close at all corners** (period_min 0.41 ns vs
+  1.31 ns constraint = ~3× margin; counter no longer overclocked → no phantom
+  27-edge rail, no runaway).  **FREQ_LOCKED reached at every corner** with an
+  in-range FCW (TT fcw5@598, FF fcw6@598, SS fcw3@342) — vs ZERO before.
+- **STA now CLEAN at all corners** (`RUN_2026-11-24_13-12-07`): setup WNS 0.0,
+  hold WNS 0, TNS 0 at TT/FF/SS, 0 vivolators.  Root cause of the old −0.33/−0.26/
+  −0.52 setup + 17 hold was **NE_CLK_* (78 generated negedge clocks) in NO clock
+  group** — OpenSTA does NOT inherit a generated clock into its master's group via
+  `-source` (the old `adpll.sdc:343-345` comment claiming it does was wrong), so a
+  clock in no group is related to everything and the CKR in-reg setup + FILTER_OUT→
+  FCWF hold were timed synchronously.  Fix (SDC-only, `constraints/adpll.sdc`):
+  record each NE_CLK's master in `_declare_negedge_clocks`, delete the early
+  `set_clock_groups` (269-273) + the duplicate proc call (461-470) + the inert
+  `_4240_/Q` DCO_EN exemption (invalid startpoint, was silently inert), add ONE
+  `set_clock_groups -asynchronous` after `CK_CLK` with every NE_CLK in its master
+  group (+ the previously-missing `OUT_DIV_CLK`/`CK_CLK`, −`DSM_CK_CLK`).
+  Groups: REF=2 OUT=3 MID_OUT=6 INJ_EDGE=78 = 89, all once.  CKR (REF→MID_OUT
+  negedge sampler, `.Q` used as a clock) is a documented async CDC; FILTER_OUT→FCWF
+  is a safe bounded CDC (FCWF reloaded every DSM_CK_G edge, ±1 LSB one-cycle
+  transient, MASH-reshaper absorbs) — both waiver-by-group, no RTL change.
+- **dsm_run unclocked hole RESOLVED (2026-11-24).**  `dsm_run`/`dsm_run_cnt`
+  were the only flops clocked by `DSM_CK` (the divider output, *not* a declared
+  clock → 2 unclocked pins).  Fixed in `src/pll_logic.v` by clocking the ICG
+  startup counter on **MID_OUT** instead (counts `>= 2*DSM_DIV` MID_OUT edges =
+  the same 2 DSM_CK posedges, then freezes; `dsm_run` is now a combinational
+  compare).  Do NOT declare `DSM_CK_CLK` for this — that reintroduces the CTS
+  cascade with the `DSM_CK_G` tree (B20/B23).  Verified `RUN_2026-11-24_14-14-10`:
+  unclocked **0**, unconstrained **4** (only CK/OUT/OUT_DIV/`u_dsm_icg/GATE`,
+  benign), `DSM_CK` now drives only the ICG `.CLK`, **0 violators / WNS 0.0 at
+  TT/FF/SS**.  Lesson: the counter must be **minimal width** (4-bit for
+  `2*DSM_DIV=8`); an 8-bit counter perturbed placement and flipped an already
+  ~38 ps-margin OUT-divider SS path (`div.phase_last → out_reg/high_phase`) to
+  −25.6 ps — a real headroom warning even though the 4-bit version closes clean.
+- **Post-lock limit cycle — RESOLVED (2026-11-24): the "rail" was a 10× under-range
+  MODEL artifact, not an architecture defect. The real fine bank locks.**
+  The earlier diagnosis (fine span ~2.2 ps → phase loop rails at 0/31) came from
+  `sim_dco.v`'s fine table, whose whole span was only 2.24 ps (23.77→26.01 ps).  The
+  converged-timestep SPICE characterization (`ihp_l3_dense/README.md`, RESOLVED
+  2026-11-23, tstep 0.02) measures the real fine authority at **~0.8 ps/code,
+  ~25 ps full span** (f16→f31 = 12.4 ps).  Fixing the `sim_delay_fine` table to
+  monotone 0.8 ps/code (code-0 base unchanged, span 24.8 ps) makes the behavioral
+  loop behave like the real bank: **`pll_macro_top` at FCW=16 now reaches `LOCKED=1`**
+  (was never), COARSE=4/MID=3 static post-lock, and **FINE dithers {11,12,14,15}
+  (1103 transitions in the dwell), SS-BBPD toggles 01↔11, inst_freq 15/16/17** — a
+  real, stable ±2-code bang-bang limit cycle centered at FINE≈13.  **No in-path fine
+  actuator redesign is needed** (and it would lose the 0.8 ps resolution — min
+  in-path step is ~one gate ≈10–15 ps).
+  - Still true: the **gate SDF cannot model MID/FINE** (load-trim varactor, output
+    dangling; SDF IOPATH is load-independent → measured zero authority), so the gate
+    phase-loop limit cycle is unmeasurable with a digital SDF netlist — it needs a
+    code-dependent fine/mid delay model.  Gate `FREQ_LOCKED` is an injection-lock
+    result.  Probe caveat: gate TB CSV samples `ss_bbpd` at `negedge REF` ~250 ps
+    before the DLF `negedge INJ_EDGE` edge (SS misreports 01 vs real 11).
+  - Frequency-alias rejection (0T/0.5T/2T counter FCW-ratio) stands.
+  - Caveat: the working proof is the behavioral model with *corrected* fine authority
+    (period authority is the governing parameter); a transistor-level closed loop at
+    the load-trim would be the gold standard but is not cheap.  Real hardware may
+    differ by the load-trim's edge-shape effects — but not by the 10× range gap.
+  - **Gate code-dependent model built (2026-11-24, `gate/CODE_DEP_DELAY.md`) — gate
+    still does NOT dither, for a DIFFERENT reason.**  `dly_inv_code` added to
+    `fine/inv_1_impl` (BASE 35 ps + 0.8 ps/code) and `mid/inv_1_impl` (115 + 1.03),
+    verified open-loop: FINE 0→31 adds ~49 ps, MID ~30 ps (2× the in-path table because
+    each gate is seen on rise+fall), code 0 unchanged.  SS_BBPD probe moved to
+    `negedge INJ_EDGE`.  But gate FCW=5/6 closed loop STILL rails: post-lock FINE
+    frozen at 0, SS_BBPD static `01`, and augmented == un-augmented byte-identical
+    (FINE pinned at code 0 → the code term never activates).  Cause: the real ring
+    **injection-locks to the integer REF ratio and pins the DCO phase off the BBPD
+    crossing** by more than fine range can pull → BBPD gives one symbol → DLF rails.
+    Behavioral (free-running DCO, no injection lock) dithers because its phase walks
+    freely.  So the gate cannot demonstrate a digital-BBPD limit cycle — either
+    injection locking is the real phase mechanism (then the digital loop is
+    redundant, and injection lock still = full-period phase lock), or the BBPD
+    sample point must be co-designed to the injection-locked phase.
+  - **DECISION (2026-11-24): accept injection locking as the phase mechanism; close the
+    limit-cycle item.**  The ring injection-locks to the integer REF ratio =
+    full-period phase lock (0T/0.5T/2T already rejected by the FCW-ratio counter).  The
+    digital BBPD phase loop is redundant at gate level but harmless.  For the SerDes,
+    the ADPLL only needs to supply a stable clock and the CDR (tap-muxed) does the data
+    phase tracking; a gate-level digital-BBPD limit cycle is **not** a signoff
+    requirement.  Code-dependent gate model (`dly_inv_code`, `gate/CODE_DEP_DELAY.md`)
+    stays as the tools for any future phase-loop work.  Behavioral FCW=16 free-running
+    still shows the digital loop *can* lock+dither with correct fine authority (record
+    of what the load-trim achieves when not injection-dominated).  Note: behavioral
+    FCW=5 churns (does not lock), so FCW=16 is the only behavioral lock point.
+- (was: mid LOAD keep RTL only — now superseded by the full P&R protection above.)
+
+**DCO phase noise (2026-11-23, ISF/Hajimiri method).**  Full ISF extraction on
+the IHP netlist — `sim/outputs/ihp-sg13g2/ISF_NOTES.md`, `test_dco_noise.csv/pdf`.
+At the **ADPLL lock point c4/m9/f25 (f0 = 359.30 MHz)** — `lock/`: L(1 MHz) =
+**−98.34 dBc/Hz** (thermal floor −112.9), 1/f³ corner 27.7 MHz, 10 MHz −127.2,
+100 MHz −151.9.  Reference c8/m8/f8 (275.9 MHz): L(1 MHz) = −102.4.  Measured
+delta +4.04 dB at 1 MHz ≈ the f0⁴ rescale (f0² under-predicts by ~2 dB).
+Two caveats on the record: (1) `psp103.osdi` emits ZERO small-signal noise in
+this ngspice-44.2 build, so the 15 noise LUTs are synthesized (sfl + 4kT·(2/3)gm)
+— absolute dBc/Hz is approximate, the ISF shape + per-net ranking is
+timestep-accurate, the flicker corner is pessimistic (real ~0.1–1 MHz).  (2)
+The dominant contributor is `xdco.mid/load` ~77% (mid-stage load) at BOTH codes
+— the lever is lower gm/flicker or more swing there.  Runs at 1 ps (19 lock /
+27 main nets); needed a tmpfile() LD_PRELOAD shim because /tmp tmpfs filled
+(glibc ignores $TMPDIR).
+
+**Estimated locked-jitter signoff (2026-11-24).**  pnoise cannot be run here,
+so the thermal column of the lock-point ISF is signed off through a
+first-order high-pass at an **assumed** 100 kHz: **4.0 ps rms**, tag
+`ESTIMATED_THERMAL_HP_100kHz`.  The synthesized-flicker total is not signed
+off, and the 1 MHz row is not this loop's bandwidth.  Record:
+`flow/characterization/JITTER_PHASE_NOISE.md`, `lock/ISF_LOCK_NOTES.md` §7.
+`FAIL_UNCHARACTERIZED` for production/PEX is unchanged.
+
+**Model polarity fixed (2026-11-23).**  `pll_ring_dco.v` and
+`pll_counter_dco.v` modelled `code-up = faster` (`period = BASE −
+STEP·countones` / `increment = 5 + 2·countones`), inverted against both the
+real cells (measured: code-up = slower, on all three banks — the coarse
+tap-select folds the chain back through more stages; the mid/fine dangling
+NANDs gate-load the shared node harder) AND the `freq_lock` loop, which
+already assumes code-up = slower (it *decrements* the code to speed up).  Both
+models now use code-up = slower; `arch_models_tb` asserts max-code < min-code
+frequency.  `sim_dco_lock.v` was already correct (`period = BASE +
+STEP·code`).  Only the behavioral Core B/C models were wrong — the transistor
+`PLL_ILDCO` path was always correct.
 
 Note this is a *different* defect from the DLL segment DNL fixed in `222b70f`
 (delay line, now 0.00 LSB over 280 codes).  Do not conflate them.
@@ -324,6 +531,22 @@ Fix (done in a patched copy, not in the PDK):
 Applied to `/tmp/opencode/pdkroot/ics55/libs.ref/ics55_LLSC_H7CR/cdl/ics55_LLSC_H7CR_patched.cdl`; point `models.inc` at that file.  Verify with a
 minimal deck: with the patched header the `Too many parameters` error is gone
 with or without the `/` separator.
+
+**Status: blocked.**  `test_dco_isf_wave.sp` gets through model loading and
+into the transient, but the ics55 CDL cannot be parsed by this ngspice build,
+so no transistor-level ics55 number can be produced on this host.  A CDL patch
+that adds default values to `.SUBCKT INV` fixes a two-line reproduction but NOT
+the real file: the same `Too many parameters` still fires for `BUFX*`, and
+ngspice reports the name lower-case even though the CDL contains only one
+upper-case `INV` definition.  `params:` as the formal-parameter keyword makes it
+report `.subckt ... .ends` mismatch instead.
+
+Options, in order of cost:
+
+1. use a different ngspice build (the PDK's own wrapper targets a specific one);
+2. convert the CDL to ngspice-native form once (drop `/`, push `pl/pw/nl/nw`
+   into explicit device widths) — mechanical but touches 1473 calls;
+3. characterise the DCO on IHP instead, whose PSP103 OSDI path does work.
 
 Also fixed in `src/spice_netlist.py`: `_split_params` now drops the bare `/`
 token, so the HSPICE form `X... Y / INV pl=...` no longer leaves the real

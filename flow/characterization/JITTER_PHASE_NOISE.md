@@ -6,10 +6,13 @@ The DCO now has:
 - routed macro PEX extraction;
 - one-code PEX-capacitance and TT/SS/FF frequency checks.
 
-Jitter and phase noise are **not** signoff results yet.  A new
-`kdco_jitter.py` report now extracts local KDCO and deterministic transient
+The macro transients below are **not** a jitter signoff.  A
+`kdco_jitter.py` report extracts local KDCO and deterministic transient
 period spread from the existing IHP table/PEX raw; see
 `KDCO_JITTER_REPORT.md`.  It still does not provide random/phase noise.
+The one signed-off jitter number is the estimated thermal residual in
+[Estimated signoff](#estimated-signoff-2026-11-24), and it does not cover
+these transients.
 
 ## Physical macro update (2026-11-01)
 
@@ -55,6 +58,46 @@ The alternative engines do not yet run the models cleanly:
 3. Integrated RMS jitter over a defined bandwidth.
 4. At least TT and one slow/fast corner, with the same PEX netlist.
 
-Until then, the generator keeps production/PVT/PEX requests at
-`FAIL_UNCHARACTERIZED`, and the PEX results are explicitly labelled
-`L3_PEX_CAP`, not `L3_PEX_PVT`.
+That list is still unmet, so the generator keeps production/PVT/PEX
+requests at `FAIL_UNCHARACTERIZED`, and the PEX results stay labelled
+`L3_PEX_CAP`, not `L3_PEX_PVT`.  A pnoise run would replace the estimate
+below; until then the estimate is the number this project quotes.
+
+## Estimated signoff (2026-11-24)
+
+`ngspice-44.2` has `.pss` and no `.pnoise`.  The one `.pss` attempt on this
+DCO did not converge, and Xyce 7.10 will not load `psp103.osdi`, so a
+closed-loop noise simulation cannot be run here.  The locked residual is
+signed off from the free-running ISF instead.
+
+**Signed off: 4.0 ps rms, thermal only.**  Tag `ESTIMATED_THERMAL_HP_100kHz`.
+
+| item | value |
+|---|---|
+| netlist | IHP lock point c4/m9/f25, free-running, f0 = 359.30 MHz |
+| spectrum | `sim/outputs/ihp-sg13g2/lock/test_dco_noise.csv`, thermal column |
+| floor | L_thermal(1 MHz) = −112.91 dBc/Hz, `A = L·f² = 5.112 Hz` |
+| transfer | `H_err = (f/fc)² / (1+(f/fc)²)`, fc = **100 kHz, assumed** |
+| integral | `2·L·|H_err|²` from 100 Hz to 1 GHz, 71-point trapezoid: 3.987 ps |
+| check | closed form `σ_φ² = π A / (2 fc)` over 0–∞: 3.969 ps |
+
+The 4.0 ps figure is the grid integral, rounded.  Derivation and the
+rejected columns are in `sim/outputs/ihp-sg13g2/lock/ISF_LOCK_NOTES.md` §6–§7.
+
+The 100 kHz bandwidth was not measured.  `src/dlf_design.py`'s 1 MHz target
+does not include `KDCO·Kpd`, and the fine `KDCO` table changes sign, so it
+cannot be used to pick `fc`.  If a bandwidth is measured later, rescale the
+thermal number only: `σ_t = 4.0 ps · sqrt(100 kHz / fc)`.  Do not quote the
+1 MHz row (1.3 ps) as this loop.
+
+Same grid with the high-pass removed integrates to 144 ps rms of thermal
+jitter.  A loop slower than 100 kHz lands between 4.0 ps and that 144 ps.
+4.0 ps is therefore conditional on the assumed bandwidth, not an
+unconditional upper bound.
+
+Not part of this signoff:
+
+- the synthesized flicker, and the total column that it dominates (53 ps at
+  the same 100 kHz; the 27.7 MHz corner is an upper bound, §3 of the ISF note);
+- SS/FF, or the same integral on a PEX-annotated netlist;
+- the physical ring and counter macros in `flow/macro/SIGNOFF_STATUS.md`.

@@ -8,7 +8,7 @@ module PLL_RING_TOP #(
     parameter integer FINE_NDELS = 31,
     parameter integer FILTER_BITS = 16,
     parameter integer IS_DSM = 1,
-    parameter integer DSM_DIV = 2,
+    parameter integer DSM_DIV = 4,
     parameter integer LOCKED_WAIT = 64,
     parameter integer FILTER_ILL = 16,
     parameter integer LOCK_TOL = 1,
@@ -19,6 +19,7 @@ module PLL_RING_TOP #(
     parameter integer FCW_BITS = 8,
     parameter integer CNT_EXTRA_BITS = 8,
     parameter integer MEAS_PERIODS = 1,
+    parameter integer LOCK_WINDOW = 256,
     parameter integer BASE_NDELS = 768
 ) (
     input REF, RST_N, INJ_EN,
@@ -52,7 +53,8 @@ module PLL_RING_TOP #(
         .DIV_INIT(DIV_INIT),
         .FCW_BITS(FCW_BITS),
         .CNT_EXTRA_BITS(CNT_EXTRA_BITS),
-        .MEAS_PERIODS(MEAS_PERIODS)
+        .MEAS_PERIODS(MEAS_PERIODS),
+        .LOCK_WINDOW(LOCK_WINDOW)
     ) u_logic (
         .REF(REF), .OUT(OUT), .MID_OUT(MID_OUT), .INJ_EDGE(INJ_EDGE),
         .RST_N(RST_N), .SS_BBPD(SS_BBPD),

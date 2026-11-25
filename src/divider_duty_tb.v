@@ -24,7 +24,7 @@ module divider_duty_tb;
     wire [W-1:0] divq;
 
     pll_mod_divider #(.W(W), .DIV_INIT(2)) dut (
-        .clk(clk), .rst_n(rst_n), .set_div(set_div), .load_div(load),
+        .clk(clk), .rst_n(rst_n), .rst_n2(rst_n), .set_div(set_div), .load_div(load),
         .out(out), .div_q(divq), .div_even(div_even)
     );
 

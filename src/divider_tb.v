@@ -17,7 +17,7 @@ module divider_tb;
     pll_fix_divider #(.DIV(3)) d3 (.clk(clk), .rst_n(rst_n), .out(out3));
     pll_fix_divider #(.DIV(4)) d4 (.clk(clk), .rst_n(rst_n), .out(out4));
     pll_mod_divider #(.W(8)) dm (
-        .clk(clk), .rst_n(rst_n),
+        .clk(clk), .rst_n(rst_n), .rst_n2(rst_n),
         .set_div(set_div), .load_div(load_div), .out(outm),
         .div_q(divq)
     );

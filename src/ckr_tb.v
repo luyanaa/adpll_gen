@@ -68,6 +68,7 @@ module ckr_tb;
         .FILTER_ILL(2),
         .LOCK_COUNT(4),
         .LOSS_COUNT(2),
+        .LOCK_WINDOW(1),
         .FCW_BITS(FCW_BITS),
         .DIV_BITS(8)
     ) dut (

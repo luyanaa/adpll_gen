@@ -4,8 +4,10 @@
 库筛选实验以及版图后特性表征。项目有意支持多 PDK：ics55、GF180mcu、sky130、
 IHP SG13G2 和 ETRI050。
 
-当前状态是**实现特性表征**，不是产品签核。完整的模拟 DCO/PLL 特性（相位噪声、
-注入范围、锁定抖动、全顶层功耗）尚未完成。
+当前状态是**实现特性表征**，不是产品签核。注入范围、全顶层功耗和闭环 pnoise
+抖动尚未完成。有一个估算值已经签核：IHP 锁定点的热噪声残差 **4.0 ps rms**，
+环路带宽按 100 kHz 假定（`flow/characterization/JITTER_PHASE_NOISE.md`）。
+闪烁、其它 PDK 和 PEX/PVT 仍未表征，生产请求仍返回 `FAIL_UNCHARACTERIZED`。
 
 > 英文版（默认）：[`README.md`](README.md)
 
@@ -103,7 +105,8 @@ DCO 特性表征状态：
 `flow/characterization/macro_char.py` 复现（TT/SS/FF 门级 STA、环形瞬态 PVT、
 确定性周期离散度、精确计数器 NCO 量化）。sky130 环形在构建后的网表中不起振，
 sky130 计数器在 SS 100 MHz TICK 下 setup 失败；两者都记为失败而非签核。
-不声称随机抖动或相位噪声签核。见 `flow/characterization/macro_char/CHARACTERIZATION.md`。
+这些宏没有 pnoise 签核；估算的 4.0 ps 热噪声残差不适用于它们。
+见 `flow/characterization/macro_char/CHARACTERIZATION.md`。
 
 两个宏的最终数据库现已用 OpenROAD RCX 提取布线寄生。DCO 网络电容回标到单一码：
 
@@ -311,8 +314,9 @@ setup +2.71 ns / hold +0.143 ns。
 
 ### 完整 PLL
 
-完整的 `pll` 顶层尚未与硬宏和数字控制视图装配。目前没有全顶层锁定时间、
-抖动、相位噪声或功耗特性。
+完整的 `pll` 顶层尚未与硬宏和数字控制视图装配。目前没有全顶层锁定时间或
+功耗特性。唯一的抖动数字是 `flow/characterization/JITTER_PHASE_NOISE.md`
+里的 IHP 锁定点热噪声残差估算，不是全顶层 pnoise 结果。
 
 **IHP SG13G2 投片就绪度评估见 [`flow/IHP130_TAPEOUT_GAPS.md`](flow/IHP130_TAPEOUT_GAPS.md)。**
 
@@ -386,10 +390,12 @@ flow/canary/ETRI050_fd_sc_core_a/
 ## 9. 尚未表征的项目
 
 - DCO 全范围实测频率、调谐范围、单调性（宏 TT/SS/FF 与局部码步进现已覆盖）；
-  随机抖动与相位噪声
+  pnoise 随机抖动。IHP 锁定点热噪声残差已按估算签核（假定 100 kHz 下 4.0 ps rms），
+  不是 pnoise，也不含闪烁
 - 注入锁定范围、锁定时间、假锁行为
-- DCO 相位噪声 / ISF 分析
-- 完整 ADPLL RMS 抖动与积分相位噪声
+- 自由振荡 ISF 之外的 DCO 相位噪声。c4/m9/f25 与 c8/m8/f8 的 ISF 已有；
+  `psp103.osdi` 不输出噪声，绝对电平是合成的
+- 闭环 pnoise RMS 抖动。上面的热噪声积分是签核替代值；合成闪烁那一列不是
 - 全顶层功耗、面积、锁定时间、BER
 - 封装/板级/PDN 签核
 - GF180、sky130、IHP 或 ETRI050 的 foundry 级 DRC/LVS

@@ -210,7 +210,8 @@ def _wrapper_text(resolved: dict[str, Any]) -> str:
         "    parameter integer LOCK_COUNT = 16,",
         "    parameter integer LOSS_COUNT = 4,",
         f"    parameter integer CNT_EXTRA_BITS = {p.get('CNT_EXTRA_BITS', 8)},",
-        f"    parameter integer MEAS_PERIODS = {p.get('MEAS_PERIODS', 1)}",
+        f"    parameter integer MEAS_PERIODS = {p.get('MEAS_PERIODS', 1)},",
+        f"    parameter integer LOCK_WINDOW = {p.get('LOCK_WINDOW', 256)}",
     ]
     inst_common = [
         "        .FILTER_BITS(FILTER_BITS),",
@@ -221,7 +222,8 @@ def _wrapper_text(resolved: dict[str, Any]) -> str:
         "        .LOCK_COUNT(LOCK_COUNT),",
         "        .LOSS_COUNT(LOSS_COUNT),",
         "        .CNT_EXTRA_BITS(CNT_EXTRA_BITS),",
-        "        .MEAS_PERIODS(MEAS_PERIODS)",
+        "        .MEAS_PERIODS(MEAS_PERIODS),",
+        "        .LOCK_WINDOW(LOCK_WINDOW)",
     ]
     params = "\n".join(core_params + common_params)
     inst = "\n".join(inst_params + inst_common)

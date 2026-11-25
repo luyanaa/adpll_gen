@@ -345,6 +345,19 @@ endmodule
 
 // We also define the used cells as blackboxes for yosys synthesis
 `ifdef YOSYS
+// PDK primitive: MOS capacitor (gate = G, second plate = SUB).
+(* blackbox *)
+module sg13_moscap_n (G, SUB);
+  // Both terminals carry the cap current; neither drives.
+  inout G;   // gate on the tuned node
+  inout SUB; // bottom plate -> series switch
+endmodule
+// PDK primitive: LV NMOS (the switched-cap series switch).
+(* blackbox *)
+module sg13_lv_nmos (D, G, S, B);
+  inout D;
+  input  G, S, B;
+endmodule
 (* blackbox *)
 module sg13g2_inv_1 (
 `ifdef WITH_POWER
@@ -500,5 +513,103 @@ module sg13g2_tiehi (
 `endif
 	output L_HI;
 endmodule
+(* blackbox *)
+module sg13g2_decap_4 (
+`ifdef WITH_POWER
+  VDD, VSS
 `endif
+);
+`ifdef WITH_POWER
+  inout VDD, VSS;
+`endif
+endmodule
+`endif
+
+// ============================================================================
+// dco_stage support cells (dco_tuning_design.md).  These are the only new
+// PLL_CELL_* wrappers; every other PDK's pll_cells_*.v carries a functional
+// no-op stub so the DCO elaborates everywhere, and only ihp-sg13g2 maps them
+// to real devices (sg13_moscap_n has no equivalent elsewhere).
+// ============================================================================
+
+// One coarse bit: NFINGERS parallel sg13_moscap_n unit fingers (gate on a
+// switched plate node, bottom plate hard to VSS) behind ONE sg13_lv_nmos
+// switch on the GATE side (SW_M width multiplier, 4 for the 16-finger bit).
+//
+// Gate-side switching (measured 2026-11-25): with the switch on the plate
+// side an OFF finger still couples its 9.2 fF gate to the ring node through
+// the floating plate (~1.3 fF/finger, x31 = dead fixed load that measured
+// ~4x period on the 25-stage ring).  With the switch on the gate side an
+// OFF finger's gate floats and presents only the switch junction residual
+// (~0.2 fF/finger); ON fingers see the full cap through R_on (transparent:
+// 147 fF behind a 4x switch is tau ~ 0.4 ns << T/2).
+module PLL_CELL_COARSE_BIT #(
+    parameter integer NFINGERS = 1,
+    parameter integer SW_M     = 1
+) (
+`ifdef WITH_POWER
+    inout  wire VDD, VSS,
+`endif
+    inout  wire NODE,   // the tuned stage output
+    input  wire EN      // buffered COARSE bit (switch gate)
+);
+    wire gn;
+    genvar f;
+    generate
+        for (f = 0; f < NFINGERS; f = f + 1) begin : finger
+            (* keep *) (* dont_touch = "true" *)
+            sg13_moscap_n cap (
+                // Unit finger ~9.2 fF (w=0.72u x l=1.0u plate at the
+                // measured 12.7 fF/um^2 density).
+                .G(gn), .SUB(VSS)
+            );
+        end
+    endgenerate
+    (* keep *) (* dont_touch = "true" *)
+    sg13_lv_nmos sw (
+        .D(gn), .G(EN), .S(NODE), .B(VSS)
+    );
+endmodule
+
+// Per-stage supply decoupling.
+module PLL_CELL_DECAP4 (
+`ifdef WITH_POWER
+    inout wire VDD, VSS
+`endif
+);
+    (* keep *) (* dont_touch = "true" *)
+    sg13g2_decap_4 impl(
+`ifdef WITH_POWER
+        .VDD(VDD), .VSS(VSS)
+`endif
+    );
+endmodule
+
+// One fine bit group: NFINGERS small sg13_moscap_n unit fingers (0.15u x
+// 0.5u, ~0.7 fF) behind ONE sg13_lv_nmos gate-side switch -- the fine twin
+// of PLL_CELL_COARSE_BIT.
+module PLL_CELL_FINE_UNIT #(
+    parameter integer NFINGERS = 1
+) (
+`ifdef WITH_POWER
+    inout  wire VDD, VSS,
+`endif
+    inout  wire NODE,   // the tuned stage output
+    input  wire EN      // buffered fine bit (switch gate)
+);
+    wire gn;
+    genvar f;
+    generate
+        for (f = 0; f < NFINGERS; f = f + 1) begin : finger
+            (* keep *) (* dont_touch = "true" *)
+            sg13_moscap_n cap (
+                .G(gn), .SUB(VSS)
+            );
+        end
+    endgenerate
+    (* keep *) (* dont_touch = "true" *)
+    sg13_lv_nmos sw (
+        .D(gn), .G(EN), .S(NODE), .B(VSS)
+    );
+endmodule
 
