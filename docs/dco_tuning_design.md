@@ -95,12 +95,32 @@ deliverable. Pass condition: each claimed rate inside the coarse+fine range at
 its corner with ≥2 fine LSB headroom each side, monotone, adjacent-code overlap
 ≥2 fine LSB. Matches how real SerDes parts are speed-binned.
 
-**Fast-end fix**: the fine bank's 63 NAND3 `A1` pins hard-tied to the stage
-output (`pll_multiphase_dco.v:372`) cost ~35 MHz of fast-end (permanent ~170 fF
-at FINE=0). Gate or reduce the fine fingers so FINE=0 does not load the stage
-with 63 hard-tied gates; recover the SS fast end toward the old ~335 MHz. The
-fine bank only needs to cover one coarse LSB (~8–15 MHz) with 2× margin, not
-±30 MHz, so fewer fingers suffice.
+**Measured reconciliation 2026-11-25 (device-level SPICE, SS 1.08 V/125 C,
+pre-layout).** This supersedes the earlier "the 335 is an STA artifact"
+suspicion — it is NOT; both numbers are correct and reconciled:
+
+- The old signed-off **335 MHz @ SS** = ONE routed traversal 1.49 ns × 2
+  (travelling-wave period), *bankless* ring. Valid.
+- New tuned ring, **controlled** measurement (identical init/release/stop/
+  corner/OSDI/extraction; only stage content differs — the earlier "inv-only
+  154 MHz" was a mislabeled deck, retracted):
+  - inv-only (no banks) traversal 1.282 ns → **390 MHz** (14% faster than the
+    routed 335, correct sign for pre-layout);
+  - tuned fastest code c0/f−31 → **185 MHz** (the real usable SS fast end).
+- Root cause of the 185 vs 335 gap: the banks' **fixed load = 5.7 fF/stage**
+  (direct extraction) ≈ 30 ps/stage at SS. Load-trim alone (only ~2 fF
+  removable) caps the fast end at ~205 MHz. NAND3 fine bank already replaced
+  by switched `sg13_moscap` (nand3 B-pin ~0.4 fF was unusable); switches are
+  gate-side (plate-side leaked 1.3 fF/finger).
+- c31/f0 startup **dead state is real** (init 0 == init X: one edge then
+  DC-latch) — brief risk 7; needs the one-shot kick.
+
+**Decision: stage drive inv_1 → inv_4 (uniform, all 25 stages; topology/taps/
+closure untouched), + one-shot startup kick.** `inv_2` gives ~250 MHz @ SS
+*pre-layout*, and the routing penalty (~16%, from the 1.282→1.49 ns traversal)
+drops it to ~215 routed → **fails 250 @ SS**. `inv_4` gives ~310 pre-layout →
+~267 routed ≥ 250 with margin, and clears 500 @ FF. The ≥250 **routed** number
+is confirmed at M4 post-route.
 
 ## PI stays a phase actuator (separate)
 

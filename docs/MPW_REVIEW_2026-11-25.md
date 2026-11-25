@@ -26,12 +26,19 @@ OpenSERDES §3). Trace: that 335 is commit `9b4452d`'s **STA linearization**
 `set_disable_timing` single-traversal path estimate, **not a measured
 oscillation**.
 
-A transistor-level SPICE run (this session, ngspice+OSDI, SS 1.08 V/125 C) on
-the same 25-stage ring gives **154–185 MHz**. That is a ~2.2x per-stage gap
-(STA ~57 ps/stage vs SPICE ~125 ps/stage). The reconciliation (SPICE-vs-STA,
-plus an internally-inconsistent fixer measurement — "tuned" faster than
-"inv-only", which is physically impossible) is **still open**; the definitive
-number is pending and will update this doc.
+**Reconciliation complete (2026-11-25, device-level, controlled).** Both
+numbers are correct — 335 is *not* an artifact:
+- The signed-off **335 MHz @ SS** = ONE routed traversal 1.49 ns × 2,
+  **bankless** ring. Valid.
+- The new **tuned** ring at fastest code (c0/f−31) = **185 MHz @ SS**
+  (pre-layout). The earlier "inv-only 154 MHz" was a mislabeled deck (retracted;
+  real inv-only = 390 MHz). The drop is the banks' **5.7 fF/stage fixed load**
+  (~30 ps/stage at SS), not a measurement bug. c31 startup dead-state confirmed
+  real.
+- **Decision**: stage drive `inv_1 → inv_4` (+ one-shot startup kick) — `inv_2`
+  fails 250 @ SS after the ~16% routing penalty (~215 MHz); `inv_4` gives
+  ~267 MHz routed @ SS ≥ 250 with margin and clears 500 @ FF. Detail in
+  `docs/dco_tuning_design.md`.
 
 What this breaks in the reports:
 - MPW_PINS_AREA §3 and status §3 say *"safe demo is 1 Gb/s (250 MHz
