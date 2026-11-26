@@ -54,8 +54,11 @@ exception strings recorded.
 
 
 ## OPEN / REMAINING (in order)
-1. FF/TT COARSE sweeps post-final-config (FF running; TT queued). FF f=0 fast
-   end projected ~700 MHz (FF/SS ~2.5x) -> 500 lands mid-range; verify.
+1. TT COARSE sweep (running at report time). FF table (final config, f=0,
+   with-wire): **658.6 (c0) -> 289.3 (c31) MHz, STRICTLY MONOTONE (0 up-jumps,
+   max step 23.8 MHz < fine half-span 86)**; 500 MHz bracketed by c12 (505.9) /
+   c13 (483.2), inside the range with +158 / -211 margins. ss_sweep5_wire.json
+   and ff_sweep_wire.json hold both tables.
 2. Six acceptance measurements on the loaded tops (tb_rx_loaded / tb_tx_loaded
    decks generated and wired): startup x2 releases x2 inits x c0/c31; duty
    45-55% at the flop clock pin at the 250-locked code (~c6/c7) AND c31
