@@ -107,3 +107,52 @@ All of it, re-purposed:
    FF/TT (already measured on the ring — unchanged by this decision).
 
 M4 (layout) starts only after 1–3 pass.
+
+---
+
+## ADDENDUM 2026-11-27: prefer all-digital — an ADDLL already exists in-repo
+
+Before starting the analogue DLL, the user asked whether an all-digital /
+synthesisable option exists. It does, and it is already written:
+
+| module | lines | role |
+|---|---|---|
+| `src/addll_top.v` | 188 | **all-digital DLL**: bang-bang PD + digital loop filter (first-order UP/DOWN counter) + thermometer decoder + DCDL |
+| `src/dll_dcdl.v` | 228 | unified delay-line interface, CODE 0..279 → COARSE(4 segments)/FINE(56 taps) |
+| `src/dll_full_period_top.v` | 529 | full-period variant: absolute-range acquisition + **TDC PD** + monitor line for range revalidation + safe-window code commit |
+| `src/fine_delay.v` / `mid_delay.v` / `coarse_delay.v` | — | **pure stdcell** switchable-load delay cells (inv5→NAND3 load→inv5, etc.) |
+| deps | — | `ssbbpd.v`, `digital_loop_filter.v`, `term_decoder.v`, `pll_counter_dcdl_phys.v` |
+| TBs | 7 | `addll_top_tb`, `dll_dcdl_tb`, `dll_full_period_tb`, `dll_gate_tb`, `dll_phys_tdc_tb`, `dll_range_reval_tb`, `dll_tdc_phys_gl_tb` — **no recorded pass/fail evidence** |
+| physical | — | `flow/macro/counter_dcdl_sky130` (sky130 hard-macro flow exists) |
+
+### Why this is a strictly better base than the analogue DLL
+- **No analogue bias/charge pump** → synthesizable, DFT-able, portable across
+  PDKs by swapping cells (the analogue option needs per-PDK bias redesign).
+- **Same code base has already fixed the exact bug class we hit**: `dll_dcdl.v`
+  documents a 62 ps (3.07 LSB) DNL gap at segment boundaries where "the loop
+  cannot settle", fixed by making the bypass add zero. That is the DCDL sibling
+  of our ring's closure-slot problem — already solved and documented.
+- **Solves R3 structurally**: frequency from the DCO/PLL, phase from a
+  digital-coded line. The tuning code no longer touches the phase relationship.
+- **Fast digital regression** (iverilog) instead of slow SPICE.
+
+### The one hard requirement that does NOT go away
+An **open-loop** delay line cannot hold 30 ps: element delay drifts ~2× SS→FF
+(500 → 250 ps/element). So the line **must be closed-loop** — but the loop can
+be fully digital (measure tap vs REF, step the code). That is precisely what
+`addll_top` / `dll_full_period_top` implement.
+
+Per-element target: **SS 500 ps, FF 250 ps**, and to hold 30 ps at tap k=7 the
+fine step must be **≈4 ps/LSB**. Whether the existing 56-tap fine segment
+achieves that is the open question being measured now.
+
+### Order of work (approved)
+1. Get the 7 existing TBs to run; record real results (none exist today).
+2. Characterise the DCDL transfer curve: range, LSB, monotonicity, residual
+   gaps — verify the EXTRA_PS fix in the functional backend.
+3. Decide `addll_top` (bang-bang + counter) vs `dll_full_period_top` (TDC +
+   range revalidation) as the base.
+4. Only if digital resolution is proven insufficient, fall back to the analogue
+   bias DLL (option C above).
+
+The analogue option C is therefore **demoted to a fallback**, not the plan.
