@@ -52,6 +52,19 @@ exception strings recorded.
 - With-wire fast end at f=-31: 336.9 MHz (L_wire_c0_f-31 deck).
 - c31 dead state: fixed by the one-shot kick (init 0 and X identical).
 
+## FINAL PER-CORNER TABLES (f=0, final config, with-wire; all PRE-layout)
+FF: 658.6 (c0) -> 289.3 (c31) MHz, 0 up-jumps, max step 23.8 MHz;
+    500 between c12 (505.9) and c13 (483.2) - headroom +158 / -211.
+TT: 436.7 (c0) -> 200.6 (c31) MHz, 0 up-jumps, max step 15.0 MHz;
+    250 between c23 (250.5) and c24 (248.6);
+    **500 NOT reachable at TT (fast end 436.7) - FLAGGED**: the approved
+    corner-graded contract requires 500 at FF ("marginal OK at TT"), and TT
+    misses it by 63 MHz. This is the one rate-coverage shortfall; no tuning
+    change attempted around it.
+SS: 279.4 (c0) -> 134.1 (c31) MHz, 0 up-jumps, max step 8.9 MHz;
+    250 between c6 (250.9) and c7 (242.0); fast end at f=-31 = 336.9 MHz.
+
+
 
 ## OPEN / REMAINING (in order)
 1. TT COARSE sweep (running at report time). FF table (final config, f=0,
