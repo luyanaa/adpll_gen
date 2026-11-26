@@ -130,16 +130,29 @@ headroom** (bracketed near c13/c14). Kick is 3 `dont_touch` inv_1 delay +
 `AND(EN, ~EN_d3)`, ORed into the closure; inversion count unchanged (an even
 delay count pinned the ring — use odd, 3).
 
-**Open (2026-11-26): coarse sweep is NON-MONOTONE at binary boundaries.**
-c7→c8 +45 MHz, c19→c20 +15, c23→c24 +34 — a high bit turning on slows *less*
-than the lower bits turning off, because bits 0–3 all use a min-width switch
-(`SW_M=1`) regardless of 1/2/4/8 fingers; the high switch-R rounds the edge
-and shrinks effective ΔC (brief risk 3). The 15–45 MHz holes exceed the fine
-bank's ±10 MHz span and break the SAR monotone assumption.
-**Decision: fix the source, not a LUT** (a LUT remap is PVT-fragile). Scale
-`SW_M` with finger count (bit4 already 4), and widen the fine span if any
-coarse step still exceeds it, so the code→freq map is monotone-by-construction
-and gap-free. Re-measure SS for monotone + every step ≤ fine span.
+**CLOSED 2026-11-26 — M3 SS gate met, with routed wire in the deck.**
+The non-monotone sweep (c7→c8 +45, c19→c20 +15, c23→c24 +34) was fixed at the
+source, not by a LUT (a code-remap is PVT-fragile). Three changes together:
+
+1. `SW_M` scaled with finger count: coarse `1,1,2,4,8`, fine `1,1,1,2,4,8`.
+2. Switched-cap switch width narrowed `w=0.42u → 0.15u` (−3.5 fF
+   junction/overlap; the ~2 fF recovery target exceeded). On-R checked:
+   bit4 147 fF behind m=8×0.15u → τ≈130 ps ≪ T/2, c31 slow end unchanged.
+3. **Routed SPEF wire caps in the deck** (`DCO_PEX_WIRE=1`, per-stage mean
+   0.96 fF, max 2.66 fF from the actual STEP=3 routed snake). The 1.16
+   routed-penalty guess is **retired** — it was measured on the bankless
+   inv_1 ring and does not transfer to the inv_4 + cap-bank stage.
+
+Verified (`ss_sweep5_wire.json`, 32/32 codes, SS pre-layout with wire):
+- COARSE 0→31: **279.4 → 134.1 MHz, monotone (0 up-jumps / 31 pairs)**;
+  max adjacent step **8.9 MHz ≪ fine half-span 86 MHz** (gap-free, ~10×).
+- **250 bracketed c6=250.9 / c7=242.0**; fast end +29 MHz over 250; f=−31
+  = 336.9 MHz. ≥2 fine LSB headroom both sides (fine LSB ~2.8 MHz).
+- duty **43.6–52.1%** all codes (c31 52.1% < 55%); startup ≤1.06 ns at c0 and
+  c31, init 0 == init X.
+
+Remaining: FF/TT coverage, six loaded-top measurements, M4 (placement regen,
+LibreLane, post-route tap uniformity + DRC/LVS + routed-250 confirm).
 
 ## PI stays a phase actuator (separate)
 
