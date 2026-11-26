@@ -179,6 +179,39 @@ interpolation sufficient, and TX quadrature becomes exact on **even** taps
 Chosen: **STEP=6 / NSTAGE=23**. Rate/loaded-grid verification pending; M4
 stays held until the new geometry is confirmed.
 
+**Second-order defect (2026-11-27): the closure is not one gate-slot.** With
+NSTAGE=23/STEP=6 built, measurement shows AND2+OR2+kick closure = **6.4 slots**
+(AND2 alone 3.8), so T/8 = 7.35 slots ≠ STEP=6 → tap conformance
+0/−70/−142/−224 ps. The ideal-gate model (period = 2·(NSTAGE+1)) is wrong by
+the closure cost. No odd NSTAGE with the AND2 closure closes the grid;
+NSTAGE=20 is near-exact but even → latches (even inversion count).
+
+**Invariant (design to this, not to a specific NSTAGE):** let L = loop length in
+*measured* slot units (NSTAGE + closure_slots). Then T = 2L, and the exact
+8-phase grid requires **L = 4·STEP (measured)**. Then taps at 0, L/4, L/2, 3L/4
+(= n0, STEP, 2·STEP, 3·STEP) plus inversions give exactly k·T/8, and TX
+quadrature is taps 0/2 + complements (T/4 exact).
+
+**Why NAND2 is the stable choice:** with c = closure slots, NSTAGE = 4·STEP − c.
+AND2 (c≈3.8, non-inverting) → even NSTAGE → latches. NAND2 (c≈1.9, inverting)
+→ even NSTAGE → total inversions odd → oscillates. Parity falls out naturally,
+no fudging.
+
+**Approved:** NAND2(chain[last], EN) inverting closure with enable folded in
+(AND2+OR2+kick superseded — the earlier "AND gives odd inversions" reasoning
+counted inversion parity but not closure *delay*); **calibrate nand2_slots per
+corner, don't assume** — report measured L and residual (L − 4·STEP);
+**delay-free startup kick** (one-shot pull on chain[0] via an off-state pass
+device — no delay element in the loop; the OR2 cost 2.6 slots); **symmetric
+taps** (lower = 2×INVX4, upper = 1×INVX4 — buf-vs-inv_4 measured 9% asymmetric,
+363.5 vs 329.0 MHz).
+
+**Verification contract:** measured |tap_k − k·T/8| for k=0..7 at c0 and c31
+(≤30 ps, wrap interval reported separately since it carries the NAND2); odd
+inversion + oscillation at init 0/X, release 0/20 ns, 3 corners, c0/c31; rate
+table with 250 @ SS and 500 @ FF/TT, monotone, steps ≤ fine span; duty 45–55%
+at the flop pin; fine symmetry; TX quadrature vs T/4.
+
 **FF gate closed too (2026-11-26, `ff_sweep_wire.json`, 32/32 codes):**
 COARSE 0→31 = **658.6 → 289.3 MHz, monotone (0 up-jumps)**, max adjacent step
 **23.8 MHz < fine half-span 86** (gap-free). **500 MHz bracketed
