@@ -154,6 +154,15 @@ Verified (`ss_sweep5_wire.json`, 32/32 codes, SS pre-layout with wire):
 Remaining: FF/TT coverage, six loaded-top measurements, M4 (placement regen,
 LibreLane, post-route tap uniformity + DRC/LVS + routed-250 confirm).
 
+**FF gate closed too (2026-11-26, `ff_sweep_wire.json`, 32/32 codes):**
+COARSE 0→31 = **658.6 → 289.3 MHz, monotone (0 up-jumps)**, max adjacent step
+**23.8 MHz < fine half-span 86** (gap-free). **500 MHz bracketed
+c12=505.9 / c13=483.2** — inside the FF range. Duty **48.2–52.6%** (inside
+45–55%). SS/FF ratio **2.36**, consistent with the measured MOS spread budget
+(2.0–2.38) from the recon. So the corner-graded contract is met pre-layout in
+both corners: **250 @ SS (c6/c7), 500 @ FF (c12/c13)**, both monotone and
+gap-free. TT sweep running; six loaded-top measurements and M4 next.
+
 ## PI stays a phase actuator (separate)
 
 Ring taps span a **half period** → they are not the 8 sampler phases.
