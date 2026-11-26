@@ -46,18 +46,16 @@
 module PLL_MULTIPHASE_DCO #(
     // DLL tap-select width: 2^PH_W phases are produced.
     parameter integer PH_W        = 3,
-    // Delay stages between adjacent taps.  The line is built as
-    // NSTAGE = NPHASE*STEP + 1 stages: odd so the (non-inverting) AND
-    // closure yields an odd loop inversion count -- a clean travelling-wave
-    // ring.  The tapped body is NPHASE*STEP (an exact multiple), so tap k
-    // sits at exactly k*STEP stages with no floor error, covering a half
-    // period in 8 steps (the complementary edges complete the UI grid).
-    // STEP sets the period: ring period ~= 2*NSTAGE*stage_delay.  STEP=6 ->
-    // NSTAGE=49 (~243 MHz at ~42 ps/stage SS); STEP=3 -> NSTAGE=25
-    // (~476 MHz).  DELAY_BITS is retained only for back-compat of the
-    // parameter port; STEP takes precedence when nonzero.
+    // Delay stages between adjacent taps.  NSTAGE = NPHASE*STEP/2 - 1 (odd
+    // for the standard cases): the loop is NSTAGE inverting stages plus the
+    // non-inverting AND closure, T = 2*(NSTAGE+1) gate delays, and STEP =
+    // T/NPHASE makes the k*STEP taps land exactly on the T/NPHASE sampler
+    // grid.  STEP=6 -> NSTAGE=23, period 48 gates, T/8 = 6 gates = STEP,
+    // the 8 taps span 42/48 T and the 8th interval wraps through the
+    // closure.  DELAY_BITS is retained only for back-compat; STEP takes
+    // precedence when nonzero.
     parameter integer DELAY_BITS  = 0,
-    parameter integer STEP        = 3,
+    parameter integer STEP        = 6,
     // Extra unit-load fingers hung on the closing node chain[NSTAGE] to pull
     // the frequency DOWN without touching the (uniform) tap grid.  A static
     // parameter, not a runtime port: runtime phase/frequency control is the
@@ -73,7 +71,12 @@ module PLL_MULTIPHASE_DCO #(
     // not connect the new tuning ports yet -- with the ports left open the
     // DCO internally interprets them as COARSE=0/FINE=0, the fast end, and
     // CLOSE_LOAD=1 restores the old period).
-    parameter integer CLOSE_LOAD  = 0
+    parameter integer CLOSE_LOAD  = 0,
+    // Variant selector: 2 -> NSTAGE = NPHASE*STEP/2 - 2 = 22 (current build,
+    // NAND2 inverting closure); 1 -> NSTAGE = 23 (the earlier AND2-closure
+    // variant, kept rebuildable -- NSTAGE=23 with the inverting NAND2 would
+    // latch since 23+1 inversions is even, so that variant pairs with AND2).
+    parameter integer NSTAGE_ADJ  = 2
 ) (
 `ifdef WITH_POWER
     inout  wire                 VDD, VSS,
@@ -100,14 +103,37 @@ module PLL_MULTIPHASE_DCO #(
     // faster than the old CLOSE_LOAD-centered period; consumers that rely
     // on the old centering keep CLOSE_LOAD>0 until they drive the words).
     input  wire [4:0]           COARSE,
-    input  wire signed [5:0]    FINE
+    input  wire signed [5:0]    FINE,
+    // Full anchor bank for the 1-slot-span PI (docs/dco_8phase_decision.md):
+    // ANCHOR[i] = stage i output, ANCHOR[NSTAGE+i] = its inversion (T/2
+    // shifted).  Every stage is an anchor, so the PI always has a pair
+    // straddling the target phase and the closure drift is absorbed by
+    // interpolation instead of breaking the tap grid.  All through the same
+    // dont_touch buffer pattern as PHASE to keep the fanout uniform.
+    output wire [ 2*((1<<PH_W)*STEP/2 - NSTAGE_ADJ) - 1 : 0 ] ANCHOR
 );
     localparam integer NPHASE = 1 << PH_W;
     // NSTAGE = NPHASE*STEP + 1: odd (oscillates) and the tapped body is an
     // exact multiple of NPHASE, so tap k is exactly k*STEP stages in.
     // Back-compat: if STEP==0 fall back to the legacy 2^DELAY_BITS line.
     localparam integer STEP_EFF = (STEP != 0) ? STEP : (1 << (DELAY_BITS - PH_W));
-    localparam integer NSTAGE   = NPHASE * STEP_EFF + 1;
+    // Tap-grid geometry (2026-11-27): the tap interval must equal the
+    // sampler grid pitch T/NPHASE.  The loop is NSTAGE inverting stages plus
+    // the non-inverting AND closure (~1 gate) per traversal, so
+    // T = 2*(NSTAGE+1) gate delays and STEP = T/NPHASE requires
+    // NSTAGE = NPHASE*STEP/2 - 1.  STEP=6, NPHASE=8 -> NSTAGE=23:
+    // period 48 gates, T/8 = 6 gates = STEP exactly, taps at k*STEP span
+    // 42/48 T with the 8th interval wrapping through the closure.
+    // (The old NSTAGE = NPHASE*STEP+1 form put the taps 3 gates apart when the
+    // grid needed 6.5 -- phases 3 and 7 were unreachable and nearest-tap
+    // error was ~84-93 ps vs the 30 ps sampler budget.)
+    // NAND2 inverting closure (approved 2026-11-27, supersedes the AND2
+    // closure): closure_slots measured ~1.9 so L = NSTAGE + ~1.9; for
+    // L = 4*STEP with STEP=6 -> NSTAGE ~= 22.  EVEN, because the closure is
+    // now INVERTING (NSTAGE+1 inversions must be odd).  NAND2 is the stable
+    // choice: with the non-inverting AND2 (~3.8 slots) NSTAGE = 4*STEP-3.8
+    // lands even for every STEP and an even-inversion loop latches.
+    localparam integer NSTAGE   = NPHASE * STEP_EFF / 2 - NSTAGE_ADJ;
     // Tap positions are exact multiples of STEP_EFF -- no floor error.
     function integer tap_stage(input integer k);
         begin
@@ -199,83 +225,126 @@ module PLL_MULTIPHASE_DCO #(
         end
     endgenerate
 
-    // Tap every STEP stages.  NSTAGE is a multiple of NPHASE, so the taps
-    // partition the line and tap k is exactly k*STEP stages from DCO_OUT.
+    // Taps: the 8 sampler phases are 4 nodes at k*STEP (k=0..3) plus their
+    // inverted copies for the upper half of the code space (PHASE[k] =
+    // ~PHASE[k-4] for k>=4), matching the PI / tx_clk4 consumer contract
+    // ("upper half of code space uses the inverted tap ~PHASE[k-4]").
+    //
+    // Geometry (2026-11-27): NSTAGE = NPHASE*STEP/2 - 1 so T/2 = NPHASE*STEP/2
+    // gate delays and T/NPHASE = STEP.  For STEP=6/NSTAGE=23: T=48 gates,
+    // T/8 = 6 gates = STEP, 4 physical taps at n0/n6/n12/n18 plus
+    // complements = 8 phases exactly T/8 apart; the 8th interval (n18 ->
+    // closure -> n0) is 5 inverters + the AND, measured separately (brief
+    // risk 2: closure interval may be slow; documented remedy is one coarse
+    // LSB of cap dropped on that stage only).
     //
     // Each tap is driven through its own dont_touch buffer.  Without it the
-    // tap node (chain[tap_stage]) carries the observability port AND the phase
-    // mux as direct loads, so its routed wire is whatever the placer happened
-    // to produce — measured on the routed macro that spread the tap-to-tap
-    // spacing by up to ~72 ps, over the < 30 ps budget.  Buffering gives every
-    // tap the same local load (one buffer input next to the stage + the next
-    // chain stage); the off-tap wire length then moves onto the buffer output
+    // tap node carries the observability port AND the phase mux as direct
+    // loads, so its routed wire is whatever the placer produced (measured
+    // ~72 ps tap spread on the routed macro).  Buffering gives every tap the
+    // same local load; the off-tap wire length moves onto the buffer output
     // where it does not perturb the ring's phase grid.  keep/dont_touch stops
     // ABC collapsing the buffer back into the chain.
+    localparam integer NTAP_HALF = NPHASE / 2;
     genvar t;
     generate
         for (t = 0; t < NPHASE; t = t + 1) begin : tap
             wire tap_iso;
-            assign tap_iso = chain[tap_stage(t)];
+            if (t < NTAP_HALF) begin : g_lower
+                wire tap_mid;
+                assign tap_iso = chain[tap_stage(t)];
+                // 2x INVX4 = buffer: same first-stage input load as the upper
+                // taps (one INVX4 input), delay 2 gates.
+                (* keep *) (* dont_touch = "true" *)
+                PLL_CELL_INVX4 tap_b0 (
+`ifdef WITH_POWER
+                    .VDD(VDD), .VSS(VSS),
+`endif
+                    .I(tap_iso), .ZN(tap_mid)
+                );
+                (* keep *) (* dont_touch = "true" *)
+                PLL_CELL_INVX4 tap_b1 (
+`ifdef WITH_POWER
+                    .VDD(VDD), .VSS(VSS),
+`endif
+                    .I(tap_mid), .ZN(PHASE[t])
+                );
+            end else begin : g_upper
+                assign tap_iso = chain[tap_stage(t - NTAP_HALF)];
+                (* keep *) (* dont_touch = "true" *)
+                PLL_CELL_INVX4 tap_inv (
+`ifdef WITH_POWER
+                    .VDD(VDD), .VSS(VSS),
+`endif
+                    .I(tap_iso), .ZN(PHASE[t])
+                );
+            end
+        end
+    endgenerate
+
+    // Anchor bank: every stage tap + its inversion, one dont_touch buffer
+    // each (uniform fanout, same pattern as the PHASE taps).
+    genvar a;
+    generate
+        for (a = 0; a < NSTAGE; a = a + 1) begin : anchor
             (* keep *) (* dont_touch = "true" *)
-            PLL_CELL_BUFFX0 tap_buf (
+            PLL_CELL_BUFFX0 abuf (
 `ifdef WITH_POWER
                 .VDD(VDD), .VSS(VSS),
 `endif
-                .I(tap_iso), .Z(PHASE[t])
+                .I(chain[a]), .Z(ANCHOR[a])
+            );
+            (* keep *) (* dont_touch = "true" *)
+            PLL_CELL_INVX1 ainv (
+`ifdef WITH_POWER
+                .VDD(VDD), .VSS(VSS),
+`endif
+                .I(chain[a]), .ZN(ANCHOR[NSTAGE+a])
             );
         end
     endgenerate
 
-    // Closing stage: NON-inverting (AND) enable so the loop inversion count
-    // is exactly NSTAGE -- odd for the STEP geometry -> a clean travelling-
-    // wave ring.  The tapped body is NPHASE*STEP stages (an exact multiple),
-    // so tap k sits at k*STEP and the grid spans the half-line; the odd
-    // NSTAGE line is the full loop period, one tap step == T/NPHASE.
-    //
-    // (The previous form closed with an inverting NAND: NSTAGE+1 inversions
-    // is EVEN, which is a relaxation/bi-stable mode, not a travelling wave --
-    // it can latch when released and its tap grid measured 0/83/166/250 deg,
-    // not the T/8 a sampler needs.  The AND closure fixes both.)
-    //
-    // One-shot startup kick (brief risk 7, confirmed by measurement): at max
-    // coarse code the loaded ring can sit in a DC dead state after release
-    // (reproduced for both init states).  The kick forces chain[0] high for
-    // ~3 gate delays at DCO_EN release only: EN is delayed by 3 dont_touch
-    // inverters; AND(EN, ~EN_delayed) is high from the release edge until the
-    // delayed copy arrives, then drops and stays 0 -- in steady state the
-    // OR sees only the AND path, so the oscillation is untouched.  Both
-    // closure gates are non-inverting: the loop inversion count is still
-    // exactly NSTAGE (odd).
-    wire close_and;
-    wire en_dly1, en_dly2, en_dly3, kick;
-
-    PLL_CELL_AND2X1 loop_close (
+    // Closing stage: INVERTING NAND2(chain[last], EN) (approved 2026-11-27).
+    // Supersedes the AND2 (+OR2 kick) closure: the AND2's measured ~3.8-slot
+    // delay (and the OR2's +2.6) consumed loop slots and broke the T/8 tap
+    // grid -- the old "AND for odd inversions" reasoning counted inversion
+    // parity but not closure delay.  NAND2 folds the enable into ONE ~1.9-slot
+    // gate, so with EVEN NSTAGE the loop inversion count is NSTAGE+1 (odd) and
+    // L = NSTAGE + ~1.9 ~= 4*STEP.
+    wire close_n;
+    PLL_CELL_NAND2X1 loop_close (
 `ifdef WITH_POWER
         .VDD(VDD), .VSS(VSS),
 `endif
-        .A0(chain[NSTAGE]), .A1(DCO_EN), .Z(close_and)
+        .A0(chain[NSTAGE]), .A1(DCO_EN), .ZN(close_n)
     );
+    assign loop_back = close_n;
 
+    // One-shot startup kick (brief risk 7): a single pass device pulling
+    // chain[0] HIGH for ~3 gate delays at DCO_EN release.  The pulse logic
+    // (EN delayed by 3 dont_touch inverters) is OUTSIDE the loop -- no delay
+    // element is added to the ring (the previous OR2 cost 2.6 loop slots).
+    // In steady state kick_n = AND(EN, EN_delayed) = 1 -> the pull-up is off
+    // and only its junction capacitance remains on chain[0] (which already
+    // carries a tap buffer).
+    wire en_dly1, en_dly2, en_dly3, en_dly4, kick_n;
     (* keep *) (* dont_touch = "true" *)
     PLL_CELL_INVX1 en_d1 ( `ifdef WITH_POWER .VDD(VDD), .VSS(VSS), `endif .I(DCO_EN), .ZN(en_dly1) );
     (* keep *) (* dont_touch = "true" *)
     PLL_CELL_INVX1 en_d2 ( `ifdef WITH_POWER .VDD(VDD), .VSS(VSS), `endif .I(en_dly1), .ZN(en_dly2) );
     (* keep *) (* dont_touch = "true" *)
     PLL_CELL_INVX1 en_d3 ( `ifdef WITH_POWER .VDD(VDD), .VSS(VSS), `endif .I(en_dly2), .ZN(en_dly3) );
-
     (* keep *) (* dont_touch = "true" *)
-    PLL_CELL_AND2X1 kick_g (
+    PLL_CELL_INVX1 en_d4 ( `ifdef WITH_POWER .VDD(VDD), .VSS(VSS), `endif .I(en_dly3), .ZN(en_dly4) );
+    // kick_n is low (pull-up ON) only while the 4-inverter delayed copy of
+    // DCO_EN has not arrived: 0 at/just after release, 1 in steady state.
+    assign kick_n = en_dly4;
+    (* keep *) (* dont_touch = "true" *)
+    PLL_CELL_KICK_PU kick_pu (
 `ifdef WITH_POWER
         .VDD(VDD), .VSS(VSS),
 `endif
-        .A0(DCO_EN), .A1(en_dly3), .Z(kick)
-    );
-    (* keep *) (* dont_touch = "true" *)
-    PLL_CELL_OR2X1 loop_or (
-`ifdef WITH_POWER
-        .VDD(VDD), .VSS(VSS),
-`endif
-        .A0(close_and), .A1(kick), .Z(loop_back)
+        .NODE(chain[0]), .KICKB(kick_n)
     );
 
     // Static frequency centering: CLOSE_LOAD extra unit loads hang on the
