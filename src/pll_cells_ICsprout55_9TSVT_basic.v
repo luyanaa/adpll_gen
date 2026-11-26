@@ -521,7 +521,8 @@ endmodule
 // One fine bit group: NFINGERS small sg13_moscap_n unit fingers behind one
 // switch (the fine twin of PLL_CELL_COARSE_BIT).  No-op on this PDK.
 module PLL_CELL_FINE_UNIT #(
-    parameter integer NFINGERS = 1
+    parameter integer NFINGERS = 1,
+    parameter integer SW_M     = 1
 ) (
 `ifdef WITH_POWER
     inout  wire VDD, VSS,
@@ -531,4 +532,27 @@ module PLL_CELL_FINE_UNIT #(
 );
     wire [NFINGERS-1:0] sink;
     assign sink = {NFINGERS{1'bz}};
+endmodule
+
+module PLL_CELL_OR2X1(
+`ifdef WITH_POWER
+  VDD, VSS,
+`endif
+  input A0, A1,
+  output Z
+);
+    wire [1:0] sink;
+    assign sink = 2'b00;
+endmodule
+
+module PLL_CELL_INVX4(
+`ifdef WITH_POWER
+  VDD, VSS,
+`endif
+  input I,
+  output ZN
+);
+    // Digital stand-in: same polarity/timing class as the real INVX4.
+    wire a;
+    PLL_CELL_INVX1 u(.I(I), .ZN(ZN));
 endmodule

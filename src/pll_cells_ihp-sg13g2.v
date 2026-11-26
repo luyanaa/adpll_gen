@@ -268,6 +268,43 @@ module PLL_CELL_AND2X1(
 
 endmodule
 
+module PLL_CELL_OR2X1(
+`ifdef WITH_POWER
+  VDD, VSS,
+`endif
+  input A0, A1,
+  output Z
+);
+  // OR2X1 -> sg13g2_or2_1
+  (* keep *) (* dont_touch = "true" *)
+  sg13g2_or2_1 impl(
+`ifdef WITH_POWER
+    .VDD(VDD), .VSS(VSS),
+`endif
+    .A(A0), .B(A1), .X(Z)
+  );
+
+endmodule
+
+module PLL_CELL_INVX4(
+`ifdef WITH_POWER
+  VDD, VSS,
+`endif
+  input I,
+  output ZN
+);
+  // INVX4 -> sg13g2_inv_4 -- the tuned ring's stage drive (sizing approved
+  // 2026-11-25): inv_1 + the tuning banks' fixed 5.7 fF caps the SS fast
+  // end at 185 MHz; inv_4 restores ~310 MHz pre-layout / ~267 routed.
+  (* keep *) (* dont_touch = "true" *)
+  sg13g2_inv_4 impl(
+`ifdef WITH_POWER
+    .VDD(VDD), .VSS(VSS),
+`endif
+    .A(I), .Y(ZN)
+  );
+endmodule
+
 module PLL_CELL_CLKINVX1(
 `ifdef WITH_POWER
   VDD, VSS,
@@ -523,6 +560,18 @@ module sg13g2_decap_4 (
   inout VDD, VSS;
 `endif
 endmodule
+(* blackbox *)
+module sg13g2_or2_1 (
+`ifdef WITH_POWER
+  VDD, VSS,
+`endif
+  X, A, B);
+`ifdef WITH_POWER
+  inout VDD, VSS;
+`endif
+	output X;
+	input A, B;
+endmodule
 `endif
 
 // ============================================================================
@@ -589,7 +638,8 @@ endmodule
 // 0.5u, ~0.7 fF) behind ONE sg13_lv_nmos gate-side switch -- the fine twin
 // of PLL_CELL_COARSE_BIT.
 module PLL_CELL_FINE_UNIT #(
-    parameter integer NFINGERS = 1
+    parameter integer NFINGERS = 1,
+    parameter integer SW_M     = 1
 ) (
 `ifdef WITH_POWER
     inout  wire VDD, VSS,

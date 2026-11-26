@@ -236,11 +236,46 @@ module PLL_MULTIPHASE_DCO #(
     // is EVEN, which is a relaxation/bi-stable mode, not a travelling wave --
     // it can latch when released and its tap grid measured 0/83/166/250 deg,
     // not the T/8 a sampler needs.  The AND closure fixes both.)
+    //
+    // One-shot startup kick (brief risk 7, confirmed by measurement): at max
+    // coarse code the loaded ring can sit in a DC dead state after release
+    // (reproduced for both init states).  The kick forces chain[0] high for
+    // ~3 gate delays at DCO_EN release only: EN is delayed by 3 dont_touch
+    // inverters; AND(EN, ~EN_delayed) is high from the release edge until the
+    // delayed copy arrives, then drops and stays 0 -- in steady state the
+    // OR sees only the AND path, so the oscillation is untouched.  Both
+    // closure gates are non-inverting: the loop inversion count is still
+    // exactly NSTAGE (odd).
+    wire close_and;
+    wire en_dly1, en_dly2, en_dly3, kick;
+
     PLL_CELL_AND2X1 loop_close (
 `ifdef WITH_POWER
         .VDD(VDD), .VSS(VSS),
 `endif
-        .A0(chain[NSTAGE]), .A1(DCO_EN), .Z(loop_back)
+        .A0(chain[NSTAGE]), .A1(DCO_EN), .Z(close_and)
+    );
+
+    (* keep *) (* dont_touch = "true" *)
+    PLL_CELL_INVX1 en_d1 ( `ifdef WITH_POWER .VDD(VDD), .VSS(VSS), `endif .I(DCO_EN), .ZN(en_dly1) );
+    (* keep *) (* dont_touch = "true" *)
+    PLL_CELL_INVX1 en_d2 ( `ifdef WITH_POWER .VDD(VDD), .VSS(VSS), `endif .I(en_dly1), .ZN(en_dly2) );
+    (* keep *) (* dont_touch = "true" *)
+    PLL_CELL_INVX1 en_d3 ( `ifdef WITH_POWER .VDD(VDD), .VSS(VSS), `endif .I(en_dly2), .ZN(en_dly3) );
+
+    (* keep *) (* dont_touch = "true" *)
+    PLL_CELL_AND2X1 kick_g (
+`ifdef WITH_POWER
+        .VDD(VDD), .VSS(VSS),
+`endif
+        .A0(DCO_EN), .A1(en_dly3), .Z(kick)
+    );
+    (* keep *) (* dont_touch = "true" *)
+    PLL_CELL_OR2X1 loop_or (
+`ifdef WITH_POWER
+        .VDD(VDD), .VSS(VSS),
+`endif
+        .A0(close_and), .A1(kick), .Z(loop_back)
     );
 
     // Static frequency centering: CLOSE_LOAD extra unit loads hang on the
@@ -296,7 +331,7 @@ module DCO_STAGE (
 );
     // The stage itself.
     (* keep *) (* dont_touch = "true" *)
-    PLL_CELL_INVX1 stage_inv (
+    PLL_CELL_INVX4 stage_inv (
 `ifdef WITH_POWER
         .VDD(VDD), .VSS(VSS),
 `endif
@@ -313,9 +348,14 @@ module DCO_STAGE (
     generate
         for (b = 0; b < 5; b = b + 1) begin : coarse_bit
             wire g;
-            // Bit 4 drives 16 unit fingers through one switch; widen the
-            // switch 4x so its residual R does not dominate the on-state
-            // (brief risk 3).
+            // Switch width scales with the finger count behind it
+            // (approved 2026-11-25, extends bit4's fix): bits 0-3 all had
+            // SW_M=1 and the measured SS sweep was non-monotone at the
+            // bit3/bit4 group boundaries (c7->c8 +45 MHz, c23->c24 +34 MHz)
+            // because the shared switch R shrank the big bits' effective
+            // dC below the sum of the lower bits.  Map 1,1,2,4,4 keeps
+            // fingers/switch-width <= 4 for every bit -> monotone by
+            // construction; bit4 was already clean at 4.
             (* keep *) (* dont_touch = "true" *)
             PLL_CELL_BUFFX0 gbuf (
 `ifdef WITH_POWER
@@ -326,7 +366,7 @@ module DCO_STAGE (
             (* keep *) (* dont_touch = "true" *)
             PLL_CELL_COARSE_BIT #(
                 .NFINGERS (1 << b),
-                .SW_M     (b == 4 ? 4 : 1)
+                .SW_M     (b == 4 ? 8 : (b >= 3 ? 4 : (b == 2 ? 2 : 1)))
             ) bank (
 `ifdef WITH_POWER
                 .VDD(VDD), .VSS(VSS),
@@ -370,9 +410,12 @@ module DCO_STAGE (
             // fine index FINE+32 (1..63) is the on-count, so code 0 = 32
             // fingers on / 31 off and the on-count is continuous across
             // the sign boundary (the "fixed +1").
+            // Fine groups get the same proportional switch rule
+            // (fingers/m <= 4): 1,1,1,2,4,8 for groups 1..32.
             (* keep *) (* dont_touch = "true" *)
             PLL_CELL_FINE_UNIT #(
-                .NFINGERS (1 << f)
+                .NFINGERS (1 << f),
+                .SW_M     ((f >= 5) ? 8 : (f == 4 ? 4 : (f == 3 ? 2 : 1)))
             ) bank (
 `ifdef WITH_POWER
                 .VDD(VDD), .VSS(VSS),

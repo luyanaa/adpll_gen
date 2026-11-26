@@ -53,7 +53,7 @@ OSDI = ROOT / "flow" / "characterization" / "ihp_l3" / "psp103.osdi"
 # Unit finger: ~9 fF (0.72u x 1.0u at the measured 12.7 fF/um^2 plate).
 CAP_W = "0.72u"
 CAP_L = "1.0u"
-SW_W = "0.42u"   # min-ish width switch
+SW_W = "0.15u"   # min-width switch (2026-11-26 recovery: w 0.42->0.15 cuts the junction/overlap residual on OUT ~3x; R tradeoff checked: bit4 147fF behind m=8x0.15u -> tau ~130ps << T/2)
 SW_L = "0.45u"
 FCAP_W = "0.15u"  # fine unit finger: ~0.7 fF (0.15u x 0.5u at 12.7 fF/um^2... l=0.5u)
 FCAP_L = "0.5u"
@@ -83,12 +83,12 @@ def emit_stage() -> str:
     s = ["* dco_stage: tuned short-ring stage (dco_tuning_design.md)",
          ".subckt DCO_STAGE IN OUT C0 C1 C2 C3 C4 F0 F1 F2 F3 F4 F5 VDD VSS",
          "* the ring inverter itself",
-         "Xinv OUT IN VDD VSS sg13g2_inv_1"]
+         "Xinv OUT IN VDD VSS sg13g2_inv_4"]
     # coarse bank: 5 bits, binary 1:2:4:8:16 unit fingers, per-bit buffer,
     # bit 4 switch 4x wide (brief risk 3).
     for b in range(5):
         nf = 1 << b
-        swm = 4 if b == 4 else 1
+        swm = 8 if b == 4 else (4 if b >= 3 else (2 if b == 2 else 1))
         s.append(f"* coarse bit {b}: {nf} unit fingers, gate-side switch m={swm}")
         s.append(f"Xgbuf{b} g{b} C{b} VDD VSS sg13g2_buf_1")
         s.append(f"Xsw{b} gn{b} g{b} OUT VSS sg13_lv_nmos w={SW_W} l={SW_L} m={swm}")
@@ -102,7 +102,8 @@ def emit_stage() -> str:
         nf = 1 << f
         s.append(f"* fine bit {f}: {nf} unit moscap fingers behind one switch")
         s.append(f"Xgbuf{f+5} g{f+5} F{f} VDD VSS sg13g2_buf_1")
-        s.append(f"Xfsw{f} fgn{f} g{f+5} OUT VSS sg13_lv_nmos w={SW_W} l={SW_L}")
+        fswm = 8 if f >= 5 else (4 if f == 4 else (2 if f == 3 else 1))
+        s.append(f"Xfsw{f} fgn{f} g{f+5} OUT VSS sg13_lv_nmos w={SW_W} l={SW_L} m={fswm}")
         s.append(f"Rfgn{f} fgn{f} VSS 1G")
         for j in range(nf):
             s.append(f"Xfcap{f}_{j} fgn{f} VSS sg13_moscap_n w={FCAP_W} l={FCAP_L}")
@@ -182,7 +183,14 @@ def emit_top(corner: str, coarse: int, fine: int, top: str,
     s.append("* ---- the ring: 25 tuned stages, AND2X1 travelling-wave closure")
     for i in range(NSTAGE):
         s.append(f"Xst{i} n{i} n{i+1} C0 C1 C2 C3 C4 F0 F1 F2 F3 F4 F5 VDD VSS DCO_STAGE")
-    s.append(f"Xclose n0 n{NSTAGE} DCO_EN VDD VSS sg13g2_and2_1")
+    # AND closure + one-shot startup kick (brief risk 7): kick high ~3 gate
+    # delays at release only; steady-state loop is AND->OR, both non-inverting.
+    s.append("Xdly1 end1 DCO_EN VDD VSS sg13g2_inv_1")
+    s.append("Xdly2 end2 end1 VDD VSS sg13g2_inv_1")
+    s.append("Xdly3 end3 end2 VDD VSS sg13g2_inv_1")
+    s.append("Xkick kick DCO_EN end3 VDD VSS sg13g2_and2_1")
+    s.append(f"Xclose_a close_a n{NSTAGE} DCO_EN VDD VSS sg13g2_and2_1")
+    s.append("Xclose_o n0 close_a kick VDD VSS sg13g2_or2_1")
 
     # tap buffers at k*STEP -- identical geometry to the RTL (dont_touch).
     s.append("* ---- tap buffers at k*STEP")
@@ -195,6 +203,15 @@ def emit_top(corner: str, coarse: int, fine: int, top: str,
     s.append(f"* ---- PRBS-7 data, UI={data_ui_ns}ns")
     s.append(pwl_source(bits, data_ui_ns, "prbs", "data", str(c["vdd"])))
 
+    # Routed wire caps (from the STEP=3 routed SPEF, wire-only, mean 0.96 fF
+    # / stage): enabled with DCO_PEX_WIRE=1 for with-wire decks.
+    if os.environ.get("DCO_PEX_WIRE") == "1":
+        wire = [0.62,1.06,1.99,2.08,0.15,2.38,0.98,1.51,1.76,2.66,0.74,0.64,
+                0.10,0.62,0.12,0.10,1.41,0.09,0.47,0.82,0.59,0.22]
+        s.append("* routed wire caps from the STEP=3 SPEF (wire-only):")
+        for i in range(NSTAGE + 1):
+            v = wire[i] if i < len(wire) else 0.96
+            s.append(f"Cwire{i} n{i} 0 {v:.3f}f")
     s.append(f"* ---- init state ({init})")
     ic = []
     for i in range(NSTAGE):
@@ -295,21 +312,21 @@ def crossings(t: list[float], w: list[float], thr: float, rising=True) -> list[f
 
 
 def metric_freq_period(times, waves, settle, stop, key=0):
-    cr = crossings(times, waves[key], 0.6, True)
+    cr = crossings(times, waves[f"v{key}"], 0.6, True)
     cr = [x for x in cr if settle <= x <= stop]
     if len(cr) < 3:
         return None, None
     per = [b - a for a, b in zip(cr, cr[1:])]
     per = [p for p in per if p > 0]
-    T = sum(per) / len(per)
-    return 1e9 / T, T
+    T = sum(per) / len(per)          # seconds
+    return (1.0 / T) / 1e6, T * 1e9  # MHz, ns
 
 
 def tap_phase_err(times, waves, T, settle, stop):
     """RX 8-tap phase error vs k*T/8 (mod period, wrapped to +-T/2)."""
     taps = []
     for k in range(8):
-        cr = crossings(times, waves[k + 1], 0.6, True)
+        cr = crossings(times, waves[f"v{k+1}"], 0.6, True)
         cr = [x for x in cr if settle <= x <= stop]
         if len(cr) < 2:
             return None
@@ -336,7 +353,8 @@ def duty(times, waves, key, settle, stop):
     """Duty cycle at the flop clock pin over the window."""
     hi = lo = 0.0
     prev_t, prev_v = None, None
-    for tt, vv in zip(times, waves[key]):
+    wv = waves[f"v{key}"]
+    for tt, vv in zip(times, wv):
         if tt < settle or tt > stop:
             prev_t, prev_v = tt, vv
             continue
@@ -357,7 +375,8 @@ def min_pulse(times, waves, key, settle, stop, thr=0.6):
     widths = []
     last_t = None
     last_state = None
-    for tt, vv in zip(times, waves[key]):
+    wv = waves[f"v{key}"]
+    for tt, vv in zip(times, wv):
         if tt < settle or tt > stop:
             continue
         state = vv > thr
@@ -418,7 +437,9 @@ def run_deck(cfg: dict, workdir: Path, force=False) -> dict:
             preexec_fn=_spice_rlimit,
         )
     times, waves = parse_wrdata(raw)
-    settle, stop = cfg.get("settle_ns", 80.0), cfg.get("stop_ns", 120.0)
+    # wrdata times are in SECONDS; settle/stop are configured in NS.
+    settle = cfg.get("settle_ns", 80.0) * 1e-9
+    stop = cfg.get("stop_ns", 120.0) * 1e-9
     freq, T = metric_freq_period(times, waves, settle, stop)
     result.update(freq_mhz=freq, period_ns=T)
     if T:
@@ -440,7 +461,7 @@ def run_deck(cfg: dict, workdir: Path, force=False) -> dict:
             result["duty_pct"] = duty(times, waves, 1, settle, stop)
     # startup check: sustained oscillation within 20 cycles of release
     if T:
-        cr = crossings(times, waves[0], 0.6, True)
+        cr = crossings(times, waves["v0"], 0.6, True)
         rel = cfg["release_ns"]
         good = [x for x in cr if x > rel]
         if len(good) >= 2:
@@ -474,8 +495,8 @@ def main():
         for corner in corners:
             for cc in coarse:
                 for ff in fine:
-                    stop = 32.0 if cc >= 24 else 24.0
-                    settle = 12.0
+                    stop = 26.0 if cc >= 24 else 18.0
+                    settle = 6.0
                     cfgs.append(dict(top=top, loads=args.loads, corner=corner,
                                      coarse=cc, fine=ff,
                                      release_ns=0.0, init="0",
@@ -487,7 +508,8 @@ def main():
             d = gen_deck(cfg, workdir)
             return run_deck(cfg, workdir)
         except Exception as e:
-            return {**cfg, "error": str(e)}
+            import traceback
+            return {**cfg, "error": repr(e), "trace": traceback.format_exc()[-1500:]}
     with ThreadPoolExecutor(args.jobs) as ex:
         results = list(ex.map(go, cfgs))
     json.dump(results, open(args.out, "w"), indent=1)
