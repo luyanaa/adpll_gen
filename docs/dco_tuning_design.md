@@ -154,6 +154,31 @@ Verified (`ss_sweep5_wire.json`, 32/32 codes, SS pre-layout with wire):
 Remaining: FF/TT coverage, six loaded-top measurements, M4 (placement regen,
 LibreLane, post-route tap uniformity + DRC/LVS + routed-250 confirm).
 
+**BLOCKER found 2026-11-27 (M4 held): NSTAGE=25/STEP=3 cannot produce an 8-phase
+T/8 grid.** Period = 2(NSTAGE+1) = 52 gates; taps at k·STEP span 7·3 = 21 gates
+(0.40 T) and +inversions = +T/2. At c6 (T=3865 ps, tap interval 195 ps) the
+continuous phase spans are **[0,1365] ps** and **[1932,3298] ps**, leaving two
+**568 ps gaps (0.147 T)**. Required sampler phases 3 (1449 ps) and 7 (3382 ps)
+fall inside those gaps → **unreachable**. Nearest-tap error to k·T/8 = **93 ps**
+vs the 30 ps budget. Also the taps are 195 ps apart while the required step is
+T/8 = 483 ps (2.5× too fine), so a 2-tap interpolator cannot span the step.
+
+The earlier "13.1 ps uniformity" is a **linear-fit residual across the 0.35 T
+tap span** — it proves the taps are evenly spaced among themselves, not that
+they land on k·T/8. It can therefore neither satisfy nor refute the 30 ps
+sampler-grid spec. The RTL BER=0 does not cover this either: the RTL PI maps
+the phase word continuously over the whole period (behavioral), which is
+precisely the abstraction that hides the tap gap.
+
+**Fix: NSTAGE = 4·STEP − 1.** Then period = 2·(4·STEP) = 8·STEP gates, so
+**T/8 = STEP gates = the tap spacing exactly**, for every k. No gaps, 2-tap
+interpolation sufficient, and TX quadrature becomes exact on **even** taps
+(PHASE[0], PHASE[2] + complements → 0/90/180/270).- STEP=6 → NSTAGE=23 (odd), period 48, span 0.875 T + one T/8 wrap; SS fast
+  ≈365 MHz, slow ≈145 MHz → 250 @ SS with ~46% margin, FF ≈861 MHz.
+- STEP=7 → NSTAGE=27, SS fast ≈313 MHz (less margin; fallback).
+Chosen: **STEP=6 / NSTAGE=23**. Rate/loaded-grid verification pending; M4
+stays held until the new geometry is confirmed.
+
 **FF gate closed too (2026-11-26, `ff_sweep_wire.json`, 32/32 codes):**
 COARSE 0→31 = **658.6 → 289.3 MHz, monotone (0 up-jumps)**, max adjacent step
 **23.8 MHz < fine half-span 86** (gap-free). **500 MHz bracketed
