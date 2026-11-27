@@ -29,3 +29,11 @@
   edge at PX+6.5) rather than one single edge; order is N-even ascending then
   P-odd ascending.  This is a test-macro deviation from "one edge".
 - The two sg13g2_inv_4 stages and VDD/VSS rails are not yet placed (next).
+
+## Update: VDD/VSS rails added (build_array5.py, also DRC 0)
+- VSS: vertical M1 strap x2400..2560 merging the N psub guard-ring left rails.
+- VDD: vertical M1 strap x5360..5520 merging the P nwell guard-ring right rails.
+- Boundary labels VSS/VDD/MID added (M1/M2 text).
+- `dll8_line_array.gds` = KLayout DRC 0 (16.38 x 346.82 um) with rails.
+Remaining: sg13g2_inv_4 IN/OUT stages (LEF pin coords known: A=(0.48..2.0,
+1.52..1.9), Y right side, VDD top rail y3.56..4.0, VSS bottom rail y-0.22..0.22).
