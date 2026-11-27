@@ -1,0 +1,62 @@
+[
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 1,
+  "mode": "pulse",
+  "nfixed": 0,
+  "use_p": true,
+  "wire": true,
+  "period": null,
+  "delay_ps": 60.97299475841373,
+  "delay_fall_ps": 65.10650784475295,
+  "tpHL_minus_tpLH": 4.133513086339221,
+  "rise_10_90_ps": 56.11202698907743,
+  "fall_10_90_ps": 46.25221063297374
+ },
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 1,
+  "mode": "pulse",
+  "nfixed": 8,
+  "use_p": true,
+  "wire": true,
+  "period": null,
+  "delay_ps": 107.93785988979744,
+  "delay_fall_ps": 126.14089634370599,
+  "tpHL_minus_tpLH": 18.203036453908553,
+  "rise_10_90_ps": 96.7218961792332,
+  "fall_10_90_ps": 114.26488908734107
+ },
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 1,
+  "mode": "pulse",
+  "nfixed": 16,
+  "use_p": true,
+  "wire": true,
+  "period": null,
+  "delay_ps": 210.67376848134862,
+  "delay_fall_ps": 232.61927569645667,
+  "tpHL_minus_tpLH": 21.94550721510805,
+  "rise_10_90_ps": 157.06109831767128,
+  "fall_10_90_ps": 195.38430342554986
+ },
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 1,
+  "mode": "pulse",
+  "nfixed": 32,
+  "use_p": true,
+  "wire": true,
+  "period": null,
+  "delay_ps": 445.53231138017645,
+  "delay_fall_ps": 281.16227058978296,
+  "tpHL_minus_tpLH": -164.3700407903935,
+  "rise_10_90_ps": 238.28972584421757,
+  "fall_10_90_ps": 274.5399712432004
+ }
+]

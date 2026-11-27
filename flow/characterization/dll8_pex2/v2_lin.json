@@ -1,0 +1,47 @@
+[
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 1,
+  "mode": "pulse",
+  "nfixed": 16,
+  "scheme": "lin",
+  "wire": true,
+  "period": null,
+  "delay_ps": 136.55960528431666,
+  "delay_fall_ps": 117.34302760025018,
+  "tpHL_minus_tpLH": -19.21657768406648,
+  "rise_10_90_ps": 100.12570069275148,
+  "fall_10_90_ps": 99.988288101033
+ },
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 1,
+  "mode": "pulse",
+  "nfixed": 32,
+  "scheme": "lin",
+  "wire": true,
+  "period": null,
+  "delay_ps": 262.5333106111808,
+  "delay_fall_ps": 226.45043858169137,
+  "tpHL_minus_tpLH": -36.08287202948944,
+  "rise_10_90_ps": 143.18711693993765,
+  "fall_10_90_ps": 171.36016794939428
+ },
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 1,
+  "mode": "pulse",
+  "nfixed": 64,
+  "scheme": "lin",
+  "wire": true,
+  "period": null,
+  "delay_ps": 548.2669757949851,
+  "delay_fall_ps": 541.2534460820551,
+  "tpHL_minus_tpLH": -7.013529712929994,
+  "rise_10_90_ps": 219.54900168479838,
+  "fall_10_90_ps": null
+ }
+]
