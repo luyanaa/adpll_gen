@@ -51,3 +51,35 @@ claimed.  Magic DRC remains 0.
 ## Status: still NOT signoff
 Routed element / LVS / PEX are not done.  PEX tap spread unavailable.  The
 0.96 fF/node assumption is still unvalidated.
+
+## KLayout 568 violations — specific rules (scope decision needed)
+From elem.lyrdb (PDK ihp-sg13g2 KLayout deck):
+  NBL.c   55 : 5.3.NBL.c Min. PWell width between nBuLay regions (different net) 3.2 um
+  Cnt.a  192 : 5.14.Cnt.a Min/max Cont width 0.16 um
+  CntB.a1 254: 5.15.CntB.a1 Min. ContBar length 0.34 um   (~1 per device)
+  CntB.a  192: 5.15.CntB.a Min/max ContBar width 0.16 um
+  Cnt.b   36 : 5.14.Cnt.b Min. Cont space 0.18 um
+  CntB.b1     5.15.CntB.b1 Min. ContBar space 0.36 um (common run >5um)
+  CntB.h1     5.15.CntB.h1 Min. Metal1 enclosure of ContBar 0.05 um
+  Act.b 11, M1.b 9, Cnt.e 4, Gat.d 2, ...
+
+The CntB (contact-bar) family is ~one-per-device: the **KLayout PCell streams
+its S/D and ring contacts as ContBar geometry that the KLayout DRC deck
+rejects** (length/width/space/M1-enclosure).  Magic DRc is 0 on the same GDS
+(Magic uses its own extract/DRC deck).  This is a PDK KLayout-PCell vs
+KLayout-DRC revision mismatch, not a placement error and not my added pads.
+NBL.c 55 (nBuLay-to-nBuLay PWell gap 3.2 um) is a pitch issue that a larger
+PMOS pitch would fix, but the ContBar family is inherent to the PCell.
+
+### Options (scope decision)
+1. Draw the devices with Magic (the cdr_ihp130/tx_macro path), where the Magic
+   PCells + Magic DRC are consistent -> KLayout deck then passes (proven on
+   cdr_ihp130).  Cost: hand/scripted Magic layout for 254 devices/element.
+2. Replace/patch the KLayout PCell ContBar construction (correct length/space)
+   -> not a parameter exposed by the moscap/nmos/pmos PCell.
+3. Accept Magic DRC 0 as the signoff deck for this PDK (the cdr_ihp130 flow
+   used Magic as primary) and treat KLayout as a second opinion with a known
+   PCell/DRC revision gap.
+
+The 127-finger / 1.0x1.0 element is unchanged; this is a device-construction
+tooling mismatch, not a design change.
