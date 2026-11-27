@@ -673,3 +673,22 @@ Shared-well implementation is therefore standard practice: connecting rectangles
 on 31/0 (+ covering 32/0) unite the P-row wells into one VDD-net shape with tie
 taps. The lane was unblocked with exact layer numbers and continues the full
 chain to PEX.
+
+### KLayout DRC = 0 achieved; flow decision: KLayout is the sole signoff deck (2026-11-27, `fb257e2`)
+
+Shared nwell/nBuLay over the P group (31/0 + 32/0 continuous rectangle) took the
+element from 171 → **0** on KLayout 0.30.12: `dll8_elem_shared_well`, 119.88 ×
+60.83 µm, 127 fingers, both inv_4. The full causal chain is now closed:
+568 (overlap) → 171 (overlap fixed) → 0 (well sharing).
+
+**Flow decision (deviation accepted, documented):** KLayout is the *sole*
+signoff deck for the custom bank path. This is coherent rather than a waiver:
+the KLayout deck is the PDK's primary open signoff deck, it natively extracts
+`sg13_moscap` for LVS, and Magic's deck is parameterized for Magic-drawn layout
+which cannot represent moscap at all. Magic DRC 256 on the same GDS is a
+representation mismatch, not a design error.
+
+Remaining: route the element bank → KLayout DRC stays 0 → KLayout LVS (with
+explicit verification that `moscap_p` inside shared nBuLay still extracts as
+`sg13_moscap_p`) → PEX (xsect or Magic-with-caveat) → the decisive numbers:
+extracted BASE/mid delay, **per-node C on mid vs 0.96 fF/node**, mid-bus RC.
