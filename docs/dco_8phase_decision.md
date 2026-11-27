@@ -416,3 +416,48 @@ on exactly the work that just failed drops 4×; if not, we stay at 127.
 Then: route one 4-element macro with shared wells/rings → DRC 0 → netgen LVS →
 **PEX tap-to-tap spread** → LEF + place dry-run. The tile PnR follows only after
 that single macro is clean.
+
+### Honest schedule assessment (2026-11-27)
+
+What is **verified today** (RTL + device-level simulation, reproducible):
+
+| item | evidence |
+|---|---|
+| 8-phase architecture | all-digital DLL8; the single-ring family proven structurally impossible |
+| element | stock inv_4 ×2 + thermometer switched-moscap bank; BASE 146/90/61 ps, LSB ~4 ps, monotone |
+| range | ≥1.31× headroom at 250 MHz (SS) and 1.83× at 500 MHz (FF) |
+| loop | coherent TDC (T/1024 = 3.9/2.9/2.0 ps); locks both rails; no false lock; **E ≤ 16 ps** |
+| phase grid | **5–16 ps** vs the 30 ps budget (SS/4 ns, SS/2 ns, TT/3 ns, FF/2 ns) |
+| duty | **50.0 % by construction** (SR regen), all 8 outputs, all corners |
+| matching | 1.5–1.7 ps element-to-element (measured); no per-element trims needed |
+| complexity | stock cells only — the custom driver was measured unnecessary and deleted |
+
+What is **NOT done**, and is real analog layout (first time in this project):
+
+1. A legal **routed** 4-element macro: shared wells/guard rings (the naive butted
+   placement produced **15,600 DRC errors**), bank routing, DRC 0 on Magic *and*
+   KLayout, netgen LVS.
+2. **PEX tap-to-tap spread** — the decisive number. Everything above assumes
+   matched tap parasitics (the sim used 0.96 fF/node); the ring campaign already
+   showed one ~38 µm route can destroy tap uniformity.
+3. LEF abstract + OpenROAD place dry-run; macro binding with the SPICE path kept.
+4. Full 8-element extracted-line SPICE at the exact lock code (conformance runs
+   used line-scaled BASE/LSB, ×1.2 element→line).
+5. SS D_set clean extraction (FF is clean at 1.5–1.7 ps; SS is extractor-limited).
+
+**Positioning recommendation for the MPW.** Do not claim a silicon-verified
+8-phase clock this shuttle. The defensible claim is:
+
+> "All-digital 8-phase DLL, RTL + device-level simulation verified to ≤16 ps phase
+> error and 50 % duty at 1 and 2 Gb/s across SS/TT/FF; **hard macro in progress**;
+> 2 × 4-element split chosen; **open**: routed DRC/LVS and PEX tap spread."
+
+That is honest and still strong — the architecture question is settled with
+evidence, which is the part that usually goes wrong late. The remaining risk is
+concentrated in one measurable item (**PEX tap spread**), not spread across the
+design.
+
+**Decision point:** if the 4-element macro cannot reach DRC-0 + a tap spread
+inside ~30 ps in the available time, ship the DLL8 as RTL + verified simulation
+(this cycle) and carry the macro to the next shuttle — rather than tape out an
+unrouted or PEX-unverified clock block.
