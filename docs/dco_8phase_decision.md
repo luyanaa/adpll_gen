@@ -692,3 +692,21 @@ Remaining: route the element bank → KLayout DRC stays 0 → KLayout LVS (with
 explicit verification that `moscap_p` inside shared nBuLay still extracts as
 `sg13_moscap_p`) → PEX (xsect or Magic-with-caveat) → the decisive numbers:
 extracted BASE/mid delay, **per-node C on mid vs 0.96 fF/node**, mid-bus RC.
+
+### Finger unit routed; array assembly in progress; stdcell fallback under evaluation (2026-11-27, `e11ea13`)
+
+The `DLL8_FINGER` unit is now routed with the correct 3-layer structure: the CN
+jumper (switch drain → moscap gate) must cross the cap's own guard ring, so it
+goes **poly contact → M1 pad → V1 → M2 bridge** — M1 alone cannot cross the ring.
+CTRL/MID/VSS are abutted terminals. Finger is at 13 violations with exact
+coordinate fixes identified (`DX=3400`, gate-pad narrowing, cont/via enclosure).
+
+**Parallel evaluation opened** (does not touch the custom path): a pure-stdcell
+switched-cap finger — `sg13g2_ebufn` (tri-state enable buffer) as the series
+switch + a large inverter's input capacitance as the cap. First-order theory
+says the caps are comparable (`inv_4` input ≈ 14.9 fF vs moscap finger 12.8 fF).
+If contrast and range measure within ~2× of the moscap finger, the entire custom
+layout path becomes unnecessary — LibreLane does P&R, DRC/LVS/PEX/SPEF all
+standard. Decisive measurement: contrast in ps per finger at SS/TT/FF, off-state
+residual, floating-node behavior, power cost of switching load inverters.
+Verdict will be (A) replace / (B) viable-but-worse / (C) not viable, with numbers.
