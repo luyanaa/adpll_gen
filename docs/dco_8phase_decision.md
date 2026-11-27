@@ -230,3 +230,40 @@ the derived dead-zone limit (>56 ps) that forced the TDC swap.
 wire caps — BASE/LSB per corner (the digital BASE/LSB are optimistic
 placeholders), element headroom at 500 ps (SS) and 250 ps (FF), and the
 conformance re-run with measured delays substituted.
+
+### DLL8 SPICE pass (2026-11-27, `0449538`, `d75778e`, `b776580`)
+
+**Element sizing resolved** (device-level SPICE, real sg13g2 + OSDI PSP103-NQS +
+0.96 fF/node wire caps):
+- First stage `INVX4-B` **Wp=5.30 µm / Wn=2.96 µm** — the stock inv_4
+  (4.48/2.96) is PMOS-under-sized under load and was the source of the
+  tpHL−tpLH asymmetry (+45…+64 ps → **≤4 ps** after the fix).
+- Bank: 7-bit **thermometer**, symmetric N/P switched `sg13_moscap`
+  0.9×1.1 µm (~12.7 fF/finger), half NMOS→VSS / half PMOS→VDD, `buf_8`/`inv_8`
+  control. Two measured corrections: buf_1 cannot drive 64 gates, and the
+  **binary** code was non-monotone at −28 ps carries → thermometer it is.
+- **BASE 62.1 / 42.2 / 30.9 ps** (bare), ~148 / 88 / 59 ps with the bank all-off
+  — still < 200 ps. **LSB ~5.0 / 4.0 / 3.5 ps**. Range 62→700 / 42→545 / 31→470 ps,
+  monotone. 8-element line additivity ~1.2× → spans **2000–4000 ps at every
+  corner**, ≥1.40× delay margin at the operating codes.
+
+**Closed-loop with measured timing** (line-scaled BASE/LSB SS 74.5/6.0,
+TT 50.4/4.75, FF 37.2/4.15 ps): LOCKED both rails in all four cases,
+E ≤ 16 ps, worst |phase_k − k·T/8| = 5–16 ps, no false lock.
+
+**Duty is load-bearing, so regeneration stays.** Raw tap duty is 58–61 %.
+This is not tolerable: TX's 4:1 latch-MUX uses `clk_ph[i]` as the latch
+transparency window, so 58 % high time holds the latch open 0.08 UI into the
+next phase's slot and corrupts data. **SR/DFF regeneration** (SET on tap_k
+rising, RESET on tap_(k+4) rising = k·d + T/2 since 8d = T) gives high time
+exactly 4d = T/2 → **50 % by construction**, and both edges are rising so the
+bank's tpHL/tpLH cannot enter duty.
+
+**Open (being closed):** per-phase **set-path SPREAD** measured 31 ps over
+k=0..3, at the budget edge and not certified for k=4..7. Note the *absolute*
+0.45 ns set delay is harmless (a common offset across all k is absorbed by the
+sampler/CDR); only the k-to-k spread enters |phase_k − k·T/8|. Suspected
+extraction artefact (0.45 ns set delay vs a 0.2 ns pairing window); all 8
+regenerators are the same cell with the same load, so the physical spread
+should be ~1–2 ps. Being re-extracted with a per-cycle edge association and
+load-symmetry enumeration over all 8 phases.
