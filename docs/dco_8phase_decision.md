@@ -408,10 +408,24 @@ scales as N at constant total capacitance:
 | 63 | 8.1 ps | 1.4×1.4 µm | 1008 |
 | **31** | **16.4 ps** | **~2.0×2.0 µm** | **496** |
 
-Being measured now: a 31-finger / ~2×2 µm element. The deciding quantity is the
-**OFF-state residual contrast** (a bigger cap behind a proportionally bigger
-switch may not preserve the on/off ratio). If contrast holds, the layout burden
-on exactly the work that just failed drops 4×; if not, we stay at 127.
+**Measured 2026-11-27 (`85e71d9`, `finger_test.json`) — the 4× reduction does NOT
+exist. Total switched capacitance is not conserved:**
+
+| N | finger | SS BASE | SS max | range | contrast/finger | vs 575 ps |
+|---|---|---|---|---|---|---|
+| **127** | 1.0×1.0 | 173.6 | **660.6** | 487.0 | 3.83 ps | **PASS (1.32×)** |
+| 63 | 1.4×1.4 | 140.5 | 510.9 | 370.4 | 5.88 | FAIL (1.02×) |
+| 31 | 2.0×2.0 | 117.5 | 403.7 | 286.3 | 9.24 | FAIL (0.81×) |
+
+Per-finger contrast grows **sub-linearly** (3.83 → 5.88 → 9.24 ps for 1×/1.4×/2×
+size) because `sg13_moscap` is voltage-dependent and the larger switch adds series
+R — so a bigger finger buys less delay than its area. **127 fingers / 1.0×1.0 µm
+is required, and the margin is not close** (63 fingers reaches only 1.02× where
+1.15× is needed). The 2 × 4-element macro split stands.
+
+Note this is the second time a "constant total capacitance" assumption failed in
+this campaign (the first was the ring's NAND3 finger bank) — on this PDK, switched
+MOS-cap delay must be measured, never scaled by area.
 
 Then: route one 4-element macro with shared wells/rings → DRC 0 → netgen LVS →
 **PEX tap-to-tap spread** → LEF + place dry-run. The tile PnR follows only after
