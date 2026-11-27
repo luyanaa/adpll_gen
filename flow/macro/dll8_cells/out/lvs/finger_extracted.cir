@@ -1,0 +1,12 @@
+* Extracted by KLayout with SG13G2 LVS runset on : 27/11/2026 16:03
+
+.SUBCKT DLL8_FINGER
+X$1 \$2 \$1 \$4 \$3 nmos
+C$1 \$1 \$I2 sg13_moscap_n w=1u l=1u
+.ENDS DLL8_FINGER
+
+.SUBCKT nmos \$1 \$2 \$4 \$8
+M$1 \$1 \$8 \$2 \$4 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p PS=1.68u
++ PD=1.68u rfmode=0
+R$2 \$3 \$4 ptap1 A=3.234p P=21.56u
+.ENDS nmos

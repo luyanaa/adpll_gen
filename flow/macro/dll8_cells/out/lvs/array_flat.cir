@@ -1,0 +1,521 @@
+* Extracted by KLayout with SG13G2 LVS runset on : 27/11/2026 16:03
+
+.SUBCKT dll8_line_array_top moscap_p moscap_p$1 moscap_p$2 moscap_p$3
++ moscap_p$4 moscap_p$5 moscap_p$6 moscap_p$7 moscap_p$8 moscap_p$9 moscap_p$10
++ moscap_p$11 moscap_p$12 moscap_p$13 moscap_p$14 moscap_p$15 moscap_p$16
++ moscap_p$17 moscap_p$18 moscap_p$19 moscap_p$20 moscap_p$21 moscap_p$22
++ moscap_p$23 moscap_p$24 moscap_p$25 moscap_p$26 moscap_p$27 moscap_p$28
++ moscap_p$29 moscap_p$30 moscap_p$31 moscap_p$32 moscap_p$33 moscap_p$34
++ moscap_p$35 moscap_p$36 moscap_p$37 moscap_p$38 moscap_p$39 moscap_p$40
++ moscap_p$41 moscap_p$42 moscap_p$43 moscap_p$44 moscap_p$45 moscap_p$46
++ moscap_p$47 moscap_p$48 moscap_p$49 moscap_p$50 moscap_p$51 moscap_p$52
++ moscap_p$53 moscap_p$54 moscap_p$55 moscap_p$56 moscap_p$57 moscap_p$58
++ moscap_p$59 moscap_p$60 moscap_p$61 moscap_p$62
+M$1 \$12 \$13 \$10 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p PS=1.68u
++ PD=1.68u rfmode=0
+M$2 \$26 \$27 \$24 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p PS=1.68u
++ PD=1.68u rfmode=0
+M$3 \$44 \$45 \$41 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p PS=1.68u
++ PD=1.68u rfmode=0
+M$4 \$60 \$61 \$57 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p PS=1.68u
++ PD=1.68u rfmode=0
+M$5 \$75 \$76 \$74 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p PS=1.68u
++ PD=1.68u rfmode=0
+M$6 \$90 \$91 \$89 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p PS=1.68u
++ PD=1.68u rfmode=0
+M$7 \$108 \$109 \$104 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$8 \$124 \$125 \$121 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$9 \$138 \$139 \$135 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$10 \$154 \$155 \$153 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$11 \$170 \$171 \$167 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$12 \$186 \$187 \$183 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$13 \$200 \$201 \$199 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$14 \$218 \$219 \$215 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$15 \$234 \$235 \$231 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$16 \$249 \$250 \$248 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$17 \$264 \$265 \$263 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$18 \$282 \$283 \$278 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$19 \$298 \$299 \$295 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$20 \$312 \$313 \$309 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$21 \$328 \$329 \$327 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$22 \$344 \$345 \$341 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$23 \$360 \$361 \$357 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$24 \$374 \$375 \$373 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$25 \$392 \$393 \$389 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$26 \$408 \$409 \$405 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$27 \$423 \$424 \$422 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$28 \$438 \$439 \$437 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$29 \$456 \$457 \$452 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$30 \$472 \$473 \$469 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$31 \$486 \$487 \$483 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$32 \$502 \$503 \$501 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$33 \$518 \$519 \$517 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$34 \$534 \$535 \$531 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$35 \$548 \$549 \$547 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$36 \$566 \$567 \$563 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$37 \$582 \$583 \$579 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$38 \$597 \$598 \$596 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$39 \$612 \$613 \$611 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$40 \$630 \$631 \$626 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$41 \$646 \$647 \$643 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$42 \$660 \$661 \$657 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$43 \$676 \$677 \$675 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$44 \$692 \$693 \$689 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$45 \$708 \$709 \$705 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$46 \$722 \$723 \$721 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$47 \$740 \$741 \$737 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$48 \$756 \$757 \$753 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$49 \$771 \$772 \$770 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$50 \$786 \$787 \$785 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$51 \$804 \$805 \$800 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$52 \$820 \$821 \$817 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$53 \$834 \$835 \$831 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$54 \$850 \$851 \$849 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$55 \$866 \$867 \$863 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$56 \$882 \$883 \$879 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$57 \$896 \$897 \$895 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$58 \$914 \$915 \$911 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$59 \$930 \$931 \$927 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$60 \$945 \$946 \$944 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$61 \$960 \$961 \$959 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$62 \$978 \$979 \$974 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$63 \$994 \$995 \$991 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$64 \$1008 \$1009 \$1005 \$1 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p
++ PS=1.68u PD=1.68u rfmode=0
+M$65 \$4 \$20 moscap_p \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p PS=2.68u
++ PD=2.68u rfmode=0
+M$66 \$28 \$38 moscap_p$1 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$67 \$50 \$62 moscap_p$2 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$68 \$72 \$81 moscap_p$3 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$69 \$93 \$105 moscap_p$4 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$70 \$113 \$126 moscap_p$5 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$71 \$136 \$148 moscap_p$6 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$72 \$156 \$172 moscap_p$7 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$73 \$179 \$189 moscap_p$8 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$74 \$202 \$212 moscap_p$9 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$75 \$223 \$236 moscap_p$10 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$76 \$245 \$255 moscap_p$11 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$77 \$267 \$279 moscap_p$12 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$78 \$287 \$300 moscap_p$13 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$79 \$311 \$322 moscap_p$14 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$80 \$330 \$346 moscap_p$15 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$81 \$352 \$363 moscap_p$16 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$82 \$377 \$386 moscap_p$17 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$83 \$397 \$410 moscap_p$18 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$84 \$420 \$429 moscap_p$19 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$85 \$441 \$453 moscap_p$20 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$86 \$462 \$474 moscap_p$21 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$87 \$485 \$496 moscap_p$22 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$88 \$504 \$520 moscap_p$23 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$89 \$527 \$537 moscap_p$24 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$90 \$551 \$560 moscap_p$25 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$91 \$571 \$584 moscap_p$26 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$92 \$593 \$603 moscap_p$27 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$93 \$614 \$627 moscap_p$28 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$94 \$636 \$648 moscap_p$29 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$95 \$659 \$670 moscap_p$30 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$96 \$679 \$694 moscap_p$31 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$97 \$701 \$711 moscap_p$32 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$98 \$725 \$734 moscap_p$33 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$99 \$745 \$758 moscap_p$34 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$100 \$768 \$777 moscap_p$35 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$101 \$789 \$801 moscap_p$36 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$102 \$809 \$822 moscap_p$37 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$103 \$832 \$844 moscap_p$38 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$104 \$853 \$868 moscap_p$39 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$105 \$875 \$885 moscap_p$40 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$106 \$899 \$908 moscap_p$41 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$107 \$920 \$932 moscap_p$42 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$108 \$941 \$951 moscap_p$43 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$109 \$962 \$975 moscap_p$44 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$110 \$983 \$996 moscap_p$45 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$111 \$1007 \$1016 moscap_p$46 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$112 \$1020 \$1024 moscap_p$47 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$113 \$1026 \$1033 moscap_p$48 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$114 \$1037 \$1040 moscap_p$49 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$115 \$1042 \$1049 moscap_p$50 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$116 \$1053 \$1056 moscap_p$51 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$117 \$1059 \$1065 moscap_p$52 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$118 \$1068 \$1072 moscap_p$53 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$119 \$1075 \$1081 moscap_p$54 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$120 \$1084 \$1088 moscap_p$55 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$121 \$1091 \$1097 moscap_p$56 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$122 \$1101 \$1104 moscap_p$57 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$123 \$1106 \$1113 moscap_p$58 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$124 \$1116 \$1120 moscap_p$59 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$125 \$1123 \$1129 moscap_p$60 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$126 \$1133 \$1136 moscap_p$61 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+M$127 \$1139 \$1145 moscap_p$62 \$2 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p
++ PS=2.68u PD=2.68u rfmode=0
+C$128 moscap_p \$14 sg13_moscap_p w=1u l=1u
+C$129 moscap_p$1 \$34 sg13_moscap_p w=1u l=1u
+C$130 moscap_p$2 \$58 sg13_moscap_p w=1u l=1u
+C$131 moscap_p$3 \$77 sg13_moscap_p w=1u l=1u
+C$132 moscap_p$4 \$96 sg13_moscap_p w=1u l=1u
+C$133 moscap_p$5 \$122 sg13_moscap_p w=1u l=1u
+C$134 moscap_p$6 \$143 sg13_moscap_p w=1u l=1u
+C$135 moscap_p$7 \$165 sg13_moscap_p w=1u l=1u
+C$136 moscap_p$8 \$188 sg13_moscap_p w=1u l=1u
+C$137 moscap_p$9 \$211 sg13_moscap_p w=1u l=1u
+C$138 moscap_p$10 \$232 sg13_moscap_p w=1u l=1u
+C$139 moscap_p$11 \$251 sg13_moscap_p w=1u l=1u
+C$140 moscap_p$12 \$271 sg13_moscap_p w=1u l=1u
+C$141 moscap_p$13 \$296 sg13_moscap_p w=1u l=1u
+C$142 moscap_p$14 \$317 sg13_moscap_p w=1u l=1u
+C$143 moscap_p$15 \$339 sg13_moscap_p w=1u l=1u
+C$144 moscap_p$16 \$362 sg13_moscap_p w=1u l=1u
+C$145 moscap_p$17 \$385 sg13_moscap_p w=1u l=1u
+C$146 moscap_p$18 \$406 sg13_moscap_p w=1u l=1u
+C$147 moscap_p$19 \$425 sg13_moscap_p w=1u l=1u
+C$148 moscap_p$20 \$444 sg13_moscap_p w=1u l=1u
+C$149 moscap_p$21 \$470 sg13_moscap_p w=1u l=1u
+C$150 moscap_p$22 \$491 sg13_moscap_p w=1u l=1u
+C$151 moscap_p$23 \$513 sg13_moscap_p w=1u l=1u
+C$152 moscap_p$24 \$536 sg13_moscap_p w=1u l=1u
+C$153 moscap_p$25 \$559 sg13_moscap_p w=1u l=1u
+C$154 moscap_p$26 \$580 sg13_moscap_p w=1u l=1u
+C$155 moscap_p$27 \$600 sg13_moscap_p w=1u l=1u
+C$156 moscap_p$28 \$618 sg13_moscap_p w=1u l=1u
+C$157 moscap_p$29 \$644 sg13_moscap_p w=1u l=1u
+C$158 moscap_p$30 \$665 sg13_moscap_p w=1u l=1u
+C$159 moscap_p$31 \$687 sg13_moscap_p w=1u l=1u
+C$160 moscap_p$32 \$710 sg13_moscap_p w=1u l=1u
+C$161 moscap_p$33 \$733 sg13_moscap_p w=1u l=1u
+C$162 moscap_p$34 \$754 sg13_moscap_p w=1u l=1u
+C$163 moscap_p$35 \$773 sg13_moscap_p w=1u l=1u
+C$164 moscap_p$36 \$792 sg13_moscap_p w=1u l=1u
+C$165 moscap_p$37 \$818 sg13_moscap_p w=1u l=1u
+C$166 moscap_p$38 \$840 sg13_moscap_p w=1u l=1u
+C$167 moscap_p$39 \$861 sg13_moscap_p w=1u l=1u
+C$168 moscap_p$40 \$884 sg13_moscap_p w=1u l=1u
+C$169 moscap_p$41 \$907 sg13_moscap_p w=1u l=1u
+C$170 moscap_p$42 \$928 sg13_moscap_p w=1u l=1u
+C$171 moscap_p$43 \$947 sg13_moscap_p w=1u l=1u
+C$172 moscap_p$44 \$966 sg13_moscap_p w=1u l=1u
+C$173 moscap_p$45 \$992 sg13_moscap_p w=1u l=1u
+C$174 moscap_p$46 \$1013 sg13_moscap_p w=1u l=1u
+C$175 moscap_p$47 \$1023 sg13_moscap_p w=1u l=1u
+C$176 moscap_p$48 \$1031 sg13_moscap_p w=1u l=1u
+C$177 moscap_p$49 \$1039 sg13_moscap_p w=1u l=1u
+C$178 moscap_p$50 \$1047 sg13_moscap_p w=1u l=1u
+C$179 moscap_p$51 \$1055 sg13_moscap_p w=1u l=1u
+C$180 moscap_p$52 \$1063 sg13_moscap_p w=1u l=1u
+C$181 moscap_p$53 \$1071 sg13_moscap_p w=1u l=1u
+C$182 moscap_p$54 \$1079 sg13_moscap_p w=1u l=1u
+C$183 moscap_p$55 \$1087 sg13_moscap_p w=1u l=1u
+C$184 moscap_p$56 \$1095 sg13_moscap_p w=1u l=1u
+C$185 moscap_p$57 \$1103 sg13_moscap_p w=1u l=1u
+C$186 moscap_p$58 \$1111 sg13_moscap_p w=1u l=1u
+C$187 moscap_p$59 \$1119 sg13_moscap_p w=1u l=1u
+C$188 moscap_p$60 \$1127 sg13_moscap_p w=1u l=1u
+C$189 moscap_p$61 \$1135 sg13_moscap_p w=1u l=1u
+C$190 moscap_p$62 \$1143 sg13_moscap_p w=1u l=1u
+R$191 moscap_p$31 \$2 ntap1 A=1.62p P=12u
+R$193 \$679 \$2 ntap1 A=3.87p P=25.8u
+R$194 moscap_p$32 \$2 ntap1 A=1.62p P=12u
+R$196 \$701 \$2 ntap1 A=3.87p P=25.8u
+R$197 moscap_p$33 \$2 ntap1 A=1.62p P=12u
+R$199 \$725 \$2 ntap1 A=3.87p P=25.8u
+R$200 moscap_p$34 \$2 ntap1 A=1.62p P=12u
+R$202 \$745 \$2 ntap1 A=3.87p P=25.8u
+R$203 moscap_p$35 \$2 ntap1 A=1.62p P=12u
+R$205 \$768 \$2 ntap1 A=3.87p P=25.8u
+R$206 moscap_p$36 \$2 ntap1 A=1.62p P=12u
+R$208 \$789 \$2 ntap1 A=3.87p P=25.8u
+R$209 moscap_p$37 \$2 ntap1 A=1.62p P=12u
+R$211 \$809 \$2 ntap1 A=3.87p P=25.8u
+R$212 moscap_p$38 \$2 ntap1 A=1.62p P=12u
+R$214 \$832 \$2 ntap1 A=3.87p P=25.8u
+R$215 moscap_p$39 \$2 ntap1 A=1.62p P=12u
+R$217 \$853 \$2 ntap1 A=3.87p P=25.8u
+R$218 moscap_p$40 \$2 ntap1 A=1.62p P=12u
+R$220 \$875 \$2 ntap1 A=3.87p P=25.8u
+R$221 moscap_p$41 \$2 ntap1 A=1.62p P=12u
+R$223 \$899 \$2 ntap1 A=3.87p P=25.8u
+R$224 moscap_p$42 \$2 ntap1 A=1.62p P=12u
+R$226 \$920 \$2 ntap1 A=3.87p P=25.8u
+R$227 moscap_p$43 \$2 ntap1 A=1.62p P=12u
+R$229 \$941 \$2 ntap1 A=3.87p P=25.8u
+R$230 moscap_p$44 \$2 ntap1 A=1.62p P=12u
+R$232 \$962 \$2 ntap1 A=3.87p P=25.8u
+R$233 moscap_p$45 \$2 ntap1 A=1.62p P=12u
+R$235 \$983 \$2 ntap1 A=3.87p P=25.8u
+R$236 moscap_p$46 \$2 ntap1 A=1.62p P=12u
+R$238 \$1007 \$2 ntap1 A=3.87p P=25.8u
+R$239 moscap_p$47 \$2 ntap1 A=1.62p P=12u
+R$241 \$1020 \$2 ntap1 A=3.87p P=25.8u
+R$242 moscap_p$48 \$2 ntap1 A=1.62p P=12u
+R$244 \$1026 \$2 ntap1 A=3.87p P=25.8u
+R$245 moscap_p$49 \$2 ntap1 A=1.62p P=12u
+R$247 \$1037 \$2 ntap1 A=3.87p P=25.8u
+R$248 moscap_p$50 \$2 ntap1 A=1.62p P=12u
+R$250 \$1042 \$2 ntap1 A=3.87p P=25.8u
+R$251 moscap_p$51 \$2 ntap1 A=1.62p P=12u
+R$253 \$1053 \$2 ntap1 A=3.87p P=25.8u
+R$254 moscap_p$52 \$2 ntap1 A=1.62p P=12u
+R$256 \$1059 \$2 ntap1 A=3.87p P=25.8u
+R$257 moscap_p$53 \$2 ntap1 A=1.62p P=12u
+R$259 \$1068 \$2 ntap1 A=3.87p P=25.8u
+R$260 moscap_p$54 \$2 ntap1 A=1.62p P=12u
+R$262 \$1075 \$2 ntap1 A=3.87p P=25.8u
+R$263 moscap_p$55 \$2 ntap1 A=1.62p P=12u
+R$265 \$1084 \$2 ntap1 A=3.87p P=25.8u
+R$266 moscap_p$56 \$2 ntap1 A=1.62p P=12u
+R$268 \$1091 \$2 ntap1 A=3.87p P=25.8u
+R$269 moscap_p$57 \$2 ntap1 A=1.62p P=12u
+R$271 \$1101 \$2 ntap1 A=3.87p P=25.8u
+R$272 moscap_p$58 \$2 ntap1 A=1.62p P=12u
+R$274 \$1106 \$2 ntap1 A=3.87p P=25.8u
+R$275 moscap_p$59 \$2 ntap1 A=1.62p P=12u
+R$277 \$1116 \$2 ntap1 A=3.87p P=25.8u
+R$278 moscap_p$60 \$2 ntap1 A=1.62p P=12u
+R$280 \$1123 \$2 ntap1 A=3.87p P=25.8u
+R$281 moscap_p$61 \$2 ntap1 A=1.62p P=12u
+R$283 \$1133 \$2 ntap1 A=3.87p P=25.8u
+R$284 moscap_p$62 \$2 ntap1 A=1.62p P=12u
+R$286 \$1139 \$2 ntap1 A=3.87p P=25.8u
+R$287 moscap_p$1 \$2 ntap1 A=1.62p P=12u
+R$289 \$28 \$2 ntap1 A=3.87p P=25.8u
+R$290 moscap_p$2 \$2 ntap1 A=1.62p P=12u
+R$292 \$50 \$2 ntap1 A=3.87p P=25.8u
+R$293 moscap_p$3 \$2 ntap1 A=1.62p P=12u
+R$295 \$72 \$2 ntap1 A=3.87p P=25.8u
+R$296 moscap_p$4 \$2 ntap1 A=1.62p P=12u
+R$298 \$93 \$2 ntap1 A=3.87p P=25.8u
+R$299 moscap_p$5 \$2 ntap1 A=1.62p P=12u
+R$301 \$113 \$2 ntap1 A=3.87p P=25.8u
+R$302 moscap_p$6 \$2 ntap1 A=1.62p P=12u
+R$304 \$136 \$2 ntap1 A=3.87p P=25.8u
+R$305 moscap_p$7 \$2 ntap1 A=1.62p P=12u
+R$307 \$156 \$2 ntap1 A=3.87p P=25.8u
+R$308 moscap_p$8 \$2 ntap1 A=1.62p P=12u
+R$310 \$179 \$2 ntap1 A=3.87p P=25.8u
+R$311 moscap_p$9 \$2 ntap1 A=1.62p P=12u
+R$313 \$202 \$2 ntap1 A=3.87p P=25.8u
+R$314 moscap_p$10 \$2 ntap1 A=1.62p P=12u
+R$316 \$223 \$2 ntap1 A=3.87p P=25.8u
+R$317 moscap_p$11 \$2 ntap1 A=1.62p P=12u
+R$319 \$245 \$2 ntap1 A=3.87p P=25.8u
+R$320 moscap_p$12 \$2 ntap1 A=1.62p P=12u
+R$322 \$267 \$2 ntap1 A=3.87p P=25.8u
+R$323 moscap_p$13 \$2 ntap1 A=1.62p P=12u
+R$325 \$287 \$2 ntap1 A=3.87p P=25.8u
+R$326 moscap_p$14 \$2 ntap1 A=1.62p P=12u
+R$328 \$311 \$2 ntap1 A=3.87p P=25.8u
+R$329 moscap_p$15 \$2 ntap1 A=1.62p P=12u
+R$331 \$330 \$2 ntap1 A=3.87p P=25.8u
+R$332 moscap_p$16 \$2 ntap1 A=1.62p P=12u
+R$334 \$352 \$2 ntap1 A=3.87p P=25.8u
+R$335 moscap_p$17 \$2 ntap1 A=1.62p P=12u
+R$337 \$377 \$2 ntap1 A=3.87p P=25.8u
+R$338 moscap_p$18 \$2 ntap1 A=1.62p P=12u
+R$340 \$397 \$2 ntap1 A=3.87p P=25.8u
+R$341 moscap_p$19 \$2 ntap1 A=1.62p P=12u
+R$343 \$420 \$2 ntap1 A=3.87p P=25.8u
+R$344 moscap_p$20 \$2 ntap1 A=1.62p P=12u
+R$346 \$441 \$2 ntap1 A=3.87p P=25.8u
+R$347 moscap_p$21 \$2 ntap1 A=1.62p P=12u
+R$349 \$462 \$2 ntap1 A=3.87p P=25.8u
+R$350 moscap_p$22 \$2 ntap1 A=1.62p P=12u
+R$352 \$485 \$2 ntap1 A=3.87p P=25.8u
+R$353 moscap_p$23 \$2 ntap1 A=1.62p P=12u
+R$355 \$504 \$2 ntap1 A=3.87p P=25.8u
+R$356 moscap_p$24 \$2 ntap1 A=1.62p P=12u
+R$358 \$527 \$2 ntap1 A=3.87p P=25.8u
+R$359 moscap_p$25 \$2 ntap1 A=1.62p P=12u
+R$361 \$551 \$2 ntap1 A=3.87p P=25.8u
+R$362 moscap_p$26 \$2 ntap1 A=1.62p P=12u
+R$364 \$571 \$2 ntap1 A=3.87p P=25.8u
+R$365 moscap_p$27 \$2 ntap1 A=1.62p P=12u
+R$367 \$593 \$2 ntap1 A=3.87p P=25.8u
+R$368 moscap_p$28 \$2 ntap1 A=1.62p P=12u
+R$370 \$614 \$2 ntap1 A=3.87p P=25.8u
+R$371 moscap_p$29 \$2 ntap1 A=1.62p P=12u
+R$373 \$636 \$2 ntap1 A=3.87p P=25.8u
+R$374 moscap_p$30 \$2 ntap1 A=1.62p P=12u
+R$376 \$659 \$2 ntap1 A=3.87p P=25.8u
+R$377 moscap_p \$2 ntap1 A=1.62p P=12u
+R$379 \$4 \$2 ntap1 A=3.87p P=25.8u
+R$380 \$7 \$1 ptap1 A=3.234p P=21.56u
+R$381 \$19 \$1 ptap1 A=3.234p P=21.56u
+R$382 \$37 \$1 ptap1 A=3.234p P=21.56u
+R$383 \$55 \$1 ptap1 A=3.234p P=21.56u
+R$384 \$69 \$1 ptap1 A=3.234p P=21.56u
+R$385 \$87 \$1 ptap1 A=3.234p P=21.56u
+R$386 \$100 \$1 ptap1 A=3.234p P=21.56u
+R$387 \$117 \$1 ptap1 A=3.234p P=21.56u
+R$388 \$133 \$1 ptap1 A=3.234p P=21.56u
+R$389 \$147 \$1 ptap1 A=3.234p P=21.56u
+R$390 \$163 \$1 ptap1 A=3.234p P=21.56u
+R$391 \$177 \$1 ptap1 A=3.234p P=21.56u
+R$392 \$197 \$1 ptap1 A=3.234p P=21.56u
+R$393 \$210 \$1 ptap1 A=3.234p P=21.56u
+R$394 \$226 \$1 ptap1 A=3.234p P=21.56u
+R$395 \$243 \$1 ptap1 A=3.234p P=21.56u
+R$396 \$261 \$1 ptap1 A=3.234p P=21.56u
+R$397 \$275 \$1 ptap1 A=3.234p P=21.56u
+R$398 \$291 \$1 ptap1 A=3.234p P=21.56u
+R$399 \$307 \$1 ptap1 A=3.234p P=21.56u
+R$400 \$320 \$1 ptap1 A=3.234p P=21.56u
+R$401 \$338 \$1 ptap1 A=3.234p P=21.56u
+R$402 \$350 \$1 ptap1 A=3.234p P=21.56u
+R$403 \$371 \$1 ptap1 A=3.234p P=21.56u
+R$404 \$384 \$1 ptap1 A=3.234p P=21.56u
+R$405 \$401 \$1 ptap1 A=3.234p P=21.56u
+R$406 \$417 \$1 ptap1 A=3.234p P=21.56u
+R$407 \$435 \$1 ptap1 A=3.234p P=21.56u
+R$408 \$448 \$1 ptap1 A=3.234p P=21.56u
+R$409 \$464 \$1 ptap1 A=3.234p P=21.56u
+R$410 \$481 \$1 ptap1 A=3.234p P=21.56u
+R$411 \$495 \$1 ptap1 A=3.234p P=21.56u
+R$412 \$512 \$1 ptap1 A=3.234p P=21.56u
+R$413 \$525 \$1 ptap1 A=3.234p P=21.56u
+R$414 \$545 \$1 ptap1 A=3.234p P=21.56u
+R$415 \$558 \$1 ptap1 A=3.234p P=21.56u
+R$416 \$574 \$1 ptap1 A=3.234p P=21.56u
+R$417 \$591 \$1 ptap1 A=3.234p P=21.56u
+R$418 \$608 \$1 ptap1 A=3.234p P=21.56u
+R$419 \$623 \$1 ptap1 A=3.234p P=21.56u
+R$420 \$639 \$1 ptap1 A=3.234p P=21.56u
+R$421 \$655 \$1 ptap1 A=3.234p P=21.56u
+R$422 \$669 \$1 ptap1 A=3.234p P=21.56u
+R$423 \$685 \$1 ptap1 A=3.234p P=21.56u
+R$424 \$699 \$1 ptap1 A=3.234p P=21.56u
+R$425 \$719 \$1 ptap1 A=3.234p P=21.56u
+R$426 \$731 \$1 ptap1 A=3.234p P=21.56u
+R$427 \$749 \$1 ptap1 A=3.234p P=21.56u
+R$428 \$765 \$1 ptap1 A=3.234p P=21.56u
+R$429 \$783 \$1 ptap1 A=3.234p P=21.56u
+R$430 \$797 \$1 ptap1 A=3.234p P=21.56u
+R$431 \$812 \$1 ptap1 A=3.234p P=21.56u
+R$432 \$829 \$1 ptap1 A=3.234p P=21.56u
+R$433 \$842 \$1 ptap1 A=3.234p P=21.56u
+R$434 \$860 \$1 ptap1 A=3.234p P=21.56u
+R$435 \$873 \$1 ptap1 A=3.234p P=21.56u
+R$436 \$893 \$1 ptap1 A=3.234p P=21.56u
+R$437 \$906 \$1 ptap1 A=3.234p P=21.56u
+R$438 \$923 \$1 ptap1 A=3.234p P=21.56u
+R$439 \$939 \$1 ptap1 A=3.234p P=21.56u
+R$440 \$957 \$1 ptap1 A=3.234p P=21.56u
+R$441 \$970 \$1 ptap1 A=3.234p P=21.56u
+R$442 \$987 \$1 ptap1 A=3.234p P=21.56u
+R$443 \$1002 \$1 ptap1 A=3.234p P=21.56u
+.ENDS dll8_line_array_top
