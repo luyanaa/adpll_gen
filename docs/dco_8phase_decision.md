@@ -727,3 +727,12 @@ Array assembly (N finger + P-finger variant, even=N/odd=P) → LVS → PEX is in
 progress on the layout lane; the stdcell fallback measurement lane runs in
 parallel. Whichever finishes first with a PASS verdict decides the
 implementation.
+
+### Both finger variants KLayout DRC = 0 (2026-11-27, `abcf13a`)
+
+P finger converged 7→3→0 with genuine pmos-intrinsic fixes: drain needs an
+adjoining M1 pad (≥190 nm) because the bare S/D ContBar strap is 160 nm < Via1
+minimum; gate V1 must be 190×190 nm; CTRL needs a gp extension because the pmos
+gate poly is 130 nm < 160 nm cont minimum. Now: element 0, N finger 0, P finger
+0 — every hard unit proven. Remaining: 127× array assembly (fully specified in
+`NEXTSTEP.md`) → LVS → PEX.
