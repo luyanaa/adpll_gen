@@ -770,3 +770,27 @@ is byte-identical across elements (common-mode).
 Remaining for element-macro signoff: place the 2 inv_4 stages, IN/mid/OUT
 routing, full CDL LVS compare, boundary-pin interface record. 8-element line
 assembly is gated on the stdcell fallback verdict (measurement lane running).
+
+### Stdcell fallback verdict: (C) NOT viable — custom moscap path confirmed (2026-11-27, `9d3b6f8`)
+
+Measured verdict (device-level ngspice, real sg13g2 + OSDI PSP103-NQS, SS/TT/FF,
+full record in `flow/characterization/stdcell_finger/REPORT.md`):
+
+- `sg13g2_ebufn` is a tri-state **buffer** (actively driven output), not a series
+  switch: the load-inverter gate cap never conductively loads MID. Measured
+  contrast of the proposed pure-stdcell finger: **0.002–0.016 ps ≈ 0** at all
+  corners, all sizes, all terminations. `mux2` likewise actively driven (0.43 ps
+  @TT). **No library pass-transistor cell exists.**
+- A corrected custom CMOS TG finger does measure well (21.6/12.6/8.7 ps
+  SS/TT/FF, 5.6× the moscap finger; 24×`inv_8`-cap fingers would meet SS range
+  564.7/LSB 20.0 ps) — but the penalties are disqualifying: ~8 fF/finger off
+  residual (BASE 219–270 ps at SS), **0.8–1.3 mW/element at 500 MHz** (6.4–10.5
+  mW for the line) vs zero dynamic power for the passive moscap bank, a
+  **mandatory keeper** because a never-enabled floating X settles at ~0.57·VDD
+  and draws 0.1–0.5 mA crowbar per finger, and it is still a custom cell — so
+  the "zero custom layout" benefit evaporates while power/keep complexity
+  appears. Strictly dominated.
+
+**Decision: the custom moscap bank is the implementation.** The pure-stdcell
+fallback is closed with evidence. 8-element line assembly proceeds as 2×
+4-element hard macros; gate lifted.
