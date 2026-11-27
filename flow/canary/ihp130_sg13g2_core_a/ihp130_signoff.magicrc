@@ -1,0 +1,11 @@
+# Magic startup for pll_macro_top on IHP SG13G2.
+# The vendored ihp-sg13g2-signoff.tech has a broken `lef` section (it maps
+# routing/cut layers to m1..m7/via1.. names it never defines as magic types),
+# which makes cifinput error out and kills both `gds read` and `lef read` --
+# so Magic.SpiceExtraction produced an empty .subckt and Magic DRC silently
+# did nothing.  The main ihp-sg13g2.tech is the complete tech: it includes
+# cifin/cifout, the vendor drc deck, a correct lef section, and the ngspice
+# device-extract rules, so one tech covers streamout, DRC and extraction.
+set techdir $env(PDK_ROOT)/ihp-sg13g2/libs.tech/magic
+tech load $techdir/ihp-sg13g2.tech
+tech unlock *

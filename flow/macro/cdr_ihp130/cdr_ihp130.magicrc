@@ -1,0 +1,10 @@
+# Magic startup for CDR_TOP on IHP SG13G2.
+# The vendored signoff tech (ihp-sg13g2-signoff.tech) has a broken lef section
+# (references m1..m7/via1.. that it never defines), which makes cifinput error
+# and breaks both GDS read and LEF read.  The main ihp-sg13g2.tech is the
+# complete tech: it includes cifin/cifout, the vendor DRC deck, the lef
+# section with the correct Metal*/Via names, and the ngspice device-extract
+# rules.  One tech covers streamout, DRC and SPICE extraction.
+set techdir $env(PDK_ROOT)/ihp-sg13g2/libs.tech/magic
+tech load $techdir/ihp-sg13g2.tech
+tech unlock *

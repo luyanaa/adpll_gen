@@ -1,0 +1,3 @@
+# `build` is a symlink to the shared canary build/ (pdk_root) on this
+# machine; recreate it with `ln -s ../../canary/ihp130_sg13g2_core_a/build build`.
+/build
