@@ -1,0 +1,23 @@
+[
+ {
+  "name": "cb_ss_0.5_inv_4",
+  "corner": "ss",
+  "bias_frac": 0.5,
+  "capcell": "inv_4",
+  "i_vdd_a": -2.46335e-05
+ },
+ {
+  "name": "cb_tt_0.5_inv_4",
+  "corner": "tt",
+  "bias_frac": 0.5,
+  "capcell": "inv_4",
+  "i_vdd_a": -5.37831e-05
+ },
+ {
+  "name": "cb_ff_0.5_inv_4",
+  "corner": "ff",
+  "bias_frac": 0.5,
+  "capcell": "inv_4",
+  "i_vdd_a": -0.000128609
+ }
+]

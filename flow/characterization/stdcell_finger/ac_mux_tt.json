@@ -1,0 +1,26 @@
+[
+ {
+  "name": "ac_tt_inv_16_none",
+  "corner": "tt",
+  "capcell": "inv_16",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -4.07276e-07
+ },
+ {
+  "name": "ac_tt_inv_16_mux_off",
+  "corner": "tt",
+  "capcell": "inv_16",
+  "switch": "mux",
+  "on": 0,
+  "imag_i": -4.21977e-07
+ },
+ {
+  "name": "ac_tt_inv_16_mux_on",
+  "corner": "tt",
+  "capcell": "inv_16",
+  "switch": "mux",
+  "on": 1,
+  "imag_i": -5.2007e-07
+ }
+]

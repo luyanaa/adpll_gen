@@ -1,0 +1,34 @@
+[
+ {
+  "name": "ctr_tt_load_inv_16_mux",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "mux",
+  "t_fall": 4.0,
+  "delay_ps": 33.481812976959304,
+  "delay_fall_ps": 37.53022023353679,
+  "rise_ps": 11.365211226228253,
+  "fall_ps": 11.171529320335951
+ },
+ {
+  "name": "ctr_tt_load_inv_16_mux_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "mux",
+  "t_fall": 4.0,
+  "delay_ps": 33.05398711855241,
+  "delay_fall_ps": 37.108057743292605,
+  "rise_ps": 11.34854574712059,
+  "fall_ps": 11.037159156142764
+ }
+]

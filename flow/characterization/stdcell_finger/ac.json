@@ -1,0 +1,362 @@
+[
+ {
+  "name": "ac_ss_inv_4_none",
+  "corner": "ss",
+  "capcell": "inv_4",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -3.64706e-07
+ },
+ {
+  "name": "ac_ss_inv_4_tg_off",
+  "corner": "ss",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.03629e-07
+ },
+ {
+  "name": "ac_ss_inv_4_tg_on",
+  "corner": "ss",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -8.22798e-07
+ },
+ {
+  "name": "ac_ss_inv_4_ebufn_off",
+  "corner": "ss",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -4.7657e-07
+ },
+ {
+  "name": "ac_ss_inv_4_ebufn_on",
+  "corner": "ss",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -4.76573e-07
+ },
+ {
+  "name": "ac_ss_inv_8_none",
+  "corner": "ss",
+  "capcell": "inv_8",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -3.64706e-07
+ },
+ {
+  "name": "ac_ss_inv_8_tg_off",
+  "corner": "ss",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.03629e-07
+ },
+ {
+  "name": "ac_ss_inv_8_tg_on",
+  "corner": "ss",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -1.15186e-06
+ },
+ {
+  "name": "ac_ss_inv_8_ebufn_off",
+  "corner": "ss",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -4.76578e-07
+ },
+ {
+  "name": "ac_ss_inv_8_ebufn_on",
+  "corner": "ss",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -4.76573e-07
+ },
+ {
+  "name": "ac_ss_inv_16_none",
+  "corner": "ss",
+  "capcell": "inv_16",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -3.64706e-07
+ },
+ {
+  "name": "ac_ss_inv_16_tg_off",
+  "corner": "ss",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.03629e-07
+ },
+ {
+  "name": "ac_ss_inv_16_tg_on",
+  "corner": "ss",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -1.80997e-06
+ },
+ {
+  "name": "ac_ss_inv_16_ebufn_off",
+  "corner": "ss",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -4.76584e-07
+ },
+ {
+  "name": "ac_ss_inv_16_ebufn_on",
+  "corner": "ss",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -4.76573e-07
+ },
+ {
+  "name": "ac_tt_inv_4_none",
+  "corner": "tt",
+  "capcell": "inv_4",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -4.07276e-07
+ },
+ {
+  "name": "ac_tt_inv_4_tg_off",
+  "corner": "tt",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.44466e-07
+ },
+ {
+  "name": "ac_tt_inv_4_tg_on",
+  "corner": "tt",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -9.12984e-07
+ },
+ {
+  "name": "ac_tt_inv_4_ebufn_off",
+  "corner": "tt",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -5.31095e-07
+ },
+ {
+  "name": "ac_tt_inv_4_ebufn_on",
+  "corner": "tt",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -5.31093e-07
+ },
+ {
+  "name": "ac_tt_inv_8_none",
+  "corner": "tt",
+  "capcell": "inv_8",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -4.07276e-07
+ },
+ {
+  "name": "ac_tt_inv_8_tg_off",
+  "corner": "tt",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.44466e-07
+ },
+ {
+  "name": "ac_tt_inv_8_tg_on",
+  "corner": "tt",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -1.28289e-06
+ },
+ {
+  "name": "ac_tt_inv_8_ebufn_off",
+  "corner": "tt",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -5.31095e-07
+ },
+ {
+  "name": "ac_tt_inv_8_ebufn_on",
+  "corner": "tt",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -5.31093e-07
+ },
+ {
+  "name": "ac_tt_inv_16_none",
+  "corner": "tt",
+  "capcell": "inv_16",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -4.07276e-07
+ },
+ {
+  "name": "ac_tt_inv_16_tg_off",
+  "corner": "tt",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.44466e-07
+ },
+ {
+  "name": "ac_tt_inv_16_tg_on",
+  "corner": "tt",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -2.02268e-06
+ },
+ {
+  "name": "ac_tt_inv_16_ebufn_off",
+  "corner": "tt",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -5.31092e-07
+ },
+ {
+  "name": "ac_tt_inv_16_ebufn_on",
+  "corner": "tt",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -5.31093e-07
+ },
+ {
+  "name": "ac_ff_inv_4_none",
+  "corner": "ff",
+  "capcell": "inv_4",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -4.30886e-07
+ },
+ {
+  "name": "ac_ff_inv_4_tg_off",
+  "corner": "ff",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.66733e-07
+ },
+ {
+  "name": "ac_ff_inv_4_tg_on",
+  "corner": "ff",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -9.65528e-07
+ },
+ {
+  "name": "ac_ff_inv_4_ebufn_off",
+  "corner": "ff",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -5.60531e-07
+ },
+ {
+  "name": "ac_ff_inv_4_ebufn_on",
+  "corner": "ff",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -5.60529e-07
+ },
+ {
+  "name": "ac_ff_inv_8_none",
+  "corner": "ff",
+  "capcell": "inv_8",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -4.30886e-07
+ },
+ {
+  "name": "ac_ff_inv_8_tg_off",
+  "corner": "ff",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.66733e-07
+ },
+ {
+  "name": "ac_ff_inv_8_tg_on",
+  "corner": "ff",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -1.35914e-06
+ },
+ {
+  "name": "ac_ff_inv_8_ebufn_off",
+  "corner": "ff",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -5.60531e-07
+ },
+ {
+  "name": "ac_ff_inv_8_ebufn_on",
+  "corner": "ff",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -5.60529e-07
+ },
+ {
+  "name": "ac_ff_inv_16_none",
+  "corner": "ff",
+  "capcell": "inv_16",
+  "switch": "none",
+  "on": 0,
+  "imag_i": -4.30886e-07
+ },
+ {
+  "name": "ac_ff_inv_16_tg_off",
+  "corner": "ff",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "on": 0,
+  "imag_i": -4.66733e-07
+ },
+ {
+  "name": "ac_ff_inv_16_tg_on",
+  "corner": "ff",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "on": 1,
+  "imag_i": -2.14636e-06
+ },
+ {
+  "name": "ac_ff_inv_16_ebufn_off",
+  "corner": "ff",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "on": 0,
+  "imag_i": -5.60531e-07
+ },
+ {
+  "name": "ac_ff_inv_16_ebufn_on",
+  "corner": "ff",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "on": 1,
+  "imag_i": -5.60529e-07
+ }
+]

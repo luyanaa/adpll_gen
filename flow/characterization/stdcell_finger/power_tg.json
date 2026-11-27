@@ -1,0 +1,425 @@
+[
+ {
+  "name": "pwr_ss_load_inv_16_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 1.887393304243167e-05,
+  "duty_pct": 50.20829861689719,
+  "avg_i_a": 1.7475863928177472e-05
+ },
+ {
+  "name": "pwr_ss_load_inv_16_tg_on",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 6.79767989160584e-05,
+  "duty_pct": 50.908181969671745,
+  "avg_i_a": 6.294148047783186e-05
+ },
+ {
+  "name": "pwr_ss_res_inv_16_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 1.8874965628912526e-05,
+  "duty_pct": 50.20829861689719,
+  "avg_i_a": 1.7476820026770856e-05
+ },
+ {
+  "name": "pwr_ss_res_inv_16_tg_on",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 6.492832878074339e-05,
+  "duty_pct": 50.908181969671745,
+  "avg_i_a": 6.0118822945132764e-05
+ },
+ {
+  "name": "pwr_ss_open_inv_16_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 1.887379899282463e-05,
+  "duty_pct": 50.20829861689719,
+  "avg_i_a": 1.7475739808170953e-05
+ },
+ {
+  "name": "pwr_ss_open_inv_16_tg_on",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 6.492779472394641e-05,
+  "duty_pct": 50.908181969671745,
+  "avg_i_a": 6.011832844809852e-05
+ },
+ {
+  "name": "pwr_ss_diode_inv_16_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.00012487761021136675,
+  "duty_pct": 50.20829861689719,
+  "avg_i_a": 0.00011562741686237662
+ },
+ {
+  "name": "pwr_ss_diode_inv_16_tg_on",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.0003094144486680671,
+  "duty_pct": 50.10831528078653,
+  "avg_i_a": 0.00028649485987783987
+ },
+ {
+  "name": "pwr_tt_load_inv_16_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 2.5406469718242096e-05,
+  "duty_pct": 50.308281953007835,
+  "avg_i_a": 2.117205809853508e-05
+ },
+ {
+  "name": "pwr_tt_load_inv_16_tg_on",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 8.84217497942885e-05,
+  "duty_pct": 50.70821529745044,
+  "avg_i_a": 7.368479149524042e-05
+ },
+ {
+  "name": "pwr_tt_res_inv_16_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 2.540788311197896e-05,
+  "duty_pct": 50.308281953007835,
+  "avg_i_a": 2.1173235926649133e-05
+ },
+ {
+  "name": "pwr_tt_res_inv_16_tg_on",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 8.476613641292831e-05,
+  "duty_pct": 50.70821529745044,
+  "avg_i_a": 7.06384470107736e-05
+ },
+ {
+  "name": "pwr_tt_open_inv_16_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 2.5406388664454835e-05,
+  "duty_pct": 50.308281953007835,
+  "avg_i_a": 2.1171990553712362e-05
+ },
+ {
+  "name": "pwr_tt_open_inv_16_tg_on",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 8.476545687104815e-05,
+  "duty_pct": 50.70821529745044,
+  "avg_i_a": 7.063788072587346e-05
+ },
+ {
+  "name": "pwr_tt_diode_inv_16_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.00028259322413980886,
+  "duty_pct": 50.308281953007835,
+  "avg_i_a": 0.00023549435344984073
+ },
+ {
+  "name": "pwr_tt_diode_inv_16_tg_on",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.0006403483213053002,
+  "duty_pct": 50.10831528078653,
+  "avg_i_a": 0.0005336236010877502
+ },
+ {
+  "name": "pwr_ff_load_inv_16_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.0004581553088856697,
+  "duty_pct": 50.10831528078653,
+  "avg_i_a": 0.00034708735521641644
+ },
+ {
+  "name": "pwr_ff_load_inv_16_tg_on",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.00011843446862214608,
+  "duty_pct": 50.40826528911849,
+  "avg_i_a": 8.97230822895046e-05
+ },
+ {
+  "name": "pwr_ff_res_inv_16_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.00045815675436804653,
+  "duty_pct": 50.10831528078653,
+  "avg_i_a": 0.00034708845027882313
+ },
+ {
+  "name": "pwr_ff_res_inv_16_tg_on",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.000114334559949573,
+  "duty_pct": 50.40826528911849,
+  "avg_i_a": 8.661709087088864e-05
+ },
+ {
+  "name": "pwr_ff_open_inv_16_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.00045815541996056407,
+  "duty_pct": 50.10831528078653,
+  "avg_i_a": 0.0003470874393640637
+ },
+ {
+  "name": "pwr_ff_open_inv_16_tg_on",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.00011433371793171082,
+  "duty_pct": 50.40826528911849,
+  "avg_i_a": 8.66164529785688e-05
+ },
+ {
+  "name": "pwr_ff_diode_inv_16_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.0007153927094749382,
+  "duty_pct": 50.10831528078653,
+  "avg_i_a": 0.0005419641738446502
+ },
+ {
+  "name": "pwr_ff_diode_inv_16_tg_on",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 0.0013175670501153595,
+  "duty_pct": 50.108315280786556,
+  "avg_i_a": 0.0009981568561479995
+ },
+ {
+  "name": "pwr_ss_none",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [],
+  "term": "open",
+  "capcell": "inv_16",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 1.5077836182263182e-05,
+  "duty_pct": 50.208298616897196,
+  "avg_i_a": 1.3960959428021464e-05
+ },
+ {
+  "name": "pwr_tt_none",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [],
+  "term": "open",
+  "capcell": "inv_16",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 1.8883896570152835e-05,
+  "duty_pct": 50.20829861689716,
+  "avg_i_a": 1.5736580475127363e-05
+ },
+ {
+  "name": "pwr_ff_none",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [],
+  "term": "open",
+  "capcell": "inv_16",
+  "period": 2.0,
+  "ncyc": 6,
+  "power_w": 2.3445411913585208e-05,
+  "duty_pct": 50.10831528078653,
+  "avg_i_a": 1.7761675692110006e-05
+ }
+]

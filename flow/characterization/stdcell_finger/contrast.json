@@ -1,0 +1,2306 @@
+[
+ {
+  "name": "ctr_ss_load_inv_4_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04960145935772,
+  "delay_fall_ps": 55.60989435442154,
+  "rise_ps": 138.95634229111147,
+  "fall_ps": 3459.5073517871365
+ },
+ {
+  "name": "ctr_ss_load_inv_4_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.03366010442494,
+  "delay_fall_ps": 55.58148112530137,
+  "rise_ps": 3564.3566972126287,
+  "fall_ps": 19.71035845356649
+ },
+ {
+  "name": "ctr_ss_load_inv_4_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 68.76777599771943,
+  "delay_fall_ps": 78.83872461110322,
+  "rise_ps": 3548.7348403552346,
+  "fall_ps": 29.569698645391078
+ },
+ {
+  "name": "ctr_ss_load_inv_4_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.569025858663935,
+  "delay_fall_ps": 61.4550371090858,
+  "rise_ps": 3559.813902846642,
+  "fall_ps": 21.426067743893483
+ },
+ {
+  "name": "ctr_ss_load_inv_8_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.046999020830405,
+  "delay_fall_ps": 55.606543719687565,
+  "rise_ps": 154.45085946124286,
+  "fall_ps": 3445.148638060228
+ },
+ {
+  "name": "ctr_ss_load_inv_8_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.03732547481242,
+  "delay_fall_ps": 55.58277635077724,
+  "rise_ps": 3564.351204051229,
+  "fall_ps": 19.702472084180283
+ },
+ {
+  "name": "ctr_ss_load_inv_8_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 71.6884439133337,
+  "delay_fall_ps": 84.1169591613431,
+  "rise_ps": 3546.197057327745,
+  "fall_ps": 31.927629622457708
+ },
+ {
+  "name": "ctr_ss_load_inv_8_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.569023615980626,
+  "delay_fall_ps": 61.455040311290546,
+  "rise_ps": 3559.8139097852086,
+  "fall_ps": 21.42606821292557
+ },
+ {
+  "name": "ctr_ss_load_inv_16_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04586298143672,
+  "delay_fall_ps": 55.60408031782809,
+  "rise_ps": 177.85407800120754,
+  "fall_ps": 3414.992960848469
+ },
+ {
+  "name": "ctr_ss_load_inv_16_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04032643628293,
+  "delay_fall_ps": 55.58375393739573,
+  "rise_ps": 3564.3467732131076,
+  "fall_ps": 19.696902439107976
+ },
+ {
+  "name": "ctr_ss_load_inv_16_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 76.20127144241602,
+  "delay_fall_ps": 93.27448915867251,
+  "rise_ps": 3542.6616650663905,
+  "fall_ps": 36.455472021628154
+ },
+ {
+  "name": "ctr_ss_load_inv_16_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.569019622823454,
+  "delay_fall_ps": 61.455047400185386,
+  "rise_ps": 3559.813916417119,
+  "fall_ps": 21.426068992257093
+ },
+ {
+  "name": "ctr_ss_res_inv_4_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04962800617761,
+  "delay_fall_ps": 55.60991023465562,
+  "rise_ps": 134.62205673873464,
+  "fall_ps": 3465.7182617531153
+ },
+ {
+  "name": "ctr_ss_res_inv_4_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.033760080625434,
+  "delay_fall_ps": 55.58151196973896,
+  "rise_ps": 3564.3566089022443,
+  "fall_ps": 19.71035025187219
+ },
+ {
+  "name": "ctr_ss_res_inv_4_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 68.76081677697378,
+  "delay_fall_ps": 78.83717200523729,
+  "rise_ps": 3548.7282037593345,
+  "fall_ps": 29.57534271470393
+ },
+ {
+  "name": "ctr_ss_res_inv_4_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.5690258564871,
+  "delay_fall_ps": 61.4550371090858,
+  "rise_ps": 3559.8139045753624,
+  "fall_ps": 21.426067743893483
+ },
+ {
+  "name": "ctr_ss_res_inv_8_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04701562506822,
+  "delay_fall_ps": 55.606563250684935,
+  "rise_ps": 151.07154841789068,
+  "fall_ps": 3448.871497358878
+ },
+ {
+  "name": "ctr_ss_res_inv_8_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.03736869067751,
+  "delay_fall_ps": 55.58278850844627,
+  "rise_ps": 3564.351166145297,
+  "fall_ps": 19.702467940285
+ },
+ {
+  "name": "ctr_ss_res_inv_8_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 71.68459952784673,
+  "delay_fall_ps": 84.11618826497636,
+  "rise_ps": 3546.192290642859,
+  "fall_ps": 31.93028748422546
+ },
+ {
+  "name": "ctr_ss_res_inv_8_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.569023615980626,
+  "delay_fall_ps": 61.455040311290546,
+  "rise_ps": 3559.813909787125,
+  "fall_ps": 21.42606821292557
+ },
+ {
+  "name": "ctr_ss_res_inv_16_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.045870457085336,
+  "delay_fall_ps": 55.604093173227284,
+  "rise_ps": 176.21729074129576,
+  "fall_ps": 3417.1279727106394
+ },
+ {
+  "name": "ctr_ss_res_inv_16_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.040341880542115,
+  "delay_fall_ps": 55.58375837367868,
+  "rise_ps": 3564.3467594935837,
+  "fall_ps": 19.6969007915834
+ },
+ {
+  "name": "ctr_ss_res_inv_16_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 76.19955131487102,
+  "delay_fall_ps": 93.27404884391426,
+  "rise_ps": 3542.660269430302,
+  "fall_ps": 36.456658892586425
+ },
+ {
+  "name": "ctr_ss_res_inv_16_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.569019622823454,
+  "delay_fall_ps": 61.455047400185386,
+  "rise_ps": 3559.813916418077,
+  "fall_ps": 21.426068992257093
+ },
+ {
+  "name": "ctr_ss_diode_inv_4_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.05392808332288,
+  "delay_fall_ps": 55.61426142642657,
+  "rise_ps": 3564.3397053988774,
+  "fall_ps": 19.65258370283756
+ },
+ {
+  "name": "ctr_ss_diode_inv_4_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04073375518948,
+  "delay_fall_ps": 55.595599388390866,
+  "rise_ps": 3564.3547436056188,
+  "fall_ps": 19.705652998232747
+ },
+ {
+  "name": "ctr_ss_diode_inv_4_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 50.192588690897466,
+  "delay_fall_ps": 55.608464706677275,
+  "rise_ps": 3553.498659460182,
+  "fall_ps": 26.50107357835714
+ },
+ {
+  "name": "ctr_ss_diode_inv_4_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.5680032457409,
+  "delay_fall_ps": 61.45511667488416,
+  "rise_ps": 3559.8150096399336,
+  "fall_ps": 21.42610098118261
+ },
+ {
+  "name": "ctr_ss_diode_inv_8_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04997012937231,
+  "delay_fall_ps": 55.61027428654603,
+  "rise_ps": 3564.342468651835,
+  "fall_ps": 19.65447875413337
+ },
+ {
+  "name": "ctr_ss_diode_inv_8_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04138070624863,
+  "delay_fall_ps": 55.59570307248212,
+  "rise_ps": 3564.3524774485613,
+  "fall_ps": 19.694545184709266
+ },
+ {
+  "name": "ctr_ss_diode_inv_8_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 48.47730859937367,
+  "delay_fall_ps": 52.27103750103768,
+  "rise_ps": 3553.9448858801984,
+  "fall_ps": 26.42283353846772
+ },
+ {
+  "name": "ctr_ss_diode_inv_8_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.56800271870831,
+  "delay_fall_ps": 61.45525313611555,
+  "rise_ps": 3559.815010197349,
+  "fall_ps": 21.426075026069825
+ },
+ {
+  "name": "ctr_ss_diode_inv_16_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.045716217219784,
+  "delay_fall_ps": 55.6049409315317,
+  "rise_ps": 3564.3458262974377,
+  "fall_ps": 19.65796045675127
+ },
+ {
+  "name": "ctr_ss_diode_inv_16_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.041295748403286,
+  "delay_fall_ps": 55.59531076292655,
+  "rise_ps": 3564.3513452074258,
+  "fall_ps": 19.687297315159427
+ },
+ {
+  "name": "ctr_ss_diode_inv_16_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 47.54585415473743,
+  "delay_fall_ps": 50.4582883240571,
+  "rise_ps": 3554.398364476698,
+  "fall_ps": 26.287315620689917
+ },
+ {
+  "name": "ctr_ss_diode_inv_16_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.568199221185665,
+  "delay_fall_ps": 61.45525295705245,
+  "rise_ps": 3559.814817808526,
+  "fall_ps": 21.42607531065635
+ },
+ {
+  "name": "ctr_ss_open_inv_4_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04962800617761,
+  "delay_fall_ps": 55.60991023465562,
+  "rise_ps": 134.62205674017784,
+  "fall_ps": 3465.7182617531153
+ },
+ {
+  "name": "ctr_ss_open_inv_4_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.033760080625434,
+  "delay_fall_ps": 55.58151196973896,
+  "rise_ps": 3564.3566089095375,
+  "fall_ps": 19.71035025187219
+ },
+ {
+  "name": "ctr_ss_open_inv_4_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 68.76081491386287,
+  "delay_fall_ps": 78.83717169157124,
+  "rise_ps": 3548.728204767647,
+  "fall_ps": 29.575342650567652
+ },
+ {
+  "name": "ctr_ss_open_inv_4_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.5690258564871,
+  "delay_fall_ps": 61.4550371090858,
+  "rise_ps": 3559.8139045753624,
+  "fall_ps": 21.426067743893483
+ },
+ {
+  "name": "ctr_ss_open_inv_8_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.04701562506822,
+  "delay_fall_ps": 55.606563250684935,
+  "rise_ps": 151.07154841789068,
+  "fall_ps": 3448.871497358878
+ },
+ {
+  "name": "ctr_ss_open_inv_8_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.03736869067751,
+  "delay_fall_ps": 55.58278850844627,
+  "rise_ps": 3564.3511661497373,
+  "fall_ps": 19.702467940285
+ },
+ {
+  "name": "ctr_ss_open_inv_8_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 71.68459817569057,
+  "delay_fall_ps": 84.11618804304712,
+  "rise_ps": 3546.1922913284543,
+  "fall_ps": 31.930287934247282
+ },
+ {
+  "name": "ctr_ss_open_inv_8_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.569023615980626,
+  "delay_fall_ps": 61.455040311290546,
+  "rise_ps": 3559.813909787125,
+  "fall_ps": 21.42606821292557
+ },
+ {
+  "name": "ctr_ss_open_inv_16_ebufn",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.045870457085336,
+  "delay_fall_ps": 55.604093173227284,
+  "rise_ps": 176.21729074129576,
+  "fall_ps": 3417.1279727106394
+ },
+ {
+  "name": "ctr_ss_open_inv_16_ebufn_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 49.040341880542115,
+  "delay_fall_ps": 55.58375837367868,
+  "rise_ps": 3564.346759495031,
+  "fall_ps": 19.6969007915834
+ },
+ {
+  "name": "ctr_ss_open_inv_16_tg",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 76.1995504820194,
+  "delay_fall_ps": 93.27404871741187,
+  "rise_ps": 3542.660269835633,
+  "fall_ps": 36.45665871122625
+ },
+ {
+  "name": "ctr_ss_open_inv_16_tg_off",
+  "corner": "ss",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 54.569019622823454,
+  "delay_fall_ps": 61.455047400185386,
+  "rise_ps": 3559.813916418077,
+  "fall_ps": 21.426068992257093
+ },
+ {
+  "name": "ctr_tt_load_inv_4_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.785603391769456,
+  "delay_fall_ps": 37.868642701698164,
+  "rise_ps": 11.5507714314317,
+  "fall_ps": 11.197622188767742
+ },
+ {
+  "name": "ctr_tt_load_inv_4_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.77527443783757,
+  "delay_fall_ps": 37.85086427345527,
+  "rise_ps": 11.554449194598483,
+  "fall_ps": 11.227615173762933
+ },
+ {
+  "name": "ctr_tt_load_inv_4_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 45.059132697015045,
+  "delay_fall_ps": 53.188730208761186,
+  "rise_ps": 16.605941378752778,
+  "fall_ps": 16.063516711971136
+ },
+ {
+  "name": "ctr_tt_load_inv_4_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934283933462,
+  "delay_fall_ps": 41.08355718491678,
+  "rise_ps": 12.195651665730749,
+  "fall_ps": 11.958061799319736
+ },
+ {
+  "name": "ctr_tt_load_inv_8_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.784584276632536,
+  "delay_fall_ps": 37.86618841319191,
+  "rise_ps": 11.545883955509474,
+  "fall_ps": 11.195539065485784
+ },
+ {
+  "name": "ctr_tt_load_inv_8_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.77826650799662,
+  "delay_fall_ps": 37.85148543194971,
+  "rise_ps": 11.550260430663569,
+  "fall_ps": 11.223349381005983
+ },
+ {
+  "name": "ctr_tt_load_inv_8_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 46.734665578601465,
+  "delay_fall_ps": 56.93169465638248,
+  "rise_ps": 17.603270649182523,
+  "fall_ps": 17.18995591868284
+ },
+ {
+  "name": "ctr_tt_load_inv_8_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934154357449,
+  "delay_fall_ps": 41.083557218110705,
+  "rise_ps": 12.195652015535503,
+  "fall_ps": 11.9580618063516
+ },
+ {
+  "name": "ctr_tt_load_inv_16_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78447434317454,
+  "delay_fall_ps": 37.86435169159412,
+  "rise_ps": 11.542134195664039,
+  "fall_ps": 11.192982363455062
+ },
+ {
+  "name": "ctr_tt_load_inv_16_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.781028649404256,
+  "delay_fall_ps": 37.85185370208819,
+  "rise_ps": 11.547514313418658,
+  "fall_ps": 11.220773236898983
+ },
+ {
+  "name": "ctr_tt_load_inv_16_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 49.21142030433717,
+  "delay_fall_ps": 63.44957125973256,
+  "rise_ps": 19.436378878970753,
+  "fall_ps": 19.423147601486512
+ },
+ {
+  "name": "ctr_tt_load_inv_16_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934040706788,
+  "delay_fall_ps": 41.08355736892062,
+  "rise_ps": 12.195652322625117,
+  "fall_ps": 11.958062070400059
+ },
+ {
+  "name": "ctr_tt_res_inv_4_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.785630976216034,
+  "delay_fall_ps": 37.868659666695244,
+  "rise_ps": 11.550736908730112,
+  "fall_ps": 11.197552135961667
+ },
+ {
+  "name": "ctr_tt_res_inv_4_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.77541159486459,
+  "delay_fall_ps": 37.85090553009004,
+  "rise_ps": 11.554534000869749,
+  "fall_ps": 11.227606451215337
+ },
+ {
+  "name": "ctr_tt_res_inv_4_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 45.0553118989548,
+  "delay_fall_ps": 53.189108981992405,
+  "rise_ps": 16.58958625767167,
+  "fall_ps": 16.068939377580257
+ },
+ {
+  "name": "ctr_tt_res_inv_4_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934282199691,
+  "delay_fall_ps": 41.083557179079364,
+  "rise_ps": 12.195651667049946,
+  "fall_ps": 11.95806180425056
+ },
+ {
+  "name": "ctr_tt_res_inv_8_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78459860621993,
+  "delay_fall_ps": 37.86620621650014,
+  "rise_ps": 11.545873625983162,
+  "fall_ps": 11.195505468573268
+ },
+ {
+  "name": "ctr_tt_res_inv_8_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.778335673422404,
+  "delay_fall_ps": 37.85150660302207,
+  "rise_ps": 11.55030750072182,
+  "fall_ps": 11.223344903885955
+ },
+ {
+  "name": "ctr_tt_res_inv_8_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 46.73250812969926,
+  "delay_fall_ps": 56.9319911160082,
+  "rise_ps": 17.59988934497909,
+  "fall_ps": 17.19256089072075
+ },
+ {
+  "name": "ctr_tt_res_inv_8_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934153655483,
+  "delay_fall_ps": 41.08355721227329,
+  "rise_ps": 12.195652015095805,
+  "fall_ps": 11.958061808816597
+ },
+ {
+  "name": "ctr_tt_res_inv_16_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78448005313489,
+  "delay_fall_ps": 37.86436261726532,
+  "rise_ps": 11.542132231956446,
+  "fall_ps": 11.192971469524444
+ },
+ {
+  "name": "ctr_tt_res_inv_16_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78105787219604,
+  "delay_fall_ps": 37.85186428238749,
+  "rise_ps": 11.547537013403836,
+  "fall_ps": 11.220771392529409
+ },
+ {
+  "name": "ctr_tt_res_inv_16_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 49.21041167015799,
+  "delay_fall_ps": 63.44955980607115,
+  "rise_ps": 19.43587200998736,
+  "fall_ps": 19.42411735563766
+ },
+ {
+  "name": "ctr_tt_res_inv_16_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934040004817,
+  "delay_fall_ps": 41.08355736308321,
+  "rise_ps": 12.195652322185419,
+  "fall_ps": 11.958062071632558
+ },
+ {
+  "name": "ctr_tt_diode_inv_4_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78838322202577,
+  "delay_fall_ps": 37.87141601214749,
+  "rise_ps": 11.550361512867925,
+  "fall_ps": 11.194701134245864
+ },
+ {
+  "name": "ctr_tt_diode_inv_4_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78049913789372,
+  "delay_fall_ps": 37.863438393443744,
+  "rise_ps": 11.559501754895987,
+  "fall_ps": 11.219878562505857
+ },
+ {
+  "name": "ctr_tt_diode_inv_4_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 33.15102191424217,
+  "delay_fall_ps": 36.80919405393888,
+  "rise_ps": 15.023710757775868,
+  "fall_ps": 14.453772247319577
+ },
+ {
+  "name": "ctr_tt_diode_inv_4_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.639339252122376,
+  "delay_fall_ps": 41.08358089220099,
+  "rise_ps": 12.195650854614863,
+  "fall_ps": 11.959244573287998
+ },
+ {
+  "name": "ctr_tt_diode_inv_8_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78588028796876,
+  "delay_fall_ps": 37.868810640655795,
+  "rise_ps": 11.547457786505454,
+  "fall_ps": 11.195376441251268
+ },
+ {
+  "name": "ctr_tt_diode_inv_8_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.781363611664034,
+  "delay_fall_ps": 37.862942551874916,
+  "rise_ps": 11.554015926952165,
+  "fall_ps": 11.213615910597724
+ },
+ {
+  "name": "ctr_tt_diode_inv_8_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 32.12652849844987,
+  "delay_fall_ps": 34.59087532040247,
+  "rise_ps": 14.99291266447847,
+  "fall_ps": 14.43700517820076
+ },
+ {
+  "name": "ctr_tt_diode_inv_8_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.638552957626096,
+  "delay_fall_ps": 41.08358035615983,
+  "rise_ps": 12.196264906528672,
+  "fall_ps": 11.959245028372166
+ },
+ {
+  "name": "ctr_tt_diode_inv_16_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.783651141631395,
+  "delay_fall_ps": 37.865173414995915,
+  "rise_ps": 11.545479292724286,
+  "fall_ps": 11.196990567296341
+ },
+ {
+  "name": "ctr_tt_diode_inv_16_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.781580594392,
+  "delay_fall_ps": 37.862256510899904,
+  "rise_ps": 11.550266908203431,
+  "fall_ps": 11.209657366744699
+ },
+ {
+  "name": "ctr_tt_diode_inv_16_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 31.559496104992032,
+  "delay_fall_ps": 33.43839124543736,
+  "rise_ps": 14.940585544116432,
+  "fall_ps": 14.518269379839962
+ },
+ {
+  "name": "ctr_tt_diode_inv_16_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63927375411557,
+  "delay_fall_ps": 41.08358010204994,
+  "rise_ps": 12.195663451291601,
+  "fall_ps": 11.95924530980879
+ },
+ {
+  "name": "ctr_tt_open_inv_4_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.785630976216034,
+  "delay_fall_ps": 37.868659666695244,
+  "rise_ps": 11.550736908730112,
+  "fall_ps": 11.197552135961667
+ },
+ {
+  "name": "ctr_tt_open_inv_4_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.775411586429264,
+  "delay_fall_ps": 37.850905520550995,
+  "rise_ps": 11.554534002705935,
+  "fall_ps": 11.227606451215337
+ },
+ {
+  "name": "ctr_tt_open_inv_4_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 45.0553113709679,
+  "delay_fall_ps": 53.189108826310395,
+  "rise_ps": 16.58958562683804,
+  "fall_ps": 16.068939453672602
+ },
+ {
+  "name": "ctr_tt_open_inv_4_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934282199691,
+  "delay_fall_ps": 41.083557179079364,
+  "rise_ps": 12.195651667049946,
+  "fall_ps": 11.95806180425056
+ },
+ {
+  "name": "ctr_tt_open_inv_8_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78459860621993,
+  "delay_fall_ps": 37.86620621650014,
+  "rise_ps": 11.545873626588659,
+  "fall_ps": 11.195505468573268
+ },
+ {
+  "name": "ctr_tt_open_inv_8_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.77833566497715,
+  "delay_fall_ps": 37.85150660302207,
+  "rise_ps": 11.550307501331504,
+  "fall_ps": 11.223344903885955
+ },
+ {
+  "name": "ctr_tt_open_inv_8_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 46.73250775898824,
+  "delay_fall_ps": 56.93199101435763,
+  "rise_ps": 17.599889065037647,
+  "fall_ps": 17.19256099909299
+ },
+ {
+  "name": "ctr_tt_open_inv_8_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934153655483,
+  "delay_fall_ps": 41.08355721227329,
+  "rise_ps": 12.195652015095805,
+  "fall_ps": 11.958061808816597
+ },
+ {
+  "name": "ctr_tt_open_inv_16_ebufn",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78448005313489,
+  "delay_fall_ps": 37.86436261726532,
+  "rise_ps": 11.542132231956446,
+  "fall_ps": 11.192971469524444
+ },
+ {
+  "name": "ctr_tt_open_inv_16_ebufn_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 33.78105787219604,
+  "delay_fall_ps": 37.851864281623996,
+  "rise_ps": 11.547537014619326,
+  "fall_ps": 11.22077139516646
+ },
+ {
+  "name": "ctr_tt_open_inv_16_tg",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 49.21041144454329,
+  "delay_fall_ps": 63.44955973457959,
+  "rise_ps": 19.4358717294595,
+  "fall_ps": 19.424117471189827
+ },
+ {
+  "name": "ctr_tt_open_inv_16_tg_off",
+  "corner": "tt",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.63934040004817,
+  "delay_fall_ps": 41.08355736308321,
+  "rise_ps": 12.195652322185419,
+  "fall_ps": 11.958062071632558
+ },
+ {
+  "name": "ctr_ff_load_inv_4_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.977442311705907,
+  "delay_fall_ps": 25.948440756016588,
+  "rise_ps": 6.753359898328985,
+  "fall_ps": 7.209140254093665
+ },
+ {
+  "name": "ctr_ff_load_inv_4_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97202632874234,
+  "delay_fall_ps": 25.939072276926108,
+  "rise_ps": 6.756031826601561,
+  "fall_ps": 7.225871227084586
+ },
+ {
+  "name": "ctr_ff_load_inv_4_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 33.27276672524574,
+  "delay_fall_ps": 35.93428619357722,
+  "rise_ps": 9.967103394865115,
+  "fall_ps": 9.910019093801
+ },
+ {
+  "name": "ctr_ff_load_inv_4_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549994537749864,
+  "delay_fall_ps": 27.692585963252828,
+  "rise_ps": 7.135971923292196,
+  "fall_ps": 7.538494029824854
+ },
+ {
+  "name": "ctr_ff_load_inv_8_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.976907589498072,
+  "delay_fall_ps": 25.946835044257018,
+  "rise_ps": 6.750329232095692,
+  "fall_ps": 7.207537998822438
+ },
+ {
+  "name": "ctr_ff_load_inv_8_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.973905899996378,
+  "delay_fall_ps": 25.93970902984718,
+  "rise_ps": 6.753867921531204,
+  "fall_ps": 7.221630581758942
+ },
+ {
+  "name": "ctr_ff_load_inv_8_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 34.44992370781345,
+  "delay_fall_ps": 38.44128309872821,
+  "rise_ps": 10.545554703210833,
+  "fall_ps": 10.699285122398322
+ },
+ {
+  "name": "ctr_ff_load_inv_8_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549992998722434,
+  "delay_fall_ps": 27.6925849546591,
+  "rise_ps": 7.135972047989673,
+  "fall_ps": 7.538494470874247
+ },
+ {
+  "name": "ctr_ff_load_inv_16_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.976831262013373,
+  "delay_fall_ps": 25.94571742156084,
+  "rise_ps": 6.748059858045461,
+  "fall_ps": 7.205870236234124
+ },
+ {
+  "name": "ctr_ff_load_inv_16_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97516597969924,
+  "delay_fall_ps": 25.940615867734348,
+  "rise_ps": 6.752351961467927,
+  "fall_ps": 7.216798621019728
+ },
+ {
+  "name": "ctr_ff_load_inv_16_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.19987419769343,
+  "delay_fall_ps": 42.733824182139124,
+  "rise_ps": 11.798261130962748,
+  "fall_ps": 11.906277449467769
+ },
+ {
+  "name": "ctr_ff_load_inv_16_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "load",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549991880846772,
+  "delay_fall_ps": 27.692584263088957,
+  "rise_ps": 7.135972161329909,
+  "fall_ps": 7.538494885874069
+ },
+ {
+  "name": "ctr_ff_res_inv_4_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.977469915532964,
+  "delay_fall_ps": 25.9484661463197,
+  "rise_ps": 6.7533549962398505,
+  "fall_ps": 7.209088220340246
+ },
+ {
+  "name": "ctr_ff_res_inv_4_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97234574703913,
+  "delay_fall_ps": 25.939163378167567,
+  "rise_ps": 6.756353664057125,
+  "fall_ps": 7.225878463178694
+ },
+ {
+  "name": "ctr_ff_res_inv_4_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 33.27024916670545,
+  "delay_fall_ps": 35.93486907831305,
+  "rise_ps": 9.964970025150423,
+  "fall_ps": 9.916512511458755
+ },
+ {
+  "name": "ctr_ff_res_inv_4_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549994482973553,
+  "delay_fall_ps": 27.692585919268325,
+  "rise_ps": 7.135971827418396,
+  "fall_ps": 7.538494005763824
+ },
+ {
+  "name": "ctr_ff_res_inv_8_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97692094521037,
+  "delay_fall_ps": 25.94685277739966,
+  "rise_ps": 6.7503308020535275,
+  "fall_ps": 7.207516849540501
+ },
+ {
+  "name": "ctr_ff_res_inv_8_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97405515531643,
+  "delay_fall_ps": 25.939748641023666,
+  "rise_ps": 6.75399573291316,
+  "fall_ps": 7.221620455619851
+ },
+ {
+  "name": "ctr_ff_res_inv_8_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 34.44845029371994,
+  "delay_fall_ps": 38.441625774338476,
+  "rise_ps": 10.544995299442501,
+  "fall_ps": 10.702345273609403
+ },
+ {
+  "name": "ctr_ff_res_inv_8_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549992961380397,
+  "delay_fall_ps": 27.69258492303102,
+  "rise_ps": 7.1359719662883725,
+  "fall_ps": 7.538494540324332
+ },
+ {
+  "name": "ctr_ff_res_inv_16_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97683633141576,
+  "delay_fall_ps": 25.945726114261277,
+  "rise_ps": 6.748061584780337,
+  "fall_ps": 7.205864256970647
+ },
+ {
+  "name": "ctr_ff_res_inv_16_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97522321452106,
+  "delay_fall_ps": 25.940633825706332,
+  "rise_ps": 6.752395130643738,
+  "fall_ps": 7.216788682443841
+ },
+ {
+  "name": "ctr_ff_res_inv_16_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.19912003996678,
+  "delay_fall_ps": 42.73378932098692,
+  "rise_ps": 11.798010548588175,
+  "fall_ps": 11.907974730494205
+ },
+ {
+  "name": "ctr_ff_res_inv_16_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "res",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549991861557437,
+  "delay_fall_ps": 27.69258424727492,
+  "rise_ps": 7.135972163745381,
+  "fall_ps": 7.538494874430853
+ },
+ {
+  "name": "ctr_ff_diode_inv_4_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.979066911137338,
+  "delay_fall_ps": 25.95009257481109,
+  "rise_ps": 6.753380548798628,
+  "fall_ps": 7.207626451854266
+ },
+ {
+  "name": "ctr_ff_diode_inv_4_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.975274239813615,
+  "delay_fall_ps": 25.94677213490744,
+  "rise_ps": 6.758880036318358,
+  "fall_ps": 7.219056510440826
+ },
+ {
+  "name": "ctr_ff_diode_inv_4_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 24.64020410684115,
+  "delay_fall_ps": 24.511380519153747,
+  "rise_ps": 8.774862198407169,
+  "fall_ps": 8.998906282206725
+ },
+ {
+  "name": "ctr_ff_diode_inv_4_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.54999407450737,
+  "delay_fall_ps": 27.68899840452124,
+  "rise_ps": 7.135970370067811,
+  "fall_ps": 7.540102462336966
+ },
+ {
+  "name": "ctr_ff_diode_inv_8_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.977669115402772,
+  "delay_fall_ps": 25.948182392514102,
+  "rise_ps": 6.751118815615117,
+  "fall_ps": 7.207414531093006
+ },
+ {
+  "name": "ctr_ff_diode_inv_8_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.975744812089914,
+  "delay_fall_ps": 25.946025598365367,
+  "rise_ps": 6.755514047472277,
+  "fall_ps": 7.215261249315985
+ },
+ {
+  "name": "ctr_ff_diode_inv_8_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 23.879425916327364,
+  "delay_fall_ps": 23.13016301612095,
+  "rise_ps": 8.797110761868458,
+  "fall_ps": 9.031669978773836
+ },
+ {
+  "name": "ctr_ff_diode_inv_8_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.54998656377203,
+  "delay_fall_ps": 27.69324646711671,
+  "rise_ps": 7.135971982211444,
+  "fall_ps": 7.538369862269191
+ },
+ {
+  "name": "ctr_ff_diode_inv_16_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.9764790000049,
+  "delay_fall_ps": 25.946033777298133,
+  "rise_ps": 6.749662918435515,
+  "fall_ps": 7.207639462835374
+ },
+ {
+  "name": "ctr_ff_diode_inv_16_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.975878982622024,
+  "delay_fall_ps": 25.94534206401066,
+  "rise_ps": 6.7532159854086355,
+  "fall_ps": 7.212898941138209
+ },
+ {
+  "name": "ctr_ff_diode_inv_16_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 23.42641230876689,
+  "delay_fall_ps": 22.399551721894014,
+  "rise_ps": 8.83739065066275,
+  "fall_ps": 9.109013881425204
+ },
+ {
+  "name": "ctr_ff_diode_inv_16_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "diode",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549991569159378,
+  "delay_fall_ps": 27.68899713813998,
+  "rise_ps": 7.135971942132113,
+  "fall_ps": 7.54010435552095
+ },
+ {
+  "name": "ctr_ff_open_inv_4_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.977469915532964,
+  "delay_fall_ps": 25.9484661463197,
+  "rise_ps": 6.7533549962398505,
+  "fall_ps": 7.209088220340246
+ },
+ {
+  "name": "ctr_ff_open_inv_4_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.972345736511606,
+  "delay_fall_ps": 25.939163378167567,
+  "rise_ps": 6.7563536713623185,
+  "fall_ps": 7.225878463178694
+ },
+ {
+  "name": "ctr_ff_open_inv_4_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 33.270248956378026,
+  "delay_fall_ps": 35.93486901568886,
+  "rise_ps": 9.964969812950782,
+  "fall_ps": 9.916512544719687
+ },
+ {
+  "name": "ctr_ff_open_inv_4_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_4",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549994482973553,
+  "delay_fall_ps": 27.692585919268325,
+  "rise_ps": 7.135971827418396,
+  "fall_ps": 7.538494005763824
+ },
+ {
+  "name": "ctr_ff_open_inv_8_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97692094521037,
+  "delay_fall_ps": 25.94685277739966,
+  "rise_ps": 6.7503308020535275,
+  "fall_ps": 7.207516849540501
+ },
+ {
+  "name": "ctr_ff_open_inv_8_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97405515531643,
+  "delay_fall_ps": 25.93974864729866,
+  "rise_ps": 6.753995733210324,
+  "fall_ps": 7.221620454236805
+ },
+ {
+  "name": "ctr_ff_open_inv_8_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 34.4484501473343,
+  "delay_fall_ps": 38.4416257352087,
+  "rise_ps": 10.54499522529067,
+  "fall_ps": 10.702345246303343
+ },
+ {
+  "name": "ctr_ff_open_inv_8_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_8",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549992961380397,
+  "delay_fall_ps": 27.69258492303102,
+  "rise_ps": 7.1359719662883725,
+  "fall_ps": 7.538494540324332
+ },
+ {
+  "name": "ctr_ff_open_inv_16_ebufn",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97683633141576,
+  "delay_fall_ps": 25.945726114261277,
+  "rise_ps": 6.748061584780337,
+  "fall_ps": 7.205864256970647
+ },
+ {
+  "name": "ctr_ff_open_inv_16_ebufn_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "ebufn",
+  "t_fall": 4.0,
+  "delay_ps": 25.97522321452106,
+  "delay_fall_ps": 25.94063384260811,
+  "rise_ps": 6.752395130940231,
+  "fall_ps": 7.216788617318257
+ },
+ {
+  "name": "ctr_ff_open_inv_16_tg",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   true
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 36.19911994474278,
+  "delay_fall_ps": 42.73378929930735,
+  "rise_ps": 11.798010464751869,
+  "fall_ps": 11.907974704421472
+ },
+ {
+  "name": "ctr_ff_open_inv_16_tg_off",
+  "corner": "ff",
+  "cmid": 0.96,
+  "states": [
+   false
+  ],
+  "term": "open",
+  "capcell": "inv_16",
+  "switch": "tg",
+  "t_fall": 4.0,
+  "delay_ps": 27.549991861557437,
+  "delay_fall_ps": 27.69258424727492,
+  "rise_ps": 7.135972163745381,
+  "fall_ps": 7.538494874430853
+ }
+]
