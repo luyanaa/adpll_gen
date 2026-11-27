@@ -58,8 +58,10 @@ SW_L = "0.45u"
 FCAP_W = "0.15u"  # fine unit finger: ~0.7 fF (0.15u x 0.5u at 12.7 fF/um^2... l=0.5u)
 FCAP_L = "0.5u"
 NPHASE = 8
-STEP = 3
-NSTAGE = NPHASE * STEP + 1  # 25
+STEP = 6
+# NSTAGE = NPHASE*STEP/2 - 1: taps must land on the T/NPHASE grid
+# (T = 2*(NSTAGE+1) gate delays).  STEP=6 -> NSTAGE=23.
+NSTAGE = NPHASE * STEP // 2 - 2  # 22 (even: NAND2 inverting closure)
 
 CORNERS = {
     "ss": dict(mos="mos_ss", vdd=1.08, temp=125),
@@ -188,14 +190,24 @@ def emit_top(corner: str, coarse: int, fine: int, top: str,
     s.append("Xdly1 end1 DCO_EN VDD VSS sg13g2_inv_1")
     s.append("Xdly2 end2 end1 VDD VSS sg13g2_inv_1")
     s.append("Xdly3 end3 end2 VDD VSS sg13g2_inv_1")
-    s.append("Xkick kick DCO_EN end3 VDD VSS sg13g2_and2_1")
-    s.append(f"Xclose_a close_a n{NSTAGE} DCO_EN VDD VSS sg13g2_and2_1")
-    s.append("Xclose_o n0 close_a kick VDD VSS sg13g2_or2_1")
+    s.append("Xdly4 kick_n end3 VDD VSS sg13g2_inv_1")
+    s.append(f"Xclose n0 n{NSTAGE} DCO_EN VDD VSS sg13g2_nand2_1")
+    s.append("Xkick_pu n0 kick_n VDD VDD sg13_lv_pmos w=1.0u l=0.13u")
 
-    # tap buffers at k*STEP -- identical geometry to the RTL (dont_touch).
-    s.append("* ---- tap buffers at k*STEP")
-    for k in range(NPHASE):
-        s.append(f"Xtap{k} ph{k} n{k*STEP} VDD VSS sg13g2_buf_1")
+    # Full anchor bank (docs/dco_8phase_decision.md): every stage tap plus
+    # its inversion, one buf_1/inv_1 each, matching the RTL ANCHOR bus.
+    s.append("* ---- full anchor bank: every stage tap + inversion")
+    for a in range(NSTAGE):
+        s.append(f"Xanc{a} anc{a} n{a} VDD VSS sg13g2_buf_1")
+        s.append(f"Xanci{a} anci{a} n{a} VDD VSS sg13g2_inv_1")
+    # 8 sampler phases = 4 nodes at k*STEP plus their inverted copies
+    # (PHASE[k] = ~PHASE[k-4] for k>=4), identical to the RTL geometry.
+    s.append("* ---- taps: n0/n6/n12/n18 buffered + inverted copies")
+    for k in range(NPHASE // 2):
+        s.append(f"Xtapb{k} tmid{k} n{k*STEP} VDD VSS sg13g2_inv_4")
+        s.append(f"Xtap{k} ph{k} tmid{k} VDD VSS sg13g2_inv_4")
+    for k in range(NPHASE // 2, NPHASE):
+        s.append(f"Xtap{k} ph{k} n{(k-NPHASE//2)*STEP} VDD VSS sg13g2_inv_4")
 
     # data: PRBS-7 switching (both tops sample the same NRZ line).
     nbits = int(stop_ns / data_ui_ns) + 4
@@ -228,8 +240,9 @@ def emit_top(corner: str, coarse: int, fine: int, top: str,
         s.append(".control")
         s.append("set filetype=ascii")
         s.append("run")
+        anc = " ".join(f"v(anc{a}) v(anci{a})" for a in range(NSTAGE))
         s.append("wrdata tran.out v(n0) v(ph0) v(ph1) v(ph2) v(ph3) v(ph4) v(ph5)"
-                 " v(ph6) v(ph7) v(ph0) v(ph1)")
+                 f" v(ph6) v(ph7) v(ph0) v(ph1) {anc}")
         s.append("quit")
         s.append(".endc")
     elif top == "rx":

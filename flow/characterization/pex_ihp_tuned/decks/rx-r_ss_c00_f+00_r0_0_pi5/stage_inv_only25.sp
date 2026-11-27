@@ -1,0 +1,3 @@
+.subckt DCO_STAGE IN OUT C0 C1 C2 C3 C4 F0 F1 F2 F3 F4 F5 VDD VSS
+Xinv OUT IN VDD VSS sg13g2_inv_1
+.ends

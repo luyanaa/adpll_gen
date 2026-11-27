@@ -48,7 +48,7 @@ WIRE_FF = 0.96
 EDGE = 0.03
 
 # finger sizing (from the ring campaign; one moscap_n 0.72x1.0 ~ 9.2 fF)
-CAP_W, CAP_L = "0.72u", "1.0u"
+CAP_W, CAP_L = "0.9u", "1.1u"
 NW, NL = "0.15u", "0.45u"      # nmos switch
 PW, PL = "0.30u", "0.13u"      # pmos switch
 
@@ -126,8 +126,8 @@ def emit_elem2(nbits: int = NBITS, nfixed: int = -1, scheme: str = "np") -> str:
         s += emit_fingers("f", "VDD", "VSS", nfixed, scheme)
     else:
         for b in range(nbits):
-            s.append(f"Xgb{b} g{b} C{b} VDD VSS sg13g2_buf_1")
-            s.append(f"Xgi{b} gb{b} g{b} VDD VSS sg13g2_inv_1")
+            s.append(f"Xgb{b} g{b} C{b} VDD VSS sg13g2_buf_8")
+            s.append(f"Xgi{b} gb{b} g{b} VDD VSS sg13g2_inv_8")
             s += emit_fingers(f"b{b}", f"g{b}", f"gb{b}", 1 << b, scheme)
     s.append(".ends DLL8_ELEM")
     s.append(emit_invb())
