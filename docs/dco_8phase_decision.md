@@ -306,3 +306,37 @@ that matched dummy** so all eight regenerator loads are symmetric.
    line-scaled BASE/LSB (×1.2 element→line), not a fully extracted line.
 4. **SS D_set extraction** (k=0..3 association, k=7 noise) — extraction-limited;
    FF is clean at 1.5–1.7 ps.
+
+### M4 prerequisite approved — moscap PnR cell library (2026-11-27)
+
+Decision: build the fixed-size custom cells **before** the DLL8 macro PnR.
+
+Why it is needed: no macro in this repo has ever been through LibreLane with
+`sg13_moscap_n/p` + `sg13_lv_nmos/pmos`. The signed-off `cdr_ihp130` uses the
+*old* cell file (zero moscap refs) and the tuned version has only ever run in
+SPICE; those primitives are Yosys blackboxes, so PnR has no LEF/GDS and would
+fail to place the bank.
+
+Why it is tractable (not uncharted): the PDK ships a Magic generator
+(`libs.tech/magic/ihp-sg13g2-cap.tcl`, `ihp-sg13g2-cifin.tech`) and this repo
+already ran the identical chain for `tx_macro`
+(`OpenSERDES/build/verify/ihp_tx_macro/`: `.gds`, `.cdl`, `.pex.spice`).
+
+Cells to produce (fixed drawn sizes matching the measured element):
+- `sg13g2_moscap_n` / `sg13_moscap_p` — 0.9 × 1.1 µm (~12.7 fF/finger);
+  if that geometry is illegal, the nearest legal size with the C consequence
+  reported (do not silently resize the element).
+- `sg13_lv_nmos` / `sg13_lv_pmos` — the switch size used by the element.
+- optional combined "switched finger" cell if it simplifies layout.
+
+Each: GDS (Magic generator) + LEF/abstract + CDL, **DRC clean** (Magic and/or
+KLayout, same decks as `cdr_ihp130`) and **LVS clean** (netgen). No fabricated
+timing arcs — these are analog/custom cells.
+
+Acceptance: cells placeable by OpenROAD (pin geometry, no overlap), wired into
+`pll_cells_ihp-sg13g2.v` replacing the Yosys blackboxes while **keeping the
+SPICE path working** (`dll8_pex2.py` must still run), and the element topology /
+bank size / finger count unchanged.
+
+Then, and only then, the DLL8 macro PnR (M4) with post-route tap-routing
+symmetry re-measurement and the full 8-element SPICE at the exact lock code.
