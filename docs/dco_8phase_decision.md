@@ -340,3 +340,39 @@ bank size / finger count unchanged.
 
 Then, and only then, the DLL8 macro PnR (M4) with post-route tap-routing
 symmetry re-measurement and the full 8-element SPICE at the exact lock code.
+
+### Cell-library attempt → better packaging decision (2026-11-27, `6f6a68b`)
+
+The per-device PnR cell attempt was stopped honestly at "not DRC/LVS clean", and
+it produced two findings that changed the plan:
+
+**1. Legal PCell geometry.** `sg13_moscap_n/p` legal range is w,l ∈ [1.0, 30] µm,
+so the design-intent **0.9 µm width is illegal**. Of the legal options,
+**1.0 × 1.0 µm (+1 %, ~12.8 fF)** is essentially the verified element, versus
+1.0 × 1.1 µm (+11 %, ~14.1 fF). Chosen: **1.0 × 1.0 µm**.
+
+**2. The bank size cannot be reduced.** LSB is a *device* property (~4.0 ps/finger
+at SS), not a free parameter, so finger count sets **range**. Measured/derived:
+- 7-bit (127): SS max 654 ps vs 575 needed (1.15× headroom) — PASS at every corner.
+- 6-bit (63): SS max 398 ps vs 575 — **FAIL**.
+- 5-bit (31): SS max 270 ps — FAIL.
+So **127 fingers is mandatory**. (An earlier note in this file claiming 6-bit
+would pass was wrong — it treated LSB as tunable. Retracted.)
+
+**3. Packaging changed: one hard macro, not 2032 cells.** The DRC violations in
+the cell attempt all came from the pin pads added to make raw devices
+placeable as stdcell-like cells — the PCell bodies themselves are DRC-clean. So
+the line becomes **one hard macro** in the `cdr_ihp130` pattern:
+- interior = 8 × (inv_4 + inv_4 + 127-finger moscap bank) as PCell bodies,
+- **LEF abstract with boundary pins only** (`IN`, `TAP[0..7]`, `CODE`, `VDD`, `VSS`),
+- the digital remainder (thermometer decoder, TDC, loop filter, regen DFFs) stays
+  as ordinary stdcells around it.
+
+That is the right split — the line is custom/analog layout, the rest is
+synthesisable logic — and it deletes the per-device placement question entirely
+(OpenROAD places 1 macro, not 2032 cells).
+
+**Remaining, ordered:** element SPICE re-confirm at 1.0×1.0 → line macro DRC 0 →
+netgen LVS → **PEX tap-to-tap spread** (the real timing number; sim used an
+assumed 0.96 fF/node) → LEF place dry-run → macro binding with the SPICE path
+preserved. The full DLL8 tile PnR follows that.
