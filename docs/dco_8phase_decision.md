@@ -507,3 +507,16 @@ number answers the decisive question — **how far real parasitics sit from the
 **Current status: the PEX tap-spread judgement is NOT available**, and the DLL8
 tile PnR must not start. Design and simulation are closed (E ≤ 16 ps, 50 % duty,
 5–16 ps grid); the open item remains the physical macro.
+
+### Pre-committed decision rule for the PEX result
+
+Worst tap error = k × (element spread), so for the full 8-phase line at k=7 with
+the simulation baseline (5–16 ps) already spent against the 30 ps budget:
+
+| element extracted spread | verdict |
+|---|---|
+| **≤ 3.5 ps** | **PASS** — macro proceeds this cycle (7 × 3.5 = 24.5, + ~5 baseline ≈ 29.5 < 30) |
+| 3.5 – 5 ps | marginal — attempt equal-parasitic tap routing, re-measure once |
+| **> 5 ps** | **FAIL** — the 8-phase grid cannot hold 30 ps; ship DLL8 as RTL + verified simulation, carry the macro to the next shuttle |
+
+This is fixed in advance so the outcome is a measurement, not a judgement call.
