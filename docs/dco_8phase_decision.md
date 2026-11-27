@@ -640,3 +640,19 @@ offset is constant), single-device cleanliness, and sliver-scale edge pairs.
 No PDK bug, no deck mismatch, no Magic redraw. Fix: build the finger as **one
 unit cell with a shared guard ring** (moscap + switch inside a single ring),
 which also tightens row packing. In progress.
+
+### Shared-well fix approved and justified electrically (2026-11-27, `2568f53`)
+
+Cap/switch overlap fix confirmed: KLayout 568 → **171** (all contact families
+gone; single moscap = 0). Remaining 171 are pure nBuLay well-sharing rules.
+
+**Electrical justification for sharing** (verified in `src/dll8_line.v`): the
+P-side cap bottom plate is `.B(1'b1)` = VDD and the PMOS switch bulk is VDD, so
+all P-device nwells in the bank are the *same net*. A continuous shared nwell is
+therefore correct circuit design, not a DRC trick. LVS is required to confirm
+the correspondence. N-side shares the global psub.
+
+Lane is now: shared wells → routed single element → both-decks DRC 0 → KLayout
+LVS → PEX (xsect if usable, else Magic PEX with the documented device-cap
+caveat — decisive quantities are wire C and inter-tap RC mismatch, which do not
+depend on the identical device caps).
