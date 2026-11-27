@@ -736,3 +736,37 @@ minimum; gate V1 must be 190×190 nm; CTRL needs a gp extension because the pmos
 gate poly is 130 nm < 160 nm cont minimum. Now: element 0, N finger 0, P finger
 0 — every hard unit proven. Remaining: 127× array assembly (fully specified in
 `NEXTSTEP.md`) → LVS → PEX.
+
+### 127-finger array DRC-0, connectivity verified, LVS extraction correct (2026-11-27, `e25e18e`)
+
+**Array**: routed 127-finger bank (64 N + 63 P) at **KLayout DRC 0**, committed
+as `dll8_line_array.gds` (16.38×346.82 µm strip). The array was initially
+un-routable (CN M2 covers each source, guard-ring M1 rails block vertical M1,
+P source/gate pads 70 nm apart); solved with per-finger **escape tracks** — MID
+routed left into the free guard-ring interior, CTRL routed up — both via
+V1→M2→V2 to M3 landings. MID = vertical M3 bus per column + top tie; 127 M3
+control exits in thermometer order; shared 31/0+32/0 over the P group.
+
+**Connectivity verified** (not just DRC): merged M3 = exactly 128 components =
+1 MID bus + 127 independent control straps — no MID/CTRL shorts; MID taps every
+source landing.
+
+**LVS extraction**: 64 `sg13_moscap_n` + 63 `sg13_moscap_p` (1.0×1.0) + 64 nmos
++ 63 pmos switches. **`moscap_p` inside shared nBuLay extracts as
+`sg13_moscap_p`** — the flagged risk is retired.
+
+**PEX tooling finding (accepted)**: no tool-based RCX exists for this PDK flow —
+KLayout has no RCX deck, xsect is a BEOL-only viewer, Magic cannot represent
+moscap at all. First-order ITF numbers instead: MID bus **R ≈105 Ω** (0.088
+Ω/sq, 345 µm, 0.29 µm), MID wire **C ≈35–64 fF** = 2–4% of the 1.626 pF bank.
+
+**Orchestrator analysis of the wire-C impact**: additive at all codes → tuning
+RANGE barely moves (2–4% shrink, 660→~640 ps still ≥508 needed at SS); even +30
+ps on FF BASE (73.5→~105 ps) is far inside the ≤250 ps fast-end requirement.
+Wire C is a verification nicety, not a decision gate. **The decisive spread
+question was always tap-output routing outside the bank** — intra-bank routing
+is byte-identical across elements (common-mode).
+
+Remaining for element-macro signoff: place the 2 inv_4 stages, IN/mid/OUT
+routing, full CDL LVS compare, boundary-pin interface record. 8-element line
+assembly is gated on the stdcell fallback verdict (measurement lane running).
