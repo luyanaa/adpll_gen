@@ -710,3 +710,20 @@ layout path becomes unnecessary — LibreLane does P&R, DRC/LVS/PEX/SPEF all
 standard. Decisive measurement: contrast in ps per finger at SS/TT/FF, off-state
 residual, floating-node behavior, power cost of switching load inverters.
 Verdict will be (A) replace / (B) viable-but-worse / (C) not viable, with numbers.
+
+### Routed finger KLayout DRC = 0 — hardest single connection closed (2026-11-27, `699c144`)
+
+`DLL8_FINGER` (6.44×3.11 µm) reached KLayout 0.30.12 DRC = 0 after 6 iterations
+(13→0). Key structural fact: the moscap gate is a full-device poly plate inside
+its own guard ring, so **no legal contact exists inside the plate** — the fix is
+a poly plate extension upward (to y≈1900, clear of ring top 870 and top S/D
+contacts 1350), cont at (420–580, 1640–1800), M1 pad + V1 + **M2 bridge** to the
+switch drain. M2 is mandatory: M1 cannot cross the guard ring.
+
+Array net allocation is now fully specified: mid = vertical M1 column at the
+source column (CN M2 covers it → mid cannot use M2), CN = local M2 in-unit,
+control = vertical M3 straps at the gate-pad column, rails + shared-well taps.
+Array assembly (N finger + P-finger variant, even=N/odd=P) → LVS → PEX is in
+progress on the layout lane; the stdcell fallback measurement lane runs in
+parallel. Whichever finishes first with a PASS verdict decides the
+implementation.
