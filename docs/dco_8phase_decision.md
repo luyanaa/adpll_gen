@@ -267,3 +267,42 @@ extraction artefact (0.45 ns set delay vs a 0.2 ns pairing window); all 8
 regenerators are the same cell with the same load, so the physical spread
 should be ~1–2 ps. Being re-extracted with a per-cycle edge association and
 load-symmetry enumeration over all 8 phases.
+
+### M4 readiness (2026-11-27, `0fdcac3`)
+
+**Custom driver eliminated by measurement.** The `sg13g2_inv_4b` (Wp 5.30/Wn 2.96)
+existed only to balance tpHL/tpLH for duty. Since SR regeneration produces duty
+independently, the asymmetry no longer reaches any output. Measured with **stock
+`sg13g2_inv_4`**: BASE 146.4 / 89.9 / 60.5 ps, max 654.3 / 511.6 / 458.7 ps,
+LSB 4.0 / 3.32 / 3.14 ps (SS/TT/FF) — **within 2 ps of the custom driver at every
+corner**, all corners reach their d with ≥1.31× margin. Custom cell deleted; the
+"cell does not exist in the library" risk is gone. Element output duty IS worse
+(up to 286 ps asymmetry at c32) and is now purely diagnostic — regeneration holds
+49.7–50.0 % at all 8 outputs.
+
+Regenerated gate with the stock element: de-offset ≤7 ps, duty 49.8–50.0 %,
+both rails, no early edges, no false lock.
+
+**k=7 outlier diagnosed as deck load asymmetry, not silicon.** The test deck
+loaded taps x1..x7 with a real next-element input *plus* a dummy, but x8 had only
+the dummy — tap7 was under-loaded by one element input. Fixed in the deck
+(dummy only on tap7, same cell as the real input). **The real netlist must carry
+that matched dummy** so all eight regenerator loads are symmetric.
+
+### Remaining before M4 can start (ordered)
+
+1. **moscap/nmos PnR views — NEW, previously unidentified.** No macro in this
+   repo has ever been through LibreLane with `sg13_moscap_n/p` +
+   `sg13_lv_nmos/pmos`: the signed-off `cdr_ihp130` uses the *old* cell file
+   (0 moscap refs) and the tuned version has only ever run in SPICE. Those
+   primitives are Yosys blackboxes, so PnR has no LEF/GDS for them. **This must
+   be built (Magic GDS + extracted LEF/abstract) before layout**, or LibreLane
+   will fail to place the bank. Precedent exists (`MAGICRC`/`MAGIC_TECH` worked
+   for the ring; the sibling PDK ships a Magic generator for these caps).
+2. **Tap routing symmetry under real placement.** The 1.7 ps spread assumes
+   matched tap loads/routing. The ring campaign already demonstrated a single
+   ~38 µm route on one tap destroying uniformity.
+3. **Full 8-element SPICE at the exact lock code** — the conformance runs used
+   line-scaled BASE/LSB (×1.2 element→line), not a fully extracted line.
+4. **SS D_set extraction** (k=0..3 association, k=7 noise) — extraction-limited;
+   FF is clean at 1.5–1.7 ps.
