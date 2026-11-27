@@ -626,3 +626,17 @@ current control) — fully synthesizable, no custom devices at all. Its known co
 resolution is non-uniform (coarse at the fast end) and range trades against BASE.
 Not pursued while the moscap path is alive, since the element is already
 SPICE-verified with moscap and a redesign would restart verification.
+
+### Root cause of the 568/513 found (2026-11-27, orchestrator direct)
+
+**The cap and its series switch overlap by 0.91 µm in every finger column.**
+Measured from `dll8_elem_ringed.gds` bboxes: `moscap_n` placed at x=0 extends to
++1.88; `nmos` placed at x=+2.0 starts at +0.97 → the two guard rings intersect
+but are slightly offset, generating the ~20 nm slivers that KLayout reports as
+`CntB.a1`/`CntB.a` (254+192, array level) plus the device-local `Cnt.b` corner
+interactions. Explains all three observations: pitch-independence (intra-column
+offset is constant), single-device cleanliness, and sliver-scale edge pairs.
+
+No PDK bug, no deck mismatch, no Magic redraw. Fix: build the finger as **one
+unit cell with a shared guard ring** (moscap + switch inside a single ring),
+which also tightens row packing. In progress.
