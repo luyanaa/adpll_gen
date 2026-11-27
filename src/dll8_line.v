@@ -13,7 +13,7 @@
 //                BASE/range/LSB, so the custom cell was dropped.)
 //       stage 2: sg13g2_inv_4
 //       bank   : 7-bit THERMOMETER (127) of symmetric N/P switched
-//                sg13_moscap (0.9 x 1.1 um, ~12.7 fF/finger): even fingers
+//                sg13_moscap (1.0 x 1.0 um frozen layout size, ~12.8 fF/finger): even fingers
 //                NMOS->VSS (moscap_n), odd fingers PMOS->VDD (moscap_p),
 //                each driven by buf_8 / inv_8.
 //
@@ -69,7 +69,7 @@ module DLL8_THERM_DEC (
 endmodule
 
 // ---------------------------------------------------------- measured element
-// Structure matches flow/characterization/dll8_pex2.py (npstrong, 0.9x1.1).
+// Structure matches flow/characterization/dll8_pex2.py (np thermometer scheme; cap 1.0x1.0).
 // NOTE: the physical cells are PnR/SPICE bindings (see wrappers).  This
 // module is not simulated by the digital gate (DLL8_IMPL=0); it defines the
 // circuit that the SPICE deck and the layout must describe.
@@ -142,9 +142,24 @@ endmodule
 
 // Switch + moscap primitives.  PnR/SPICE: sg13_lv_nmos (w=0.5u l=0.45u,
 // drain=D, gate=G, source=S), sg13_lv_pmos (w=1.0u l=0.13u), sg13_moscap_n /
-// sg13_moscap_p (w=0.9u l=1.1u, gate=G, plate=B).  These are PDK primitive
-// devices, NOT digital stdcells -- PnR must treat them as a custom/analog
-// block; the digital gate uses the model.
+// sg13_moscap_p (w=1.0u l=1.0u -- the 0.9 x 1.1 um intent was illegal in the
+// PCell legal range, 1.0x1.0 is the frozen layout size), gate=G, plate=B.
+// These are PDK primitive devices, NOT digital stdcells -- PnR must treat
+// them as a custom/analog block; the digital gate uses the model.
+//
+// LAYOUT REALITY (dll8_elem_macro.gds, KLayout DRC 0, LVS-verified path):
+//   * The finger has NO buf_8/inv_8: the control strap connects directly to
+//     the switch gate.  The buffers shown below are documentation-level only
+//     (control is quasi-static thermometer DC and each thermo bit drives
+//     exactly one switch gate, so gate buffering is electrically irrelevant;
+//     the SPICE-verified delays are identical with or without them since the
+//     buffers only load the decoder outputs, not the RC on mid).
+//   * POLARITY CONTRACT for the decoder/integration: an N finger (even j)
+//     turns ON when its control strap is HIGH (EN=th[j] directly); a P finger
+//     (odd j) turns ON when its control strap is LOW, so the decoder must
+//     drive strap j with th[j] XOR (j odd) -- i.e. inverted thermometer bits
+//     for odd fingers.  This matches the verified SPICE harness, which drove
+//     the odd fingers with selb.
 module DLL8_NSW (D, G, S);
     input  wire D, G;
     output wire S;

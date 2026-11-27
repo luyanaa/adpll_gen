@@ -794,3 +794,29 @@ full record in `flow/characterization/stdcell_finger/REPORT.md`):
 **Decision: the custom moscap bank is the implementation.** The pure-stdcell
 fallback is closed with evidence. 8-element line assembly proceeds as 2×
 4-element hard macros; gate lifted.
+
+### Line4 macro exists; LVS root cause found and fixed by pitch (2026-11-28)
+
+**Orchestrator takeover** after the lane died post-`85c65d8`. Verification of
+the existing artifacts (re-run on correct topcells): `dll8_elem_macro.gds`
+**DRC 0**, `dll8_line4.gds` **DRC 0** (4 strips @17 µm pitch, 67.4×358.5 µm,
+chain E[k].OUT→E[k+1].IN on M2, TAP[3:0] identical straight M2 drops —
+length-matched by construction, 445 control strap escapes on M4/M5 to the
+right edge).
+
+**LVS root cause chain (each step measured):** KLayout extraction of the
+element macro lost all 64 `moscap_n` (P caps fine). The moscap extractor sizes
+each core by 1.5 µm and requires exactly one core per merged dev_mk blob;
+moscap_n core spans 1.74 µm vertically in the finger cell → sized reach 4.74 µm
+> **N-row pitch 4.0 µm** → all 64 N caps merge into one blob ("64 core regions,
+should be 1") → rejected. P fingers survive at 5.5 µm pitch. Decisive
+experiment: two bare moscap_n at 4.0 µm → 0 extracted; at **4.1 µm → both
+extract**. Fix: N-row pitch → 4.2 µm, rebuild array/macro/line4 (in progress).
+
+**Polarity contract clarified** (RTL updated, comments only — TB re-verified
+PASS, matching 7.8 ps): the layout finger has no buf8/inv8 (control strap
+drives the switch gate directly — electrically irrelevant since control is
+quasi-static and each thermo bit drives exactly one gate); N fingers turn ON
+with strap HIGH, P fingers with strap LOW — the decoder must emit
+`strap[j] = th[j] XOR (j odd)`. This matches the verified SPICE harness
+(sel/selb). Also corrected stale 0.9×1.1 µm references → 1.0×1.0 µm frozen.
