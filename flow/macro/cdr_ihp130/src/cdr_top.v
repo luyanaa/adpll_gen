@@ -36,12 +36,15 @@ module CDR_TOP #(
     // 2^PH_W equally spaced phases.  PH_W=3 -> 8 phases, the documented
     // default (1.25 ns spacing at 100 MHz).
     parameter integer PH_W       = 3,
-    // Stages per tap (NSTAGE = 8*STEP + 1).  6 -> ~243 MHz, 3 -> ~476 MHz at
-    // SS on sg13g2_inv_1.  For a 500 MHz-class multiphase clock use STEP=3 and
-    // pull down with CLOSE_LOAD.  DELAY_BITS is the legacy back-compat knob
-    // (ignored while STEP!=0).
+    // Stages per tap.  NSTAGE = 8*STEP/2 - 1 = 4*STEP - 1: the tap interval
+    // must equal the sampler grid pitch T/8, and T = 2*(NSTAGE+1) gate
+    // delays.  STEP=6 -> NSTAGE=23 (period 48 gates, T/8 = 6 gates = STEP,
+    // 8 taps spanning 42/48 T with the wrap interval through the closure).
+    // (The old NSTAGE = 8*STEP+1 put taps 3 gates apart vs the required 6.5:
+    // phases 3 and 7 were unreachable.)  DELAY_BITS is the legacy back-compat
+    // knob (ignored while STEP!=0).
     parameter integer DELAY_BITS = 0,
-    parameter integer STEP        = 3,
+    parameter integer STEP        = 6,
     parameter integer CLOSE_LOAD  = 0,
     // Number of reference cycles the phase mux parks low when the tap
     // changes.  1 is enough for the sampled edge to be safely away.
