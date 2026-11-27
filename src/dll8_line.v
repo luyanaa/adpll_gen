@@ -1,24 +1,27 @@
 `timescale 1ps/1ps
 // Purpose-built 8-phase all-digital DLL delay line.
 //
-// Architecture (approved 2026-11-27):
-//   * EIGHT identical elements lock to a FULL period (8d = T).  A 4-element
-//     half-period line puts the REF duty cycle directly into d (1% duty
-//     error = +35 ps at tap 7 at 500 MHz, over the 30 ps budget); 8d = T is
-//     duty-immune and is the textbook DLL.
-//   * Per-element fine trim: 8 independent codes = shared loop code + a
-//     signed per-element trim.  Independent residuals give tap-7 error
-//     ~1.32*LSB instead of 3.5*LSB for one shared code, so a 20 ps cell
-//     passes and 10 ps is the aim.
-//   * Element: two INVX4 stages with a NAND3 switched-cap bank on the middle
-//     node (the fine_delay.v pattern), all sg13g2 stdcell.  Binary
-//     1:2:4:8:16:32:64 finger groups (one buffer + one inverter per bit):
-//     monotone by construction, 7-bit code, LSB = one finger.
+// Architecture (approved 2026-11-27, SPICE-confirmed):
+//   * EIGHT identical elements lock to a FULL period (8d = T): duty-cycle
+//     immune, taps at k*d.
+//   * Per-element signed trim: code_i = clamp(loop + trim_i).
+//   * Element (SPICE-measured, in lockstep with the RTL below):
+//       stage 1: balanced custom driver "INVX4-B" (Wp=5.30um, Wn=2.96um),
+//                NOT stock sg13g2_inv_4 (Wp=4.48/Wn=2.96, too-weak PMOS under
+//                the bank load -> tpHL/tpLH asymmetry)
+//       stage 2: sg13g2_inv_4
+//       bank   : 7-bit THERMOMETER (127) of symmetric N/P switched
+//                sg13_moscap (0.9 x 1.1 um, ~12.7 fF/finger): even fingers
+//                NMOS->VSS (moscap_n), odd fingers PMOS->VDD (moscap_p),
+//                each driven by buf_8 / inv_8.
 //
 // Two backends (dll_dcdl.v convention):
 //   DLL8_IMPL=0 : parameterised transport-delay model (BASE + CODE*STEP),
-//                 used for the loop / conformance verification.
-//   DLL8_IMPL=1 : the real sg13g2 stdcell structure; timing from SPICE/STA.
+//                 used for the loop / conformance verification.  BASE/LSB
+//                 are the SPICE-measured values.
+//   DLL8_IMPL=1 : the structural element (DLL8_ELEM_PHYS).  It is a PnR/SPICE
+//                 netlist; the digital gate uses the model.  Binding notes
+//                 are in the wrapper cells below.
 `default_nettype none
 
 module DLL8_ELEM #(
@@ -42,9 +45,6 @@ module DLL8_ELEM #(
             assign OUT  = d;
             assign LOAD = 1'b0;
         end else begin : phys
-            // The real stdcell structure lives in its own module so the
-            // implementation split does not need a nested generate
-            // (iverilog rejects for-generate inside if-generate).
             DLL8_ELEM_PHYS #(.CODE_BITS(CODE_BITS)) u_phys (
                 .IN(IN), .CODE(CODE), .OUT(OUT), .LOAD(LOAD)
             );
@@ -52,10 +52,25 @@ module DLL8_ELEM #(
     endgenerate
 endmodule
 
-// Real sg13g2 stdcell element: two INVX4 stages with a NAND3 switched-cap
-// bank on the middle node (fine_delay.v pattern).  Binary 1:2:4:8:16:32:64
-// finger groups, one buffer + one inverter per bit: monotone by
-// construction, LSB = one finger.
+// ---------------------------------------------------------------- decoder
+// Binary code -> 127-bit thermometer (code c enables fingers 0..c-1).
+module DLL8_THERM_DEC (
+    input  wire [6:0]   CODE,
+    output wire [126:0] THERM
+);
+    genvar j;
+    generate
+        for (j = 0; j < 127; j = j + 1) begin : bitg
+            assign THERM[j] = (CODE > j);
+        end
+    endgenerate
+endmodule
+
+// ---------------------------------------------------------- measured element
+// Structure matches flow/characterization/dll8_pex2.py (npstrong, 0.9x1.1).
+// NOTE: the physical cells are PnR/SPICE bindings (see wrappers).  This
+// module is not simulated by the digital gate (DLL8_IMPL=0); it defines the
+// circuit that the SPICE deck and the layout must describe.
 module DLL8_ELEM_PHYS #(
     parameter integer CODE_BITS = 7
 ) (
@@ -64,63 +79,98 @@ module DLL8_ELEM_PHYS #(
     output wire                  OUT,
     output wire                  LOAD
 );
-    // Fingers are separate generate loops (iverilog does not support nested
-    // generate loops): finger n belongs to bit f_log2(n+1), so group b holds
-    // exactly 2^b fingers -> binary weighting 1:2:4:8:16:32:64.
-    function integer f_log2(input integer v);
-        integer k;
-        begin
-            f_log2 = 0;
-            for (k = 0; k < 16; k = k + 1)
-                if ((1 << k) <= v) f_log2 = k;
-        end
-    endfunction
+    wire [126:0] th;
+    DLL8_THERM_DEC u_dec (.CODE(CODE), .THERM(th));
 
     wire mid;
     (* keep *) (* dont_touch = "true" *)
-    PLL_CELL_INVX4 u_in (.I(IN), .ZN(mid));
+    DLL8_INV4B u_in (.A(IN), .Y(mid));          // balanced custom driver
     (* keep *) (* dont_touch = "true" *)
-    PLL_CELL_INVX4 u_out (.I(mid), .ZN(OUT));
-    // Per-bit buffered select lines (one buffer + one inverter per bit).
-    // (Port connections, not generate-scope assigns: iverilog 12 rejects
-    // assigning a vector element from inside a generate loop.)
-    wire [CODE_BITS-1:0] g, gb;
-    genvar b;
-    generate
-        for (b = 0; b < CODE_BITS; b = b + 1) begin : bitgrp
-            DLL8_BITBUF u_bitbuf (
-                .I(CODE[b]), .G(g[b]), .GB(gb[b])
-            );
-        end
-    endgenerate
-
-    genvar n;
-    generate
-        for (n = 0; n < (1 << CODE_BITS) - 1; n = n + 1) begin : finger
-            localparam integer FB = f_log2(n + 1);
-            (* keep *) (* dont_touch = "true" *)
-            PLL_CELL_NAND3X1 cap (
-                .A0(g[FB]), .A1(mid), .A2(gb[FB]), .ZN()
-            );
-        end
-    endgenerate
+    PLL_CELL_INVX4 u_out (.I(mid), .ZN(OUT));   // sg13g2_inv_4
     assign LOAD = mid;
+
+    genvar j;
+    generate
+        for (j = 0; j < 127; j = j + 1) begin : finger
+            DLL8_FINGER #(.IS_P(j % 2)) u_f (
+                .EN(th[j]), .MID(mid)
+            );
+        end
+    endgenerate
 endmodule
 
-module DLL8_BITBUF (
-    input  wire I,
-    output wire G,
-    output wire GB
+// One thermometer finger: even -> NMOS switch + moscap_n to VSS,
+// odd -> PMOS switch + moscap_p to VDD.  A submodule (not a nested generate
+// inside the element) because iverilog forbids nested generate regions.
+module DLL8_FINGER #(
+    parameter integer IS_P = 0
+) (
+    input  wire EN,
+    input  wire MID
 );
-    (* keep *) (* dont_touch = "true" *)
-    PLL_CELL_BUFFX0 gbuf (.I(I), .Z(G));
-    (* keep *) (* dont_touch = "true" *)
-    PLL_CELL_INVX1 ginv (.I(G), .ZN(GB));
+    generate
+        if (IS_P == 0) begin : nside
+            wire g, cn;
+            DLL8_BUF8 gbuf (.I(EN), .Z(g));
+            DLL8_NSW sw (.D(cn), .G(g), .S(MID));
+            DLL8_MOSCAP_N cap (.G(cn), .B(1'b0));
+        end else begin : pside
+            wire gb, cn;
+            DLL8_INV8 ginv (.I(EN), .ZN(gb));
+            DLL8_PSW sw (.D(cn), .G(gb), .S(MID));
+            DLL8_MOSCAP_P cap (.G(cn), .B(1'b1));
+        end
+    endgenerate
 endmodule
 
-// Eight-element line: tap k = (k+1) element delays from IN.  Per-element
-// code ports allow independent trim; all outputs are 50% duty by
-// construction (a chain of inverters), so the taps are duty-clean.
+// ------------------------------------------------------------- cell wrappers
+// PnR binding: a custom stdcell "sg13g2_inv_4b" with Wp=5.30um/Wn=2.96um
+// (the SPICE-balanced driver).  Do NOT map this to sg13g2_inv_4.
+// Behavioural stand-in for elaboration only.
+module DLL8_INV4B (A, Y);
+    input  wire A;
+    output wire Y;
+    assign Y = ~A;
+endmodule
+
+// buf_8 / inv_8 control buffers (thermometer bit fanout).  PnR: sg13g2_buf_8
+// / sg13g2_inv_8.
+module DLL8_BUF8 (I, Z);
+    input  wire I;
+    output wire Z;
+    assign Z = I;
+endmodule
+
+module DLL8_INV8 (I, ZN);
+    input  wire I;
+    output wire ZN;
+    assign ZN = ~I;
+endmodule
+
+// Switch + moscap primitives.  PnR/SPICE: sg13_lv_nmos (w=0.5u l=0.45u,
+// drain=D, gate=G, source=S), sg13_lv_pmos (w=1.0u l=0.13u), sg13_moscap_n /
+// sg13_moscap_p (w=0.9u l=1.1u, gate=G, plate=B).  These are PDK primitive
+// devices, NOT digital stdcells -- PnR must treat them as a custom/analog
+// block; the digital gate uses the model.
+module DLL8_NSW (D, G, S);
+    input  wire D, G;
+    output wire S;
+endmodule
+
+module DLL8_PSW (D, G, S);
+    input  wire D, G;
+    output wire S;
+endmodule
+
+module DLL8_MOSCAP_N (G, B);
+    input wire G, B;
+endmodule
+
+module DLL8_MOSCAP_P (G, B);
+    input wire G, B;
+endmodule
+
+// Eight-element line: tap k = (k+1) element delays from IN.
 module DLL8_LINE #(
     parameter real    BASE_PS   = 110.0,
     parameter real    STEP_PS   = 3.0,
