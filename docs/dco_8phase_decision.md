@@ -544,3 +544,28 @@ drain→cap-gate, per-element decoder with its 127 outputs as a local strap),
 then netgen LVS, then Magic PEX. Only then is the **extracted element delay and
 per-node C** available to test the 0.96 fF/node assumption and feed the
 pre-committed ≤3.5 ps / >5 ps rule.
+
+### KLayout discrepancy RESOLVED — it is our GDS, not the deck (2026-11-27, `22da56f`)
+
+The KLayout "version block" was indeed only the Python wrapper (missing
+`versions.txt`); the standalone Ruby deck runs on the installed 0.30.0 in 5.4 s.
+But it then reported **568 violations** on our element while Magic reported 0.
+
+**Discriminator run decided the question:** the *same* deck on the **signed-off
+`cdr_ihp130` GDS reports 0 violations** (18.7 s, `main` table complete). So the
+deck, layer map and flow are correct, and **our element's GDS is genuinely not
+KLayout-clean**. Deck reconciliation is a dead end; the fault is in the GDS we
+generate.
+
+Violation profile: `CntB.a1` 254 (**≈1 per device**), `CntB.a` 192, `NBL.c` 55,
+`Cnt.b` 36, `Act.b` 11, `M1.b` 9 — i.e. the **PCell's contact/NBL construction**
+as streamed out does not match what the deck expects, consistently across every
+device. This is a device-construction/streaming-parameter issue, not placement
+spacing (placement has no overlaps, and Magic is clean).
+
+Being fixed at the source (PCell contact/NBL generation or a corrected cell),
+after which the requirement is **both decks at 0 on the same GDS** — "Magic says
+0" alone is not acceptable given this evidence.
+
+**Scope flag if it cannot be fixed by PCell parameters:** correcting 254 device
+constructions by hand is a scope decision, not something to absorb silently.
