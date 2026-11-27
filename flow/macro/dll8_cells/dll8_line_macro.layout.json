@@ -1,0 +1,9 @@
+{
+ "gds": "/grid/adpll_gen/flow/macro/dll8_cells/dll8_line_macro.gds",
+ "bbox_dbu": "(-880,-1660;709470,43170)",
+ "w_um": 710.35,
+ "h_um": 44.83,
+ "area_um2": 31844.9905,
+ "elements": 8,
+ "devices": 2048
+}
