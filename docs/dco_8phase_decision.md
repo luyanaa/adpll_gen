@@ -475,3 +475,35 @@ design.
 inside ~30 ps in the available time, ship the DLL8 as RTL + verified simulation
 (this cycle) and carry the macro to the next shuttle — rather than tape out an
 unrouted or PEX-unverified clock block.
+
+### Layout: three stops, obstacle identified (2026-11-27, `e030acb`)
+
+Attempts to place/route the macro stopped three times at the same step. The lane's
+own diagnosis names the obstacle, and it is architectural, not a matter of effort:
+
+**1. The control fan.** A thermometer bank needs 127 control nets *per element*;
+4 elements = 508 long nets inside the macro. That, not the device count, is what
+makes routing intractable.
+**Fix (keeps the thermometer, which monotonicity requires): replicate the
+thermometer decoder per element.** Only the 7-bit `CODE` bus crosses the macro;
+each element has its own 127-output decoder placed adjacent to its bank, so the
+127 nets become **local** (decoder→bank, ~10–20 µm) laid as a regular strap in a
+dedicated channel — the standard cap-bank layout. Decoder area is trivial against
+the routing it saves.
+
+**2. The DRC residual is mechanical, not architectural.** Removing per-device
+guard rings dropped 15,600 → **781** errors, and the residual is exactly
+*"device-to-device spacing plus missing well/substrate taps"* — i.e. the rings were
+deleted but no psub/nwell taps were added. Needed: explicit psub + nwell tap rings
+at legal spacing, legal device spacing, and a regular bank (shared `mid` bus,
+VDD/VSS rails, control strap). Standard layout, not research.
+
+**3. Scope reduced: one element first.** Deliver one element at DRC-0 (Magic *and*
+KLayout) → netgen LVS → **PEX extracted element delay + per-node C**. That single
+number answers the decisive question — **how far real parasitics sit from the
+0.96 fF/node assumption** — and feeds straight back into the grid budget. The
+4-element macro and the 2-macro split follow only after that.
+
+**Current status: the PEX tap-spread judgement is NOT available**, and the DLL8
+tile PnR must not start. Design and simulation are closed (E ≤ 16 ps, 50 % duty,
+5–16 ps grid); the open item remains the physical macro.
