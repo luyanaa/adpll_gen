@@ -27,7 +27,7 @@ WORKDIR = Path("/tmp/opencode/dll8regen/decks")
 
 
 def emit_top(corner: str, code: int, period: float, wire: bool = True,
-             ncyc: int = 3) -> str:
+             ncyc: int = 2) -> str:
     c = m.CORNERS[corner]
     bits = [(code >> b) & 1 for b in range(7)]
     s = [f"* dll8 regen corner={corner} code={code} period={period}",
@@ -44,36 +44,31 @@ def emit_top(corner: str, code: int, period: float, wire: bool = True,
         s.append(f"vc{b} C{b} 0 DC={c['vdd'] if bits[b] else 0.0}")
     s.append(m.pwl_square(period, c["vdd"], ncyc))
     # 8-element line; same load on every tap
+    nodes = ["IN"] + [f"x{i+1}" for i in range(8)]
     for i in range(8):
-        s.append(f"Xn{i} x{i} x{i+1} C0 C1 C2 C3 C4 C5 C6 VDD VSS DLL8_ELEM")
+        s.append(f"Xn{i} {nodes[i]} {nodes[i+1]} C0 C1 C2 C3 C4 C5 C6 VDD VSS DLL8_ELEM")
         if wire:
             s.append(f"Cwire{i} x{i+1} 0 0.960f")
         s.append(f"Xtb{i} tb{i} x{i+1} VDD VSS sg13g2_buf_1")
         s.append(f"Xnx{i} nx{i} x{i+1} VDD VSS sg13g2_inv_4")
     # SR regeneration, one per phase
     for k in range(8):
-        tk = f"x{k+1}"
-        tk4 = f"x{((k+4) % 8)+1}"
+        tk = nodes[k+1]
+        tk4 = nodes[((k+4) % 8)+1]
         nl = f"k{k}"
-        # set pulse: spn = NAND(tk, tk_delayed) -> sn = ~spn (active-low set)
-        s.append(f"Xsda_{nl} sda{nl} {tk} VDD VSS sg13g2_inv_1")
-        s.append(f"Xsdb_{nl} sdb{nl} sda{nl} VDD VSS sg13g2_inv_1")
-        s.append(f"Xspn_{nl} spn{nl} {tk} sdb{nl} VDD VSS sg13g2_nand2_1")
-        s.append(f"Xsn_{nl} sn{nl} spn{nl} VDD VSS sg13g2_inv_1")
-        # reset pulse from tap_(k+4)
+        # set: DFF clocked by tap_k, D=1 -> Q rises at tap_k
+        # reset: edge pulse from tap_(k+4) -> active-low async reset
         s.append(f"Xrda_{nl} rda{nl} {tk4} VDD VSS sg13g2_inv_1")
         s.append(f"Xrdb_{nl} rdb{nl} rda{nl} VDD VSS sg13g2_inv_1")
         s.append(f"Xrpn_{nl} rpn{nl} {tk4} rdb{nl} VDD VSS sg13g2_nand2_1")
         s.append(f"Xrn_{nl} rn{nl} rpn{nl} VDD VSS sg13g2_inv_1")
-        # cross-coupled NAND latch
-        s.append(f"Xq_{nl} q{k} qb{k} sn{nl} VDD VSS sg13g2_nand2_1")
-        s.append(f"Xqb_{nl} qb{k} q{k} rn{nl} VDD VSS sg13g2_nand2_1")
-        s.append(f".ic V(q{k})=0 V(qb{k})=1")
+        s.append(f"Xq_{nl} q{k} qb{k} {tk} VDD rn{nl} VDD VSS sg13g2_dfrbp_1")
+        s.append(f".ic V(q{k})=0")
     vecs = " ".join(f"v(x{i})" for i in range(1, 9))
     qs = " ".join(f"v(q{i})" for i in range(8))
     s += [".control", "set filetype=ascii", "run",
           f"wrdata tran.out v(IN) {vecs} {qs}", "quit", ".endc",
-          f".TRAN 2p {period*(ncyc+2):.4g}n", ".end"]
+          f".TRAN 4p {period*(ncyc+2):.4g}n", ".end"]
     return "\n".join(s)
 
 
@@ -127,7 +122,30 @@ def measure(corner, code, period, raw: Path) -> dict:
                 else: lo += dt
             pt, pv = tt, vv
         return 100.0*hi/(hi+lo) if hi+lo > 0 else None
+    # tap spacing d = (tap4 - tap0)/4 from the same rising edge
+    r0 = [x for x in m.interp_cross(t, taps[0], thr, True) if x > settle]
+    r4 = [x for x in m.interp_cross(t, taps[4], thr, True) if x > settle]
+    if r0 and r4:
+        res["d_ps"] = (r4[0]-r0[0])/4.0*1e12
+        res["line8_ps"] = 8*res["d_ps"]
+    # per-phase q high time (set tap_k -> reset tap_(k+4))
+    qh=[]
+    for k in range(8):
+        qr=[x for x in m.interp_cross(t, qs[k], thr, True) if x > settle]
+        qf=[x for x in m.interp_cross(t, qs[k], thr, False) if x > settle]
+        if qr and qf:
+            f=next((x for x in qf if x>qr[0]), None)
+            if f is not None: qh.append((f-qr[0])*1e12)
+    res["q_high_ps"]=qh
     res["raw_tap7_duty"] = duty_of(taps[7])
+    # line delay: tap7 rise - IN rise
+    ri = m.interp_cross(t, w["v0"], thr, True)
+    r7 = m.interp_cross(t, taps[7], thr, True)
+    if ri and r7:
+        ri2 = [x for x in ri if x > settle]
+        r72 = [x for x in r7 if x > settle]
+        if ri2 and r72:
+            res["line_delay_ps"] = (r72[0]-ri2[0])*1e12
     return res
 
 
@@ -169,7 +187,7 @@ def main():
         d = r.get("q_duty_pct") or []
         print(f"{r['corner']}: set={r.get('set_delay_ps')} spread={r.get('set_spread_ps')} "
               f"q_duty={[round(x,2) if x else None for x in d]} "
-              f"raw_tap7={r.get('raw_tap7_duty')}")
+              f"raw_tap7={r.get('raw_tap7_duty')} line={r.get('line_delay_ps')}")
 
 
 if __name__ == "__main__":
