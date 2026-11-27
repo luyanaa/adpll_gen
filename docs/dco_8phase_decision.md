@@ -188,3 +188,45 @@ cell pattern, `ssbbpd`/TDC detector, `digital_loop_filter` + `term_decoder`.
 Synthesizable, no analogue bias. Verification: lock from both rails at 3 corners
 and both rates, prove no false lock (exactly 8d = T), and measured
 |phase_k − k·T/8| ≤ 30 ps for k=0..7.
+
+### DLL8 digital pass — ACCEPTED (2026-11-27, `15ccd9d`)
+
+Reproduced independently by the orchestrator (not just the lane's report):
+
+| config | worst \|phase_k−k·T/8\| | E (lock point) | element matching | duty | verdict |
+|---|---|---|---|---|---|
+| SS / 4 ns (250 MHz) | **0.0 ps** | +0.0 ps | 3.9 ps | 50.0% | PASS |
+| FF / 2 ns (500 MHz) | **0.0 ps** | +0.0 ps | 3.9 ps | 50.0% | PASS |
+| TT / 3 ns | **0.0 ps** | +0.0 ps | 3.9 ps | 50.0% | PASS |
+| SS / 2 ns (500 MHz) | 16.0 ps | −16 ps | 2.2 ps | 50.0% | PASS |
+
+- Locks from **both code rails**, 0.4–3.1 µs, final code 94/95.
+- **No false lock**: tap7−REF = 0 / ±16 ps (a 7d/9d lock would read ±T/8 = ±500/±250 ps).
+- TDC resolution T/1024 = 3.9 / 2.9 / 2.0 ps vs the derived requirement **E ≤ 34 ps**
+  → measured **E ≤ 16 ps**.
+- **Measurement-based trim** demonstrated: injected +6/+4/−5/+3/−4/+5/−3/+2 code
+  offsets → untrimmed worst 32 ps → **TDC-calibrated worst 4 ps**, matching 7.8 ps.
+  (The 32 ps "FAIL" line in the log is that deliberate pre-calibration demo.)
+
+Files (no shared module touched): `src/dll8_line.v` (element + 8-element line,
+per-element codes, `DLL8_IMPL` model/phys split), `src/dll8_tdc.v` (coherent
+phase TDC — counter and both edge captures in the TICK domain, avoiding the
+split-handshake ±1-period error of the older `DLL_TDC`), `src/dll8_top.v`
+(TDC-default loop, half-code-step dead band, update every 3 REF cycles,
+absolute-range acquisition clocked REF/8 with TICK=16×REF so 8d=T reads 16
+counts — the harmonic-lock guard), `src/dll8_tb.v`.
+
+**Known range limit (accepted, matches the spec table):** with the 7-bit sizing
+the element maxima are SS 628 / TT 466 / FF 314 ps, so **TT and FF cannot reach
+d = 500 ps at 4 ns** (they rail at code 127). The corner-graded contract is
+SS@250 MHz and FF@500 MHz — both covered — plus TT@3 ns. Supporting TT/FF at
+250 MHz would need an 8-bit (255-finger) bank; not required by the contract.
+
+**`PD_MODE=0` (bang-bang latch)** is kept selectable but is *not* a valid lock
+detector here (settles at the anti-phase equilibrium 8d≈T/2), consistent with
+the derived dead-zone limit (>56 ps) that forced the TDC swap.
+
+**Remaining gate before M4**: SPICE confirmation with real sg13g2 cells + routed
+wire caps — BASE/LSB per corner (the digital BASE/LSB are optimistic
+placeholders), element headroom at 500 ps (SS) and 250 ps (FF), and the
+conformance re-run with measured delays substituted.
