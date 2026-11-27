@@ -569,3 +569,28 @@ after which the requirement is **both decks at 0 on the same GDS** — "Magic sa
 
 **Scope flag if it cannot be fixed by PCell parameters:** correcting 254 device
 constructions by hand is a scope decision, not something to absorb silently.
+
+### Scope decision: draw the devices with Magic PCells (2026-11-27, `4d45c4f`)
+
+The KLayout 568 were attributed to the **PDK's KLayout PCell** streaming S/D and
+guard-ring contacts as ContBar geometry that the KLayout DRC deck rejects
+(`CntB.a1` 254 ≈ 1 per device; `Cnt.a`/`CntB.a` 192 each; `NBL.c` 55 from the
+nW/nBuLay pitch). Magic uses a different extract/DRC path and reports 0 on the
+*same* GDS, and the Magic-drawn `cdr_ihp130` passes the KLayout deck too — so it
+is a **PDK KLayout-PCell vs KLayout-DRC revision mismatch**, not a placement error.
+
+**Decision: draw the element with the Magic PCells** (`ihp-sg13g2-cap.tcl`,
+`ihp-sg13g2-fet.tcl`), scripted and reproducible — the same flow that produced
+`cdr_ihp130`, which is the only artefact in this repo that passes *both* decks
+at zero. Rejected alternatives:
+- patching the KLayout PCell / PDK source (would edit foundry files silently);
+- declaring Magic the sole signoff deck — **not acceptable**, because I verified
+  the KLayout deck catches real differences (0 on `cdr_ihp130`, 568 here).
+
+Acceptance stays **both decks at 0 on the same GDS**, then route → LVS → PEX.
+
+**Status: the decisive number (PEX tap spread / per-node C vs 0.96 fF/node) is
+still unavailable, and the ≤3.5 ps PASS / >5 ps FAIL rule cannot be applied.**
+This is the fourth iteration on the physical side; the design remains closed and
+verified, so the open risk is concentrated entirely in first-time-for-this-project
+analog layout.
