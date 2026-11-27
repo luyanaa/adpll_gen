@@ -156,3 +156,35 @@ achieves that is the open question being measured now.
    bias DLL (option C above).
 
 The analogue option C is therefore **demoted to a fallback**, not the plan.
+
+### ADDLL evaluation result (2026-11-27, measured) — code usable, line must be re-made
+
+All 7 TBs now run (previously none had evidence): **5 PASS, 2 FAIL**.
+PASS: `dll_dcdl_tb` (TT 2930/11548 ps, SS 3320/18128, FF 2780/8640; boundary
+step **exactly = LSB** → the EXTRA_PS DNL-gap fix is verified), `dll_full_period_tb`,
+`dll_gate_tb`, `dll_tdc_phys_gl_tb`; `addll_top_tb` passes but is a **smoke test
+only** (elab-stub cells are zero-delay, so its code carries no timing meaning).
+FAIL: `dll_range_reval_tb` (4 checks — no re-lock at 6 ns, phase not full period,
+long-edge/restore never re-lock, CODE stuck 75) and `dll_phys_tdc_tb` (SS lock
+0.972 ns vs ~5.0; TT/FF pass).
+
+**The existing DCDL does not fit this purpose** (measured, codes 0..279):
+min total **3320 ps @SS / 2780 ps @FF** (830 / 695 ps per element) and
+**LSB 30 ps uniform**. It was sized for DDR ~5 ns periods. We need 250–500 ps per
+element with ≤20 ps LSB.
+
+**Two derived corrections to the earlier 4-element idea:**
+1. **Use 8 elements, full-period lock (8d = T).** A 4-element line locks 4d = T/2
+   against the inverted edge, putting REF **duty cycle directly into d**: at
+   500 MHz a 1% duty error costs **+35 ps at tap 7** (budget 30) → needs <0.85%
+   duty. Full-period lock is duty-immune.
+2. **Per-element trim, not one shared code.** Shared code: tap-7 = 3.5·LSB → needs
+   LSB ≤ 8 ps. Per-element (independent residuals): tap-7 ≈ 1.32·LSB → **LSB ≤ 20 ps
+   passes, 10 ps comfortable**.
+
+Target: 8 elements × (base < 150 ps + fine bank), d = 250 ps (FF) / 500 ps (SS),
+per-element trim, LSB ≤ 20 ps (aim 10). Reuse the stdcell `fine_delay`/`mid_delay`
+cell pattern, `ssbbpd`/TDC detector, `digital_loop_filter` + `term_decoder`.
+Synthesizable, no analogue bias. Verification: lock from both rails at 3 corners
+and both rates, prove no false lock (exactly 8d = T), and measured
+|phase_k − k·T/8| ≤ 30 ps for k=0..7.
