@@ -27,7 +27,7 @@ WORKDIR = Path("/tmp/opencode/dll8regen/decks")
 
 
 def emit_top(corner: str, code: int, period: float, wire: bool = True,
-             ncyc: int = 2) -> str:
+             ncyc: int = 2, driver: str = "custom") -> str:
     c = m.CORNERS[corner]
     bits = [(code >> b) & 1 for b in range(7)]
     s = [f"* dll8 regen corner={corner} code={code} period={period}",
@@ -45,12 +45,18 @@ def emit_top(corner: str, code: int, period: float, wire: bool = True,
     s.append(m.pwl_square(period, c["vdd"], ncyc))
     # 8-element line; same load on every tap
     nodes = ["IN"] + [f"x{i+1}" for i in range(8)]
+    # every tap must drive exactly ONE element-input load: x1..x7 drive the
+    # real next element; x8 gets a dummy of the SAME stage-1 cell.  (The old
+    # version added an inv_4 dummy to every tap and left x8 without a real
+    # input, so tap7 was under-loaded - the k=7 D_set outlier.)
+    dummy = "DLL8_INV4B" if driver == "custom" else "sg13g2_inv_4"
     for i in range(8):
         s.append(f"Xn{i} {nodes[i]} {nodes[i+1]} C0 C1 C2 C3 C4 C5 C6 VDD VSS DLL8_ELEM")
         if wire:
-            s.append(f"Cwire{i} x{i+1} 0 0.960f")
-        s.append(f"Xtb{i} tb{i} x{i+1} VDD VSS sg13g2_buf_1")
-        s.append(f"Xnx{i} nx{i} x{i+1} VDD VSS sg13g2_inv_4")
+            s.append(f"Cwire{i} {nodes[i+1]} 0 0.960f")
+        s.append(f"Xtb{i} tb{i} {nodes[i+1]} VDD VSS sg13g2_buf_1")
+        if i == 7:
+            s.append(f"Xnx7 nx7 {nodes[8]} VDD VSS {dummy}")
     # SR regeneration, one per phase
     for k in range(8):
         tk = nodes[k+1]
@@ -134,9 +140,10 @@ def measure(corner, code, period, raw: Path) -> dict:
 def run(cfg):
     d = WORKDIR / (f"{cfg['corner']}_c{cfg['code']:03d}_p{cfg['period']:.2f}")
     d.mkdir(parents=True, exist_ok=True)
-    (d / "dll8_elem.sp").write_text(m.emit_elem2(7, cfg["code"], "npstrong"))
+    drv = cfg.get("driver", "custom")
+    (d / "dll8_elem.sp").write_text(m.emit_elem2(7, cfg["code"], "npstrong", drv))
     (d / "top.sp").write_text(emit_top(cfg["corner"], cfg["code"],
-                                       cfg["period"]))
+                                       cfg["period"], driver=drv))
     (d / ".spiceinit").write_text(
         f"set num_threads=1\nosdi {m.OSDI.resolve()}\nosdi {m.OSDI_NQS.resolve()}\n")
     raw = d / "tran.out"
@@ -153,6 +160,7 @@ def main():
     ap.add_argument("--codes", default="")
     ap.add_argument("--period", type=float, default=4.0)
     ap.add_argument("--jobs", type=int, default=3)
+    ap.add_argument("--driver", default="custom", choices=["custom","stock"])
     ap.add_argument("--out", default=str(OUT / "regen.json"))
     a = ap.parse_args()
     codes = [int(x) for x in a.codes.split(",")] if a.codes else [a.code]

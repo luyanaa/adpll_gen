@@ -6,9 +6,11 @@
 //     immune, taps at k*d.
 //   * Per-element signed trim: code_i = clamp(loop + trim_i).
 //   * Element (SPICE-measured, in lockstep with the RTL below):
-//       stage 1: balanced custom driver "INVX4-B" (Wp=5.30um, Wn=2.96um),
-//                NOT stock sg13g2_inv_4 (Wp=4.48/Wn=2.96, too-weak PMOS under
-//                the bank load -> tpHL/tpLH asymmetry)
+//       stage 1: stock sg13g2_inv_4.  (A custom Wp=5.30/Wn=2.96 "INVX4-B" was
+//                tried to balance tpHL/tpLH, but the only load it affected was
+//                the element output duty, which SR regeneration now produces
+//                independently.  SPICE shows stock inv_4 has the same
+//                BASE/range/LSB, so the custom cell was dropped.)
 //       stage 2: sg13g2_inv_4
 //       bank   : 7-bit THERMOMETER (127) of symmetric N/P switched
 //                sg13_moscap (0.9 x 1.1 um, ~12.7 fF/finger): even fingers
@@ -84,7 +86,7 @@ module DLL8_ELEM_PHYS #(
 
     wire mid;
     (* keep *) (* dont_touch = "true" *)
-    DLL8_INV4B u_in (.A(IN), .Y(mid));          // balanced custom driver
+    PLL_CELL_INVX4 u_in (.I(IN), .ZN(mid));     // stock sg13g2_inv_4
     (* keep *) (* dont_touch = "true" *)
     PLL_CELL_INVX4 u_out (.I(mid), .ZN(OUT));   // sg13g2_inv_4
     assign LOAD = mid;
@@ -124,15 +126,6 @@ module DLL8_FINGER #(
 endmodule
 
 // ------------------------------------------------------------- cell wrappers
-// PnR binding: a custom stdcell "sg13g2_inv_4b" with Wp=5.30um/Wn=2.96um
-// (the SPICE-balanced driver).  Do NOT map this to sg13g2_inv_4.
-// Behavioural stand-in for elaboration only.
-module DLL8_INV4B (A, Y);
-    input  wire A;
-    output wire Y;
-    assign Y = ~A;
-endmodule
-
 // buf_8 / inv_8 control buffers (thermometer bit fanout).  PnR: sg13g2_buf_8
 // / sg13g2_inv_8.
 module DLL8_BUF8 (I, Z);

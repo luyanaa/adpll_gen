@@ -115,10 +115,13 @@ def emit_invb() -> str:
             ".ends DLL8_INV4B")
 
 
-def emit_elem2(nbits: int = NBITS, nfixed: int = -1, scheme: str = "np") -> str:
+def emit_elem2(nbits: int = NBITS, nfixed: int = -1, scheme: str = "np",
+              driver: str = "custom") -> str:
+    inv1 = "DLL8_INV4B" if driver == "custom" else "sg13g2_inv_4"
     s = [".subckt DLL8_ELEM IN OUT C0 C1 C2 C3 C4 C5 C6 VDD VSS"
          " params: CMID=0.96f",
-         "Xinv_in IN mid VDD VSS DLL8_INV4B",
+         ("Xinv_in IN mid VDD VSS DLL8_INV4B" if inv1=="DLL8_INV4B"
+         else "Xinv_in mid IN VDD VSS sg13g2_inv_4"),
          "Xinv_out OUT mid VDD VSS sg13g2_inv_4",
          "Cmid mid 0 {CMID}"]
     if nfixed >= 0:
@@ -266,13 +269,14 @@ def measure(cfg, raw):
 def deck_dir(cfg):
     return WORKDIR / (f"v2_{cfg['nelem']}e_{cfg['corner']}"
                       f"_c{cfg.get('code',0):03d}_n{cfg.get('nfixed',-1)}"
-                      f"_{cfg.get('scheme','np')}_{cfg.get('mode','pulse')[0]}")
+                      f"_{cfg.get('scheme','np')}_{cfg.get('driver','custom')}_{cfg.get('mode','pulse')[0]}")
 
 
 def run_one(cfg):
     d = deck_dir(cfg); d.mkdir(parents=True, exist_ok=True)
     (d / "dll8_elem.sp").write_text(
-        emit_elem2(NBITS, cfg.get("nfixed", -1), cfg.get("scheme", "np")))
+        emit_elem2(NBITS, cfg.get("nfixed", -1), cfg.get("scheme", "np"),
+                   cfg.get("driver", "custom")))
     (d / "top.sp").write_text(emit_top(cfg))
     (d / ".spiceinit").write_text(
         f"set num_threads=1\nosdi {OSDI.resolve()}\nosdi {OSDI_NQS.resolve()}"
@@ -295,6 +299,7 @@ def main():
     ap.add_argument("--period", type=float, default=0.0)
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--scheme", default="np", choices=["np","npstrong","tg","lin","mom","nplin","npcap"])
+    ap.add_argument("--driver", default="custom", choices=["custom","stock"])
     ap.add_argument("--out", default=str(OUT / "dll8_v2.json"))
     args = ap.parse_args()
 
@@ -305,17 +310,17 @@ def main():
         for n in nf:
             for c in corners:
                 cfgs.append(dict(corner=c, code=0, nelem=1, mode="pulse",
-                                 nfixed=n, scheme=args.scheme,
+                                 nfixed=n, scheme=args.scheme, driver=args.driver,
                                  wire=True, period=None))
     else:
-        codes = (list(range(128)) if args.cmd == "sweep"
-                 else [int(x) for x in (args.codes or "0,64,127").split(",")])
+        codes = ([int(x) for x in args.codes.split(",")] if args.codes
+                 else list(range(128)))
         for ne in [int(x) for x in args.nelem.split(",")]:
             for c in corners:
                 for code in codes:
                     cfgs.append(dict(corner=c, code=code, nelem=ne,
                                      mode=args.mode, nfixed=-1,
-                                     scheme=args.scheme, wire=True,
+                                     scheme=args.scheme, driver=args.driver, wire=True,
                                      period=(args.period or None), ncyc=3))
     def go(cfg):
         try:
