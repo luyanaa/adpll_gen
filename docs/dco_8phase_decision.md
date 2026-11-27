@@ -594,3 +594,35 @@ still unavailable, and the ≤3.5 ps PASS / >5 ps FAIL rule cannot be applied.**
 This is the fourth iteration on the physical side; the design remains closed and
 verified, so the open risk is concentrated entirely in first-time-for-this-project
 analog layout.
+
+### Diagnosis corrected — no Magic redraw needed (2026-11-27, orchestrator direct)
+
+The lane's "KLayout-PCell vs deck revision mismatch → must redraw in Magic" was
+**refuted by measurement** before any redraw happened:
+
+1. **KLayout version irrelevant**: 0.30.12 (nix store) gives the identical 568 as 0.30.0.
+2. **Single parameterized PCell devices are KLayout-clean**: the round-1
+   `sg13g2_lv_nmos` / `sg13g2_moscap_n` cells → **0 violations**. The PCells are
+   not inherently broken.
+3. **Pitch sweep**: 7 µm → 568, 10 µm → 513, 14 µm → 513. Only ~55 violations
+   (NBL.c) are spacing-driven; **513 are pitch-independent device/array-level**.
+4. Contacts are exactly at the rule edge: 0.160 µm wide, minimum edge gaps of
+   exactly 0.180 µm. Suspects: guard-ring corner contacts, cap/switch interaction
+   at the 2 µm intra-column offset, or a parameter difference between the
+   round-1 (passing) and round-2 (failing) instantiations.
+5. **KLayout LVS deck natively extracts `sg13_moscap`**
+   (`libs.tech/klayout/tech/lvs/rule_decks/cap_connections.lvs`) — Magic was never
+   needed even for LVS. New preferred flow: **KLayout for DRC + extraction + LVS**,
+   no Magic redraw, no PDK patching, no waiving KLayout.
+
+The lane is now diagnosing the 513 to root cause at the shape level, then
+routing one element → both-decks DRC 0 → KLayout LVS → PEX.
+
+### Fallback noted, not pursued (documented for contingency)
+
+If the moscap layout path fails again, the stdcell-only fallback is a
+**drive-strength-tuned element** (parallel tri-state inverter slices / DCCA-style
+current control) — fully synthesizable, no custom devices at all. Its known cost:
+resolution is non-uniform (coarse at the fast end) and range trades against BASE.
+Not pursued while the moscap path is alive, since the element is already
+SPICE-verified with moscap and a redesign would restart verification.
