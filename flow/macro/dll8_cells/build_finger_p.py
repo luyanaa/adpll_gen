@@ -16,19 +16,21 @@ def txt(l,x,y,s): f.shapes(l).insert(pya.Text(s,pya.Trans(pya.Vector(int(x),int(
 # CN gate contact high above ring and top S/D contacts
 f.shapes(ly.layer(5,0)).insert(pya.Box(300,1350,700,2320))
 box(cont, 420,2080, 580,2240)
-box(m1, 390,2030, 610,2290)
-box(v1, 405,2075, 595,2245)
+box(m1, 380,2020, 620,2300)
+box(v1, 405,2070, 595,2260)
 box(m2, 370,1990, 630,2330)
 # switch drain M1 (DX+900..DX+1060,0..500): V1 + M2
-box(v1, DX+600,155, DX+790,345)
+box(m1, DX+420,80, DX+820,500)
+box(v1, DX+565,195, DX+755,385)
 # M2 CN bridge gate->drain
-box(m2, 500,150, DX+790,350)
+box(m2, 500,150, DX+820,350)
 box(m2, 450,150, 750,2150)
 txt(m2p, 2000, 900, "CN")
 # CTRL: cont on switch gate poly (DX+340..DX+790), M1 pad narrowed
-box(cont, DX+470,120, DX+630,280)
-box(m1, DX+420,80, DX+720,340)
-txt(m1p, DX+560, 210, "CTRL")
+f.shapes(ly.layer(5,0)).insert(pya.Box(DX+280,1180,DX+580,1620))
+box(cont, DX+350,1360, DX+510,1520)
+box(m1, DX+300,1320, DX+560,1600)
+txt(m1p, DX+430, 1290, "CTRL")
 txt(m1p, DX+150, 250, "MID")
 txt(m1p, 500, 1250, "VDD")
 top=ly.create_cell("dll8_finger_p_top"); top.insert(pya.CellInstArray(f.cell_index(),pya.Trans()))
