@@ -520,3 +520,27 @@ the simulation baseline (5–16 ps) already spent against the 30 ps budget:
 | **> 5 ps** | **FAIL** — the 8-phase grid cannot hold 30 ps; ship DLL8 as RTL + verified simulation, carry the macro to the next shuttle |
 
 This is fixed in advance so the outcome is a measurement, not a judgement call.
+
+### First DRC milestone — and the "tooling block" may be spurious (2026-11-27, `dad0a33`)
+
+**Magic DRC = 0 on one element** (2 × inv_4 + 127 moscap/switch, 1.0×1.0 µm),
+size **110.35 × 59.83 µm**. The obstacle was exactly as diagnosed: the guard rings
+*are* the well/substrate taps. `guardRingType=psub/nwell` kept, spaced to
+**7.0 µm pitch** → clean. Removing the rings (which produced the 15,600 / 781
+errors) also removed the taps; that was the whole problem, not the 127 fingers.
+
+**The KLayout requirement is in the Python wrapper, not the rule deck.**
+`run_drc.py::_get_required_klayout_version()` reads a repo-level `versions.txt`
+which **does not exist** in this PDK tree (`find` confirms), and the actual deck
+`libs.tech/klayout/tech/drc/ihp-sg13g2.drc` is a **standalone KLayout Ruby deck
+with no version guard of its own**. So the "needs KLayout ≥ 0.30.7" report is a
+consequence of the missing versions.txt, not of the rules — the deck should be
+runnable directly on the installed 0.30.0 via
+`klayout -b -r <deck> -rd input=... -rd report=...`. Being tested; if it runs
+clean, the KLayout half of DRC-0 closes with no upgrade.
+
+**Still open before the decisive number:** routing one element (mid bus, rails,
+drain→cap-gate, per-element decoder with its 127 outputs as a local strap),
+then netgen LVS, then Magic PEX. Only then is the **extracted element delay and
+per-node C** available to test the 0.96 fF/node assumption and feed the
+pre-committed ≤3.5 ps / >5 ps rule.
