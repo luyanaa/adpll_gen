@@ -119,3 +119,42 @@ ADPLL is SS-closed and jitter-measured.
    this week, or descope DDR1 from this shuttle (~30 pads).
 6. **Correct the stale claims** in both source docs (HEADs, "empty hardmacro",
    the 335 / 1-Gb/s-safe statements).
+
+---
+
+## Addendum 2026-11-27 — 8-phase clock architecture resolved (affects OpenSERDES PMA)
+
+The MPW review's OpenSERDES §3 said the PMA needed "a faster ring" for 2 Gb/s and
+that SS would not reach it. That framing is now superseded by a measured
+architecture change:
+
+- **The single-ring 8-phase grid is closed as impossible.** A travelling-wave
+  ring cannot produce exact k·T/8: new phases appear only every 2 stages
+  (polarity), so L must be divisible by 8, while the closure delay is fractional
+  (2.59–3.31 slots) *and code-dependent*. Measured conformance was 93–108 ps
+  against a 30 ps budget. This is a structural result, not a sizing miss.
+- **Replaced by an all-digital 8-element delay-locked line** (`src/dll8_*.v`,
+  from the in-repo ADDLL/DCDL lineage):
+  - element: balanced driver + symmetric N/P switched-moscap thermometer bank;
+    BASE 62/42/31 ps, LSB ~5/4/3.5 ps, range 62–700 / 42–545 / 31–470 ps
+    (SS/TT/FF), monotone — spans 2000–4000 ps over 8 elements at every corner;
+  - lock: coherent phase TDC (T/1024 = 3.9/2.9/2.0 ps), locks from both rails,
+    no false lock (proven: exactly 8d = T), E ≤ 16 ps;
+  - closed-loop conformance with measured timing: **5–16 ps** worst;
+  - **duty 50.0 % by construction** via SR/DFF phase regeneration (SET on tap_k,
+    RESET on tap_(k+4)); this is load-bearing, not cosmetic — TX's 4:1 latch-MUX
+    uses clk_ph[i] as the transparency window.
+  - **no analogue bias, no charge pump** → synthesizable, DFT-able, portable
+    across PDKs by swapping cells.
+
+Consequences for the MPW plan:
+- The 250 MHz/1 Gb/s and 500 MHz/2 Gb/s clock generation question moves from
+  "can the ring reach it" to "can the frequency source reach it", where the
+  answer is already measured: SS 279–337 MHz, TT 437–553 MHz, FF 659–837 MHz.
+  So **1 Gb/s @ SS and 2 Gb/s @ FF/TT** are supported by the frequency source,
+  and the phase grid is now independent of that source.
+- The `cdr_ihp130` "335 MHz @ SS" figure remains valid but is no longer the
+  phase-grid mechanism.
+- Remaining physical risks to close before tape-out: the custom balanced driver
+  cell must exist/bind in the stdcell flow, `sg13_moscap` PnR binding, and tap
+  routing symmetry under real placement.
