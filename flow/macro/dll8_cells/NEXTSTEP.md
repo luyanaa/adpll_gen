@@ -5,8 +5,8 @@
 - N finger `dll8_finger.gds` (`build_finger6.py`): DRC 0, WITH array escape
   tracks (MID via left guard-interior, CTRL via up) -> M3 landings.
 - P finger `dll8_finger_p.gds` (`build_finger_p6.py`): DRC 0, same escapes.
-- **Routed 127-finger array `dll8_line_array.gds` (`build_array4.py`):
-  DRC 0** (16.38 x 346.62 um).  64 N + 63 P, MID = vertical M3 bus per
+- **Routed 127-finger array `dll8_line_array.gds` (`build_array5.py`):
+  DRC 0** (16.38 x 346.82 um), with VDD/VSS rails + labels.  64 N + 63 P, MID = vertical M3 bus per
   column + top tie, CTRL = 127 M3 horizontals (one per finger, own row y),
   shared 31/0+32/0 fully enclosing the P group.
 - Connectivity verified: merged M3 = **128 components = 1 MID + 127 CTRL**
@@ -29,8 +29,10 @@
         -rd net_only=true -rd target_netlist=<cir> -rd log=<log>
 
 ## REMAINING (bounded, arithmetic)
-1. Place the two `sg13g2_inv_4` stages (IN -> inv1 -> MID -> inv2 -> OUT) and
-   VDD/VSS rails on the routed array; DRC to 0.  NOTE: the stdcell GDS gives
+1. Place the two `sg13g2_inv_4` stages (IN -> inv1 -> MID -> inv2 -> OUT);
+   VDD/VSS rails are DONE.  inv_4 LEF pins: A M1 (0.48..2.0,1.52..1.9);
+   Y M1 right (0.775..2.54,0.61..3.155); VDD top rail (0,3.56..4.0);
+   VSS bottom rail (0,-0.22..0.22); SIZE 2.88x3.78.  NOTE: the stdcell GDS gives
    only one M1 pin box for inv_4 (no explicit A/Y/VDD/VSS), so wiring must
    use the LEF/pin data (libs.ref LeF) or place inv_4 with its documented
    rail y-positions.  This is the same class of coordinate work as the
