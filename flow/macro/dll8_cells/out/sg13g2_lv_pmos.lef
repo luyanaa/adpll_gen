@@ -1,0 +1,67 @@
+VERSION 5.7 ;
+  NOWIREEXTENSIONATPIN ON ;
+  DIVIDERCHAR "/" ;
+  BUSBITCHARS "[]" ;
+MACRO sg13g2_lv_pmos
+  CLASS BLOCK ;
+  FOREIGN sg13g2_lv_pmos ;
+  ORIGIN 1.660 1.660 ;
+  SIZE 4.130 BY 4.320 ;
+  PIN S
+    ANTENNADIFFAREA 0.226500 ;
+    PORT
+      LAYER Metal1 ;
+        RECT 0.070 0.650 0.230 1.000 ;
+        RECT 0.000 0.350 0.300 0.650 ;
+        RECT 0.070 0.000 0.230 0.350 ;
+      LAYER Via1 ;
+        RECT 0.050 0.400 0.250 0.600 ;
+      LAYER Metal2 ;
+        RECT 0.000 0.350 0.300 0.650 ;
+    END
+  END S
+  PIN D
+    ANTENNADIFFAREA 0.226500 ;
+    PORT
+      LAYER Metal1 ;
+        RECT 0.580 0.650 0.740 1.000 ;
+        RECT 0.510 0.350 0.810 0.650 ;
+        RECT 0.580 0.000 0.740 0.350 ;
+      LAYER Via1 ;
+        RECT 0.560 0.400 0.760 0.600 ;
+      LAYER Metal2 ;
+        RECT 0.510 0.350 0.810 0.650 ;
+    END
+  END D
+  PIN G
+    PORT
+      LAYER Metal1 ;
+        RECT 0.255 1.380 0.555 1.680 ;
+      LAYER Via1 ;
+        RECT 0.305 1.430 0.505 1.630 ;
+      LAYER Metal2 ;
+        RECT 0.255 1.380 0.555 1.680 ;
+    END
+  END G
+  PIN B
+    ANTENNADIFFAREA 3.870000 ;
+    PORT
+      LAYER Metal1 ;
+        RECT -1.310 2.010 2.120 2.310 ;
+        RECT -1.310 -1.010 -1.010 2.010 ;
+        RECT 1.820 -1.010 2.120 2.010 ;
+        RECT -1.310 -1.310 2.120 -1.010 ;
+      LAYER Via1 ;
+        RECT 0.305 -1.260 0.505 -1.060 ;
+      LAYER Metal2 ;
+        RECT 0.255 -1.310 0.555 -1.010 ;
+    END
+  END B
+  OBS
+      LAYER GatPoly ;
+        RECT 0.340 1.000 0.470 1.180 ;
+        RECT 0.340 -0.180 0.470 0.000 ;
+  END
+END sg13g2_lv_pmos
+END LIBRARY
+

@@ -1,0 +1,37 @@
+VERSION 5.7 ;
+  NOWIREEXTENSIONATPIN ON ;
+  DIVIDERCHAR "/" ;
+  BUSBITCHARS "[]" ;
+MACRO sg13g2_moscap_p
+  CLASS BLOCK ;
+  FOREIGN sg13g2_moscap_p ;
+  ORIGIN 1.090 0.620 ;
+  SIZE 3.280 BY 2.710 ;
+  PIN G
+    ANTENNADIFFAREA 2.450000 ;
+    PORT
+      LAYER Metal1 ;
+        RECT 0.400 1.830 0.700 1.870 ;
+        RECT -0.830 1.570 1.930 1.830 ;
+        RECT -0.830 0.850 -0.570 1.570 ;
+        RECT 0.400 1.550 0.700 1.570 ;
+        RECT 1.670 0.850 1.930 1.570 ;
+        RECT -0.830 0.150 -0.060 0.850 ;
+        RECT 1.160 0.150 1.930 0.850 ;
+      LAYER Via1 ;
+        RECT 0.450 1.600 0.650 1.820 ;
+      LAYER Metal2 ;
+        RECT 0.400 1.550 0.700 1.870 ;
+    END
+  END G
+  OBS
+      LAYER GatPoly ;
+        RECT 0.000 1.000 1.100 1.370 ;
+        RECT 0.000 -0.370 1.100 0.000 ;
+      LAYER Metal1 ;
+        RECT 0.020 1.090 1.080 1.350 ;
+        RECT 0.020 -0.350 1.080 -0.090 ;
+  END
+END sg13g2_moscap_p
+END LIBRARY
+

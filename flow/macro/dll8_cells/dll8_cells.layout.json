@@ -1,0 +1,29 @@
+{
+ "cells": {
+  "sg13g2_moscap_n": {
+   "kind": "moscap",
+   "w": 1.0,
+   "l": 1.1,
+   "bbox": "(-880,-1030;1980,1870)"
+  },
+  "sg13g2_moscap_p": {
+   "kind": "moscap",
+   "w": 1.0,
+   "l": 1.1,
+   "bbox": "(-1090,-620;2190,2090)"
+  },
+  "sg13g2_lv_nmos": {
+   "kind": "nmos",
+   "w": 0.5,
+   "l": 0.45,
+   "bbox": "(-1030,-1210;2160,1710)"
+  },
+  "sg13g2_lv_pmos": {
+   "kind": "pmos",
+   "w": 1.0,
+   "l": 0.13,
+   "bbox": "(-1660,-1660;2470,2660)"
+  }
+ },
+ "gds": "/grid/adpll_gen/flow/macro/dll8_cells/dll8_cells.gds"
+}
