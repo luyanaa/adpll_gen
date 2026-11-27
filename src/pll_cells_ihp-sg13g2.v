@@ -396,6 +396,11 @@ module sg13_lv_nmos (D, G, S, B);
   input  G, S, B;
 endmodule
 (* blackbox *)
+module sg13_lv_pmos (D, G, S, B);
+  inout D;
+  input  G, S, B;
+endmodule
+(* blackbox *)
 module sg13g2_inv_1 (
 `ifdef WITH_POWER
   VDD, VSS,
@@ -617,6 +622,24 @@ module PLL_CELL_COARSE_BIT #(
     (* keep *) (* dont_touch = "true" *)
     sg13_lv_nmos sw (
         .D(gn), .G(EN), .S(NODE), .B(VSS)
+    );
+endmodule
+
+
+// One-shot startup kick: a single PMOS pass device from VDD to the ring node.
+// Off (gate high) in steady state, so it adds no delay to the loop and only
+// its junction capacitance to the node.  Driven by the kick pulse logic that
+// lives OUTSIDE the ring.
+module PLL_CELL_KICK_PU (
+`ifdef WITH_POWER
+    inout  wire VDD, VSS,
+`endif
+    inout  wire NODE,
+    input  wire KICKB   // active-low: 0 = pull NODE high
+);
+    (* keep *) (* dont_touch = "true" *)
+    sg13_lv_pmos pu (
+        .D(NODE), .G(KICKB), .S(VDD), .B(VDD)
     );
 endmodule
 

@@ -137,3 +137,15 @@ module PLL_CELL_INVX4(
     wire a;
     PLL_CELL_INVX1 u(.I(I), .ZN(ZN));
 endmodule
+
+module PLL_CELL_KICK_PU (
+`ifdef WITH_POWER
+    inout  wire VDD, VSS,
+`endif
+    inout  wire NODE,
+    input  wire KICKB
+);
+    // Inert in digital simulation.
+    wire sink;
+    assign sink = 1'bz;
+endmodule
