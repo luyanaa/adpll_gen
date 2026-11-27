@@ -31,3 +31,23 @@ tooling blocker (not a layout result): the KLayout half of DRC 0 is unverified.
 2. Route one element: per-element decoder adjacent, 127 control nets as a
    local strap in a channel; shared mid bus / rails.
 3. LVS, then PEX; report extracted element delay, per-node C, tap spread.
+
+## KLayout DRC — direct deck run (updates the earlier "blocked")
+The version guard is only in `run_drc.py`; the standalone Ruby deck
+`libs.tech/klayout/tech/drc/ihp-sg13g2.drc` runs directly on KLayout 0.30.0:
+  klayout -b -r ihp-sg13g2.drc -rd input=<gds> -rd topcell=<cell> -rd report=<lyrdb>
+It completes in 5.4 s -> there was no tooling block.  BUT it reports
+**568 violations** on the same placement that Magic calls DRC 0, dominated by
+  CntB.a1 254  (contact bottom, ~1 per device)
+  CntB.a  192
+  NBL.c    55
+  Cnt.b    36
+  Act.b    11, M1.b 9, ...
+This is a Magic-vs-KLayout deck/mapping discrepancy on the PDK-PCell contacts
+and NBL, not a placement spacing problem.  It must be resolved (layer mapping
+or the deck's contact rules vs the PCell GDS) before KLayout DRC-0 can be
+claimed.  Magic DRC remains 0.
+
+## Status: still NOT signoff
+Routed element / LVS / PEX are not done.  PEX tap spread unavailable.  The
+0.96 fF/node assumption is still unvalidated.
