@@ -1,0 +1,350 @@
+* Extracted by KLayout with SG13G2 LVS runset on : 27/11/2026 15:52
+
+.SUBCKT dll8_elem_shared_well_top
+X$1 \$1 elem_shared_well
+.ENDS dll8_elem_shared_well_top
+
+.SUBCKT elem_shared_well \$2
+X$1 \$1 pmos
+X$2 \$1 moscap_p
+X$3 \$1 moscap_p
+X$4 \$1 moscap_p
+X$5 \$1 moscap_p
+X$6 \$1 moscap_p
+X$7 \$1 moscap_p
+X$8 \$1 moscap_p
+X$9 \$1 moscap_p
+X$10 \$1 moscap_p
+X$11 \$1 moscap_p
+X$12 \$1 moscap_p
+X$13 \$1 moscap_p
+X$14 \$1 moscap_p
+X$15 \$1 moscap_p
+X$16 \$1 moscap_p
+X$17 \$1 moscap_p
+X$18 \$1 moscap_p
+X$19 \$1 moscap_p
+X$20 \$1 moscap_p
+X$21 \$1 moscap_p
+X$22 \$1 moscap_p
+X$23 \$1 moscap_p
+X$24 \$1 moscap_p
+X$25 \$1 moscap_p
+X$26 \$1 moscap_p
+X$27 \$1 moscap_p
+X$28 \$1 moscap_p
+X$29 \$1 moscap_p
+X$30 \$1 moscap_p
+X$31 \$1 moscap_p
+X$32 \$1 moscap_p
+X$33 \$1 moscap_p
+X$34 \$1 moscap_p
+X$35 \$1 moscap_p
+X$36 \$1 moscap_p
+X$37 \$1 moscap_p
+X$38 \$1 moscap_p
+X$39 \$1 moscap_p
+X$40 \$1 moscap_p
+X$41 \$1 moscap_p
+X$42 \$1 moscap_p
+X$43 \$1 moscap_p
+X$44 \$1 moscap_p
+X$45 \$1 moscap_p
+X$46 \$1 moscap_p
+X$47 \$1 moscap_p
+X$48 \$1 moscap_p
+X$49 \$1 moscap_p
+X$50 \$1 moscap_p
+X$51 \$1 moscap_p
+X$52 \$1 moscap_p
+X$53 \$1 moscap_p
+X$54 \$1 moscap_p
+X$55 \$1 moscap_p
+X$56 \$1 moscap_p
+X$57 \$1 moscap_p
+X$58 \$1 moscap_p
+X$59 \$1 moscap_p
+X$60 \$1 moscap_p
+X$61 \$1 moscap_p
+X$62 \$1 moscap_p
+X$63 \$1 moscap_p
+X$64 \$1 moscap_p
+X$65 \$1 pmos
+X$66 \$1 pmos
+X$67 \$1 pmos
+X$68 \$1 pmos
+X$69 \$1 pmos
+X$70 \$1 pmos
+X$71 \$1 pmos
+X$72 \$1 pmos
+X$73 \$1 pmos
+X$74 \$1 pmos
+X$75 \$1 pmos
+X$76 \$1 pmos
+X$77 \$1 pmos
+X$78 \$1 pmos
+X$79 \$1 pmos
+X$80 \$1 pmos
+X$81 \$1 pmos
+X$82 \$1 pmos
+X$83 \$1 pmos
+X$84 \$1 pmos
+X$85 \$1 pmos
+X$86 \$1 pmos
+X$87 \$1 pmos
+X$88 \$1 pmos
+X$89 \$1 pmos
+X$90 \$1 pmos
+X$91 \$1 pmos
+X$92 \$1 pmos
+X$93 \$1 pmos
+X$94 \$1 pmos
+X$95 \$1 pmos
+X$96 \$1 pmos
+X$97 \$1 pmos
+X$98 \$1 pmos
+X$99 \$1 pmos
+X$100 \$1 pmos
+X$101 \$1 pmos
+X$102 \$1 pmos
+X$103 \$1 pmos
+X$104 \$1 pmos
+X$105 \$1 pmos
+X$106 \$1 pmos
+X$107 \$1 pmos
+X$108 \$1 pmos
+X$109 \$1 pmos
+X$110 \$1 pmos
+X$111 \$1 pmos
+X$112 \$1 pmos
+X$113 \$1 pmos
+X$114 \$1 pmos
+X$115 \$1 pmos
+X$116 \$1 pmos
+X$117 \$1 pmos
+X$118 \$1 pmos
+X$119 \$1 pmos
+X$120 \$1 pmos
+X$121 \$1 pmos
+X$122 \$1 pmos
+X$123 \$1 pmos
+X$124 \$1 pmos
+X$125 \$1 pmos
+X$126 \$1 pmos
+X$128 \$2 nmos
+X$129 \$2 sg13g2_inv_4
+X$130 \$2 sg13g2_inv_4
+X$131 \$2 nmos
+X$132 \$2 nmos
+X$133 \$2 nmos
+X$134 \$2 nmos
+X$135 \$2 nmos
+X$136 \$2 nmos
+X$137 \$2 nmos
+X$138 \$2 nmos
+X$139 \$2 nmos
+X$140 \$2 nmos
+X$141 \$2 nmos
+X$142 \$2 nmos
+X$143 \$2 nmos
+X$144 \$2 nmos
+X$145 \$2 nmos
+X$146 \$2 nmos
+X$147 \$2 nmos
+X$148 \$2 nmos
+X$149 \$2 nmos
+X$150 \$2 nmos
+X$151 \$2 nmos
+X$152 \$2 nmos
+X$153 \$2 nmos
+X$154 \$2 nmos
+X$155 \$2 nmos
+X$156 \$2 nmos
+X$157 \$2 nmos
+X$158 \$2 nmos
+X$159 \$2 nmos
+X$160 \$2 nmos
+X$161 \$2 nmos
+X$162 \$2 nmos
+X$163 \$2 nmos
+X$164 \$2 nmos
+X$165 \$2 nmos
+X$166 \$2 nmos
+X$167 \$2 nmos
+X$168 \$2 nmos
+X$169 \$2 nmos
+X$170 \$2 nmos
+X$171 \$2 nmos
+X$172 \$2 nmos
+X$173 \$2 nmos
+X$174 \$2 nmos
+X$175 \$2 nmos
+X$176 \$2 nmos
+X$177 \$2 nmos
+X$178 \$2 nmos
+X$179 \$2 nmos
+X$180 \$2 nmos
+X$181 \$2 nmos
+X$182 \$2 nmos
+X$183 \$2 nmos
+X$184 \$2 nmos
+X$185 \$2 nmos
+X$186 \$2 nmos
+X$187 \$2 nmos
+X$188 \$2 nmos
+X$189 \$2 nmos
+X$190 \$2 nmos
+X$191 \$2 nmos
+X$192 \$2 nmos
+X$193 \$2 nmos
+C$1 \$I1136 \$I504 sg13_moscap_n w=1u l=1u
+C$2 \$I1078 \$I504 sg13_moscap_n w=1u l=1u
+C$3 \$I1079 \$I504 sg13_moscap_n w=1u l=1u
+C$4 \$I1080 \$I657 sg13_moscap_n w=1u l=1u
+C$5 \$I1081 \$I657 sg13_moscap_n w=1u l=1u
+C$6 \$I1082 \$I757 sg13_moscap_n w=1u l=1u
+C$7 \$I1073 \$I822 sg13_moscap_n w=1u l=1u
+C$8 \$I1084 \$I887 sg13_moscap_n w=1u l=1u
+C$9 \$I1123 \$I644 sg13_moscap_n w=1u l=1u
+C$10 \$I1137 \$I644 sg13_moscap_n w=1u l=1u
+C$11 \$I1150 \$I644 sg13_moscap_n w=1u l=1u
+C$12 \$I1155 \$I711 sg13_moscap_n w=1u l=1u
+C$13 \$I1158 \$I772 sg13_moscap_n w=1u l=1u
+C$14 \$I1167 \$I839 sg13_moscap_n w=1u l=1u
+C$15 \$I1178 \$I908 sg13_moscap_n w=1u l=1u
+C$16 \$I1182 \$I970 sg13_moscap_n w=1u l=1u
+C$17 \$I1103 \$I650 sg13_moscap_n w=1u l=1u
+C$18 \$I1139 \$I650 sg13_moscap_n w=1u l=1u
+C$19 \$I1145 \$I650 sg13_moscap_n w=1u l=1u
+C$20 \$I1156 \$I712 sg13_moscap_n w=1u l=1u
+C$21 \$I1164 \$I778 sg13_moscap_n w=1u l=1u
+C$22 \$I1165 \$I837 sg13_moscap_n w=1u l=1u
+C$23 \$I1172 \$I902 sg13_moscap_n w=1u l=1u
+C$24 \$I1185 \$I973 sg13_moscap_n w=1u l=1u
+C$25 \$I1117 \$I665 sg13_moscap_n w=1u l=1u
+C$26 \$I1138 \$I665 sg13_moscap_n w=1u l=1u
+C$27 \$I1148 \$I665 sg13_moscap_n w=1u l=1u
+C$28 \$I1152 \$I708 sg13_moscap_n w=1u l=1u
+C$29 \$I1163 \$I777 sg13_moscap_n w=1u l=1u
+C$30 \$I1166 \$I838 sg13_moscap_n w=1u l=1u
+C$31 \$I1176 \$I906 sg13_moscap_n w=1u l=1u
+C$32 \$I1179 \$I967 sg13_moscap_n w=1u l=1u
+C$33 \$I1083 \$I682 sg13_moscap_n w=1u l=1u
+C$34 \$I1143 \$I682 sg13_moscap_n w=1u l=1u
+C$35 \$I1146 \$I682 sg13_moscap_n w=1u l=1u
+C$36 \$I1157 \$I713 sg13_moscap_n w=1u l=1u
+C$37 \$I1162 \$I776 sg13_moscap_n w=1u l=1u
+C$38 \$I1169 \$I841 sg13_moscap_n w=1u l=1u
+C$39 \$I1177 \$I907 sg13_moscap_n w=1u l=1u
+C$40 \$I1183 \$I971 sg13_moscap_n w=1u l=1u
+C$41 \$I1102 \$I638 sg13_moscap_n w=1u l=1u
+C$42 \$I1142 \$I638 sg13_moscap_n w=1u l=1u
+C$43 \$I1147 \$I638 sg13_moscap_n w=1u l=1u
+C$44 \$I1153 \$I709 sg13_moscap_n w=1u l=1u
+C$45 \$I1160 \$I774 sg13_moscap_n w=1u l=1u
+C$46 \$I1171 \$I843 sg13_moscap_n w=1u l=1u
+C$47 \$I1175 \$I905 sg13_moscap_n w=1u l=1u
+C$48 \$I1181 \$I969 sg13_moscap_n w=1u l=1u
+C$49 \$I1101 \$I690 sg13_moscap_n w=1u l=1u
+C$50 \$I1140 \$I690 sg13_moscap_n w=1u l=1u
+C$51 \$I1149 \$I690 sg13_moscap_n w=1u l=1u
+C$52 \$I1151 \$I707 sg13_moscap_n w=1u l=1u
+C$53 \$I1159 \$I773 sg13_moscap_n w=1u l=1u
+C$54 \$I1170 \$I842 sg13_moscap_n w=1u l=1u
+C$55 \$I1174 \$I904 sg13_moscap_n w=1u l=1u
+C$56 \$I1184 \$I972 sg13_moscap_n w=1u l=1u
+C$57 \$I1085 \$I667 sg13_moscap_n w=1u l=1u
+C$58 \$I1141 \$I667 sg13_moscap_n w=1u l=1u
+C$59 \$I1144 \$I667 sg13_moscap_n w=1u l=1u
+C$60 \$I1154 \$I710 sg13_moscap_n w=1u l=1u
+C$61 \$I1161 \$I775 sg13_moscap_n w=1u l=1u
+C$62 \$I1168 \$I840 sg13_moscap_n w=1u l=1u
+C$63 \$I1173 \$I903 sg13_moscap_n w=1u l=1u
+C$64 \$I1180 \$I968 sg13_moscap_n w=1u l=1u
+C$65 \$I1272 \$I193 sg13_moscap_p w=1u l=1u
+C$66 \$I1571 \$I193 sg13_moscap_p w=1u l=1u
+C$67 \$I1576 \$I193 sg13_moscap_p w=1u l=1u
+C$68 \$I1588 \$I245 sg13_moscap_p w=1u l=1u
+C$69 \$I1595 \$I288 sg13_moscap_p w=1u l=1u
+C$70 \$I1601 \$I344 sg13_moscap_p w=1u l=1u
+C$71 \$I1606 \$I407 sg13_moscap_p w=1u l=1u
+C$72 \$I1613 \$I464 sg13_moscap_p w=1u l=1u
+C$73 \$I1267 \$I196 sg13_moscap_p w=1u l=1u
+C$74 \$I1573 \$I196 sg13_moscap_p w=1u l=1u
+C$75 \$I1580 \$I196 sg13_moscap_p w=1u l=1u
+C$76 \$I1587 \$I244 sg13_moscap_p w=1u l=1u
+C$77 \$I1589 \$I282 sg13_moscap_p w=1u l=1u
+C$78 \$I1600 \$I343 sg13_moscap_p w=1u l=1u
+C$79 \$I1603 \$I404 sg13_moscap_p w=1u l=1u
+C$80 \$I1611 \$I462 sg13_moscap_p w=1u l=1u
+C$81 \$I1317 \$I15 sg13_moscap_p w=1u l=1u
+C$82 \$I1274 \$I15 sg13_moscap_p w=1u l=1u
+C$83 \$I1275 \$I15 sg13_moscap_p w=1u l=1u
+C$84 \$I1277 \$I191 sg13_moscap_p w=1u l=1u
+C$85 \$I1278 \$I191 sg13_moscap_p w=1u l=1u
+C$86 \$I1280 \$I267 sg13_moscap_p w=1u l=1u
+C$87 \$I1281 \$I332 sg13_moscap_p w=1u l=1u
+C$88 \$I1283 \$I390 sg13_moscap_p w=1u l=1u
+C$89 \$I1284 \$I174 sg13_moscap_p w=1u l=1u
+C$90 \$I1572 \$I174 sg13_moscap_p w=1u l=1u
+C$91 \$I1575 \$I174 sg13_moscap_p w=1u l=1u
+C$92 \$I1585 \$I242 sg13_moscap_p w=1u l=1u
+C$93 \$I1591 \$I284 sg13_moscap_p w=1u l=1u
+C$94 \$I1597 \$I340 sg13_moscap_p w=1u l=1u
+C$95 \$I1602 \$I403 sg13_moscap_p w=1u l=1u
+C$96 \$I1612 \$I463 sg13_moscap_p w=1u l=1u
+C$97 \$I1296 \$I176 sg13_moscap_p w=1u l=1u
+C$98 \$I1574 \$I176 sg13_moscap_p w=1u l=1u
+C$99 \$I1581 \$I176 sg13_moscap_p w=1u l=1u
+C$100 \$I1584 \$I241 sg13_moscap_p w=1u l=1u
+C$101 \$I1594 \$I287 sg13_moscap_p w=1u l=1u
+C$102 \$I1304 \$I294 sg13_moscap_p w=1u l=1u
+C$103 \$I1306 \$I327 sg13_moscap_p w=1u l=1u
+C$104 \$I1312 \$I168 sg13_moscap_p w=1u l=1u
+C$105 \$I1568 \$I168 sg13_moscap_p w=1u l=1u
+C$106 \$I1579 \$I168 sg13_moscap_p w=1u l=1u
+C$107 \$I1582 \$I239 sg13_moscap_p w=1u l=1u
+C$108 \$I1590 \$I283 sg13_moscap_p w=1u l=1u
+C$109 \$I1596 \$I339 sg13_moscap_p w=1u l=1u
+C$110 \$I1605 \$I406 sg13_moscap_p w=1u l=1u
+C$111 \$I1610 \$I461 sg13_moscap_p w=1u l=1u
+C$112 \$I1257 \$I162 sg13_moscap_p w=1u l=1u
+C$113 \$I1570 \$I162 sg13_moscap_p w=1u l=1u
+C$114 \$I1577 \$I162 sg13_moscap_p w=1u l=1u
+C$115 \$I1586 \$I243 sg13_moscap_p w=1u l=1u
+C$116 \$I1592 \$I285 sg13_moscap_p w=1u l=1u
+C$117 \$I1598 \$I341 sg13_moscap_p w=1u l=1u
+C$118 \$I1607 \$I408 sg13_moscap_p w=1u l=1u
+C$119 \$I1609 \$I460 sg13_moscap_p w=1u l=1u
+C$120 \$I1315 \$I153 sg13_moscap_p w=1u l=1u
+C$121 \$I1569 \$I153 sg13_moscap_p w=1u l=1u
+C$122 \$I1578 \$I153 sg13_moscap_p w=1u l=1u
+C$123 \$I1583 \$I240 sg13_moscap_p w=1u l=1u
+C$124 \$I1593 \$I286 sg13_moscap_p w=1u l=1u
+C$125 \$I1599 \$I342 sg13_moscap_p w=1u l=1u
+C$126 \$I1604 \$I405 sg13_moscap_p w=1u l=1u
+C$127 \$I1608 \$I459 sg13_moscap_p w=1u l=1u
+.ENDS elem_shared_well
+
+.SUBCKT sg13g2_inv_4 VSS
+M$1 VSS A Y VSS sg13_lv_nmos L=0.13u W=2.96u AS=0.6734p AD=0.6734p PS=5.52u
++ PD=5.52u rfmode=0
+M$5 VDD A Y VDD sg13_lv_pmos L=0.13u W=4.48u AS=1.0192p AD=1.0192p PS=7.42u
++ PD=7.42u rfmode=0
+.ENDS sg13g2_inv_4
+
+.SUBCKT pmos \$4
+M$1 \$1 \$5 \$2 \$4 sg13_lv_pmos L=0.13u W=1u AS=0.34p AD=0.34p PS=2.68u
++ PD=2.68u rfmode=0
+R$2 \$3 \$4 ntap1 A=3.87p P=25.8u
+.ENDS pmos
+
+.SUBCKT moscap_p \$3
+R$1 \$2 \$3 ntap1 A=1.74p P=12.2u
+.ENDS moscap_p
+
+.SUBCKT nmos \$4
+M$1 \$1 \$8 \$2 \$4 sg13_lv_nmos L=0.45u W=0.5u AS=0.17p AD=0.17p PS=1.68u
++ PD=1.68u rfmode=0
+R$2 \$3 \$4 ptap1 A=3.234p P=21.56u
+.ENDS nmos
