@@ -376,3 +376,43 @@ synthesisable logic — and it deletes the per-device placement question entirel
 netgen LVS → **PEX tap-to-tap spread** (the real timing number; sim used an
 assumed 0.96 fF/node) → LEF place dry-run → macro binding with the SPICE path
 preserved. The full DLL8 tile PnR follows that.
+
+### Macro packaging (2026-11-27, `9243adf`)
+
+**1.0 × 1.0 µm confirmed.** Element SPICE at 1.0×1.0 vs 0.9×1.1: BASE 146.4 ps,
+max 655.7 / 514.3 / 462.0 ps (SS/TT/FF) — **<0.5 % change**. Range clears 1.15×
+at every corner with 127 fingers.
+
+**Pin plan (18 pins):** `IN`, `CODE[6:0]`, `TAP[7:0]`, `VDD`, `VSS`. The
+thermometer decoder goes **inside** the macro so the 127-wire fan never crosses
+the boundary (127 boundary pins would be a routing disaster). No per-element trim
+pins — measured matching is 1.5–1.7 ps, so trims only buy range headroom; the
+trim logic stays in the RTL model for the digital calibration demo.
+
+**Area/shape:** naive 8-element placement = **710 × 44.8 µm (31.8k µm²), a 16:1
+strip**, 2048 devices — bad for the tile. **Decision: 2 macros × 4 elements**
+(~355×45 each), which fixes the aspect ratio and halves the tap-fanout span
+(the main threat to tap symmetry).
+
+**DRC 15,600 on the placement** — correctly diagnosed as adjacent-device guard
+ring/well/implant spacing when PCells are butted. A legal macro must **share
+wells and guard rings**, which is real analog layout, not spacing.
+
+**Finger count is not fixed by physics — only total switched C is.** With
+N ≥ 23 fingers satisfying both LSB ≤ 22.7 ps and range ≥ 508 ps, device count
+scales as N at constant total capacitance:
+
+| N | LSB | finger | devices |
+|---|---|---|---|
+| 127 | 4.0 ps | 1.0×1.0 µm | 2032 |
+| 63 | 8.1 ps | 1.4×1.4 µm | 1008 |
+| **31** | **16.4 ps** | **~2.0×2.0 µm** | **496** |
+
+Being measured now: a 31-finger / ~2×2 µm element. The deciding quantity is the
+**OFF-state residual contrast** (a bigger cap behind a proportionally bigger
+switch may not preserve the on/off ratio). If contrast holds, the layout burden
+on exactly the work that just failed drops 4×; if not, we stay at 127.
+
+Then: route one 4-element macro with shared wells/rings → DRC 0 → netgen LVS →
+**PEX tap-to-tap spread** → LEF + place dry-run. The tile PnR follows only after
+that single macro is clean.
