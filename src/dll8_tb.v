@@ -31,6 +31,8 @@ module dll8_tb;
     reg  [6:0] PD_TRIM_V, PD_TRIM_R;
     reg  [2:0] TAP_SEL;
     wire [7:0] TAP;
+    wire [7:0] PHASE;
+    reg phase_early;
     wire LOCKED;
     wire [6:0] LOOP_CODE;
     wire [55:0] ELEM_CODES;
@@ -54,15 +56,20 @@ module dll8_tb;
         .ELEM_CODES(ELEM_CODES),
         .MEAS_COUNTS(MEAS_COUNTS), .ACQ_DONE(ACQ_DONE),
         .TAP_STAMP(TAP_STAMP), .MON_STAMP(MON_STAMP),
-        .REF_STAMP(REF_STAMP), .PERIOD_TICKS(PERIOD_TICKS)
+        .REF_STAMP(REF_STAMP), .PERIOD_TICKS(PERIOD_TICKS),
+        .PHASE(PHASE)
     );
 
     always #(T_PS / 2)          REF = ~REF;
     always #(T_PS / 32.0)       TICK = ~TICK;      // 16 x REF  (range counter)
     always #(T_PS / 2048.0)     TICK_FAST = ~TICK_FAST; // 1024 x REF (TDC)
 
+    // regenerated outputs must be flat while the loop is not locked
+    always @(PHASE) if (!LOCKED && PHASE != 8'd0) phase_early <= 1'b1;
+
     real t_ref;
     real d_elem [0:7];
+    real d_ph [0:7];
     real dmeas  [0:7];
     integer errors;
     reg [8*48-1:0] check_name;
@@ -256,12 +263,62 @@ module dll8_tb;
         end
     endtask
 
+    // ---------------------------------------------- regenerated phases
+    task automatic check_phase;
+        integer t;
+        real target, resid, off, worst_raw, worst_off;
+        begin
+            @(posedge REF); t_ref = $realtime;
+            for (t = 0; t < 8; t = t + 1) begin
+                @(posedge PHASE[t]); d_ph[t] = $realtime - t_ref;
+            end
+            target = T_PS / 8.0;
+            off = 0.0;
+            for (t = 0; t < 8; t = t + 1)
+                off = off + (d_ph[t] - (t + 1) * target);
+            off = off / 8.0;
+            worst_raw = 0.0; worst_off = 0.0;
+            for (t = 0; t < 8; t = t + 1) begin
+                resid = d_ph[t] - (t + 1) * target;
+                if ((resid < 0 ? -resid : resid) > worst_raw)
+                    worst_raw = (resid < 0 ? -resid : resid);
+                resid = resid - off;
+                if ((resid < 0 ? -resid : resid) > worst_off)
+                    worst_off = (resid < 0 ? -resid : resid);
+            end
+            $display("   REGEN: common offset %+0.1f ps, raw worst %0.1f ps, de-offset worst %0.1f ps %s",
+                     off, worst_raw, worst_off, (worst_off <= 30.0) ? "PASS" : "FAIL");
+            if (worst_off > 30.0) errors = errors + 1;
+        end
+    endtask
+
+    task automatic check_phase_duty;
+        integer t;
+        real t0, t1, t2, duty, wduty;
+        begin
+            wduty = 0.0;
+            for (t = 0; t < 8; t = t + 1) begin
+                @(posedge PHASE[t]); t0 = $realtime;
+                @(negedge PHASE[t]); t1 = $realtime;
+                @(posedge PHASE[t]); t2 = $realtime;
+                duty = 100.0 * (t1 - t0) / (t2 - t0);
+                if (duty < 45.0 || duty > 55.0) begin
+                    $display("   REGEN duty ph%0d = %0.2f %% FAIL", t, duty);
+                    errors = errors + 1;
+                end
+                if (t == 0) wduty = duty;
+            end
+            $display("   REGEN duty ph0 = %0.2f %% (all 8 45-55 check done)", wduty);
+        end
+    endtask
+
     // ------------------------------------------------------------- stimulus
     initial begin
         errors = 0;
         PD_OFFSET = 5'sd0;
         PD_TRIM_V = 7'd0; PD_TRIM_R = 7'd0;
         TAP_SEL   = 3'd7;
+        phase_early = 1'b0;
         HOLD      = 1'b0;
         for (kk = 0; kk < 8; kk = kk + 1) trim_cur[kk] = 0;
 
@@ -281,6 +338,12 @@ module dll8_tb;
         run_lock(1'b0);
         HOLD = 1'b1;
         check_name = "matched elements, untrimmed"; check;
+        check_phase;
+        check_phase_duty;
+        if (phase_early) begin
+            $display("   ERROR: regenerated edge before LOCKED");
+            errors = errors + 1;
+        end
         check_no_false_lock("low-rail");
         check_duty;
         report_matching("matched");

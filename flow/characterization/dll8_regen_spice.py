@@ -75,42 +75,47 @@ def emit_top(corner: str, code: int, period: float, wire: bool = True,
 def measure(corner, code, period, raw: Path) -> dict:
     c = m.CORNERS[corner]; vdd = c["vdd"]; thr = 0.5*vdd
     t, w = m.parse_wrdata(raw)
-    # v0=IN, v1..v8=x1..x8, v9..v16=q0..q7
     P = period*1e-9
-    settle, stop = 1.2*P, 2.6*P
+    settle, stop = 1.5*P, 2.6*P
     res = dict(corner=corner, code=code, period=period)
     taps = [w[f"v{i+1}"] for i in range(8)]
     qs = [w[f"v{9+i}"] for i in range(8)]
-    # set-path delay: q_k rising - tap_k rising (first edge in window)
-    setd = []
+    rise = [m.interp_cross(t, taps[k], thr, True) for k in range(8)]
+    qr = [m.interp_cross(t, qs[k], thr, True) for k in range(8)]
+    qf = [m.interp_cross(t, qs[k], thr, False) for k in range(8)]
+    rise = [[x for x in rise[k] if x > settle] for k in range(8)]
+    qr = [[x for x in qr[k] if x > settle] for k in range(8)]
+    qf = [[x for x in qf[k] if x > settle] for k in range(8)]
+    # tap spacing d: mean of (next tap_{k+1} rise after tap_k rise)
+    ds = []
+    for k in range(7):
+        for x in rise[k][:6]:
+            y = next((y for y in rise[k+1] if y > x and y-x < P), None)
+            if y is not None:
+                ds.append((y-x)*1e12)
+    res["d_ps"] = sum(ds)/len(ds) if ds else None
+    # per-phase: for each tap_k rise, the next q_k rise (set) and its next
+    # fall (reset).  Window = one full period, so the 0.45 ns set delay and
+    # the T/2 high time are both inside it (no fixed look-back window).
+    dset = []; high = []
     for k in range(8):
-        tr = m.interp_cross(t, taps[k], thr, True)
-        qr = m.interp_cross(t, qs[k], thr, True)
-        tr = [x for x in tr if x > settle]
-        qr = [x for x in qr if x > settle]
-        if tr and qr:
-            # nearest q rise after the tap rise
-            qq = next((x for x in qr if x >= tr[0]-0.2e-9), None)
-            if qq is not None:
-                setd.append((qq-tr[0])*1e12)
-    res["set_delay_ps"] = setd
-    if len(setd) == 8:
-        res["set_spread_ps"] = max(setd)-min(setd)
-    # duty of q7 and all q
-    duties = []
-    for k in range(8):
-        hi = lo = 0.0; pt = pv = None
-        for tt, vv in zip(t, qs[k]):
-            if tt < settle or tt > stop:
-                pt, pv = tt, vv; continue
-            if pt is not None:
-                dt = tt-pt
-                if (pv+vv)*0.5 > thr: hi += dt
-                else: lo += dt
-            pt, pv = tt, vv
-        duties.append(100.0*hi/(hi+lo) if hi+lo > 0 else None)
-    res["q_duty_pct"] = duties
-    # raw tap duty for comparison (q7/tap7)
+        xd = []; xh = []
+        for x in rise[k][:8]:
+            y = next((y for y in qr[k] if x < y < x+P), None)
+            if y is None:
+                continue
+            z = next((z for z in qf[k] if y < z < y+P), None)
+            xd.append((y-x)*1e12)
+            if z is not None:
+                xh.append((z-y)*1e12)
+        dset.append(sum(xd)/len(xd) if xd else None)
+        high.append(sum(xh)/len(xh) if xh else None)
+    res["d_set_ps"] = dset
+    res["q_high_ps"] = high
+    good = [x for x in dset if x is not None]
+    res["set_spread_ps"] = (max(good)-min(good)) if len(good) > 1 else None
+    res["q_duty_pct"] = [100.0*h/P if h is not None else None for h in high]
+    # raw tap duty (tap7) for reference
     def duty_of(v):
         hi = lo = 0.0; pt = pv = None
         for tt, vv in zip(t, v):
@@ -122,30 +127,7 @@ def measure(corner, code, period, raw: Path) -> dict:
                 else: lo += dt
             pt, pv = tt, vv
         return 100.0*hi/(hi+lo) if hi+lo > 0 else None
-    # tap spacing d = (tap4 - tap0)/4 from the same rising edge
-    r0 = [x for x in m.interp_cross(t, taps[0], thr, True) if x > settle]
-    r4 = [x for x in m.interp_cross(t, taps[4], thr, True) if x > settle]
-    if r0 and r4:
-        res["d_ps"] = (r4[0]-r0[0])/4.0*1e12
-        res["line8_ps"] = 8*res["d_ps"]
-    # per-phase q high time (set tap_k -> reset tap_(k+4))
-    qh=[]
-    for k in range(8):
-        qr=[x for x in m.interp_cross(t, qs[k], thr, True) if x > settle]
-        qf=[x for x in m.interp_cross(t, qs[k], thr, False) if x > settle]
-        if qr and qf:
-            f=next((x for x in qf if x>qr[0]), None)
-            if f is not None: qh.append((f-qr[0])*1e12)
-    res["q_high_ps"]=qh
     res["raw_tap7_duty"] = duty_of(taps[7])
-    # line delay: tap7 rise - IN rise
-    ri = m.interp_cross(t, w["v0"], thr, True)
-    r7 = m.interp_cross(t, taps[7], thr, True)
-    if ri and r7:
-        ri2 = [x for x in ri if x > settle]
-        r72 = [x for x in r7 if x > settle]
-        if ri2 and r72:
-            res["line_delay_ps"] = (r72[0]-ri2[0])*1e12
     return res
 
 

@@ -94,7 +94,8 @@ module DLL8_TOP #(
     output wire [TDC_BITS-1:0]     TAP_STAMP,   // TAP[7] timestamp
     output wire [TDC_BITS-1:0]     MON_STAMP,   // TAP[TAP_SEL] timestamp
     output wire [TDC_BITS-1:0]     REF_STAMP,
-    output wire [TDC_BITS-1:0]     PERIOD_TICKS
+    output wire [TDC_BITS-1:0]     PERIOD_TICKS,
+    output wire [7:0]              PHASE
 );
     // ---------------------------------------------------------------- trim
     reg signed [4:0] trim [0:7];
@@ -300,6 +301,14 @@ module DLL8_TOP #(
         .CODE_BITS(CODE_BITS), .DLL8_IMPL(DLL8_IMPL)
     ) u_line (
         .IN(line_in), .CODES(ELEM_CODES), .TAP(TAP)
+    );
+
+    // ---------------------------------------- duty regeneration (SR/DFF)
+    // Q_k SET on TAP[k] rising, RESET on TAP[k+4] rising -> 50% duty; both
+    // edges are rising edges so tap pulse asymmetry cannot enter the duty.
+    DLL8_REGEN #(.PHASES(8)) u_regen (
+        .TICK_FAST(TICK_FAST), .RST_N(RST_N), .EN(LOCKED),
+        .TAP(TAP), .PHASE(PHASE)
     );
 
     // --------------------------------------------------------------- lock
