@@ -656,3 +656,20 @@ Lane is now: shared wells → routed single element → both-decks DRC 0 → KLa
 LVS → PEX (xsect if usable, else Magic PEX with the documented device-cap
 caveat — decisive quantities are wire C and inter-tap RC mismatch, which do not
 depend on the identical device caps).
+
+### Shared-well "blocker" was a misread — layers exist (2026-11-27, orchestrator direct)
+
+The lane reported it could not draw the shared nwell because "the PCell exposes
+no explicit nwell/nBuLay layer" and the layer map "is not at sg13g2.map". Both
+claims are wrong, verified directly from the GDS cell shapes and `sg13g2.lyp`:
+
+- `pmos` PCell shapes include **31/0 and 32/0**; `moscap_p` includes **31/0**
+  (no 32/0 — flagged for LVS verification).
+- `sg13g2.lyp` (present all along): **31/0 = NWell.drawing**, 32/0 = nBuLay.drawing,
+  46/0 = PWell.drawing; 14/0 = Substrate.drawing, 63/0 = nSD.drawing are implant
+  markers, not block layers.
+
+Shared-well implementation is therefore standard practice: connecting rectangles
+on 31/0 (+ covering 32/0) unite the P-row wells into one VDD-net shape with tie
+taps. The lane was unblocked with exact layer numbers and continues the full
+chain to PEX.
