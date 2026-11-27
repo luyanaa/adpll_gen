@@ -12,14 +12,14 @@
 // matching, and measurement-based per-element trim calibration.
 module dll8_tb;
     parameter integer CORNER  = 0;
-    parameter integer BASE_PS = 120;
-    parameter integer STEP_PS = 4;
+    parameter real BASE_PS = 120.0;
+    parameter real STEP_PS = 4.0;
     parameter integer T_PS    = 4000;
     parameter integer PD_MODE = 1;
 
     // Half a code step in TDC LSBs: one code step moves 8d by 8*STEP_PS, and
     // the TDC LSB is ~T/1024, so the dead band must scale with STEP_PS/T.
-    localparam integer EB = (4 * STEP_PS * 1024 + T_PS - 1) / T_PS;
+    localparam integer EB = $rtoi(4.0 * STEP_PS * 1024.0 / T_PS + 0.5);
 
     reg  REF = 1'b0, RST_N = 1'b0, EN = 1'b0;
     reg  TICK = 1'b0, TICK_FAST = 1'b0;
@@ -266,14 +266,14 @@ module dll8_tb;
         for (kk = 0; kk < 8; kk = kk + 1) trim_cur[kk] = 0;
 
         $display("=======================================================");
-        $display("corner %0d: T=%0d ps BASE=%0d LSB=%0d PD_MODE=%0d dead-band=%0d LSB",
+        $display("corner %0d: T=%0d ps BASE=%0.1f LSB=%0.3f PD_MODE=%0d dead-band=%0d LSB",
                  CORNER, T_PS, BASE_PS, STEP_PS, PD_MODE, EB);
         $display("TDC nominal LSB = T/1024 = %0.3f ps", T_PS / 1024.0);
         // Element transfer (timing model): delay(c) = BASE + c*LSB, strictly
         // monotone (one NAND3 finger per LSB).  SPICE is the authority.
-        $display("element transfer: base=%0d ps  LSB=%0d ps  delay(c)=%0d+c*%0d",
-                 BASE_PS, STEP_PS, BASE_PS, STEP_PS);
-        $display("   c=0:%0d  c=1:%0d  c=2:%0d  c=32:%0d  c=95:%0d  c=127:%0d ps",
+        $display("element transfer: base=%0.1f ps  LSB=%0.3f ps  delay(c)=base+c*LSB",
+                 BASE_PS, STEP_PS);
+        $display("   c=0:%0.1f  c=1:%0.1f  c=2:%0.1f  c=32:%0.1f  c=95:%0.1f  c=127:%0.1f ps",
                  BASE_PS, BASE_PS+STEP_PS, BASE_PS+2*STEP_PS,
                  BASE_PS+32*STEP_PS, BASE_PS+95*STEP_PS, BASE_PS+127*STEP_PS);
 

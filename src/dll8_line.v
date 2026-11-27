@@ -22,8 +22,8 @@
 `default_nettype none
 
 module DLL8_ELEM #(
-    parameter integer BASE_PS   = 110,
-    parameter integer STEP_PS   = 3,
+    parameter real    BASE_PS   = 110.0,
+    parameter real    STEP_PS   = 3.0,
     parameter integer CODE_BITS = 7,
     parameter integer DLL8_IMPL = 0
 ) (
@@ -122,8 +122,8 @@ endmodule
 // code ports allow independent trim; all outputs are 50% duty by
 // construction (a chain of inverters), so the taps are duty-clean.
 module DLL8_LINE #(
-    parameter integer BASE_PS   = 110,
-    parameter integer STEP_PS   = 3,
+    parameter real    BASE_PS   = 110.0,
+    parameter real    STEP_PS   = 3.0,
     parameter integer CODE_BITS = 7,
     parameter integer DLL8_IMPL = 0
 ) (

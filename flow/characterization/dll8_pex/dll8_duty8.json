@@ -1,0 +1,42 @@
+[
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 8,
+  "mode": "square",
+  "wire": true,
+  "period": null,
+  "ncyc": 3,
+  "duty_pct": 70.18749999999999
+ },
+ {
+  "corner": "ss",
+  "code": 127,
+  "nelem": 8,
+  "mode": "square",
+  "wire": true,
+  "period": null,
+  "ncyc": 3,
+  "duty_pct": 64.3125
+ },
+ {
+  "corner": "ff",
+  "code": 0,
+  "nelem": 8,
+  "mode": "square",
+  "wire": true,
+  "period": null,
+  "ncyc": 3,
+  "duty_pct": 68.25
+ },
+ {
+  "corner": "ff",
+  "code": 127,
+  "nelem": 8,
+  "mode": "square",
+  "wire": true,
+  "period": null,
+  "ncyc": 3,
+  "duty_pct": 63.00000000000001
+ }
+]

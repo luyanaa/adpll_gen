@@ -66,8 +66,8 @@ module DLL8_TOP #(
     // measured before the next one.
     parameter integer UPDATE_DIV  = 3,
     // Timing model (DLL8_IMPL=0).  Set per corner by the testbench.
-    parameter integer BASE_PS     = 110,
-    parameter integer STEP_PS     = 3,
+    parameter real    BASE_PS     = 110.0,
+    parameter real    STEP_PS     = 3.0,
     parameter integer DLL8_IMPL   = 0
 ) (
     input  wire                    REF,
@@ -182,11 +182,11 @@ module DLL8_TOP #(
     // Detector-input trim delays (PD_MODE=0 only; the TDC taps TAP directly).
     wire ref_pd, vco_pd;
     DLL8_ELEM #(
-        .BASE_PS(0), .STEP_PS(STEP_PS), .CODE_BITS(CODE_BITS),
+        .BASE_PS(0.0), .STEP_PS(STEP_PS), .CODE_BITS(CODE_BITS),
         .DLL8_IMPL(DLL8_IMPL)
     ) u_pdtrim_r (.IN(REF), .CODE(PD_TRIM_R), .OUT(ref_pd), .LOAD());
     DLL8_ELEM #(
-        .BASE_PS(0), .STEP_PS(STEP_PS), .CODE_BITS(CODE_BITS),
+        .BASE_PS(0.0), .STEP_PS(STEP_PS), .CODE_BITS(CODE_BITS),
         .DLL8_IMPL(DLL8_IMPL)
     ) u_pdtrim_v (.IN(TAP[7]), .CODE(PD_TRIM_V), .OUT(vco_pd), .LOAD());
 

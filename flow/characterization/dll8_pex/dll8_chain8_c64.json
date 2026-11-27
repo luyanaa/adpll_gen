@@ -1,0 +1,42 @@
+[
+ {
+  "corner": "ss",
+  "code": 64,
+  "nelem": 8,
+  "mode": "pulse",
+  "wire": true,
+  "period": null,
+  "ncyc": 3,
+  "delay_ps": 4045.213106890431,
+  "delay_fall_ps": null,
+  "rise_10_90_ps": 176.10632324557122,
+  "fall_10_90_ps": null
+ },
+ {
+  "corner": "ff",
+  "code": 64,
+  "nelem": 8,
+  "mode": "pulse",
+  "wire": true,
+  "period": null,
+  "ncyc": 3,
+  "delay_ps": 1732.6781408042875,
+  "delay_fall_ps": 2038.11074008937,
+  "rise_10_90_ps": 78.48115941027412,
+  "fall_10_90_ps": 82.21139158540751,
+  "duty_distortion_ps": 305.43259928508246
+ },
+ {
+  "corner": "tt",
+  "code": 64,
+  "nelem": 8,
+  "mode": "pulse",
+  "wire": true,
+  "period": null,
+  "ncyc": 3,
+  "delay_ps": 2541.491293493909,
+  "delay_fall_ps": null,
+  "rise_10_90_ps": 112.74682675983489,
+  "fall_10_90_ps": null
+ }
+]

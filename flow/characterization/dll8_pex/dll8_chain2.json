@@ -1,0 +1,98 @@
+[
+ {
+  "corner": "ff",
+  "code": 0,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 357.8085878363793,
+  "delay_fall_ps": 449.85317754861507,
+  "rise_10_90_ps": 73.35169420105527,
+  "fall_10_90_ps": 74.40198564630778,
+  "duty_distortion_ps": 92.04458971223579
+ },
+ {
+  "corner": "ff",
+  "code": 64,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 404.31093921468226,
+  "delay_fall_ps": 482.61012280212867,
+  "rise_10_90_ps": 78.19027424922224,
+  "fall_10_90_ps": 81.82737530402973,
+  "duty_distortion_ps": 78.29918358744641
+ },
+ {
+  "corner": "ff",
+  "code": 127,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 449.487153453653,
+  "delay_fall_ps": 513.8770218917266,
+  "rise_10_90_ps": 82.82799032787376,
+  "fall_10_90_ps": 88.65953416151439,
+  "duty_distortion_ps": 64.38986843807362
+ },
+ {
+  "corner": "ss",
+  "code": 0,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 844.5867645642537,
+  "delay_fall_ps": null,
+  "rise_10_90_ps": 168.6028624683042,
+  "fall_10_90_ps": null
+ },
+ {
+  "corner": "ss",
+  "code": 64,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 936.7159095280444,
+  "delay_fall_ps": null,
+  "rise_10_90_ps": 175.97128420911855,
+  "fall_10_90_ps": null
+ },
+ {
+  "corner": "ss",
+  "code": 127,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 1026.3746485032916,
+  "delay_fall_ps": null,
+  "rise_10_90_ps": 183.06669273633477,
+  "fall_10_90_ps": null
+ },
+ {
+  "corner": "tt",
+  "code": 0,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 526.399327359749,
+  "delay_fall_ps": 687.5534719277679,
+  "rise_10_90_ps": 107.04454631520751,
+  "fall_10_90_ps": 108.99806926962953,
+  "duty_distortion_ps": 161.15414456801886
+ },
+ {
+  "corner": "tt",
+  "code": 64,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 589.3605294081897,
+  "delay_fall_ps": 731.0435623953715,
+  "rise_10_90_ps": 112.60666528440477,
+  "fall_10_90_ps": 119.8046863364377,
+  "duty_distortion_ps": 141.68303298718183
+ },
+ {
+  "corner": "tt",
+  "code": 127,
+  "nelem": 2,
+  "mode": "pulse",
+  "delay_ps": 650.7127698697063,
+  "delay_fall_ps": 772.3113268669802,
+  "rise_10_90_ps": 118.01933224572866,
+  "fall_10_90_ps": 129.72423655530696,
+  "duty_distortion_ps": 121.59855699727382
+ }
+]

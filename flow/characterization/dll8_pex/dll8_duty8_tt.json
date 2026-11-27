@@ -1,0 +1,12 @@
+[
+ {
+  "corner": "tt",
+  "code": 0,
+  "nelem": 8,
+  "mode": "square",
+  "wire": true,
+  "period": 3.0,
+  "ncyc": 3,
+  "duty_pct": 70.99999999999999
+ }
+]
