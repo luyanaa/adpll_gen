@@ -128489,14 +128489,40 @@ to the regenerator's own residual asymmetry (dll8 measured ≤ a few ps per
 stage). Documented as closed-by-construction pending the regen-chain
 SPICE.
 
+### N=8 direct measurement (2026-11-28, chain_n8_stock.json, 21/21 clean)
+
+Confirms the extrapolation almost exactly — the chain law is linear in N:
+
+| corner | lock code | headroom up | step@lock | c127 max | resid@CODE_INIT=48 |
+|---|---:|---:|---:|---:|---:|
+| SS | 32.7 | 94 | 39.2 ps/code | 7311 ps | +2405 ps |
+| TT | 71.6 | 55 | 31.0 ps/code | 4556 ps | −2570 ps |
+| FF | 94.2 | 33 | 28.5 ps/code | 3538 ps | −4728 ps |
+
+Monotonic in code at every measured point in every corner (the DQS-style
+monotonicity requirement).  SS initial residual +2405 ps sits inside the
+structural TDC's positive unambiguous window (+2920 ps); TT/FF negative
+residuals clamp correct-sign at any depth — CODE_INIT=48 verified.
+Chain asymmetry accumulates badly at depth 8/high codes (SS c96:
++1476 ps tpHL−tpLH) — confirms the SR regeneration is mandatory, not
+optional.  CK90 bang-bang dither at lock: ±10/±8/±7 ps SS/TT/FF.
+
 ### Remaining chain-level verification (pass-2)
 
-1. Chain + SR regeneration pulse fidelity (duty at output, edge rates).
-2. N=8 confirmation run (the numbers above are N=6 × 4/3 extrapolation —
-   linearity is structural but a direct measurement is cheap).
+1. Chain + SR regeneration pulse fidelity (duty at output, edge rates,
+   D_set, regen phase shift) — IN PROGRESS, flow/characterization/
+   ddr1_dll_regen.py, full 32+8-element deck with m-collapsed fingers.
+2. ~~N=8 confirmation run~~ DONE (table above).
 3. Integration loading: end-of-chain buffer + TDC reference chain input
    load; re-derive headroom.
-4. Mismatch: Monte-Carlo or at least per-element mismatch sensitivity —
-   master/slave ratio error goes directly into CK90 accuracy; the 4:1
-   ratio cancels common-mode but not per-segment random mismatch.
-   Budget: ±100 ps CK90 target = ±25 ps per segment ≈ ±3 ps per element.
+4. ~~Mismatch~~ CLOSED analytically 2026-11-28: the SerDes session measured
+   element-to-element matching at 1.5-1.7 ps sigma (same macro, same code;
+   docs/dco_8phase_decision.md, good enough that per-element trim was
+   dropped from silicon).  CK90 ratio error = slave_dev − master_dev/4
+   with independent per-element errors: var = 8σ² + 32(σ/4)² = 10σ²,
+   so σ(CK90) = √10 × 1.7 ≈ 5.4 ps, 3σ ≈ 16 ps against the ±100 ps target
+   — 6.2× margin.  Caveat: cross-strip (master vs slave die-position)
+   systematic gradients are NOT included in the same-macro measurement;
+   layout must interdigitate/common-centroid the five segments, and the
+   residual is bounded by the same order as the random term.  No Monte
+   Carlo needed at this margin.
