@@ -48,10 +48,11 @@
 // FIRST_STAGE >= 0; LANES, TAP_BITS, STEP_CELLS, SETTLE_CYCLES > 0;
 // FIRST_STAGE + (CODES-1)*STEP_CELLS must stay below the primitive NTAPS.
 // Default sizing / real-cell corners (requirements doc section 4.4):
-//   TAP_BITS 7 (128 codes), CELLS_PER_TAP 2, LINE_NTAPS 128, CELL_PS 35 (TT
-//   behavioral).  See ddr1_dqs_delay_line_phys.v for the TT/SS/FF table:
-//   FF 48 ps/tap (code 105 covers 5 ns), TT 70 ps/tap, SS 122 ps/tap, all
-//   <= the 200 ps step limit.
+//   TAP_BITS 7 (128 codes), CELLS_PER_TAP 1, LINE_NTAPS 128, CELL_PS 63
+//   (sg13g2 TT, measured by flow/sta/run_ddr1_dqs_corners.sh).  See
+//   ddr1_dqs_delay_line_phys.v for the measured TT/SS/FF table: TT 63 ps/tap,
+//   SS 96 ps/tap, FF 44 ps/tap, all <= the 200 ps step limit; FF reaches
+//   5 ns at code 115.
 
 `default_nettype none
 module DDR1_DQS_DELAY #(
@@ -62,8 +63,8 @@ module DDR1_DQS_DELAY #(
     parameter integer SETTLE_CYCLES = 2,
     // Primitive sizing (see ddr1_dqs_delay_line_phys.v).
     parameter integer LINE_NTAPS   = 128,
-    parameter integer CELLS_PER_TAP = 2,
-    parameter integer CELL_PS      = 35,
+    parameter integer CELLS_PER_TAP = 1,
+    parameter integer CELL_PS      = 63,
     parameter integer LINE_IMPL    = 0
 ) (
     input  wire                       sys_clk, rst, update_idle,

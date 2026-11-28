@@ -29,7 +29,8 @@
 //          sim/outputs/ddr1/dqs_delay_codes.csv (code,delay_ps,step_ps).
 //
 // Behavior of the line under test is the TT behavioral model with the
-// resized line: CELLS_PER_TAP=2, CELL_PS=35 -> delay(code) = code * 70 ps.
+// resized line: CELLS_PER_TAP=1, CELL_PS=63 (sg13g2 TT, measured) ->
+// delay(code) = code * 63 ps.
 // (The old 3 x 55 ps / 32-code model could not meet the 5 ns range on
 // real cells; see ddr1_dqs_delay_line_phys.v for the TT/SS/FF table.)
 //
@@ -42,7 +43,7 @@ module ddr1_dqs_delay_tb;
     localparam integer TAP_BITS     = 7;
     localparam integer CODES        = 1 << TAP_BITS;   // 128
     localparam integer SETTLE_CYCLES = 2;
-    localparam integer STEP_PS      = 70;             // expected TT model step
+    localparam integer STEP_PS      = 63;             // expected TT model step (sg13g2 cell)
     localparam integer CLK_HALF     = 10000;          // 50 MHz sys_clk, ps
     localparam integer TIMEOUT_PS   = 200000;
     localparam integer MAX_DELAY_PS = (CODES-1)*STEP_PS; // 8890

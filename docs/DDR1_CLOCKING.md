@@ -11,7 +11,7 @@ Requirements source: `/grid/ddr-phy/docs/ADPLL_DDR1_REQUIREMENTS.md` (v0.1).
 | `src/ddr1_clock_top.v` | Integration top: MCK(200 MHz) → DE2 divider + ratio DLL → fail-closed outputs, ERR, Phase-A bypass |
 | `src/ddr1_ck90_de2.v` | Dual-edge divide-by-2 (posedge/negedge) → CK + reference phase; 2-flop reset synchronizer |
 | `src/ddr1_ck90_dll.v` | **CK90 engine (chosen architecture)**: master/slave ratio DLL, continuous bang-bang tracking, absolute-phase lock/loss detection |
-| `src/ddr1_dqs_delay.v` + `src/ddr1_dqs_delay_line_phys.v` | DQS receive delay line: uniform 256-cell chain, 128 taps × 2 cells, TAP_BITS=7 |
+| `src/ddr1_dqs_delay.v` + `src/ddr1_dqs_delay_line_phys.v` | DQS receive delay line: uniform 128-cell chain, 128 taps × 1 cell, TAP_BITS=7 |
 | `src/ddr1_clock_top_tb.v` | 85-check self-checking TB (compile/run commands in header) |
 | `src/ddr1_ck90_compare_tb.v` | 72-check A/B injection-matrix TB |
 | `src/ddr1_dqs_delay_tb.v` | DQS handshake/glitch/monotonicity TB |
@@ -35,10 +35,15 @@ Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
 4. **Fail-closed**: all outputs ANDed with PHY_LOCKED; gate *release* registered on a
    CK rising edge (no first-pulse runt), *drop* asynchronous. ERR sticky until RST.
 5. **DQS line = uniform series chain** (no coarse/bypass mux → monotonic by construction,
-   avoiding the `PLL_SEGMENTED_DELAY_PHYS` boundary-step problem). Resized after gate
-   review: 128 taps × 2 fine cells — per-corner arithmetic (ics55-characterized cell
-   delays 35/61/24 ps TT/SS/FF): TT 70 ps/tap → range 8.89 ns; SS 122 ps/tap ≤ 200 ps
-   spec → 15.49 ns; FF 48 ps/tap → 6.10 ns (5 ns at code 105). TAP_BITS=7.
+   avoiding the `PLL_SEGMENTED_DELAY_PHYS` boundary-step problem). **Measured on real
+   sg13g2 cells** (`flow/sta/run_ddr1_dqs_corners.sh` — OpenSTA per-tap extraction):
+   the real FINE_DELAY_CELL is ~65/100/45 ps TT/SS/FF per cell, nearly twice the
+   ics55 figures, so the first 2-cells/tap sizing exactly hit the 200 ps SS limit
+   (FAIL). Resized to **128 taps × 1 cell, TAP_BITS=7** — measured per-corner:
+   TT step 65 ps (range 8.22 ns), SS step 100 ps (range 12.65 ns, > one DQS
+   period → consumer must cap the usable window), FF step 45 ps (range 5.69 ns,
+   5 ns at code 112). All corners: step ≤ 200 ps, range ≥ 5 ns, monotone,
+   max/nominal ≤ 1.12. PASS TT/SS/FF.
 
 ## Key implementation contracts (do not regress)
 
@@ -85,10 +90,12 @@ Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
    at all corners. Ring SS ceiling ~340 MHz constrains DCO choice; the 200 MHz MCK
    plan (DCO 400 MHz ÷2) is infeasible at SS — pick the real plan and verify against
    the measured DCO tables in `flow/ADPLL_FREQ_DIV.md`.
-5. **DQS real-cell characterization**: mux select-dependent delay can bend the
-   code→delay map even though the chain is monotone; SS range 15.5 ns > one DQS
-   period (10 ns) creates aliased capture windows — the consumer must cap the usable
-   code window; first-tap input-net load; `LINE_IMPL=1` for synthesis.
+5. **DQS real-cell characterization**: done at pre-layout level 2026-11-28
+   (`flow/sta/run_ddr1_dqs_corners.sh` + `ddr1_dqs_taps_{TT,SS,FF}.csv`): PASS all
+   corners with the 1-cell/tap resize. Remaining: routing/parasitic re-verify,
+   mux select-dependent load bending, the consumer-side cap of the usable code
+   window (SS range 12.65 ns > one 10 ns DQS period aliases high codes),
+   first-tap input-net load, `LINE_IMPL=1` for synthesis.
 6. **Jitter**: period-jitter ≤100 ps pk-pk / cycle-to-cycle ≤50 ps evidence
    (requirements §2 line 44) — no measurement exists yet.
 7. **STA/SDF gate-level smoke** for both blocks at TT/SS/FF; lock time < 100 µs
@@ -103,7 +110,7 @@ Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
 - `ddr1_phy.sv:39-40` derives `pad_ck_n = ~ck` locally — the matched CK_PHY/CK_PHY_N
   pair (≤100 ps crossover requirement) is never consumed; wire the pair through.
 - `ddr1_ihp130_io.sv:174` still has the behavioral `#(DQS_CAPTURE_DELAY_PS)` fake
-  delay — replace with `DDR1_DQS_DELAY` (TAP_BITS=7, LINE_NTAPS=128, CELLS_PER_TAP=2).
+  delay — replace with `DDR1_DQS_DELAY` (TAP_BITS=7, LINE_NTAPS=128, CELLS_PER_TAP=1).
 - `ddr_dqs_delay_adpll.sv` instantiates the old one-cell-per-tap primitive; with
   TAP_BITS=7 that yields only half the required range — use the new wrapper or rebind.
 

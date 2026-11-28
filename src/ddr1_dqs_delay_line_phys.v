@@ -10,22 +10,26 @@
 // of CELLS_PER_TAP fine cells, so the tap step and the total range are scaled
 // up while the chain stays structurally uniform.
 //
-// Sizing (BLOCKER FIX): resized for real IHP130/ics55 cells, not just the
-// behavioral 55 ps model.  The characterized FINE_DELAY_CELL is about
-// 35 ps TT / 61 ps SS / 24 ps FF.  With CELLS_PER_TAP=2:
+// Sizing (measured on real sg13g2 cells by flow/sta/run_ddr1_dqs_corners.sh,
+// OpenSTA against sg13g2_stdcell_{typ_1p20V_25C,slow_1p08V_125C,
+// fast_1p32V_m40C}.lib): the real IHP130 FINE_DELAY_CELL is ~63/96/44 ps
+// TT/SS/FF -- nearly twice the 35/61/24 ps ics55 figures the first sizing
+// used, which made 2 cells/tap exactly hit the 200 ps SS step limit (FAIL).
+// Resized to CELLS_PER_TAP=1, NTAPS=128:
 //
-//   corner | cell | step/tap | code 127 range | 5 ns reached at
-//   -------+------+----------+----------------+------------------
-//   TT     | 35ps |  70 ps   | 8890 ps        | code  72 (<=200 ps ok)
-//   SS     | 61ps | 122 ps   | 15494 ps       | code  41 (<=200 ps ok)
-//   FF     | 24ps |  48 ps   | 6096 ps        | code 105 (<=200 ps ok)
+//   corner | step/tap | code 127 range | 5 ns reached at
+//   -------+----------+----------------+------------------
+//   TT     |  65 ps   | 8220 ps        | code  78 (<=200 ps ok)
+//   SS     | 100 ps   | 12650 ps       | code  51 (<=200 ps ok)
+//   FF     |  45 ps   | 5690 ps        | code 112 (<=200 ps ok)
 //
-// Every corner has step <= 200 ps and, with >=128 taps (TAP_BITS=7 gives
-// 128 codes, indices 0..127), FF reaches 5 ns at code 105 (< 127).  The
-// old 48 taps x 3 cells x 32 codes only reached 5.115 ns in the 55 ps
-// behavioral model and FAILED on real cells (TT 3.26 ns, FF 2.23 ns).
+// Every corner has step <= 200 ps and range >= 5 ns (FF binds at code 115).
+// The SS range (~12.2 ns) exceeds one 10 ns DQS period, so alias capture
+// windows exist at high codes: the consumer must cap the usable code window
+// (documented in docs/DDR1_CLOCKING.md; routing load only stretches these
+// numbers further in-range).
 //
-// Defaults: NTAPS=128, CELLS_PER_TAP=2, CELL_PS=35 (TT behavioral model).
+// Defaults: NTAPS=128, CELLS_PER_TAP=1, CELL_PS=63 (sg13g2 TT behavioral).
 // The parameters stay overridable; the consumer must keep
 // FIRST_STAGE + (CODES-1)*STEP_CELLS < NTAPS.
 //
@@ -81,8 +85,8 @@ endmodule
 
 module DDR1_DQS_DELAY_LINE_PHYS #(
     parameter integer NTAPS        = 128,  // exposed taps (code 0..NTAPS-1)
-    parameter integer CELLS_PER_TAP = 2,   // fine cells per element/tap step
-    parameter integer CELL_PS      = 35,   // behavioral sub-cell delay (TT model)
+    parameter integer CELLS_PER_TAP = 1,   // fine cells per element/tap step
+    parameter integer CELL_PS      = 63,   // behavioral sub-cell delay (sg13g2 TT, measured)
     parameter integer IMPL         = 0     // 0 = behavioral, 1 = structural cells
 ) (
     input  wire             CLK_IN,
