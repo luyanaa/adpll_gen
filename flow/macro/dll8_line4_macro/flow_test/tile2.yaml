@@ -1,0 +1,63 @@
+# LibreLane: production dll8_tile (2x dll8_line4 macros + control plane).
+# Purpose: prove the tile control plane (per-element Bresenham decoder, DFF PD,
+# DLF, SR regen) places and routes with the hardened strips, including the
+# 8 x 127 = 1016 independent EN nets (one bus per element).
+#
+# The macro liberty is a stub (comb arcs only) -- this run is a routability/
+# DRC exercise, not timing closure.  Timing signoff comes after the strip is
+# re-characterized with SPEF.
+
+DESIGN_NAME: dll8_tile
+VERILOG_FILES:
+  - dir::../../../../src/dll8_tile.v
+  - dir::../../../../src/digital_loop_filter.v
+  - dir::../dll8_line4.v
+
+PDK: ihp-sg13g2
+STD_CELL_LIBRARY: sg13g2_stdcell
+
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD]
+SCL_GROUND_PINS: [VSS]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal5
+
+# The macro liberty is a stub with no clock arcs, and TAP7 clocks the PD flop
+# from inside the macro, so this run is a routability/DRC exercise (as the
+# line8 integration test): no clock constraint.
+CLOCK_PORT: null
+
+# tile2: tile1 converged to 36 Metal Spacing violations with 508 EN nets
+# sharing an 82 um / 64 um channel pair.  Strips are now 3x the PDN pitch
+# apart (226.8 um, same stripe phase) and the die is 520 wide: channels are
+# 147.5 um (A) and 224 um (B) -- ~4x the track capacity per net.
+DIE_AREA: [0, 0, 520, 760]
+FP_SIZING: absolute
+FP_CORE_UTIL: 30
+PL_TARGET_DENSITY_PCT: 40
+
+PDN_CFG: dir::pdn_cfg.tcl
+PDN_VOFFSET: 65.24
+
+MACROS:
+  dll8_line4:
+    gds: dir::../dll8_line4.gds
+    lef: dir::../dll8_line4.lef
+    lib:
+      nom_typ_1p20V_25C:
+        - dir::../dll8_line4__tt.lib
+      nom_slow_1p08V_125C:
+        - dir::../dll8_line4__ss.lib
+      nom_fast_1p32V_m40C:
+        - dir::../dll8_line4__ff.lib
+    instances:
+      line_a:
+        location: [10, 20]
+        orientation: N
+      line_b:
+        location: [226.8, 20]
+        orientation: N
