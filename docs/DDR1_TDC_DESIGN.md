@@ -159,12 +159,23 @@ verification stance: silicon will behave no worse than the model. Keep as
 is; document, don't "fix".
 
 **Sign at the zero crossing:** within ±1 tap the capture position is the
-measurement; the bang-bang dead zone is the quantization itself, already
-verified. Metastability of the capture flops near the transition is
-debounced by the LOCK_N/LOSS_N counters (bang-bang self-corrects single
-bad samples) — MTBF analysis is a pass-2 signoff item.
+measurement.  The loop's dead zone is NOT "the quantization itself" any
+more (that assumption was wrong, see the jitter section below): it is the
+explicit HOLD_PS parameter, which must be >= max(master step, TDC tap) or
+an unlucky phase leaves no reachable code inside the band.  Metastability
+of the capture flops near the transition is debounced by the LOCK_N/LOSS_N
+counters — MTBF analysis is a pass-2 signoff item.
 
-**Structural implementation shape (TDC_IMPL=1):**
+**As built (final parameters):** NTAP=32 measurement cells, NOFF=16 offset
+cells (D0 = 16·τ), one-bubble leading-ones decode, signed E_MEAS in
+master-scale ps.  TDC_STEP_PS is swept 45/65/100 (FF/TT/SS) in the TBs.
+The dead zone is `HOLD_PS = max(NQ_SEG·CELL_X4_STEP, TDC_STEP_PS)` — 65 ps
+master = 16 ps CK90 at the defaults — and it must cover the MEASUREMENT
+granularity too: with a 65 ps tap against a 64 ps band the loop wandered
+5-6 codes (80 ps at CK90) before the fix.
+
+**Structural implementation shape (TDC_IMPL=1) — first sketch, superseded
+by the single-chain form below:**
 - reference chain: 2×M FINE_DELAY_CELLs, center tap defines zero; sizing
   M from measured τ per corner so the ±loss band (640 ps) is inside the
   chain at SS (M·100 ≥ 2×640+margin → 2M ≈ 16-20 cells).
@@ -174,6 +185,10 @@ bad samples) — MTBF analysis is a pass-2 signoff item.
 - downstream interface identical to the behavioral model: signed e_meas in
   ps units (position × TDC_STEP_PS parameter), so loop/lock/loss logic is
   shared verbatim.
+The as-built version keeps the decode and interface but replaces the
+"reference chain + inverted edge sense" with ONE chain plus a delayed
+master capture clock (next section), which removes the negative-time
+problem without a second chain or a CDC.
 
 ## Structural implementation landed (2026-11-28): single-chain + delayed-master
 
