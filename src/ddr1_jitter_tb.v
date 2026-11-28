@@ -175,13 +175,18 @@ module ddr1_jitter_tb;
         $display("INJ30: CK90 mean=%0d fs pkpk=%0d fs c2c=%0d fs", meanp9, pkpk9, c2c9);
         $fdisplay(fd, "INJ30: CK   mean=%0d fs pkpk=%0d fs c2c=%0d fs", meanp, pkpk, c2c);
         $fdisplay(fd, "INJ30: CK90 mean=%0d fs pkpk=%0d fs c2c=%0d fs", meanp9, pkpk9, c2c9);
-        // transfer: output must not exceed input (30ps pk-pk per half
-        // period — up to ~60ps pk-pk on the full period) plus our own
-        // intrinsic addition measured in config 1.
-        chk(pkpk9 <= 60000 + pkpk9_c + 10000,
-            "jitter2: CK90 pk-pk <= input + intrinsic + 10ps margin");
-        chk(c2c9 <= 30000 + c2c9_c + 10000,
-            "jitter2: CK90 c2c <= input amplitude + intrinsic + 10ps margin");
+        // Transfer bound, measured against the SAME-NODE reference: CK and
+        // CK90 are both 100 MHz outputs of this chain, so a delay line
+        // transmits the input period jitter 1:1 and CK90 may exceed CK only
+        // by what the DLL itself adds (its own re-timing / code activity).
+        // With the dead zone the code should be stationary, so the added
+        // term should be ~0.  (The ±15 ps/half-period injection here is a
+        // DIAGNOSTIC drive, not a spec case: the 100/50 ps limits are gated
+        // in config 1 where the input is clean.)
+        chk(pkpk9 <= pkpk_c + pkpk9_c + 15000,
+            "jitter2: CK90 pk-pk <= CK pk-pk + intrinsic + 15ps (1:1 transfer + DLL addition)");
+        chk(c2c9 <= c2c_c + c2c9_c + 15000,
+            "jitter2: CK90 c2c <= CK c2c + intrinsic + 15ps (1:1 transfer + DLL addition)");
         chk(phylock === 1'b1 && err === 1'b0,
             "jitter2: lock maintained under 30ps input jitter");
 

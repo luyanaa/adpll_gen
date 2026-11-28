@@ -1,5 +1,27 @@
 # DDR1 pass-2 synthesis blockers + replacement plan
 
+**STATUS 2026-11-28 (late): items 1-5 below are RESOLVED in RTL.**  The
+synthesis-blocker inventory is kept for the record; the current state:
+
+- item 1 (`real`/`$realtime` FIFO) — replaced by `src/ddr1_dll_tdc.v`
+  (structural signed flash TDC, single chain + delayed-master offset),
+  integrated as `TDC_IMPL=1` next to the behavioral emulation.  Unit TB
+  11/11, DLL integration TB 25/25, yosys flatten clean.
+- item 2 (`#`-delay segments) — structural segments in
+  `src/ddr1_dll_phys.v` (2x `dll8_line4` hard macros + thermometer strap
+  decoder).  N=8 confirmed by chain SPICE.
+- item 4 (`assign #2.8` monitor) — replaced by the MCK-grid edge-order
+  monitor in `src/ddr1_clock_top.v` (synthesizable, no delayed clock).
+- item 5 (`ck90_inv_tb`) — now `ifdef SIMULATION`.
+- Additional pass-2 hardware that did not exist when this list was
+  written: SR phase regeneration (`DDR1_CLK_REGEN`, mandatory because the
+  measured chain asymmetry reaches +1.5 ns), the loop dead zone (jitter
+  spec), and `TRIM_MASTER_PS` (locked-target calibration for the
+  EN-gate / latch-set systematic).
+- Remaining real work: SPICE characterization of the regenerated chain
+  (D_set, duty, regen phase shift), STA of the integrated top, and the
+  jitter/DPI handoff — see docs/DDR1_CLOCKING.md pass-2 list.
+
 Evidence: `yosys` (0.52) read+synth attempt log
 `sim/outputs/ddr1/ihp130/clock_top_synth_attempt.log` — first hard error
 `src/ddr1_ck90_dll.v:290: ERROR: syntax error, unexpected TOK_REAL`.
@@ -91,14 +113,15 @@ TT 212-624, SS 111.8-370.0, FF 262.2-903.2 MHz, all corners cover 300
 (FF margin -38 MHz thin). Integration done (commit 5eb91c6, 86/86
 integration regression).
 
-## Order of work suggested
+## Order of work (updated 2026-11-28)
 
-1. FF endpoint verdict (SPICE, running).
-2. Element chain sizing SPICE (stock-inv chain + moscap trim vs 2.5 ns
-   target at TT/SS/FF) — reuse dll8 finger recipe.
-3. TDC resolution characterization (FINE_DELAY_CELL taps per corner —
-   same flow as the DQS measurement, trivial).
-4. Rewrite `DDR1_DLL_SEG` + phase detector in synthesizable RTL behind
-   the same behavioral interface; keep `IMPL` split so the existing
-   85-check TB still runs in behavioral mode.
-5. Re-run yosys/STA at TT/SS/FF; lock-time < 100 µs evidence.
+1. ~~FF endpoint verdict~~ DONE (GO, FF margin −38 MHz).
+2. ~~Element chain sizing SPICE~~ DONE (`ddr1_dll_chain.py`: N=8,
+   lock codes 32.7/71.6/94.2, monotone, CODE_INIT=48).
+3. ~~TDC resolution~~ DONE (taps 65/100/45 ps TT/SS/FF, swept in every TB).
+4. ~~Rewritable segments + phase detector in synthesizable RTL~~ DONE
+   (`SEG_IMPL`/`TDC_IMPL`/`REGEN` split; default keeps the 87-check
+   regression).
+5. **NEXT**: regenerated-chain SPICE (D_set / duty / phase shift), then
+   yosys+STA of the integrated top at TT/SS/FF, then lock-time and
+   jitter signoff numbers into the ddr-phy handoff.

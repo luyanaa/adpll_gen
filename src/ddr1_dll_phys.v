@@ -29,10 +29,20 @@
 //                          common-mode and the output duty is set by the TAP
 //                          SPACING (T/2 at lock), not by the input duty.
 //                          Structural: sg13g2_dfrbp_1 D=1 clocked by SET_IN,
-//                          async-reset by a narrow active-low pulse generated
-//                          from RESET_IN with one nand2b + a 2-inverter delay
-//                          (rn = ~(RESET_IN & ~RESET_IN_d)).  Behavioral
-//                          model for RTL sim: edge-sensitive SR semantics.
+//                          async-reset by an active-low pulse from RESET_IN
+//                          built as rn = ~(RESET_IN & ~RESET_IN_d) with
+//                          RESET_IN_d = 8 inverter stages (~400 ps).
+//                          PULSE WIDTH IS A HARD CONSTRAINT, measured in
+//                          SPICE on the real dfrbp model (2026-11-28,
+//                          /tmp deck "dfrbp reset width probe"): a 100 ps
+//                          active-low pulse does NOT reset the flop; 300 ps
+//                          does (Q falls ~260 ps into the pulse).  8 stages
+//                          gives ~400 ps with margin.  A 2-stage (47 ps)
+//                          pulse was the first cut and silently left Q
+//                          stuck high — always characterize the async
+//                          control against the min-pulse-width spec.
+//                          Behavioral model for RTL sim: edge-sensitive SR
+//                          semantics (pulse width irrelevant there).
 //
 // Timing note (docs/DDR1_DLL_ELEMENT_SIZING.md): the latch adds a constant
 // set-path delay D_set to every regenerated edge.  Because the TDC measures
@@ -112,13 +122,18 @@ module DDR1_CLK_REGEN #(
             end
             assign Q = q;
         end else begin : cells
-            // reset pulse: rn = ~(RESET_IN & ~RESET_IN_d), a negative pulse
-            // of width ~2 inverter delays at each RESET_IN rising edge.
-            wire rd, rdb, rn;
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_inv_1 u_rd  (.A(RESET_IN), .Y(rd));
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_inv_1 u_rdb (.A(rd),       .Y(rdb));
+            // reset pulse: rn = ~(RESET_IN & ~RESET_IN_d) with an 8-stage
+            // delay (~400 ps measured; 2 stages = 47 ps was BELOW the flop's
+            // minimum async-reset width and did not reset it at all).
+            wire [8:0] rdl;
+            assign rdl[0] = RESET_IN;
+            genvar ri;
+            for (ri = 0; ri < 8; ri = ri + 1) begin : rdel
+                (* keep *) (* dont_touch = "true" *)
+                sg13g2_inv_1 u_i (.A(rdl[ri]), .Y(rdl[ri+1]));
+            end
+            wire rdb = rdl[8];
+            wire rn;
             // nand2b: Y = ~(~A_N & B) (A_N is the internally-inverted pin).
             // With A_N = rdb (= RESET_IN delayed) and B = RESET_IN:
             // Y = ~(~RESET_IN_d & RESET_IN) = the narrow active-low pulse
