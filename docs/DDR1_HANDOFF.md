@@ -126,25 +126,27 @@ chain passes it through 1:1 and adds nothing measurable.
   behavioral simulation**.  The DDR1 requirement's 200 µs budget will be
   dominated by this, and the DDR chain's own ÷3+DLL adds ~1.3 µs at most.
   Resolve on the ADPLL macro side before claiming the power-up window.
-- **D_set / regen matching / duty — MEASURED** (table in
-  `docs/DDR1_DLL_ELEMENT_SIZING.md`): matching ≤11 ps, CK90 duty at lock
-  45.7-48.1%, and a real input-duty sensitivity of the deep taps that costs
-  ≈±45 ps CK90 for a 40-60% MCK duty (after the DE3's 3× attenuation).
-  The remaining action is the 3-value trim strap, above.
+- **Systematic-phase calibration — MEASURED, must be corner-selected**
+  (full table in `docs/DDR1_DLL_ELEMENT_SIZING.md`): with REGEN=1 the
+  residual is (3/4)·D_set + D_EN, so `TRIM_MASTER_PS = 3·D_set + 4·D_EN`.
+  SPICE (32+8 elements, real cells) gives D_set = 424 / 273 / 197 ps at
+  SS/TT/FF → TRIM = **1472 / 1018 / 791**, raw systematic **+368 / +255 /
+  +198 ps** at CK90 — OUTSIDE the ±200 ps spec at SS/TT, and a single fixed
+  TRIM leaves ±85 ps across corners.  **Action: 2 strap pins selecting 3
+  trim values** (corner selection at test/init; the locked code 33/72/94
+  is a free corner sensor if automatic selection is preferred).  The
+  regenerator pair itself matches to 0.1-11 ps, as designed.  RTL today
+  exposes one compile-time `TRIM_MASTER_PS`;
+  `flow/characterization/ddr1_regen_trim.py` regenerates the table.
+- **CK90 duty / input-duty sensitivity — MEASURED**: CK90 duty at lock
+  45.7-48.1% (SS/TT/FF, inside 45-55%; CK90 duty is not spec'd, this bounds
+  the transmit-eye asymmetry).  The deep master taps are duty-sensitive
+  (x24 moves −378 ps for a 50→60% input duty while the slave moves −12 ps),
+  which costs ≈±45 ps CK90 for a 40-60% MCK after the DE3's 3× attenuation.
 - **STA of the integrated top** at TT/SS/FF: structural elaboration is DONE
   (`flow/sta/synth_ddr1_dll.sh`: 1286 cells, 10 dll8_line4 macros, no
   errors); liberty-mapped timing with the macro .lib files and parasitics
   is NOT.
-- **Systematic-phase calibration — MEASURED, must be corner-selected**:
-  with REGEN=1 the residual is (3/4)·D_set + D_EN, so
-  `TRIM_MASTER_PS = 3·D_set + 4·D_EN`.  SPICE (32+8 elements, real cells):
-  D_set = 424 / 273 / 197 ps at SS/TT/FF → TRIM = **1472 / 1018 / 791**.
-  The raw systematic (+368/+255/+198 ps CK90) is OUTSIDE the ±200 ps spec
-  at SS/TT, and a single fixed TRIM leaves ±85 ps across corners — so the
-  clock top needs **2 strap pins selecting 3 trim values** (corner
-  selection at test/init).  Regenerator matching itself is 0.1-11 ps, as
-  designed.  RTL today exposes one compile-time `TRIM_MASTER_PS`.
-  `flow/characterization/ddr1_regen_trim.py` regenerates this table.
 - **DCO jitter**: the period/c2c budget for the 300 MHz DCO itself is not
   measured in this repo; the DDR1 chain is transparent to it (1:1).
 - **DQS post-route** monotonicity and select-dependent load bending.
