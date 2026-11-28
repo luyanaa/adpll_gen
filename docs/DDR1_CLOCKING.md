@@ -11,14 +11,25 @@ Requirements source: `/grid/ddr-phy/docs/ADPLL_DDR1_REQUIREMENTS.md` (v0.1).
 | `src/ddr1_clock_top.v` | Integration top: MCK(**300 MHz**, freq-plan commit) → DE3 dual-edge ÷3 → ratio DLL → fail-closed outputs, ERR, Phase-A bypass |
 | `src/ddr1_clk_de3.v` | Dual-edge divide-by-3: 300→100 MHz, period exactly 3T input-duty independent, duty error attenuated 3×; synthesizes to sg13g2 |
 | `src/ddr1_ck90_de2.v` | (legacy) dual-edge ÷2 — retired from the clock top with the 200 MHz plan; kept for the compare TB |
-| `src/ddr1_ck90_dll.v` | **CK90 engine (chosen architecture)**: master/slave ratio DLL, continuous bang-bang tracking, absolute-phase lock/loss detection |
-| `src/ddr1_dqs_delay.v` + `src/ddr1_dqs_delay_line_phys.v` | DQS receive delay line: uniform 128-cell chain, 128 taps × 1 cell, TAP_BITS=7 |
-| `src/ddr1_clock_top_tb.v` | 85-check self-checking TB (compile/run commands in header) |
-| `src/ddr1_ck90_compare_tb.v` | 72-check A/B injection-matrix TB |
-| `src/ddr1_dqs_delay_tb.v` | DQS handshake/glitch/monotonicity TB |
+| `src/ddr1_ck90_dll.v` | **CK90 engine**: master/slave ratio DLL, dead-zone bang-bang tracking, TDC-honest lock/loss; `SEG_IMPL`/`REGEN`/`TDC_IMPL` structural splits |
+| `src/ddr1_dll_tdc.v` | structural signed flash TDC (single chain + delayed-master offset) |
+| `src/ddr1_dll_phys.v` | structural segment (2× `dll8_line4`) + thermometer strap decoder + SR regeneration |
+| `src/ddr1_cells_bb.v` / `src/ddr1_phys_elab_stub.v` | Yosys blackbox / sim stubs for the extra sg13g2 cells |
+| `src/ddr1_dqs_delay.v` + `src/ddr1_dqs_delay_line_phys.v` | DQS receive delay line: 128 taps × 1 cell, TAP_BITS=7, `IMPL=1` real cells |
+| `src/ddr1_clock_top_tb.v` | 87-check integration TB |
+| `src/ddr1_ck90_dll_tdc_tb.v` | 25-check DLL/TDC focused TB (acquisition, dead zone, tracking, loss, aliasing, trim) |
+| `src/ddr1_dll_tdc_tb.v` | 11-check TDC unit TB |
+| `src/ddr1_ck90_compare_tb.v` | 84-check A/B injection-matrix TB |
+| `src/ddr1_jitter_tb.v` | 8-check jitter TB (period / c2c, clean + injected) |
+| `src/ddr1_dqs_delay_tb.v` / `src/ddr1_clk_de3_tb.v` | DQS handshake/glitch/monotonicity (37) / DE3 (12) |
+| `flow/run_ddr1_regression.sh` | single-command regression (all of the above, PASS/FAIL) |
+| `flow/characterization/ddr1_dll_chain.py` | bare-cascade chain SPICE (N, corners × codes) |
+| `flow/characterization/ddr1_dll_regen.py` | regenerated-chain SPICE (D_set, duty, phase shift) |
 
-Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
-85 + 72 + all-DQS checks pass, exit 0.
+Evidence (iverilog, regenerable — `sim/outputs/` gitignored): clock 87,
+DLL/TDC 25, TDC unit 11, jitter 8, compare 84, DQS 37, DE3 12 — all PASS
+via `flow/run_ddr1_regression.sh`.  Chain SPICE: 27 + 21 decks clean.
+Integration contract for ddr-phy: `docs/DDR1_HANDOFF.md`.
 
 ## Architecture decisions (locked)
 
