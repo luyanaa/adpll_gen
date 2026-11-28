@@ -140,12 +140,21 @@ Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
    mux select-dependent load bending, the consumer-side cap of the usable code
    window (SS range 12.65 ns > one 10 ns DQS period aliases high codes),
    first-tap input-net load, `LINE_IMPL=1` for synthesis.
-6. **Jitter — measurement built 2026-11-28**: `src/ddr1_jitter_tb.v` measures
-   output period/c2c jitter at CK_PHY/CK90_PHY over 2000 periods, two
-   configurations (clean input; ±15 ps/half-period injected MCK edge jitter),
-   explicit methodology (spec §2 line 44). Verdicts gate on the 100/50 ps limits;
-   the injected run bounds the chain's own added jitter separately from the DCO
-   budget it must pass through.
+6. **Jitter — MEASURED, PASS (2026-11-28)**: `src/ddr1_jitter_tb.v`, 2000
+   periods per config at the CK_PHY / CK90_PHY outputs (methodology = the
+   spec's period-jitter / cycle-to-cycle definitions).
+   - Clean 300 MHz input: CK50/CK90 **0 ps pk-pk period, 0 ps c2c** (limits
+     100 / 50 ps).  The 0 is the architecture result, not a modelling
+     accident: DE3 divides exactly (output period = 3 MCK periods) and the
+     DLL dead zone freezes the code, so the chain contributes no edge motion.
+   - Injected MCK edge jitter ±15 ps per half period (diagnostic drive):
+     CK pk-pk 145 ps, CK90 pk-pk 145 ps, c2c 105/105 ps — **exactly 1:1, zero
+     added jitter**, lock maintained (the delay line transmits DCO jitter and
+     adds nothing of its own).
+   - Before the dead-zone/aggregate-law fixes the same measurement read
+     128 ps pk-pk at CK90 with a clean input (limit cycle) — the defect this
+     evidence caught.  Remaining production number: the DCO's own jitter
+     (upstream, `docs/DDR1_FREQ_PLAN.md` scope), which passes through 1:1.
 7. **STA/SDF gate-level smoke** for both blocks at TT/SS/FF; lock time < 100 µs
    (target) within the 200 µs DDR1 power-up window.
 

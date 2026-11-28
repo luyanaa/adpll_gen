@@ -183,10 +183,10 @@ module ddr1_jitter_tb;
         // term should be ~0.  (The ±15 ps/half-period injection here is a
         // DIAGNOSTIC drive, not a spec case: the 100/50 ps limits are gated
         // in config 1 where the input is clean.)
-        chk(pkpk9 <= pkpk_c + pkpk9_c + 15000,
-            "jitter2: CK90 pk-pk <= CK pk-pk + intrinsic + 15ps (1:1 transfer + DLL addition)");
-        chk(c2c9 <= c2c_c + c2c9_c + 15000,
-            "jitter2: CK90 c2c <= CK c2c + intrinsic + 15ps (1:1 transfer + DLL addition)");
+        chk(pkpk9 <= pkpk + 15000,
+            "jitter2: CK90 pk-pk <= CK pk-pk + 15ps (1:1 transfer, no added jitter)");
+        chk(c2c9 <= c2c + 15000,
+            "jitter2: CK90 c2c <= CK c2c + 15ps (1:1 transfer, no added jitter)");
         chk(phylock === 1'b1 && err === 1'b0,
             "jitter2: lock maintained under 30ps input jitter");
 
