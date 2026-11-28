@@ -29,6 +29,14 @@
 module DLL8_ELEM #(
     parameter real    BASE_PS   = 110.0,
     parameter real    STEP_PS   = 3.0,
+    // Measured-code-curve refinement: the SPICE element curve is strongly
+    // convex (local LSB 1 ps at code 0 -> 8.9 ps at code 112, SS), so a pure
+    // BASE+STEP*CODE model understates the local step at the operating point
+    // by ~1.8x.  A2/A3 add the quadratic/cubic terms from the fit to the
+    // measured points (flow/characterization/dll8_pex2/stock_elem.json).
+    // Default 0 keeps the old linear behaviour.
+    parameter real    A2_PS     = 0.0,
+    parameter real    A3_PS     = 0.0,
     parameter integer CODE_BITS = 7,
     parameter integer DLL8_IMPL = 0
 ) (
@@ -43,7 +51,9 @@ module DLL8_ELEM #(
             // expression when the event executes, so CODE can change at run
             // time exactly like a trimmed physical element).
             reg d;
-            always @(IN) d <= #(BASE_PS + CODE * STEP_PS) IN;
+            always @(IN)
+                d <= #(BASE_PS + STEP_PS*CODE + A2_PS*CODE*CODE
+                       + A3_PS*CODE*CODE*CODE) IN;
             assign OUT  = d;
             assign LOAD = 1'b0;
         end else begin : phys

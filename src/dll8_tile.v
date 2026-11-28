@@ -77,7 +77,17 @@ module dll8_tile #(
     parameter integer LOCK_TOL    = 8,
     // Behavioral line timing passthrough (sim only).
     parameter real    BASE_PS     = 110.0,
-    parameter real    STEP_PS     = 3.0
+    parameter real    STEP_PS     = 3.0,
+    parameter real    A2_PS       = 0.0,
+    parameter real    A3_PS       = 0.0,
+    // Phase-detector timing model (sim only).  The DFF's decision boundary
+    // is NOT at the clock pin edge: SPICE (sg13g2_dfrbp_1, ideal 20 ps data
+    // ramp) measures "data must lead the clock edge by" = 122 / 92 / 61 ps at
+    // SS / TT / FF.  A clock-path buffer (buf_4 = 108 / 71 / 51 ps) moves the
+    // sampling instant later and cancels most of it; the residual is closed
+    // post-layout with a routing snake (documented in REPORT_tile_rtl).
+    parameter real    PD_OFF_PS   = 0.0,   // flop data-lead offset
+    parameter real    PD_CLK_PS   = 0.0    // clock-path buffer delay
 ) (
     input  wire                    REF,
     input  wire                    RST_N,
@@ -160,7 +170,7 @@ module dll8_tile #(
     wire mid, unused_tap6b;
 
 `ifdef DLL8_TILE_SIM
-`define DLL8_LINE4_PARAMS #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS))
+`define DLL8_LINE4_PARAMS #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS), .A2_PS(A2_PS), .A3_PS(A3_PS))
 `else
 `define DLL8_LINE4_PARAMS
 `endif
@@ -213,15 +223,27 @@ module dll8_tile #(
     endgenerate
 
     // ------------------------------------------------------- phase detector
-    // D=REF, CLK=TAP7: at the TAP7 rising edge, REF high => d > T => too long.
-    wire pd_raw;
+    // D=REF, CLK=TAP7 (delayed): at the sampling instant REF high => d > T.
+    // Both inputs get a 2x inv_16 (fast edge, ~50 ps, non-inverting) so the
+    // flop sees the slews its offset was characterized at; the clock gets an
+    // extra buf_4 whose delay subtracts from the flop's data-lead offset.
+    wire pd_raw, pd_clk, ref_pd;
 `ifdef DLL8_TILE_SIM
+    assign #(PD_CLK_PS) pd_clk = tap[7];
+    assign #(PD_OFF_PS) ref_pd = REF;
     reg pd_q;
-    always @(posedge tap[7]) pd_q <= REF;
+    always @(posedge pd_clk) pd_q <= ref_pd;
     assign pd_raw = pd_q;
 `else
+    wire ref_a, ref_b, tk_a, tk_b;
+    sg13g2_inv_16 u_ra (.A(REF),    .Y(ref_a));
+    sg13g2_inv_16 u_rb (.A(ref_a),  .Y(ref_b));
+    sg13g2_inv_16 u_ka (.A(tap[7]), .Y(tk_a));
+    sg13g2_inv_16 u_kb (.A(tk_a),   .Y(tk_b));
+    sg13g2_buf_4  u_kc (.A(tk_b),   .X(pd_clk));
+    assign ref_pd = ref_b;
     sg13g2_dfrbp_1 u_pd (
-        .Q(pd_raw), .Q_N(), .CLK(tap[7]), .D(REF), .RESET_B(RST_N)
+        .Q(pd_raw), .Q_N(), .CLK(pd_clk), .D(ref_pd), .RESET_B(RST_N)
     );
 `endif
 
@@ -291,25 +313,40 @@ module dll8_tile #(
             wire tk  = tap[k];
             wire tk4 = tap[(k + 4) % 8];
             wire rda, rpn;
+            // Set path: two inverters matched to the reset former's inv+nand,
+            // so t_set and t_rst cancel and the high time is T/2 (not
+            // T/2 + reset-path delay).  Mismatch is one gate type (~10-20 ps).
+            wire ts1, ts2;
 `ifdef SIMULATION
-            // Zero-delay stdcell models collapse the edge-former pulse; the
-            // real cells measure ~20-40 ps/stage (dll8_regen_spice.py).
-            wire rda_c, rpn_c;
+            // Zero-delay stdcell models collapse the pulse; the real cells
+            // measure ~20-40 ps/stage (dll8_regen_spice.py).  The set path is
+            // given the same 2-stage delay so the sim models the matching.
+            wire rda_c, rpn_c, ts1_c, ts2_c;
             assign #(30) rda = rda_c;
             assign #(30) rpn = rpn_c;
+            assign #(30) ts1 = ts1_c;
+            assign #(30) ts2 = ts2_c;
             (* keep *) (* dont_touch = "true" *)
             sg13g2_inv_1 u_rda (.A(tk4), .Y(rda_c));
             (* keep *) (* dont_touch = "true" *)
             sg13g2_nand2_1 u_rpn (.A(tk4), .B(rda), .Y(rpn_c));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sda (.A(tk), .Y(ts1_c));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sdb (.A(ts1), .Y(ts2_c));
 `else
             (* keep *) (* dont_touch = "true" *)
             sg13g2_inv_1 u_rda (.A(tk4), .Y(rda));
             (* keep *) (* dont_touch = "true" *)
             sg13g2_nand2_1 u_rpn (.A(tk4), .B(rda), .Y(rpn));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sda (.A(tk), .Y(ts1));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sdb (.A(ts1), .Y(ts2));
 `endif
             wire rst_comb = rpn & RST_N;
             reg q;
-            always @(posedge tk or negedge rst_comb) begin
+            always @(posedge ts2 or negedge rst_comb) begin
                 if (!rst_comb) q <= 1'b0;
                 else           q <= 1'b1;
             end

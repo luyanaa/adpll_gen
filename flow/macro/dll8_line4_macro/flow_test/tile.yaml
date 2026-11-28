@@ -1,0 +1,60 @@
+# LibreLane: production dll8_tile (2x dll8_line4 macros + control plane).
+# Purpose: prove the tile control plane (per-element Bresenham decoder, DFF PD,
+# DLF, SR regen) places and routes with the hardened strips, including the
+# 8 x 127 = 1016 independent EN nets (one bus per element).
+#
+# The macro liberty is a stub (comb arcs only) -- this run is a routability/
+# DRC exercise, not timing closure.  Timing signoff comes after the strip is
+# re-characterized with SPEF.
+
+DESIGN_NAME: dll8_tile
+VERILOG_FILES:
+  - dir::../../../../src/dll8_tile.v
+  - dir::../../../../src/digital_loop_filter.v
+  - dir::../dll8_line4.v
+
+PDK: ihp-sg13g2
+STD_CELL_LIBRARY: sg13g2_stdcell
+
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD]
+SCL_GROUND_PINS: [VSS]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal5
+
+CLOCK_PORT: REF
+
+# Two strips at 2x the PDN vertical pitch apart (151.2 um) so both macro
+# Metal5 pad windows land on the same vertical stripe phase, exactly as in
+# the accepted macro-integration test.  Wide channels host the decoders and
+# the stdcell rows.
+DIE_AREA: [0, 0, 300, 760]
+FP_SIZING: absolute
+FP_CORE_UTIL: 10
+PL_TARGET_DENSITY_PCT: 35
+
+PDN_CFG: dir::pdn_cfg.tcl
+PDN_VOFFSET: 65.24
+
+MACROS:
+  dll8_line4:
+    gds: dir::../dll8_line4.gds
+    lef: dir::../dll8_line4.lef
+    lib:
+      nom_typ_1p20V_25C:
+        - dir::../dll8_line4__tt.lib
+      nom_slow_1p08V_125C:
+        - dir::../dll8_line4__ss.lib
+      nom_fast_1p32V_m40C:
+        - dir::../dll8_line4__ff.lib
+    instances:
+      line_a:
+        location: [10, 20]
+        orientation: N
+      line_b:
+        location: [161.2, 20]
+        orientation: N

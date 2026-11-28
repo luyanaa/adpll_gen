@@ -21,7 +21,9 @@
 
 module dll8_line4 #(
     parameter real    BASE_PS   = 110.0,
-    parameter real    STEP_PS   = 3.0
+    parameter real    STEP_PS   = 3.0,
+    parameter real    A2_PS     = 0.0,
+    parameter real    A3_PS     = 0.0
 ) (
     input  wire         IN,
     output wire         OUT,
@@ -63,9 +65,9 @@ module dll8_line4 #(
     assign TAP3 = n4;
     assign OUT  = n4;
 
-    DLL8_ELEM #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS)) e0 (.IN(n0), .CODE(c0), .OUT(n1), .LOAD());
-    DLL8_ELEM #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS)) e1 (.IN(n1), .CODE(c1), .OUT(n2), .LOAD());
-    DLL8_ELEM #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS)) e2 (.IN(n2), .CODE(c2), .OUT(n3), .LOAD());
-    DLL8_ELEM #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS)) e3 (.IN(n3), .CODE(c3), .OUT(n4), .LOAD());
+    DLL8_ELEM #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS), .A2_PS(A2_PS), .A3_PS(A3_PS)) e0 (.IN(n0), .CODE(c0), .OUT(n1), .LOAD());
+    DLL8_ELEM #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS), .A2_PS(A2_PS), .A3_PS(A3_PS)) e1 (.IN(n1), .CODE(c1), .OUT(n2), .LOAD());
+    DLL8_ELEM #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS), .A2_PS(A2_PS), .A3_PS(A3_PS)) e2 (.IN(n2), .CODE(c2), .OUT(n3), .LOAD());
+    DLL8_ELEM #(.BASE_PS(BASE_PS), .STEP_PS(STEP_PS), .A2_PS(A2_PS), .A3_PS(A3_PS)) e3 (.IN(n3), .CODE(c3), .OUT(n4), .LOAD());
 endmodule
 `default_nettype wire

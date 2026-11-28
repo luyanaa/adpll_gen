@@ -37,6 +37,17 @@ module dll8_tile_tb;
                                   (CORNER == 1) ?  59.0 :  89.0;
     parameter real    STEP_PS   = (CORNER == 0) ? 5.0 :
                                   (CORNER == 1) ? 3.5 : 4.0;
+    // measured element code->delay curve (stock_elem.json cubic fit)
+    parameter real    A2_PS     = (CORNER == 0) ? -0.029813 :
+                                  (CORNER == 1) ?  0.040914 : -0.029813;
+    parameter real    A3_PS     = (CORNER == 0) ?  0.000360 :
+                                  (CORNER == 1) ? -0.000050 :  0.000360;
+    // DFF detector: data-lead offset and clock-path buffer (SPICE measured /
+    // liberty buf_4)
+    parameter real    PD_OFF_PS = (CORNER == 0) ? 122.0 :
+                                  (CORNER == 1) ?  61.0 : 122.0;
+    parameter real    PD_CLK_PS = (CORNER == 0) ? 108.0 :
+                                  (CORNER == 1) ?  51.0 : 108.0;
 
     reg REF, RST_N, EN;
     wire [7:0]  PHASE;
@@ -46,7 +57,9 @@ module dll8_tile_tb;
     wire [3:0]  MEAS_COUNTS;
 
     dll8_tile #(
-        .BASE_PS(BASE_PS), .STEP_PS(STEP_PS)
+        .BASE_PS(BASE_PS), .STEP_PS(STEP_PS),
+        .A2_PS(A2_PS), .A3_PS(A3_PS),
+        .PD_OFF_PS(PD_OFF_PS), .PD_CLK_PS(PD_CLK_PS)
     ) dut (
         .REF(REF), .RST_N(RST_N), .EN(EN),
         .KI(16'd1), .CODE_INIT(RAIL == 0 ? 7'd0 : 7'd127), .HOLD(1'b0),
