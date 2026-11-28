@@ -28,6 +28,17 @@
 //                          waveform, so the tpHL/tpLH chain asymmetry is
 //                          common-mode and the output duty is set by the TAP
 //                          SPACING (T/2 at lock), not by the input duty.
+//                          Each structural instance ends in a matched
+//                          sg13g2_buf_4 output stage.  Why: the two latch
+//                          outputs drive DIFFERENT loads in the integrated
+//                          top (master -> the TDC offset chain; CK90 -> the
+//                          EN gate + pad), and that load difference lands
+//                          directly on CK90 (it is not divided by 4).  The
+//                          buffer makes the latch's own output load
+//                          identical on both sides; the residual is the
+//                          buffer's load sensitivity, one stage removed and
+//                          absorbed by TRIM_MASTER_PS.
+//
 //                          Structural: sg13g2_dfrbp_1 D=1 clocked by SET_IN,
 //                          async-reset by an active-low pulse from RESET_IN
 //                          built as rn = ~(RESET_IN & ~RESET_IN_d) with
@@ -142,12 +153,15 @@ module DDR1_CLK_REGEN #(
             // starting at the RESET_IN rising edge.
             (* keep *) (* dont_touch = "true" *)
             sg13g2_nand2b_1 u_rp (.A_N(rdb), .B(RESET_IN), .Y(rn));
-            wire tied_hi;
+            wire tied_hi, q_raw;
             (* keep *) (* dont_touch = "true" *)
             sg13g2_tiehi u_tie (.L_HI(tied_hi));
             (* keep *) (* dont_touch = "true" *)
             sg13g2_dfrbp_1 u_sr (
-                .CLK(SET_IN), .D(tied_hi), .RESET_B(rn), .Q(Q), .Q_N());
+                .CLK(SET_IN), .D(tied_hi), .RESET_B(rn), .Q(q_raw), .Q_N());
+            // matched output stage (identical cell in every instance)
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_buf_4 u_obuf (.A(q_raw), .X(Q));
         end
     endgenerate
 endmodule

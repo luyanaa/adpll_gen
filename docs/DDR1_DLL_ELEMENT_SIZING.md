@@ -128513,8 +128513,25 @@ optional.  CK90 bang-bang dither at lock: ±10/±8/±7 ps SS/TT/FF.
    D_set, regen phase shift) — IN PROGRESS, flow/characterization/
    ddr1_dll_regen.py, full 32+8-element deck with m-collapsed fingers.
 2. ~~N=8 confirmation run~~ DONE (table above).
-3. Integration loading: end-of-chain buffer + TDC reference chain input
-   load; re-derive headroom.
+3. **Integration loading — ANALYSED 2026-11-28 (closed by construction):**
+   the ratio path is load-matched by topology, not by tuning:
+   - CKIN drives the master's FIRST segment and the slave segment directly,
+     so input loading (including the TDC measurement chain and the monitor)
+     is common-mode between the 4-segment master and the 1-segment slave;
+     it changes the absolute edge rate and therefore the LOCK CODE, never
+     the 4:1 ratio.
+   - Each segment output drives exactly one element input except the master
+     END (drives the master regen latch) and the slave END (drives the CK90
+     regen latch) — matched because both are the same cell.
+   - The one real asymmetry was AFTER the latches: the master latch output
+     drives the TDC offset chain while the CK90 latch output drives the EN
+     gate + pad, and that difference is NOT divided by 4.  Fixed by adding a
+     matched `sg13g2_buf_4` output stage inside every `DDR1_CLK_REGEN`
+     instance (src/ddr1_dll_phys.v); the residual is the buffer's own load
+     sensitivity, absorbed by TRIM_MASTER_PS.
+   Consequence: integration loading cannot break the ratio, only shift the
+   lock code (headroom 33-95 codes absorbs it) and the absolute systematic
+   (TRIM).
 4. ~~Mismatch~~ CLOSED analytically 2026-11-28: the SerDes session measured
    element-to-element matching at 1.5-1.7 ps sigma (same macro, same code;
    docs/dco_8phase_decision.md, good enough that per-element trim was

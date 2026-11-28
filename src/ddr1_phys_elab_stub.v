@@ -26,3 +26,7 @@ module sg13g2_dfrbp_1(input D, input RESET_B, input CLK, output Q, output Q_N);
     assign Q   = q;
     assign Q_N = ~q;
 endmodule
+
+module sg13g2_buf_4(input A, output X);
+    assign X = A;
+endmodule
