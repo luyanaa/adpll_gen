@@ -953,8 +953,9 @@ The verified topology is a **cross-coupled NAND SR latch** with two
 *identical* 5-inverter + NAND pulse formers (one on TAP[k] = SET, one on
 TAP[k+4] = RESET).  Both edges then go through the same structure; the
 latch's fall path is one gate longer than its rise path, compensated by
-2 extra inverters on the SET input.  Measured duty: **49.45 %** (T = 4 ns,
-SS, 60 % raw input).  The RTL implements exactly that network; the sim
+2 extra inverters on the SET input.  Measured duty with a 60 % raw input:
+**49.45 / 49.85 / 50.00 % at SS / TT / FF** (T = 4 ns) -- PVT tracking comes
+from the matched structures, not from tuning.  The RTL implements exactly that network; the sim
 models the measured effective set/reset delays (62/40 ps) so the tb duty
 (49.0-49.7 %) matches the cell-level number.
 
