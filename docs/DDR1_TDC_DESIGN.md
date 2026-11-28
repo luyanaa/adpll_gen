@@ -113,3 +113,97 @@ the same hardware. Design detail for the rewrite.
 3. The chain cells are FINE_DELAY_CELL (IMPL=1 path exists already).
 4. Verification: same TB + new checks for quantization behavior at
    simulated τ of 45/65/100 ps (parameterize the behavioral chain delay).
+
+## Capture dynamics of the flash chain (added 2026-11-28, structural design input)
+
+The naive "launch CKIN into the chain, capture with master_out" has richer
+dynamics than the quantization analysis above implies. Worked through:
+
+**Capture types** (chain length ~1.3 ns « T/2 = 5 ns, one edge in flight):
+- (a) rising wavefront mid-chain — VALID signed measurement. Capture times
+  within ±1-2 ns of the CKIN edge are always type (a) or (d).
+- (b) wavefront fully through, falling edge not yet entered — chain reads
+  all-ones = saturated LARGE POSITIVE. Correct sign for a late master.
+- (c) falling wavefront mid-chain (CKIN is 50% duty: falling edge enters
+  at +5 ns) — the tap vector LOOKS like a valid partial measurement but
+  encodes the falling-edge position, which is meaningless for phase. Can
+  read either sign depending on how far the falling edge has propagated.
+- (d) all-zero — valid negative saturation (master early) or post-passage.
+
+**Reachability of the garbage zone (c):** capture times in (c) are master
+edges arriving ≥ ~5 ns after CKIN — i.e. residuals beyond ±T/2-scale
+offsets. Post-lock, the loop holds residuals within ±192 ps, and a loss
+excursion trips within 3 measurements (~30 ns) while the residual is still
+inside ±1 ns; the loop steps at most 1 LSB (37-50 ps master) per cycle, so
+the garbage zone is UNREACHABLE in normal post-lock operation. During
+acquisition the initial residual is constrained inside ±T/2 of lock by the
+element sizing (docs/DDR1_DLL_ELEMENT_SIZING.md CODE_INIT retarget), and
+type-(c) reads then cannot occur either: master edges arrive within ±T/2
+of CKIN, i.e. before the falling wavefront enters the chain... careful:
+residual approaching +T/2 means master edges close to +5 ns — the falling
+edge entry. The acquisition-residual budget must actually keep initial
+residual inside ±(T/2 - chain_len - margin), tighter than ±T/2. At the
+N=6 sizing: initial residuals are within ±2.7 ns of zero at all corners —
+inside ±(5 - 1.3 - margin) only if margin ≤ 1 ns. Marginal at SS
+(+2.67 ns); chain-level SPICE + acquisition simulation must confirm the
+first measurements are type-(a). If not, CODE_INIT per-corner trimming or
+a shortened chain is the fix.
+
+**Divergence from the behavioral modulo-fold model:** the behavioral model
+(fold into ±T/2 then quantize) makes deep positive residuals read negative
+(wrong-way walk, caught fail-closed — verified in ddr1_ck90_dll_tdc_tb.v
+check7). The real chain SATURATES positive for moderately late masters
+(type b) and reads garbage only in the unreachable-in-practice zone (c).
+The behavioral model is thus PESSIMISTIC for deep offsets — a conservative
+verification stance: silicon will behave no worse than the model. Keep as
+is; document, don't "fix".
+
+**Sign at the zero crossing:** within ±1 tap the capture position is the
+measurement; the bang-bang dead zone is the quantization itself, already
+verified. Metastability of the capture flops near the transition is
+debounced by the LOCK_N/LOSS_N counters (bang-bang self-corrects single
+bad samples) — MTBF analysis is a pass-2 signoff item.
+
+**Structural implementation shape (TDC_IMPL=1):**
+- reference chain: 2×M FINE_DELAY_CELLs, center tap defines zero; sizing
+  M from measured τ per corner so the ±loss band (640 ps) is inside the
+  chain at SS (M·100 ≥ 2×640+margin → 2M ≈ 16-20 cells).
+- capture: master_out (inverted edge sense) clocks the tap-vector flops.
+- decode: thermometer position of the 1→0 transition relative to center,
+  one bubble tolerated; saturate at the ends.
+- downstream interface identical to the behavioral model: signed e_meas in
+  ps units (position × TDC_STEP_PS parameter), so loop/lock/loss logic is
+  shared verbatim.
+
+## Structural implementation landed (2026-11-28): single-chain + delayed-master
+
+`src/ddr1_dll_tdc.v` implements the signed flash TDC. The two-chain
+start/stop-swap structure considered above was REJECTED during design:
+the stop-chain capture overwrite window is only ~the residual itself
+(hundreds of ps) and the CKIN->master CDC of its reading would add two
+flops = up to 2 master periods of measurement latency, retuning the whole
+loop's lock dynamics. Instead:
+
+- ONE measurement chain started by CKIN; capture clocked by master_d =
+  MASTER delayed through an offset chain of NTAP/2 identical cells.
+- zero residual reads the CENTER tap; signed range ±(NTAP/2)·τ; negative
+  residuals of ANY depth clamp at −(NTAP/2)·τ with correct sign (capture
+  before wavefront entry = all-zero).
+- positive saturation (correct sign) for e ∈ [+(NTAP/2)·τ, +(T/2 − D0 −
+  chain_len)] ≈ [+1040, +2920] ps at TT/NTAP=32. Past that lies the
+  falling-wavefront interference zone and then the periodic ±T/2 aliasing
+  that NO periodic measurement can avoid.
+- consumption one master period after capture (T − D0 ≈ 8.7 ns of
+  metastability settling) — single domain, no synchronizers.
+- IMPL=0 behavioral transport-delay cells exercise the full capture/
+  decode path in RTL; IMPL=1 binds FINE_DELAY_CELL for synthesis/STA.
+
+**Acquisition budget consequence** (with N=6 element sizing): initial
+residuals −1800…+2670 ps across corners are correct-sign everywhere
+(negative side clamps correctly at any depth; SS +2670 is inside the
+positive saturation window ending +2920). Marginal at SS: if chain-level
+SPICE moves the SS initial residual past +2920, CODE_INIT must rise.
+
+Unit verification `src/ddr1_dll_tdc_tb.v`: 11/11 PASS — signed residuals
+±192/±640 ps within ±2 taps, tap quantization, correct-sign clamps,
+no modulo aliasing inside the documented window, return-to-zero.
