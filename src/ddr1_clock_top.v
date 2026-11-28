@@ -160,71 +160,96 @@ module DDR1_CLOCK_TOP #(
     // CK90 select (incl. BLOCKER 2 test inversion) is declared with the
     // phase monitor below; CK90_PHY uses ck90_sel.
 
-    // BLOCKER 2 (attempt 3) TEST SCAFFOLDING (pass-2 removal): ck90_inv_tb
-    // injects the forbidden 180-degree inverse CK90 (= ~CK, "force
-    // ck90_sel = ~ck_a") so the monitor test can prove sample 3 catches
-    // what samples 1+2 miss.  A procedural `force ck90_sel = ~ck_a` cannot
-    // be used: iverilog evaluates the force RHS only ONCE (constant), which
-    // would collapse the injection to a stuck level caught by sample 1.
-    // This is a plain internal reg (not a port, constant 0 in synthesis)
-    // driving a continuous mux, so the inversion tracks ck_a exactly;
-    // pass 2 deletes it and relies on a real fault-injection path.
+    // BLOCKER 2 (attempt 3) TEST SCAFFOLDING — simulation-only since
+    // 2026-11-28 (pass-2 removal done): the inversion mux must not exist in
+    // silicon (it is a mux on a clock).  `ifdef SIMULATION keeps it for the
+    // fault-injection tests (iverilog evaluates a procedural force RHS only
+    // once, so a literal `force ck90_sel = ~ck_a` collapses to a stuck
+    // level; the reg-driven mux tracks ck_a exactly).  Synthesis sees only
+    // the direct connection.
+`ifdef SIMULATION
     reg  ck90_inv_tb = 1'b0;
     wire ck90_sel = ck90_inv_tb ? ~ck_a : ck90_b;
+`else
+    wire ck90_sel = ck90_b;
+`endif
 
     // ------------------------------------------------------------------
-    // BLOCKER 6 + BLOCKER 2 (attempt 3): CK90 phase monitor (structural,
-    // CK-clocked).  Three samples per CK period; a failure after
-    // CK90_MON_N consecutive CK cycles is sticky and feeds ERR.
-    //   1. at CK rise        CK90 must be LOW   (rejects 0 degrees)
-    //   2. at CK fall        CK90 must be HIGH  (rejects 270 degrees)
-    //   3. at CK rise+2.8 ns CK90 must be HIGH  (rejects 180 degrees)
-    // Sample 3 is the BLOCKER 2 fix: samples 1+2 alone are satisfied by
-    // BOTH the correct 90-degree lag AND the forbidden 180-degree inverse
-    // (they differ only in the middle quadrants), so the old monitor
-    // accepted an inverted CK90.  A correct 90-degree CK90 rises at
-    // CK-rise+2.5 ns (+/-0.2 ns spec), so at 2.8 ns it reads HIGH; the
-    // 180-degree inverse (~CK, or CK delayed by T/2) is LOW across the
-    // whole CK high phase, so sample 3 reads LOW and the monitor trips.
-    // 2.8 ns = T/4 + 0.3 ns clears both the coincident 2.5 ns edge and the
-    // +0.2 ns spec corner with margin.  Behavioural implementation: a
-    // delayed replica of CK (assign #2.8) clocking the sample flop.
-    // Real-cell equivalent: an edge-order comparator / TDC that timestamps
-    // the CK90 edge against CK and checks lag within T/4 +/-0.2 ns.
-    // For candidate B this checks the DLL quadrature; for candidate A the
-    // structural negedge relationship (NOT duty accuracy -- real-cell
-    // duty/phase accuracy is pass 2).
+    // BLOCKER 6 + BLOCKER 2: CK90 edge-order monitor, MCK-grid structural
+    // implementation (2026-11-28, replaces the behavioral `assign #2.8`
+    // third sample and the negedge-CK second sample — neither is
+    // synthesizable on the posedge-only sg13g2 library).
+    //
+    // Structure: MCK (300 MHz) is exactly 3x CK and CK rises are aligned
+    // to MCK rising edges (DDR1_CLK_DE3 construction), so the CK period
+    // spans exactly 3 MCK edges at +0, +3.33, +6.67 ns.  A 2-deep sample
+    // shift of ck_a in the MCK domain detects the CK falling edge with
+    // one-edge latency:
+    //   cka_h == 2'b10 at an MCK edge  <=>  ck_a was HIGH at the previous
+    //   edge and LOW at this one.  Since CK falls at +5.0 ns (between MCK
+    //   edges), the first LOW sample is at +6.67 and the detection fires
+    //   at the FOLLOWING edge = +10.0 ns = exactly the next CK rising
+    //   edge ("det").  det therefore recurs once per CK period, perfectly
+    //   aligned, with no counter and no knowledge of the DE3 phase.
+    //   Per CK period the monitor then samples ck90_sel at two grid
+    //   points where it is STATIC (transitions are >= 0.8 ns away):
+    //     at det            (+0.0 ns): ck90 must be LOW  (correct rises at
+    //                        +2.5; rejects 0-degree and 270-degree)
+    //     at det delayed x2 (+6.67ns): ck90 must be HIGH (correct falls at
+    //                        +7.5 worst case 50% duty; rejects the
+    //                        180-degree inverse which is LOW here, and
+    //                        270-degree which fell at +2.5)
+    //   Margins: correct CK90 rise +2.5+-0.2 -> >= 2.3 ns clear of the
+    //   +0 sample; fall at +7.5 (50% duty) / +7.0 (worst asymmetry, regen
+    //   makes this structural) -> >= 0.8 ns clear of the +6.67 sample.
+    //   Both samples are metastability-free by construction; the ck_a
+    //   samples feeding det are metastability-exposed only at the
+    //   coincident CK-rise edge, whose value does not affect the falling-
+    //   edge detection pattern.
+    //
+    //   A failure in CK90_MON_N consecutive CK periods sets sticky
+    //   ck90_mon_err (feeds ERR, drops PHY_LOCKED) — same semantics as
+    //   before.  Counting is qualified by phy_lock_core (the monitor
+    //   validates locked operation; acquisition correctness is the DLL's
+    //   own lock/loss logic).  Everything is in the MCK domain;
+    //   phy_lock_core is latch_q (MCK domain) ANDed with quasi-static
+    //   levels, the same reference the original ck_a-domain monitor used.
     // ------------------------------------------------------------------
-    wire ck_a_qtr;
-    assign #2.8 ck_a_qtr = ck_a;          // CK rise + T/4 + margin
-    reg  ck90_at_qtr;
-    always @(posedge ck_a_qtr or posedge RST) begin
-        if (RST) ck90_at_qtr <= 1'b0;
-        else     ck90_at_qtr <= ck90_sel; // sampled at CK-rise + 2.8 ns
-    end
-
-    reg ck90_at_fall;
-    always @(negedge ck_a or posedge RST) begin
-        if (RST) ck90_at_fall <= 1'b1;
-        else     ck90_at_fall <= ck90_sel;
-    end
-
+    reg [1:0] cka_h;
+    reg [1:0] det_pipe;
+    reg       mon_bad;
     reg [3:0] mon_fail;
     reg       ck90_mon_err;
-    always @(posedge ck_a or posedge RST) begin
+    wire      det = (cka_h == 2'b10);
+
+    always @(posedge MCK_IN or posedge RST) begin
         if (RST) begin
+            cka_h        <= 2'b00;
+            det_pipe     <= 2'b00;
+            mon_bad      <= 1'b0;
             mon_fail     <= 4'd0;
             ck90_mon_err <= 1'b0;
-        end else if (phy_lock_core) begin
-            if ((ck90_sel !== 1'b0) || (ck90_at_fall !== 1'b1) ||
-                (ck90_at_qtr !== 1'b1)) begin
-                if (mon_fail >= CK90_MON_N-1) ck90_mon_err <= 1'b1;
-                else                          mon_fail     <= mon_fail + 1'b1;
-            end else begin
-                mon_fail <= 4'd0;
-            end
         end else begin
-            mon_fail <= 4'd0;
+            cka_h    <= {cka_h[0], ck_a};
+            det_pipe <= {det_pipe[0], det};
+
+            // once per CK period, at the det edge: evaluate the period
+            if (det) begin
+                if (phy_lock_core) begin
+                    if (mon_bad || (ck90_sel !== 1'b0)) begin
+                        if (mon_fail >= CK90_MON_N-1) ck90_mon_err <= 1'b1;
+                        else                          mon_fail     <= mon_fail + 1'b1;
+                    end else begin
+                        mon_fail <= 4'd0;
+                    end
+                end else begin
+                    mon_fail <= 4'd0;
+                end
+                mon_bad <= 1'b0;
+            end else if (det_pipe[1] && (ck90_sel !== 1'b1)) begin
+                // +6.67 ns sample of this CK period: must be HIGH
+                mon_bad <= 1'b1;
+            end
         end
     end
 
