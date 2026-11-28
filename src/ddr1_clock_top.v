@@ -2,32 +2,24 @@
 // pass 1 behavioral/RTL sketch.  Requirements:
 // /grid/ddr-phy/docs/ADPLL_DDR1_REQUIREMENTS.md sections 1-2.
 //
-// ARCHITECTURE DECISION (latest): candidate B (master/slave ratio DLL) is
-// the Phase-B architecture.  USE_DLL90 defaults to 1.  Candidate A
-// (dual-edge divide-by-2) is kept for comparison/experiments.
-//
-//   MCK_IN (200 MHz, ADPLL integer divider output -- the fractional
+// ARCHITECTURE (locked 2026-11-28, docs/DDR1_FREQ_PLAN.md):
+//   MCK_IN (300 MHz, ADPLL DCO=300MHz FCW=3 path -- the fractional
 //           OUT_DIV output is FORBIDDEN for DDR use)
-//     -> optional ADCC_TOP (duty correction, USE_DCC=1, candidate-A
-//           experiments only) -> MCK_PATH
-//     -> DDR1_CK90_DE2 (candidate A / always present as the CK source)
-//          CK  = 100 MHz
-//     -> DDR1_CK90_DLL (candidate B, default: USE_DLL90=1)
+//     -> DDR1_CLK_DE3 dual-edge divide-by-3
+//          CK  = 100 MHz, duty = 1/3-attenuated input duty error
+//                (input 40/60% -> output 46.7/53.3%, inside DDR1 45-55%)
+//     -> DDR1_CK90_DLL master/slave ratio DLL
 //          CK90 = CK + 2.5 ns by the 4:1 replica ratio, locked on CK
 //     -> SYS_CLK = CK/2 toggle flop (edge-aligned with CK by construction)
 //     -> fail-closed output gate (PHY_LOCKED)
 //
-// Why DCC is optional and OFF by default (USE_DCC=0):
-//   Candidate B locks on CK, and CK is the toggle-divider output of MCK.
-//   A divide-by-2 toggle is 50% duty by construction (both halves are one
-//   MCK period), so CK/CK90 for candidate B do not need the ADCC.  The
-//   ADCC remains instantiable (USE_DCC=1) for candidate-A experiments,
-//   where CK90 is the negedge divider and therefore carries MCK duty
-//   error.  With USE_DCC=0 the DCC outputs are tied off (dcc_locked=1,
-//   dcc_err=0) and the DCC-loss ERR arming naturally does not apply.
-//   TICK/SAMP are exposed as INPUT PORTS so a USE_DCC=1 build can be
-//   driven by real/simulated sources (pass 2 real-cell evidence); with
-//   USE_DCC=0 they are unused inputs.
+// 2026-11-28 architecture cleanup: candidate A (dual-edge divide-by-2)
+//   and the ADCC duty-corrector path are REMOVED.  They were 200 MHz
+//   experiments; at the committed 300 MHz MCK the DE2 divider would
+//   produce 150 MHz, and no 300 MHz candidate-A duty experiment exists.
+//   The divide-by-3 output duty is input-duty-attenuated 3x (DE3 algebra,
+//   src/ddr1_clk_de3.v) and needs no correction inside the DDR1 45-55%
+//   spec.  TICK/SAMP ports are gone with the DCC.
 //
 // Interface contract (lane):
 //   * CK_PHY/CK_PHY_N 100 MHz complementary pair, 45-55% duty, both low
@@ -36,13 +28,9 @@
 //   * SYS_CLK 50 MHz, rise edge-aligned with a CK_PHY rise.
 //   * PHY_LOCKED high only when the full chain is valid; deasserts
 //     immediately on loss.
-//   * ERR sticky: set on (a) PLL_LOCKED drop after lock, (b) candidate-B
-//     DLL rail / false lock / lost lock / acquisition timeout, (c) DCC_ERR
-//     when USE_DCC=1 AND after the DCC path has locked once (the raw
-//     ADCC_ERR ILL flags pulse while the DCC code integrates up from
-//     reset, so it must not poison a fresh acquisition), (d) CK90
-//     phase-monitor violation.  ERR clears only on RST and blocks
-//     PHY_LOCKED.
+//   * ERR sticky: set on (a) PLL_LOCKED drop after lock, (b) DLL rail /
+//     false lock / lost lock / acquisition timeout, (c) CK90 phase-monitor
+//     violation.  ERR clears only on RST and blocks PHY_LOCKED.
 //
 // BLOCKER FIXES in this revision
 // ------------------------------
@@ -51,13 +39,6 @@
 //    like src/ddr_clock_phy.v (`dll_en = DLL_EN & PLL_LOCKED`).  It can no
 //    longer lock on the ADPLL acquisition-time frequency; a PLL lock loss
 //    resets it and the next PLL lock re-acquires.
-//
-// 5. DCC lock loss is now visible after the latch.  err_q is armed (sticky)
-//    on dcc_err, and a debounced DCC-lock-loss (DCC_LOSS_DBC_CY consecutive
-//    MCK cycles with dcc_locked=0, default 4) clears latch_q.  The debounce
-//    is needed because DCC_LOCKED is a dither-window level; 4 cycles is
-//    long enough to reject the normal dither while dropping PHY_LOCKED
-//    fail-closed on a real loss.  With USE_DCC=0 all of this is tied off.
 //
 // 6. CK90 phase monitor.  A CK-clocked structural monitor samples CK90 at
 //    three points per CK period: the CK rising edge (must be low, rejects
@@ -102,47 +83,33 @@
 // periods and cannot cover a 10 ns lock; candidate B therefore implements
 // its own quarter-replica ratio DLL (see ddr1_ck90_dll.v header).
 //
-// Reset semantics: RST async, active high.  All dividers/toggles are
-// forced to 0, so the first CK edge after release is at the next MCK
-// rising edge and CK90 lags it by one MCK half-period.
+// Reset semantics: RST async, active high.  The DE3 divider and all
+// toggles are forced to 0, so the first CK edge after release is aligned
+// to an MCK rising edge (DDR1_CLK_DE3 header) and CK90 lags it by the
+// DLL-controlled T/4.
 //
 // DBG[15:0] layout (documented):
 //   [15] PHY_LOCKED   [14] ERR (sticky)   [13] BYPASS(committed)
-//   [12] USE_DLL90    [11] DLL_LOCKED     [10] DLL_ERR
-//   [9] DCC_LOCKED    [8] DCC_ERR         [7:0] DLL code (B; 0 if A)
+//   [12] 1'b1 (was USE_DLL90)             [11] DLL_LOCKED     [10] DLL_ERR
+//   [9:8] 2'b00 (was DCC)                 [7:0] DLL code
 //
 // Parameters:
-//   MCK_DIV is documentation-only in pass 1 (MCK_IN is assumed to be
-//   already the final 200 MHz integer-divided master clock).
+//   MCK_DIV is documentation-only (MCK_IN is assumed to be already the
+//   final 300 MHz integer-path master clock; the divider is inside).
 `timescale 1ns/1ps
 
 module DDR1_CLOCK_TOP #(
-    parameter integer MCK_DIV     = 2,    // documentation-only, see header
-    parameter integer USE_DLL90   = 1,    // 1 = candidate B (default), 0 = A
+    parameter integer MCK_DIV     = 3,    // documentation-only, see header
+    parameter integer USE_DLL90   = 1,    // vestigial (candidate A removed
+                                          // 2026-11-28); must stay 1
     parameter integer BYPASS_EN   = 1,    // Phase A bypass mux present
-    parameter integer LOCK_DBC_CY = 8,    // debounce MCK cycles
-    // ADCC (duty corrector) plumbing -- off by default for candidate B
-    parameter integer USE_DCC     = 0,
-    parameter [15:0]  DCC_KI      = 16'd1,
-    // BLOCKER 5: DCC-lock-loss debounce (MCK cycles).
-    // Attempt-3 tuning 4 -> 16: measured on the re-integration path, the
-    // DCC presents dcc_locked LOW stretches of up to 9 MCK cycles after
-    // every reset (harness: /tmp/opencode/t_dcc.v, worst=9 over 40 us).
-    // With 4, every normal re-integration debounced "loss" dropped the
-    // latch and (once arming follows dcc_loss_deb) armed sticky ERR ~10 us
-    // after every reset, permanently poisoning a fresh acquisition.
-    // 16 = 40 ns still catches a real loss in far under one check window
-    // (check13 forces 200 ns = 80 MCK) while 2x margin over the 9-cycle
-    // integration glitch.
-    parameter integer DCC_LOSS_DBC_CY = 16, // DCC-lock-loss debounce (MCK cy)
+    parameter integer LOCK_DBC_CY = 8,    // debounce MCK cycles (300 MHz:
+                                          // 8 cy = 26.7 ns)
     parameter integer CK90_MON_N  = 3     // CK90 phase-monitor failure count
 ) (
-    input  wire MCK_IN,       // 200 MHz master clock (ADPLL integer divider)
+    input  wire MCK_IN,       // 300 MHz master clock (ADPLL integer path)
     input  wire PLL_LOCKED,   // upstream PLL lock status
     input  wire RST,          // async reset, active high
-    // Pass-1-only DCC sources (unused when USE_DCC=0)
-    input  wire TICK,         // DCC loop clock
-    input  wire SAMP,         // DCC incommensurate duty sampler
     // Phase A bypass: external (board-provided) clocks
     input  wire EXT_CK, EXT_CK90, EXT_SYS_CLK,
     input  wire BYPASS,       // 1 = pass external clocks through
@@ -156,47 +123,20 @@ module DDR1_CLOCK_TOP #(
     wire en    = ~RST;
 
     // ------------------------------------------------------------------
-    // Optional duty correction on the 200 MHz MCK (candidate-A experiments).
+    // 300 MHz -> 100 MHz dual-edge divide-by-3 (50% at 50% input duty,
+    // duty error attenuated 3x; DDR1_CLK_DE3 header).  This is the only
+    // CK source: candidate A (DE2 divide-by-2) was retired with the
+    // 200 MHz frequency plan.
     // ------------------------------------------------------------------
-    wire        mck_dcc;
-    wire        dcc_locked, dcc_err;
-    wire [7:0]  dcc_code;
-
-    generate
-        if (USE_DCC) begin : g_dcc
-            ADCC_TOP #(
-                .COARSE_NDELS(15), .MID_NDELS(15), .FINE_NDELS(31),
-                .FILTER_BITS(16), .LOCK_COUNT(16),
-                .MID_W(4), .COARSE_W(8)
-            ) u_dcc (
-                .CLK_IN(MCK_IN), .RST_N(RST_N), .TICK(TICK), .SAMP(SAMP),
-                .EN(en), .KI(DCC_KI),
-                .DUTY_OFFS(8'd0), .DUTY_INIT(8'd0),
-                .CLK_OUT(mck_dcc), .LOCKED(dcc_locked), .ERR(dcc_err),
-                .DUTY_CODE(dcc_code)
-            );
-        end else begin : g_dcc_byp
-            // Candidate B: CK is a /2 toggle, 50% duty by construction, so
-            // the DCC is not needed.  Tied off; DCC-loss logic is inert.
-            assign mck_dcc    = MCK_IN;
-            assign dcc_locked = 1'b1;
-            assign dcc_err    = 1'b0;
-            assign dcc_code   = 8'd0;
-        end
-    endgenerate
-
-    // ------------------------------------------------------------------
-    // Candidate A: dual-edge dividers on the (optionally corrected) MCK.
-    // ------------------------------------------------------------------
-    wire ck_a, ck90_a;
-    DDR1_CK90_DE2 u_de2 (
-        .MCK(mck_dcc), .RST(RST), .EN(en),
-        .CK(ck_a), .CK90(ck90_a)
+    wire ck_a;
+    DDR1_CLK_DE3 u_de3 (
+        .MCK(MCK_IN), .RST(RST), .EN(en),
+        .OUT(ck_a)
     );
 
     // ------------------------------------------------------------------
-    // Candidate B: master/slave ratio DLL locked on CK.  BLOCKER 4: park
-    // it in reset/disabled until PLL_LOCKED, and re-acquire on lock loss.
+    // Master/slave ratio DLL locked on CK.  BLOCKER 4: park it in
+    // reset/disabled until PLL_LOCKED, and re-acquire on lock loss.
     // ------------------------------------------------------------------
     wire        dll_locked_c, dll_err_c;
     wire [8:0]  dll_code_c;
@@ -230,8 +170,7 @@ module DDR1_CLOCK_TOP #(
     // driving a continuous mux, so the inversion tracks ck_a exactly;
     // pass 2 deletes it and relies on a real fault-injection path.
     reg  ck90_inv_tb = 1'b0;
-    wire ck90_nonsel = USE_DLL90 ? ck90_b : ck90_a;
-    wire ck90_sel = ck90_inv_tb ? ~ck_a : ck90_nonsel;
+    wire ck90_sel = ck90_inv_tb ? ~ck_a : ck90_b;
 
     // ------------------------------------------------------------------
     // BLOCKER 6 + BLOCKER 2 (attempt 3): CK90 phase monitor (structural,
@@ -289,20 +228,7 @@ module DDR1_CLOCK_TOP #(
         end
     end
 
-    wire ck90_ok = (USE_DLL90 ? dll_locked_c : 1'b1) & ~ck90_mon_err;
-
-    // ------------------------------------------------------------------
-    // BLOCKER 5: debounced DCC-lock loss (inert when USE_DCC=0).
-    // ------------------------------------------------------------------
-    reg [7:0] dcc_loss_cnt;
-    always @(posedge MCK_IN or posedge RST) begin
-        if (RST || !USE_DCC)      dcc_loss_cnt <= 8'd0;
-        else if (dcc_locked)      dcc_loss_cnt <= 8'd0;
-        else if (dcc_loss_cnt < DCC_LOSS_DBC_CY[7:0])
-            dcc_loss_cnt <= dcc_loss_cnt + 1'b1;
-    end
-    wire dcc_loss_deb = (USE_DCC != 0) &&
-                        (dcc_loss_cnt >= DCC_LOSS_DBC_CY[7:0]);
+    wire ck90_ok = dll_locked_c & ~ck90_mon_err;
 
     // ------------------------------------------------------------------
     // BLOCKER 8(c): BYPASS is synchronized/committed only while RST is
@@ -353,11 +279,9 @@ module DDR1_CLOCK_TOP #(
     reg  [15:0] dbc;
     reg         latch_q;
 
-    wire dcc_ok        = USE_DCC ? dcc_locked : 1'b1;
-    wire chain_ok      = PLL_LOCKED & ck90_ok & dcc_ok & ~err_q;
+    wire chain_ok      = PLL_LOCKED & ck90_ok & ~err_q;
     wire latch_next    = chain_ok && (dbc >= LOCK_DBC_CY-1);
-    wire phy_lock_core = latch_q & PLL_LOCKED & ck90_ok & ~err_q
-                       & ~dcc_loss_deb;
+    wire phy_lock_core = latch_q & PLL_LOCKED & ck90_ok & ~err_q;
 
     // Merged lock/ERR block: locked_seen is armed from the SAME edge that
     // sets latch_q (blocker 9).
@@ -376,24 +300,7 @@ module DDR1_CLOCK_TOP #(
             end
 
             if (!bypass_q && locked_seen && !PLL_LOCKED) err_q <= 1'b1;
-            if (!bypass_q && USE_DLL90 && dll_err_c)     err_q <= 1'b1;
-            // DCC_ERR (ADCC: lost_r | ILL_P | ILL_N) is NOT armable as a
-            // raw level: lost_r latches high on the FIRST out-of-band code
-            // excursion and never clears until RST, and ILL flags pulse
-            // during normal acquisition -- both fire within ~20 us of any
-            // reset while the DCC is still integrating.  Arming on that
-            // level (gated or not by the top-level locked_seen) latches
-            // err_q before the chain can hold lock, permanently killing
-            // PHY_LOCKED after any mid-test reset (BLOCKER 5 follow-up:
-            // observed uC never re-locking; whether check13 passed was a
-            // race between the arm pulse and the lockC sample).
-            // The arm condition is therefore the DEBOUNCED DCC lock LOSS --
-            // the same condition that clears latch_q -- which is a real,
-            // sustained loss (>= DCC_LOSS_DBC_CY MCK cycles) after the
-            // chain has locked at least once (locked_seen).  check13's
-            // 200 ns forced loss trips it within 40 ns; normal
-            // re-integration lows (<= 9 MCK measured) never do.
-            if (!bypass_q && USE_DCC && dcc_loss_deb && locked_seen) err_q <= 1'b1;
+            if (!bypass_q && dll_err_c)                  err_q <= 1'b1;
             if (!bypass_q && ck90_mon_err)               err_q <= 1'b1;
 
             // ---- latch set / clear ----
@@ -405,8 +312,7 @@ module DDR1_CLOCK_TOP #(
                 if (dbc >= LOCK_DBC_CY-1) latch_q <= 1'b1;
             end else begin
                 dbc <= 16'd0;
-                // DCC dither loss (debounced) is now a latch-clear source.
-                if (!PLL_LOCKED || !ck90_ok || dcc_loss_deb)
+                if (!PLL_LOCKED || !ck90_ok)
                     latch_q <= 1'b0;
             end
         end
@@ -451,7 +357,7 @@ module DDR1_CLOCK_TOP #(
     // ------------------------------------------------------------------
     // Debug taps (see header for layout).
     // ------------------------------------------------------------------
-    assign DBG = {PHY_LOCKED, ERR, bypass_q, (USE_DLL90 != 0),
-                  dll_locked_c, dll_err_c, dcc_locked, dcc_err,
+    assign DBG = {PHY_LOCKED, ERR, bypass_q, 1'b1,
+                  dll_locked_c, dll_err_c, 2'b00,
                   dll_code_c[7:0]};
 endmodule

@@ -192,7 +192,8 @@ def main() -> int:
         "technology": "ihp-sg13g2",
         "characterization_level": "L3_transistor_dense_axes",
         "points": len(rows),
-        "results": [dict(coarse_code=k[0], mid_code=k[1], fine_code=k[2], **v)
+        "results": [dict(coarse_code=k[0], mid_code=k[1], fine_code=k[2],
+                         period_ns=v["period_ns"], freq_mhz=v["freq_mhz"])
                     for k, v in sorted(rows.items())],
         "note": "30 ns fine-bank sweep; no PEX/PVT/jitter signoff.",
     }, indent=2) + "\n")
