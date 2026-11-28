@@ -820,3 +820,43 @@ quasi-static and each thermo bit drives exactly one gate); N fingers turn ON
 with strap HIGH, P fingers with strap LOW — the decoder must emit
 `strap[j] = th[j] XOR (j odd)`. This matches the verified SPICE harness
 (sel/selb). Also corrected stale 0.9×1.1 µm references → 1.0×1.0 µm frozen.
+
+### CUSTOM BANK SIGNOFF COMPLETE (2026-11-28, `212e4d8`)
+
+| artifact | DRC (KLayout 0.30.12) | LVS |
+|---|---|---|
+| 127-finger array (NY=5000/PY=5500) | **0** | — |
+| element macro (+2×inv_4, IN/MID/OUT, rails) | **0** | **MATCH** |
+| dll8_line4 (4-elem chain, TAP[3:0], ctrl escapes) | **0** | **MATCH** |
+
+Extraction: 64+63 switches, 64+63 moscaps (1.0×1.0), inv FETs, taps — all correct.
+
+**The LVS false-negative root cause** (cost an afternoon of lane iterations):
+strict port mode in this environment fails even the PDK's own `sg13_lv_nmos`
+unit testcase — measured directly. The PDK's own regression framework
+(`testing/run_regression.py`) always passes `--ignore_top_ports_mismatch`;
+with that flag both the PDK testcase and our macro pass. During the
+false-negative chase the lane had already rebuilt the array to NY=5000 (N-row
+pitch) — which independently fixed the REAL moscap_n extraction-loss issue
+(cores merge below 4.1 µm pitch, measured) — so the pitch rebuild was not
+wasted, but the final dozen "mismatch" iterations were chasing a phantom.
+Independent confirmation of correctness: net-signature multiset comparison of
+extracted vs reference — 262 nets/260 devices, **exactly isomorphic**.
+
+**Pre-committed PEX judgement — final application**: tool-based RCX does not
+exist in this flow (documented). The spread question is closed at the
+construction level instead: (a) all 8 elements are byte-identical layout →
+intra-bank contributions are common-mode by construction; (b) TAP drops are
+identical straight M2, length-matched by construction; (c) device mismatch
+was measured in SPICE (1.5–1.7 ps). Residual unmeasurable: systematic
+process/voltage gradients across the 358 µm strip — accepted as a documented
+risk, mitigated by the shared rails and the small absolute budget headroom
+(sim 5–16 ps vs 30 ps).
+
+**Integration contract** (in REPORT_signoff.md): control straps ENk_j
+thermometer-ascending; N ON-high/P ON-low → decoder emits th[j] XOR (j odd);
+TAP[3:0] length-matched; chain on M2; continuous rails.
+
+Remaining for DLL8 integration: LEF abstract for the macro, 2×line4 +
+decoder/TDC/loop in the LibreLane DLL8 tile, then the MPW-critical items
+(full-chip top, corners, power/jitter).
