@@ -66,26 +66,39 @@ module DDR1_CK90_DE2 (
     reg ck90_q;
     reg [1:0] rel_sync;
 
+    // Explicit inverted clock for the negedge logic: sg13g2 has posedge
+    // flops only and synthesis rejects mixed-edge clocking on one net
+    // (bisected on DDR1_CLK_DE3, 2026-11-28).  In synthesis this inversion
+    // must be a clock-tree inverter cell whose delay is part of the clock
+    // network latency budget -- pass-2 STA item.
+    wire mck_n;
+    assign mck_n = ~MCK;
+
     // Two-flop async-assert / sync-deassert reset synchronizer.  Both
     // stages are clocked on the MCK falling edge so the release strobe
     // (rel_sync[1]) only ever changes during the MCK low phase, exactly
     // one MCK edge after the previous stage.
-    always @(negedge MCK or posedge RST) begin
+    always @(posedge mck_n or posedge RST) begin
         if (RST) rel_sync <= 2'b00;
         else     rel_sync <= {rel_sync[0], 1'b1};
     end
     wire rel = rel_sync[1];
 
+    // Reset discipline as async-reset + synchronous-enable: the mixed
+    // `if (RST || !rel)` form is NOT synthesizable (yosys proc rejects it
+    // as multiple edge-sensitive events).  rel is stable across each MCK
+    // edge by the synchronizer construction, so gating the update is
+    // timing-equivalent to holding the flop in reset until release.
     // Posedge divider -> CK.  Reset value 0.
     always @(posedge MCK or posedge RST) begin
-        if (RST || !rel) ck_q <= 1'b0;
-        else             ck_q <= ~ck_q;
+        if (RST)         ck_q <= 1'b0;
+        else if (rel)    ck_q <= ~ck_q;
     end
 
     // Negedge divider -> CK90.  Same async reset event as ck_q.
-    always @(negedge MCK or posedge RST) begin
-        if (RST || !rel) ck90_q <= 1'b0;
-        else             ck90_q <= ~ck90_q;
+    always @(posedge mck_n or posedge RST) begin
+        if (RST)         ck90_q <= 1'b0;
+        else if (rel)    ck90_q <= ~ck90_q;
     end
 
     assign CK   = EN & ck_q;
