@@ -56,6 +56,16 @@ module ddr1_ck90_dll_tdc_tb;
         .CK90(ck90_100), .DLL_LOCKED(locked_100), .DLL_ERR(err_100),
         .DBG_CODE(code_100));
 
+    // Calibration instance: TRIM_MASTER_PS = +256 master ps must ADVANCE
+    // CK90 = shorten the locked segment by TRIM/4 = 64 ps = exactly ONE
+    // behavioral CODE LSB (master step = 64 ps at NQ_SEG=64, CELL_X4_STEP=1).
+    wire ck90_tm, locked_tm, err_tm;
+    wire [8:0] code_tm;
+    DDR1_CK90_DLL #(.TDC_STEP_PS(65), .TRIM_MASTER_PS(256)) utrim (
+        .CKIN(ckin), .RST(rst), .EN(1'b1),
+        .CK90(ck90_tm), .DLL_LOCKED(locked_tm), .DLL_ERR(err_tm),
+        .DBG_CODE(code_tm));
+
     // TDC_IMPL=1 pair (TT/SS tap steps): structural signed flash TDC
     // (src/ddr1_dll_tdc.v, behavioral cells) in the loop — validates loop
     // dynamics with the real one-period measurement latency.
@@ -149,9 +159,14 @@ module ddr1_ck90_dll_tdc_tb;
         $display("check2: phases %0d/%0d/%0d ps", ph45, ph65, ph100);
 
         // ---------------- post-lock dither ----------------
+        // check3 (contract change 2026-11-28): the loop now HOLDS in a dead
+        // zone when the measured residual quantizes to zero.  Stability is
+        // the requirement (bang-bang dither at CK90 broke the 100 ps pk-pk
+        // jitter spec, src/ddr1_jitter_tb.v); tracking is checked separately
+        // below by perturbation, so "no changes" cannot mean "frozen".
         count_dither(40, nchange45, nchange65, nchange100);
-        chk(nchange45 >= 2 && nchange65 >= 2 && nchange100 >= 2,
-            "check3: post-lock bang-bang dither alive at all corners");
+        chk(nchange45 == 0 && nchange65 == 0 && nchange100 == 0,
+            "check3: post-lock code STABLE in dead zone at all quantizations");
         begin : dith_i
             integer j, nc; reg [8:0] pv;
             nc = 0; pv = code_i65;
@@ -159,7 +174,39 @@ module ddr1_ck90_dll_tdc_tb;
                 @(posedge ckin); #0.001;
                 if (code_i65 !== pv) begin nc = nc + 1; pv = code_i65; end
             end
-            chk(nc >= 2, "check3b: TDC_IMPL=1 post-lock dither alive");
+            chk(nc == 0, "check3b: TDC_IMPL=1 post-lock code stable in dead zone");
+        end
+
+        // ---- check3c: the dead zone is NOT a freeze: a one-tap offset
+        // (forced on the TT instance) must re-engage the loop.
+        begin : track_chk
+            integer j, moved; reg [8:0] c_before;
+            c_before = code_65;
+            force u65.dly_off_x4 = 32'd2;    // +128 ps master = 2 taps > HOLD_PS
+            moved = 0;
+            for (j = 0; j < 20; j = j + 1) begin
+                @(posedge ckin); #0.001;
+                if (code_65 !== c_before) moved = 1;
+            end
+            chk(moved == 1,
+                "check3c: one-tap perturbation re-engages the loop (tracking preserved)");
+            release u65.dly_off_x4; u65.dly_off_x4 = 32'd0;
+            #100;
+        end
+
+        // check20: TRIM_MASTER_PS calibration applies in the right direction
+        // and at the right scale: +256 master ps = exactly 1 behavioral CODE
+        // LSB (64 ps master), so the trimmed instance locks 1 code lower.
+        tmo = 0;
+        while (!locked_tm && tmo < 5000) begin #10; tmo = tmo + 10; end
+        chk(locked_tm && !err_tm, "check20a: TRIM instance locks");
+        begin : trim_chk
+            integer d;
+            d = code_65 - code_tm;   // untrimmed minus trimmed
+            $display("check20: code untrimmed=%0d trimmed=%0d delta=%0d (expect 4 for 256/64)",
+                     code_65, code_tm, d);
+            chk(d >= 3 && d <= 5,
+                "check20b: TRIM_MASTER_PS=256 lowers the lock code by ~4 LSB");
         end
 
         // ---------------- +512 ps master step: no false trip, correct sign

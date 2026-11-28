@@ -183,16 +183,25 @@
 //     is false), so a coincident reset/master-edge never double-pops.
 `timescale 1ns/1ps
 
-// One quarter-replica delay segment: NQ_SEG identical fine cells in
-// series, all enabled, per-cell delay set by the shared CODE.
+// One quarter-replica delay segment (BEHAVIORAL MODEL, IMPL-equivalent of
+// the structural DDR1_DLL_SEG_PHYS = 2x dll8_line4).
 //
-// Quiet code update: each stage LATCHES the code as an edge passes
-// through it and applies the latched value to the NEXT edge, so a code
-// update never re-times an edge in flight (the standard DLL practice).
+// Delay law: total = NQ_SEG * (CELL_X4_MIN + CODE*CELL_X4_STEP) / 4 ps.
+// It is applied as ONE transport delay, not as NQ_SEG chained #-delays:
+// at the 1 ps timescale a per-stage delay of 0.25 ps/LSB cannot be
+// represented, so the chained form quantized to a 64 ps staircase every
+// 4 codes (measured 2026-11-28) — 4x coarser than the law and a direct
+// cause of a 128 ps CK90 limit cycle.  The aggregate form has exactly
+// NQ_SEG*CELL_X4_STEP/4 = 16 ps per code at the defaults.
 //
-// NO RESET: see the header.  Resetting a stage while a `<= #d` assignment
-// is in flight leaves that stage stuck and swallows the next edge.  The
-// chain is a pure delay line and is reset-free by design.
+// Quiet code update: the segment LATCHES the code when an edge enters and
+// applies the latched value to that edge (ch <= CODE takes effect for the
+// NEXT edge), so a code update never re-times an edge in flight.
+//
+// NO RESET: see the header.  Resetting while a `<= #d` assignment is in
+// flight overwrites it and leaves the segment at the wrong level,
+// swallowing the next edge.  The chain is a pure delay line and is
+// reset-free by design.
 module DDR1_DLL_SEG #(
     parameter integer NQ_SEG       = 64,
     parameter integer CODE_BITS    = 9,
@@ -209,26 +218,31 @@ module DDR1_DLL_SEG #(
     // every segment instance -> identical delay per CODE).  Note: do NOT
     // precompute this into an integer with always @(*); iverilog misses
     // the t=0 declaration-initializer event and leaves it X.
-    wire [NQ_SEG:0] nd;
-    assign nd[0]   = IN;
-    assign OUT     = nd[NQ_SEG];
-
-    genvar i;
-    generate
-        for (i = 0; i < NQ_SEG; i = i + 1) begin : stage
-            reg r = 1'b0;
-            reg [CODE_BITS-1:0] ch = CODE_INIT[CODE_BITS-1:0]; // next-edge code
-            always @(nd[i]) begin
-                // current edge leaves with the previously latched code.
-                // DLY_OFF_X4 is test-only scaffolding (normally 0).
-                r  <= #((CELL_X4_MIN + (ch * CELL_X4_STEP) + DLY_OFF_X4)/4000.0)
-                      nd[i];
-                // latch the present code for the next edge
-                ch <= CODE;
-            end
-            assign nd[i+1] = r;
-        end
-    endgenerate
+    // BEHAVIORAL MODEL: ONE transport delay for the whole segment with the
+    // AGGREGATE delay law  NQ_SEG * (CELL_X4_MIN + CODE*CELL_X4_STEP)/4 ps.
+    //
+    // Why not NQ_SEG chained #-delays (as before 2026-11-28): each stage's
+    // delay is rounded to the 1 ps timescale, so the documented 0.25 ps/LSB
+    // per stage never existed -- the chain quantized to ~1 ps per stage =
+    // 64 ps per segment per 4 codes, a staircase 4x coarser than intended.
+    // That staircase inflated the post-lock limit cycle to 128 ps at CK90
+    // (measured by src/ddr1_jitter_tb.v) and made the model disagree with
+    // the measured silicon step (28-39 ps/segment/code).  With the
+    // aggregate law the per-code step is exactly NQ_SEG*CELL_X4_STEP/4 ps
+    // = 16 ps at the defaults, i.e. the intended law and the closest
+    // whole-ps approximation of the measured element.
+    //
+    // The per-edge code commit is unchanged and still structural in
+    // spirit: `ch` captures CODE when an edge enters, so a code update
+    // never re-times an edge already in flight.
+    reg r = 1'b0;
+    reg [CODE_BITS-1:0] ch = CODE_INIT[CODE_BITS-1:0];   // next-edge code
+    always @(IN) begin
+        r  <= #((NQ_SEG * (CELL_X4_MIN + (ch * CELL_X4_STEP)) + NQ_SEG*DLY_OFF_X4)/4000.0)
+              IN;
+        ch <= CODE;
+    end
+    assign OUT = r;
 endmodule
 
 module DDR1_CK90_DLL #(
@@ -286,7 +300,36 @@ module DDR1_CK90_DLL #(
     //   correct connectivity verification), silicon adds D_set.
     parameter integer SEG_IMPL          = 0,
     parameter integer REGEN             = 0,
-    parameter integer REGEN_IMPL        = 0
+    parameter integer REGEN_IMPL        = 0,
+    // Systematic-phase calibration (P1 item of ddr-phy
+    // ADPLL_DDR1_SECOND_CHECK.md §2.2: "matched replica gate OR calibrate in
+    // the lock target").  MASTER-scale ps added to the residual target:
+    // the loop drives (master_delay - T + TRIM) to 0, so a POSITIVE value
+    // ADVANCES CK90 (shortens the locked segment delay by TRIM/4).
+    //
+    // Value to null the real-cell systematic, from SPICE/STA:
+    //   REGEN=0:  TRIM = 4 * D_and                    (EN gate on CK90 only)
+    //   REGEN=1:  TRIM = 3 * D_set + 4 * D_and        (regenerated master
+    //             measured -> (3/4)D_set leaks to CK90, plus the EN gate)
+    // Default 0 = no calibration, the behavioral/corner-neutral setting.
+    // ddr1_ck90_dll_tdc_tb.v check20 verifies the sign and magnitude.
+    parameter integer TRIM_MASTER_PS    = 0,
+    // Dead-zone half-width, MASTER-scale ps.  The loop holds the code when
+    // |measured residual| <= HOLD_PS.  It must be >= BOTH:
+    //   * the master step  NQ_SEG*CELL_X4_STEP = 64 ps at the defaults --
+    //     otherwise an unlucky phase offset leaves no reachable code inside
+    //     the band (2-cycle limit cycle, observed at 45/100 ps taps);
+    //   * the measurement quantization TDC_STEP_PS -- otherwise a reading
+    //     one tap away (which may be a tenth of a tap in reality) keeps
+    //     stepping the code: observed as a 5-6 code wander (80 ps at CK90)
+    //     with a 65 ps tap against a 64 ps band.
+    // Default = max(step, tap).  The converged residual is then bounded by
+    // HOLD_PS master = <=25 ps CK90 (SS), inside the +-100 ps target, and
+    // the code is STATIONARY in steady state (zero dither contribution to
+    // period/c2c jitter).
+    parameter integer STEP_MASTER_PS    = NQ_SEG * CELL_X4_STEP,
+    parameter integer HOLD_PS           = (TDC_STEP_PS > STEP_MASTER_PS)
+                                          ? TDC_STEP_PS : STEP_MASTER_PS
 ) (
     input  wire                  CKIN,   // 100 MHz CK (the master locks ON it)
     input  wire                  RST,    // async reset, active high (state only)
@@ -506,6 +549,7 @@ module DDR1_CK90_DLL #(
             while (e_meas >  REF_PERIOD_PS/2) e_meas = e_meas - REF_PERIOD_PS;
             while (e_meas <= -REF_PERIOD_PS/2) e_meas = e_meas + REF_PERIOD_PS;
             // quantize (round to nearest tap, ties away from zero)
+            e_meas = e_meas + TRIM_MASTER_PS;
             if (e_meas >= 0)
                 e_meas = ((e_meas + TDC_STEP_PS/2) / TDC_STEP_PS) * TDC_STEP_PS;
             else
@@ -519,7 +563,7 @@ module DDR1_CK90_DLL #(
         // PREVIOUS master edge — one extra period of loop latency, exactly
         // what silicon will have.
         if (TDC_IMPL != 0) begin
-            e_meas   = tdc_e;
+            e_meas   = tdc_e + TRIM_MASTER_PS;
             meas_vld = rise & tdc_vld;
         end
 
@@ -550,17 +594,35 @@ module DDR1_CK90_DLL #(
 
                     // ---- one-LSB bang-bang step driven by the measured sign ----
                     // e > 0 : master late (delay > T)  -> decrease code
-                    // e <= 0: master early             -> increase code
-                    if (e > 0) begin
+                    // e < 0 : master early             -> increase code
+                    // e == 0: within half a TDC tap   -> HOLD (dead zone)
+                    //
+                    // The dead zone is not cosmetic: without it the loop
+                    // steps every measurement even when the residual is
+                    // inside the quantization cell, producing a limit cycle
+                    // of +-1-2 LSB whose period jitter landed at 128 ps
+                    // pk-pk at CK90 (src/ddr1_jitter_tb.v, 2026-11-28) --
+                    // over the 100 ps spec.  Holding at quantized zero
+                    // freezes the code in steady state (jitter contribution
+                    // -> 0) while TRACKING IS PRESERVED: any drift that
+                    // moves the residual out of the cell re-engages the
+                    // loop on the very next measurement.  Standard DLL
+                    // dead-zone practice; the loss detector is unchanged
+                    // and still trips on |e| > LOSS_TOL for LOSS_N samples.
+                    if (e > HOLD_PS) begin
                         if (code_q != code_min) code_q <= code_q - 1'b1;
                         if (code_q == code_min) rail_cnt <= rail_cnt + 1'b1;
                         else                    rail_cnt <= 16'd0;
                         last_dir <= 2'b10;
-                    end else begin
+                    end else if (e < -HOLD_PS) begin
                         if (code_q != code_max) code_q <= code_q + 1'b1;
                         if (code_q == code_max) rail_cnt <= rail_cnt + 1'b1;
                         else                    rail_cnt <= 16'd0;
                         last_dir <= 2'b01;
+                    end else begin
+                        // inside one step of zero: hold (dead zone)
+                        rail_cnt <= 16'd0;
+                        last_dir <= 2'b00;
                     end
                     // DEBUG ONLY: consecutive same-direction count.
                     if (last_dir == ((e > 0) ? 2'b10 : 2'b01))

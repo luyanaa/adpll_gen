@@ -98,17 +98,30 @@ module ddr1_ck90_compare_tb;
             chk(dll_locked === 1'b1, "candidate B DLL locked");
             chk(dll_err === 1'b0,   "candidate B no DLL_ERR");
             #200; // settle
-            // BLOCKER FIX check: the loop must keep tracking after lock.
-            // Count code changes over 24 CK cycles: a frozen loop would
-            // report 0, a dithering bang-bang loop reports many.
+            // BLOCKER FIX check (contract 2026-11-28): the loop holds its
+            // code in a dead zone when the residual quantizes to zero
+            // (dither broke the CK90 jitter spec); tracking is proven by
+            // perturbation instead of by dither.
             prev_code = dbg_code; dcnt = 0;
             for (k = 0; k < 24; k = k + 1) begin
                 @(posedge ck_a);
                 if (dbg_code !== prev_code) dcnt = dcnt + 1;
                 prev_code = dbg_code;
             end
-            chk(dcnt >= 2, "candidate B code dithers post-lock (not frozen)");
-            chk(dll_err === 1'b0, "candidate B still no DLL_ERR after dither");
+            chk(dcnt == 0, "candidate B code stable in dead zone post-lock");
+            begin : track_c
+                integer moved; reg [8:0] c_before;
+                c_before = dbg_code;
+                force u_b.dly_off_x4 = 32'd2;   // > HOLD_PS
+                moved = 0;
+                for (k = 0; k < 20; k = k + 1) begin
+                    @(posedge ck_a); #0.01;
+                    if (dbg_code !== c_before) moved = 1;
+                end
+                chk(moved == 1, "candidate B one-tap offset re-engages tracking");
+                release u_b.dly_off_x4; u_b.dly_off_x4 = 32'd0;
+            end
+            chk(dll_err === 1'b0, "candidate B still no DLL_ERR after tracking");
             sa = 0.0; sb = 0.0;
             for (k = 0; k < 8; k = k + 1) begin
                 @(posedge ck_a);   t1 = $realtime;

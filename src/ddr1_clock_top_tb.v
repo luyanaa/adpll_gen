@@ -285,7 +285,12 @@ module ddr1_clock_top_tb;
         chk(errA === 1'b0, "check5: uA ERR still clear");
         chk(errB === 1'b0, "check5: uB ERR still clear");
 
-        // ---- check 5b: BLOCKER 1 continuous tracking (dither post-lock) ----
+        // ---- check 5b: BLOCKER 1 continuous tracking (dead zone post-lock)
+        //
+        // 2026-11-28 contract change: the DLL holds its code while the
+        // measured residual quantizes to zero (the dither broke the 100 ps
+        // pk-pk CK90 jitter spec).  "Not frozen" is now proven by
+        // PERTURBATION: a one-tap offset must move the code.
         begin : dither_chk
             integer changes;
             reg [8:0] prev;
@@ -296,11 +301,26 @@ module ddr1_clock_top_tb;
                 if (uB.g_dll.u_dll.code_q !== prev) changes = changes + 1;
                 prev = uB.g_dll.u_dll.code_q;
             end
-            $display("check5b: uB DLL code changed %0d times in 40 MCK cycles (dither)", changes);
+            $display("check5b: uB DLL code changed %0d times in 40 MCK cycles (dead zone)", changes);
             $fdisplay(fd, "check5b: uB DLL code changed %0d times in 40 MCK cycles", changes);
-            chk(changes >= 2, "check5b: DLL keeps dithering after lock (not frozen)");
+            chk(changes == 0, "check5b: DLL code stable in dead zone after lock");
             chk((lockB === 1'b1) && (errB === 1'b0),
-                "check5b: DLL stays locked/error-free while tracking");
+                "check5b: DLL stays locked/error-free while holding");
+            // tracking preserved: a one-tap offset must move the code
+            begin : track_b
+                integer moved; reg [8:0] c_before;
+                c_before = uB.g_dll.u_dll.code_q;
+                force uB.g_dll.u_dll.dly_off_x4 = 32'd2;   // > HOLD_PS
+                moved = 0;
+                for (k = 0; k < 30; k = k + 1) begin
+                    @(posedge mck); #0.01;
+                    if (uB.g_dll.u_dll.code_q !== c_before) moved = 1;
+                end
+                chk(moved == 1, "check5b: one-tap offset re-engages the DLL loop");
+                release uB.g_dll.u_dll.dly_off_x4;
+                uB.g_dll.u_dll.dly_off_x4 = 32'd0;
+                #100;
+            end
         end
 
         // ---- check 6: lock release across ck_a release phases (no runt) ----

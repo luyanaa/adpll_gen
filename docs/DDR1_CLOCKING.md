@@ -62,12 +62,31 @@ Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
   **removed** (both false-fire). Modulo aliasing during acquisition is caught
   fail-closed (watchdog/loss trip); element sizing must keep the initial delay
   within ±T/2 of lock (pass-2 constraint, `docs/DDR1_DLL_ELEMENT_SIZING.md`).
-- **The DLL loop never freezes** — continuous tracking is the PVT-drift mechanism.
-  Post-lock dither is ±1 LSB (±16 ps at CK90).
-- **CK90 structural monitor** samples at CK rise (expect low), CK fall (expect high),
-  and CK rise + 2.8 ns (expect high) — the third sample is what distinguishes the
-  forbidden 180° inverse from correct 90° lag. Three consecutive failures → sticky
-  ERR + lock drop.
+- **The DLL loop tracks continuously but HOLDS in a dead zone** (contract
+  change 2026-11-28, forced by the jitter spec): the loop steps ±1 LSB only
+  while `|measured residual| > HOLD_PS`, where HOLD_PS = max(master step, TDC
+  tap) (65 ps master = 16 ps CK90 at the defaults).  Inside the band the code
+  is stationary.  Rationale: the old unconditional bang-bang dither produced a
+  limit cycle measured at **128 ps pk-pk / 128 ps c2c at CK90** (jitter TB) —
+  over both spec limits.  The dead zone removes the steady-state dither
+  entirely (measured 0 ps pk-pk clean-input CK90 period after the fix) and any
+  drift that moves the residual out of the band re-engages the loop on the
+  next measurement, so PVT tracking is preserved.  HOLD_PS must be >= the
+  measurement quantization or the loop wanders 5-6 codes (observed with a
+  65 ps tap against a 64 ps band).  "Not frozen" is verified by perturbation
+  in every TB (a 2-tap offset must move the code), not by counting dither.
+- **CK90 structural monitor (MCK-grid, synthesizable since 2026-11-28)**: the
+  behavioral `assign #2.8` third sample and the negedge-CK second sample are gone
+  (neither synthesizes on the posedge-only sg13g2 library). CK rising edges are
+  MCK-posedge aligned by the DE3 construction, so a 2-deep MCK-domain shift of CK
+  detects the CK falling edge repeating once per CK period, exactly at the next CK
+  rise (`det`). Each period the monitor samples CK90 twice: at `det` it must be LOW
+  (correct CK90 rises +2.5 ns later), and one MCK edge later (+6.67 ns) it must be
+  HIGH (correct CK90 rises +2.5 ns, falls +7.5 ns at 50% duty; the forbidden 180°
+  inverse reads both LOW at the second point and HIGH at the first). Sample margins
+  ≥0.8 ns by construction. Three consecutive failing periods → sticky ERR + lock
+  drop (qualified by phy_lock_core; same semantics as before). The test injection
+  mux (`ck90_inv_tb`) is now `ifdef SIMULATION` — absent from synthesis netlists.
 - **DLL held in reset until PLL_LOCKED**; re-acquires on PLL loss/return.
 - **Bypass (Phase A)**: outputs gated by a latch clocked on EXT_SYS_CLK; BYPASS is a
   static strap committed only during reset (changes outside reset are ignored).
@@ -78,16 +97,31 @@ Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
 
 ## Pass 2 — real-cell work (ranked)
 
-1. **DLL tunable element**: the behavioral per-edge-latched segments must become real
-   cells. `FINE_DELAY_CELL`'s MUX is a dummy load — it is NOT a tunable element.
-   The repo's characterized tunable candidate is the **DLL8 switched-moscap element**
-   (`src/dll8_line.v`); evaluate it first. Needs: code→delay map at TT/SS/FF, range
-   covering 2.5 ns ± drift per segment at 100 MHz, per-edge code commit.
-2. **Phase detector hardware**: DONE at behavioral level 2026-11-28 — the
-   measurement now emulates the real TDC semantics (modulo-T fold + tap
-   quantization), proving the loop/lock/loss logic survives them. Remaining:
-   structural tapped-chain TDC (TDC_IMPL=1) per `docs/DDR1_TDC_DESIGN.md`,
-   and the monitor ±2.8 ns sample replaced by the same-chain edge-order check.
+1. **DLL tunable element — DONE 2026-11-28**: N=8 dll8-v4 elements per segment
+   (2× `dll8_line4` hard-macro strips, stock `sg13g2_inv_4` stages + 127-finger
+   thermometer moscap bank), shared 7-bit code, no coarse select, no mux in the
+   delay path (`flow/characterization/ddr1_dll_chain.py` bare-cascade SPICE:
+   lock codes 32.7/71.6/94.2 SS/TT/FF, monotone, FF headroom 33 codes).
+   RTL: `DDR1_DLL_SEG_PHYS` + `DDR1_DLL_THERM_STRAP` in `src/ddr1_dll_phys.v`
+   (strap polarity contract verified 8 codes × 127 bits against the macro
+   contract). Selection parameters `SEG_IMPL`/`REGEN`/`REGEN_IMPL` default 0
+   so the behavioral regression is untouched. Chain asymmetry measured up to
+   +1.5 ns tpHL−tpLH at SS high codes → **matched SR regeneration**
+   (`DDR1_CLK_REGEN`, dfrbp + narrow nand2b reset pulse) at the master
+   measurement point and the CK90 output; regeneration is outside the ratio
+   path, so it cancels in the loop apart from a (3/4)·D_set systematic at
+   CK90 (SPICE quantification in progress, `flow/characterization/
+   ddr1_dll_regen.py`). Mismatch budget: 3σ(CK90) ≈ 16 ps vs ±100 ps target
+   (element matching 1.7 ps measured; layout interdigitation required).
+2. **Phase detector hardware — DONE 2026-11-28**: behavioral TDC semantics
+   (modulo-T fold + tap quantization) in the default path, PLUS the structural
+   signed flash TDC (`src/ddr1_dll_tdc.v`, single chain + delayed-master offset:
+   zero residual reads the center tap, deep offsets clamp correct-sign, one
+   master period of loop latency = physically irreducible). Unit TB 11/11;
+   DLL integration TB 22/22 incl. TDC_IMPL=1 acquisition/dither/512-ps-no-trip/
+   1024-ps-trip; clock-top regression 86/86. yosys `synth -flatten` clean
+   (5498 cells, 32+16 chain cells preserved as black boxes). Monitor third
+   sample replaced by the MCK-grid edge-order check (above).
 3. **IHP130 real-cell flow** (recon complete): clone `flow/sta/run_ddr_phy_corners.sh`
    → swap to `build/pdk_root/ihp-sg13g2` libs (`sg13g2_stdcell_{typ_1p20V_25C,
    slow_1p08V_125C,fast_1p32V_m40C}.lib` + `sg13g2_stdcell.v`/`sg13g2_udp.v` +
@@ -106,8 +140,12 @@ Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
    mux select-dependent load bending, the consumer-side cap of the usable code
    window (SS range 12.65 ns > one 10 ns DQS period aliases high codes),
    first-tap input-net load, `LINE_IMPL=1` for synthesis.
-6. **Jitter**: period-jitter ≤100 ps pk-pk / cycle-to-cycle ≤50 ps evidence
-   (requirements §2 line 44) — no measurement exists yet.
+6. **Jitter — measurement built 2026-11-28**: `src/ddr1_jitter_tb.v` measures
+   output period/c2c jitter at CK_PHY/CK90_PHY over 2000 periods, two
+   configurations (clean input; ±15 ps/half-period injected MCK edge jitter),
+   explicit methodology (spec §2 line 44). Verdicts gate on the 100/50 ps limits;
+   the injected run bounds the chain's own added jitter separately from the DCO
+   budget it must pass through.
 7. **STA/SDF gate-level smoke** for both blocks at TT/SS/FF; lock time < 100 µs
    (target) within the 200 µs DDR1 power-up window.
 
