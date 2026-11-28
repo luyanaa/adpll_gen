@@ -438,18 +438,31 @@ module DDR1_CK90_DLL #(
     // Both sides advance at exactly one entry per CKIN period, so the FIFO
     // occupancy is constant and pairing is exact across resets.
     // ------------------------------------------------------------------
+    integer e_meas;
+    reg     meas_vld;
+
+`ifndef SYNTHESIS
+    // ------------------------------------------------------------------
+    // SIMULATION-ONLY behavioral measurement vehicle ($realtime FIFO).
+    // Yosys cannot parse `real`/`$realtime`, so the whole block is excluded
+    // from synthesis: silicon has no FIFO and no timestamps — the phase
+    // detector IS the structural TDC (TDC_IMPL=1), and the synthesized
+    // netlist therefore uses the TDC branch exclusively (see the loop
+    // block's `ifdef SYNTHESIS`).  Keeping the behavioral path compiled
+    // out of synthesis also removes the last non-synthesizable construct
+    // this file had.
+    // ------------------------------------------------------------------
     real    t_ck_q [0:QDEPTH-1];
     integer q_head = 0, q_tail = 0;   // head/tail; head!=tail => FIFO non-empty
     real    dly_ns;
     integer dly_ps;
-    integer e_meas;
-    reg     meas_vld;
 
     always @(posedge CKIN) begin
         t_ck_q[q_head] = $realtime;
         if (q_head == QDEPTH-1) q_head = 0;
         else                    q_head = q_head + 1;
     end
+`endif
 
     // ------------------------------------------------------------------
     // Loop state — SINGLE driver (BLOCKER 1 fix).
@@ -521,14 +534,32 @@ module DDR1_CK90_DLL #(
     // epoch below discards the first STALE_CY after release as well.
     reg prev_m = 1'b0;      // last observed master_out level
     reg rise;               // genuine master_out rising edge this activation
+`ifdef SYNTHESIS
+    // Synthesis: edge-triggered sensitivity (level-sensitive event lists are
+    // not synthesizable).  Every entry from a posedged m_loop IS a genuine
+    // rising edge, so `rise` is unconditional; the FIFO pairing/epoch logic
+    // does not exist in silicon (the TDC branch below is the detector).
+    always @(posedge m_loop or posedge RST) begin
+        rise = 1'b1;
+`else
     always @(m_loop or posedge RST) begin
-        // Detect a real rising edge regardless of trigger order/merging:
-        // a bare posedge RST re-enters with master_out unchanged -> rise=0.
+        // Simulation: level-sensitive so a bare posedge RST is a no-op for
+        // the FIFO.  Detect a real rising edge regardless of trigger
+        // order/merging: a bare posedge RST re-enters with m_loop unchanged
+        // -> rise = 0.
         rise   = (m_loop === 1'b1) && (prev_m !== 1'b1);
         prev_m = m_loop;
+`endif
 
         // POP (exactly once per genuine rise, even during RST)
         meas_vld = 1'b0;
+`ifdef SYNTHESIS
+        // Silicon: the phase detector is the structural TDC.  No FIFO, no
+        // timestamps, no behavioral folding; E_MEAS already carries the
+        // signed quantized residual in master-scale ps.
+        e_meas   = tdc_e + TRIM_MASTER_PS;
+        meas_vld = rise & tdc_vld;
+`else
         if (rise && (q_head != q_tail)) begin
             dly_ns = $realtime - t_ck_q[q_tail];
             if (q_tail == QDEPTH-1) q_tail = 0;
@@ -566,9 +597,16 @@ module DDR1_CK90_DLL #(
             e_meas   = tdc_e + TRIM_MASTER_PS;
             meas_vld = rise & tdc_vld;
         end
+`endif
 
         if (RST) begin
             // async clear of loop state (never the FIFO head/tail)
+`ifdef SYNTHESIS
+            // (no FIFO in silicon; the measurement nets are constant under
+            //  reset so the async branch has defined values)
+            e_meas   <= 0;
+            meas_vld <= 1'b0;
+`endif
             code_q    <= CODE_INIT[CODE_BITS-1:0];
             locked_q  <= 1'b0;
             err_q     <= 1'b0;
