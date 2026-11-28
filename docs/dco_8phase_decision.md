@@ -952,13 +952,26 @@ the set path matched to the former so t_set and t_rst cancel.
 identical to `dll8_tb.v`, per-tap error relative to the REF grid so it includes
 the lock-point offset; measured element cubic + measured DFF offset / buf_4):
 
-| corner | T | start rail | worst abs(phase_k-kT/8) | duty |
-|---|---|---|---|---|
-| SS 1.08V/125C | 4 ns | 0 / 127 | **8.0 ps** | 49.5 % |
-| FF 1.32V/-40C | 2 ns | 0 / 127 | **5.0 ps** | 49.0 % |
-| SS stress | 2 ns | 0 / 127 | **13.0 ps** | 48.9 % |
+| corner | T | start rail | lock (REF cycles) | worst abs(phase_k-kT/8) | regen spacing |
+|---|---|---|---|---|---|
+| SS 1.08V/125C | 4 ns | 0 | 579 | **18.0 ps** | 9.0 ps |
+| SS 1.08V/125C | 4 ns | 127 | 260 | **18.0 ps** | 9.0 ps |
+| FF 1.32V/-40C | 2 ns | 0 | 495 | **14.0 ps** | 6.0 ps |
+| FF 1.32V/-40C | 2 ns | 127 | 443 | **14.0 ps** | 6.0 ps |
+| SS stress | 2 ns | 0 | 395 | **12.0 ps** | 9.0 ps |
+| SS stress | 2 ns | 127 | 515 | **16.0 ps** | 11.0 ps |
 
-Budget 30 ps; lock from both rails in 419-559 REF cycles.  Residual risks
+Budget 30 ps.  Lock codes land where the measured curve says they must
+(SS code 112, FF code 90, SS/2 ns code 66).
+
+Two acquisition bugs found by the rail matrix and fixed: (a) the loop
+filter's integrator had no runtime init, so the first acquisition update
+wiped CODE_INIT to 0 (the DLF is replaced by a local saturating
+up/down accumulator); (b) at SS/2 ns the high-rail start has 8d = 5232 ps
+> 2T, so the half-period count wraps and reads "short".  A latched wrap flag
+(top of range + meas < 2) drives the walk down until meas is legal again.
+
+Residual risks
 before tapeout: (a) the DFF offset vs buf_4 residual (+10..+21 ps) must be
 re-measured post-layout with real slews/parasitics and closed with the clock
 snake; (b) per-element code routing is 1016 macro pins instead of 127

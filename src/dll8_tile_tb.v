@@ -33,11 +33,16 @@ module dll8_tile_tb;
     parameter integer CORNER    = 0;
     parameter integer RAIL      = 0;   // start code 0 or 127
     parameter real    T_PS      = (CORNER == 0) ? 4000.0 : 2000.0;
-    parameter real    BASE_PS   = (CORNER == 0) ? 148.0 :
-                                  (CORNER == 1) ?  59.0 :  89.0;
-    parameter real    STEP_PS   = (CORNER == 0) ? 5.0 :
-                                  (CORNER == 1) ? 3.5 : 4.0;
-    // measured element code->delay curve (stock_elem.json cubic fit)
+    // Measured element code->delay curve: cubic fit to the SPICE sweep
+    // (flow/characterization/dll8_pex2/stock_elem.json), delay =
+    // BASE + STEP*code + A2*code^2 + A3*code^3.  The coefficients are the
+    // FIT's, not the old linear BASE/STEP with a correction on top.
+    //   SS: a0 146.62, a1 1.9756, a2 -0.029813, a3  0.000360
+    //   FF: a0  64.71, a1 -1.24461, a2 0.040914, a3 -0.000050
+    parameter real    BASE_PS   = (CORNER == 0) ? 146.62 :
+                                  (CORNER == 1) ?  64.71 : 146.62;
+    parameter real    STEP_PS   = (CORNER == 0) ? 1.9756 :
+                                  (CORNER == 1) ? -1.24461 : 1.9756;
     parameter real    A2_PS     = (CORNER == 0) ? -0.029813 :
                                   (CORNER == 1) ?  0.040914 : -0.029813;
     parameter real    A3_PS     = (CORNER == 0) ?  0.000360 :
@@ -135,6 +140,32 @@ module dll8_tile_tb;
         end
     endtask
 
+    // Regenerated-phase spacing: the PHASE[k] rising edges are what the TX/RX
+    // actually use.  A common set-path delay cancels; only the k-to-k spread
+    // enters |phase_k - k*T/8|.
+    task automatic check_regen_spacing;
+        real r0, rk, worst;
+        integer k;
+        begin
+            @(posedge REF);
+            worst = 0.0; r0 = 0.0;
+            for (k = 0; k < 8; k = k + 1) begin
+                @(posedge PHASE[k]);
+                if (k == 0) r0 = $realtime;
+                else begin
+                    rk = ($realtime - r0) - k*T_PS/8.0;
+                    while (rk >  T_PS/2.0) rk = rk - T_PS;
+                    while (rk < -T_PS/2.0) rk = rk + T_PS;
+                    if (rk < 0) rk = -rk;
+                    if (rk > worst) worst = rk;
+                end
+            end
+            $display("   regenerated spacing worst = %0.1f ps (budget 30)  %s",
+                     worst, (worst <= 30.0) ? "PASS" : "FAIL");
+            if (worst > 30.0) errors = errors + 1;
+        end
+    endtask
+
     // ---------------------------------------------------------------- run
     integer n;
     initial begin
@@ -160,6 +191,7 @@ module dll8_tile_tb;
         repeat (10) @(posedge REF);
         check_phases;
         check_duty;
+        check_regen_spacing;
         if (phase_early) begin
             $display("   PHASE active before LOCKED: FAIL");
             errors = errors + 1;

@@ -55,3 +55,48 @@
 3. Real liberty: the stub has placeholder arcs; decide whether STA needs
    extracted timing or whether SPICE-level signoff + blackbox STA exclusion
    is the correct treatment for this analog macro.
+
+---
+
+# Update 2026-11-28 evening: power respin acceptance + per-element codes
+
+## Power respin acceptance (LibreLane, accept1..accept6)
+
+The respin (M5 end pads, 15.5 um pad window) made the macro power reachable:
+
+| run | result |
+|---|---|
+| accept1/2 | PDN-0179 channel repair (die too narrow, ~5 um channels) |
+| accept3 | PDN generated; PSM-0069 VSS: only one stripe polarity per pad window |
+| accept4 | PDN-0175: the 0.62 um pad gap cannot host the 1.9 um horizontal-strap pitch |
+| accept5 | **PSM-0040: all VDD/VSS shapes connected**; GRT-0116 2 residual cells at 5.4% |
+| accept6 | detailed routing reached; 6 Metal5 spacing violations at the EN-pin staircases + PSM-0069 from welltap rails (no stdcells in this top) |
+
+Recipe that works: `PDN_CFG: pdn_cfg.tcl` (stock template + `add_pdn_connect
+-grid macro -layers "Metal5 TopMetal1"`), `PDN_VOFFSET: 65.24` (stripe pair
+lands in both 15.5 um pad windows, strips at 2x the 75.6 um pitch apart),
+`PDN_ENABLE_RAILS: false` (no stdcells in the acceptance top),
+`RUN_TAP_ENDCAP_INSERTION: false` (welltaps would otherwise inject floating
+M1 rails), `GRT_ALLOW_CONGESTION: true` (2 residual cells are a 30%-
+adjustment artifact at 5.4% utilisation).
+
+## EN pin routing on Metal5 is the last DRC blocker
+
+The 508 EN pins per strip are staircased across M3/M4/M5.  Detailed routing
+with `RT_MAX_LAYER: Metal5` leaves 5-10 Metal5 spacing violations where
+signal wires run parallel to the pin staircases (bbox x 76.98-78.26 local
+~67-68, i.e. just inside the pins).  The pins are also on M3/M4, so the
+acceptance config now caps signal routing at Metal4 (`RT_MAX_LAYER:
+Metal4`): vias still land on the M5 pin ends but no M5 wires share the layer.
+accept8 tests this.
+
+## Per-element codes: the tile drives 8 independent 127-bit buses
+
+The production tile (`src/dll8_tile.v`) sets a separate code per element
+(Bresenham fractional split).  This is REQUIRED for the 30 ps budget: the
+SPICE element curve is cubic, the local LSB at the operating point is
+8.85 ps (SS code 112), so a single broadcast code makes tap7 step 71 ps and a
+sign-only loop limit-cycles over it.  Consequence for integration: 8 x 127 =
+1016 EN nets, not 127 broadcast nets.  The strip was designed with
+independent EN0..EN3 buses, so the pins exist; the tile PnR must close the
+congestion (flow_test/tile.yaml).

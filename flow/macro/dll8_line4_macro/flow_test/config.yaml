@@ -20,16 +20,47 @@ GND_NETS: [VSS]
 RT_MIN_LAYER: Metal2
 RT_MAX_LAYER: Metal5
 
+# PDN acceptance for the respin macro: power pins are M5 end pads at local
+# x[67.61,69.26] y[9.18..12.36].  The M4 feed trunks end at x=67.5, leaving a
+# ~1.7 um x-window inside the pads that is unobstructed all the way down:
+# vertical stripes phased onto that window (abs x 78.35 / 229.55 for the two
+# strips, exactly 2x the 75.6 um pitch apart) reach the pads and continue to
+# the die boundary.  No standard cells exist in this test top, so the
+# followpin rails (source of the PDN-0179 channel-repair failures) are off.
+PDN_CFG: dir::pdn_cfg.tcl
+PDN_ENABLE_RAILS: false
+PDN_VOFFSET: 65.24
+
+# Residual global-route congestion is 2 grid cells at 5.4% total usage --
+# an artifact of the 30% global adjustment over the narrow channels, not
+# real capacity.  Detailed routing (the actual acceptance criterion, as in
+# smoke4) is the arbiter; allow GRT to hand over.
+GRT_ALLOW_CONGESTION: true
+
+# This acceptance top has NO standard cells (two hard macros + tie/constant
+# logic only).  Tap/endcap insertion therefore inserts welltap cells whose
+# M1 rails have nothing to connect to (rails are disabled because the earlier
+# PDN-0179 channel-repair failure came from followpin rails) -> PSM-0069 on
+# VDD in accept6.  No stdcells, no taps.
+RUN_TAP_ENDCAP_INSERTION: false
+
+# accept6 left 6 Metal5 spacing violations at the macro EN-pin staircase;
+# give the detailed router more optimization iterations.
+DRT_OPT_ITERS: 128
+
 # no clock in this test top (IN is a data input); STA is meaningless for the
 # stub liberty -- this run validates macro reading/placement/routing only.
 CLOCK_PORT: null
 
-DIE_AREA: [0, 0, 200, 760]
+# Die width: the two strips leave two vertical channels. PDN-0179 in the
+# first acceptance run showed ~4-6 um channels are unrepairable for the
+# stdcell grid; give the center channel ~30 um and the east channel ~20 um.
+DIE_AREA: [0, 0, 240, 760]
 FP_SIZING: absolute
 FP_CORE_UTIL: 5
 PL_TARGET_DENSITY_PCT: 30
 
-# strip is 67.38 x 358.53.  EN pins escape on the RIGHT edge of each strip,
+# strip is 69.26 x 358.53 (power respin widened it).  EN pins escape on the RIGHT edge of each strip,
 # so the two strips must not face each other's right edge: place both with
 # orientation N, right edges toward the core center channel.
 MACROS:
@@ -48,7 +79,7 @@ MACROS:
         location: [10, 20]
         orientation: N
       line_b:
-        location: [110, 20]
+        location: [161.2, 20]
         orientation: N
 
 LIB:

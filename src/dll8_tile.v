@@ -133,8 +133,24 @@ module dll8_tile #(
     assign MEAS_COUNTS = meas;
     assign ACQ_DONE    = acq_done;
 
-    wire acq_up   = !acq_done && (meas < 4'd2);
-    wire acq_down = !acq_done && (meas > 4'd2);
+    // Range guard: meas counts half-periods mod 4, so a line longer than 2T
+    // wraps and reads as "short".  A wrap can only be detected at the top of
+    // the code range (up is impossible there): latch a wrap flag and drive
+    // DOWN until meas returns to the legal 2T range.  Neither meas nor the
+    // DFF detector is reliable beyond 1.5T, so the start rail must not be
+    // trusted either -- the flag makes the walk recover.
+    reg acq_wrap;
+    always @(posedge loop_clk or negedge RST_N) begin
+        if (!RST_N)                       acq_wrap <= 1'b0;
+        else if (!EN || acq_done)         acq_wrap <= 1'b0;
+        else if ((loop_code_q == S_MAX[10:0]) && (meas < 4'd2))
+            acq_wrap <= 1'b1;
+        else if (meas >= 4'd3)            acq_wrap <= 1'b0;
+    end
+    wire acq_up   = !acq_done && !acq_wrap && (loop_code_q != S_MAX[10:0]) &&
+                    (meas < 4'd2);
+    wire acq_down = !acq_done && (acq_wrap ||
+                    ((loop_code_q != 11'd0) && (meas > 4'd2)));
 
     // One code update per acquisition period, placed at the REF falling edge
     // where acq_clk is low and refdiv has just wrapped (t = 2.5T after the
@@ -158,9 +174,7 @@ module dll8_tile #(
     end
 
     // ---------------------------------------------------------- accumulator
-    wire [FILTER_BITS-1:0] dlf_out;
     reg  [10:0] loop_code_q;          // S
-    wire [10:0] s_sat = (dlf_out > S_MAX) ? S_MAX[10:0] : dlf_out[10:0];
 
     // ------------------------------------------------------------- the line
     // 8 separate 127-bit straps: strap_i[j] = th(code_i)[j] XOR (j odd).
@@ -253,28 +267,37 @@ module dll8_tile #(
     wire loop_clk = ~REF;
 
     // ---------------------------------------------------------- loop filter
-    // KI is boosted during acquisition: a forced decision must move one full
-    // coarse code (8 S counts) per acquisition cycle.
-    wire [FILTER_BITS+2:0] ki_wide = {1'b0, KI, 3'b000};
-    wire [FILTER_BITS-1:0] ki_eff  = acq_done ? KI :
-        (ki_wide > {3'b000, {FILTER_BITS{1'b1}}}) ? {FILTER_BITS{1'b1}}
-                                                  : ki_wide[FILTER_BITS-1:0];
-    wire                   ill_p, ill_n;
+    // Saturating up/down accumulator (first-order integral loop).  This used
+    // to be pll_digital_loop_filter, but its integrator has no runtime init:
+    // CODE_INIT lives in the accumulator while the DLF's INT starts at 0, so
+    // the first acquisition update wiped the start code to 0 (high-rail start
+    // walked to the bottom rail and stuck -- the out-of-range half of the DFF
+    // detector's response).  One state variable, one place to init it.
+    //
+    // KI is boosted 8x during acquisition: one forced decision must move one
+    // full coarse code (8 S counts) per acquisition cycle.
+    wire [10:0] ki_v = (KI > S_MAX[FILTER_BITS-1:0]) ? S_MAX[10:0] : KI[10:0];
+    wire [11:0] ki_acq = {1'b0, ki_v} << 3;
+    wire [10:0] ki_eff = acq_done ? ki_v :
+        (ki_acq > {1'b0, S_MAX[10:0]}) ? S_MAX[10:0] : ki_acq[10:0];
+    // PD decode into the filter's 2-bit symbol (REF&&!OUT = up = 01,
+    // REF&&OUT = down = 11, 00 = hold).  DFF polarity measured: REF high at
+    // the TAP7 sampling instant => d > T => too long => down.
     wire [1:0] pd_used = !acq_done ? (acq_up ? 2'b01 : acq_down ? 2'b11 : 2'b00)
                                    : (pd_raw ? 2'b11 : 2'b01);
-    wire dlf_en = EN && (acq_done || acq_upd);
-    pll_digital_loop_filter #(.BITS(FILTER_BITS), .INVERT_PN(0)) dlf (
-        .CLK(loop_clk), .RST_N(RST_N), .ENABLE(dlf_en),
-        .SS_BBPD(pd_used), .KP({FILTER_BITS{1'b0}}), .KI(ki_eff),
-        .OUT(dlf_out), .ILL_P(ill_p), .ILL_N(ill_n)
-    );
+    wire upd_en = acq_done ? 1'b1 : acq_upd;
 
-    // Async reset is a CONSTANT 0 (a dynamic async reset value cannot map to
-    // a library flop).  CODE_INIT is loaded synchronously while EN is low.
     always @(posedge loop_clk or negedge RST_N) begin
-        if (!RST_N)     loop_code_q <= 11'd0;
-        else if (!EN)   loop_code_q <= {CODE_INIT, 3'b000};
-        else if (acq_done ? !HOLD : acq_upd) loop_code_q <= s_sat;
+        if (!RST_N)          loop_code_q <= 11'd0;
+        else if (!EN)        loop_code_q <= {CODE_INIT, 3'b000};
+        else if (HOLD)       loop_code_q <= loop_code_q;
+        else if (!upd_en)    loop_code_q <= loop_code_q;
+        else if (pd_used == 2'b01)
+            loop_code_q <= (loop_code_q > S_MAX - ki_eff) ? S_MAX[10:0]
+                                                          : loop_code_q + ki_eff;
+        else if (pd_used == 2'b11)
+            loop_code_q <= (loop_code_q < ki_eff) ? 11'd0
+                                                  : loop_code_q - ki_eff;
     end
     assign LOOP_S    = loop_code_q;
     assign LOOP_CODE = loop_code_q[9:3];
