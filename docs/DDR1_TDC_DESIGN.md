@@ -160,7 +160,9 @@ is; document, don't "fix".
 
 **Sign at the zero crossing:** within ±1 tap the capture position is the
 measurement.  The loop's dead zone is NOT "the quantization itself" any
-more (that assumption was wrong, see the jitter section below): it is the
+more (that assumption was wrong — the measured limit cycle was 128 ps pk-pk at
+CK90; see docs/DDR1_CLOCKING.md "The DLL loop tracks continuously but HOLDS
+in a dead zone" and src/ddr1_jitter_tb.v): it is the
 explicit HOLD_PS parameter, which must be >= max(master step, TDC tap) or
 an unlucky phase leaves no reachable code inside the band.  Metastability
 of the capture flops near the transition is debounced by the LOCK_N/LOSS_N
