@@ -309,6 +309,22 @@ module DDR1_CK90_DLL #(
         .IN(CKIN), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(slave_out));
 
     // ------------------------------------------------------------------
+    // Structural signed flash TDC (TDC_IMPL=1): src/ddr1_dll_tdc.v.
+    // The measurement chain is started by CKIN and captured by master_d;
+    // E_MEAS/MEAS_VLD update one MASTER period after the capture edge —
+    // the loop therefore consumes residuals with one extra period of
+    // latency vs. the behavioral emulation, the physically irreducible
+    // cost of the real detector.  Verified in ddr1_ck90_dll_tdc_tb2.v.
+    // ------------------------------------------------------------------
+    wire signed [15:0] tdc_e;
+    wire               tdc_vld;
+    DDR1_DLL_TDC #(
+        .NTAP(32), .TDC_STEP_PS(TDC_STEP_PS), .IMPL(0)
+    ) u_tdc (
+        .CKIN(CKIN), .MASTER(master_out), .RST(RST),
+        .E_MEAS(tdc_e), .MEAS_VLD(tdc_vld));
+
+    // ------------------------------------------------------------------
     // Behavioural absolute time-difference measurement.
     //   PUSH: free-running, one timestamp per CKIN rising edge.
     //   POP : free-running, one pairing per master_out rising edge.
@@ -433,6 +449,16 @@ module DDR1_CK90_DLL #(
             else
                 e_meas = -(((-e_meas) + TDC_STEP_PS/2) / TDC_STEP_PS) * TDC_STEP_PS;
             meas_vld = 1'b1;
+        end
+
+        // TDC_IMPL=1: replace the behavioral arithmetic with the structural
+        // TDC output.  At this master edge the TDC's own nonblocking update
+        // has not landed yet, so tdc_e is the residual measured from the
+        // PREVIOUS master edge — one extra period of loop latency, exactly
+        // what silicon will have.
+        if (TDC_IMPL != 0) begin
+            e_meas   = tdc_e;
+            meas_vld = rise & tdc_vld;
         end
 
         if (RST) begin

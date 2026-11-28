@@ -56,6 +56,21 @@ module ddr1_ck90_dll_tdc_tb;
         .CK90(ck90_100), .DLL_LOCKED(locked_100), .DLL_ERR(err_100),
         .DBG_CODE(code_100));
 
+    // TDC_IMPL=1 pair (TT/SS tap steps): structural signed flash TDC
+    // (src/ddr1_dll_tdc.v, behavioral cells) in the loop — validates loop
+    // dynamics with the real one-period measurement latency.
+    wire ck90_i65, locked_i65, err_i65;
+    wire ck90_i100, locked_i100, err_i100;
+    wire [8:0] code_i65, code_i100;
+    DDR1_CK90_DLL #(.TDC_STEP_PS(65), .TDC_IMPL(1)) ui65 (
+        .CKIN(ckin), .RST(rst), .EN(1'b1),
+        .CK90(ck90_i65), .DLL_LOCKED(locked_i65), .DLL_ERR(err_i65),
+        .DBG_CODE(code_i65));
+    DDR1_CK90_DLL #(.TDC_STEP_PS(100), .TDC_IMPL(1)) ui100 (
+        .CKIN(ckin), .RST(rst), .EN(1'b1),
+        .CK90(ck90_i100), .DLL_LOCKED(locked_i100), .DLL_ERR(err_i100),
+        .DBG_CODE(code_i100));
+
     task chk(input cond, input [8*72-1:0] name);
         begin
             checks = checks + 1;
@@ -110,6 +125,16 @@ module ddr1_ck90_dll_tdc_tb;
         chk(!err_45 && !err_65 && !err_100,
             "check1b: no ERR during acquisition");
         $display("check1: lock time ~%0d ns", tmo);
+        // structural-TDC instances: same acquisition, tolerate the extra
+        // measurement latency (up to ~2x lock time)
+        tmo = 0;
+        while (!(locked_i65 && locked_i100) && tmo < 10000) begin
+            #10; tmo = tmo + 10;
+        end
+        chk(locked_i65 && locked_i100,
+            "check1c: TDC_IMPL=1 structural loop locks at TT/SS taps");
+        chk(!err_i65 && !err_i100,
+            "check1d: TDC_IMPL=1 no ERR during acquisition");
 
         #(20*TCK_NS);
 
@@ -127,15 +152,28 @@ module ddr1_ck90_dll_tdc_tb;
         count_dither(40, nchange45, nchange65, nchange100);
         chk(nchange45 >= 2 && nchange65 >= 2 && nchange100 >= 2,
             "check3: post-lock bang-bang dither alive at all corners");
+        begin : dith_i
+            integer j, nc; reg [8:0] pv;
+            nc = 0; pv = code_i65;
+            for (j = 0; j < 40; j = j + 1) begin
+                @(posedge ckin); #0.001;
+                if (code_i65 !== pv) begin nc = nc + 1; pv = code_i65; end
+            end
+            chk(nc >= 2, "check3b: TDC_IMPL=1 post-lock dither alive");
+        end
 
         // ---------------- +512 ps master step: no false trip, correct sign
         c0_45 = code_45; c0_65 = code_65; c0_100 = code_100;
         force u45.dly_off_x4  = 32'd8;
         force u65.dly_off_x4  = 32'd8;
         force u100.dly_off_x4 = 32'd8;
+        force ui65.dly_off_x4  = 32'd8;
+        force ui100.dly_off_x4 = 32'd8;
         #(1500);
         chk(!err_45 && !err_65 && !err_100,
             "check4a: +512ps master step causes NO false loss trip (all taps)");
+        chk(!err_i65 && !err_i100,
+            "check4d: +512ps no false trip with structural TDC latency");
         chk(locked_45 && locked_65 && locked_100,
             "check4b: lock retained through +512ps step (all taps)");
         chk(code_45 < c0_45 && code_65 < c0_65 && code_100 < c0_100,
@@ -147,6 +185,8 @@ module ddr1_ck90_dll_tdc_tb;
         release u45.dly_off_x4;  u45.dly_off_x4  = 32'd0;
         release u65.dly_off_x4;  u65.dly_off_x4  = 32'd0;
         release u100.dly_off_x4; u100.dly_off_x4 = 32'd0;
+        release ui65.dly_off_x4;  ui65.dly_off_x4  = 32'd0;
+        release ui100.dly_off_x4; ui100.dly_off_x4 = 32'd0;
         #(1500);
         chk(code_45 > c0_45 - 9'd12 && code_65 > c0_65 - 9'd12 && code_100 > c0_100 - 9'd12,
             "check5: after release code increases back toward pre-step value");
@@ -157,14 +197,20 @@ module ddr1_ck90_dll_tdc_tb;
         force u45.dly_off_x4  = 32'd16;
         force u65.dly_off_x4  = 32'd16;
         force u100.dly_off_x4 = 32'd16;
-        #(500);
+        force ui65.dly_off_x4  = 32'd16;
+        force ui100.dly_off_x4 = 32'd16;
+        #(800);
         chk(err_45 && err_65 && err_100,
             "check6: +1024ps master step trips DLL_ERR at all quantizations");
+        chk(err_i65 && err_i100,
+            "check6d: +1024ps trips with structural TDC latency");
         chk(!locked_45 && !locked_65 && !locked_100,
             "check6b: DLL_LOCKED drops with the loss trip");
         release u45.dly_off_x4;  u45.dly_off_x4  = 32'd0;
         release u65.dly_off_x4;  u65.dly_off_x4  = 32'd0;
         release u100.dly_off_x4; u100.dly_off_x4 = 32'd0;
+        release ui65.dly_off_x4;  ui65.dly_off_x4  = 32'd0;
+        release ui100.dly_off_x4; ui100.dly_off_x4 = 32'd0;
         #(100);
         chk(err_45 && err_65 && err_100,
             "check6c: ERR is sticky after the step is removed");
