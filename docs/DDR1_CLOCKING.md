@@ -121,18 +121,23 @@ Integration contract for ddr-phy: `docs/DDR1_HANDOFF.md`.
    (`DDR1_CLK_REGEN`, dfrbp + narrow nand2b reset pulse) at the master
    measurement point and the CK90 output; regeneration is outside the ratio
    path, so it cancels in the loop apart from a (3/4)·D_set systematic at
-   CK90 (SPICE quantification in progress, `flow/characterization/
-   ddr1_dll_regen.py`). Mismatch budget: 3σ(CK90) ≈ 16 ps vs ±100 ps target
-   (element matching 1.7 ps measured; layout interdigitation required).
+   CK90 — MEASURED (`flow/characterization/ddr1_dll_regen.py`): D_set
+   424/273/197 ps SS/TT/FF, regenerator matching 0.1-11 ps, raw systematic
+   +368/+255/+198 ps → `TRIM_MASTER_PS` 1472/1018/791, i.e. TRIM MUST be
+   corner-selected (2 straps, 3 values).  Mismatch budget: 3σ(CK90) ≈ 16 ps
+   vs ±100 ps target (element matching 1.7 ps measured; layout
+   interdigitation required).  CK90 duty at lock 45.7-48.1%.
 2. **Phase detector hardware — DONE 2026-11-28**: behavioral TDC semantics
    (modulo-T fold + tap quantization) in the default path, PLUS the structural
    signed flash TDC (`src/ddr1_dll_tdc.v`, single chain + delayed-master offset:
    zero residual reads the center tap, deep offsets clamp correct-sign, one
    master period of loop latency = physically irreducible). Unit TB 11/11;
-   DLL integration TB 22/22 incl. TDC_IMPL=1 acquisition/dither/512-ps-no-trip/
-   1024-ps-trip; clock-top regression 86/86. yosys `synth -flatten` clean
-   (5498 cells, 32+16 chain cells preserved as black boxes). Monitor third
-   sample replaced by the MCK-grid edge-order check (above).
+   DLL integration TB 25/25 incl. TDC_IMPL=1 acquisition / dead-zone
+   stability / perturbation tracking / 512-ps-no-trip / 1024-ps-trip /
+   TRIM sign-and-scale; clock-top regression 87/87.  yosys `synth -flatten`
+   clean, and the whole structural DLL synthesizes with all 10 macros
+   (`flow/sta/synth_ddr1_dll.sh`).  Monitor third sample replaced by the
+   MCK-grid edge-order check (above).
 3. **IHP130 real-cell flow — ELABORATION DONE 2026-11-28**: the FULL
    structural DLL (`SEG_IMPL=1 REGEN=1 REGEN_IMPL=1 TDC_IMPL=1`) synthesizes
    with no errors — `flow/sta/synth_ddr1_dll.sh`, 1286 cells, all 10
@@ -153,7 +158,7 @@ Integration contract for ddr-phy: `docs/DDR1_HANDOFF.md`.
 4. **Frequency plan — RESOLVED 2026-11-28** (`docs/DDR1_FREQ_PLAN.md`): DCO=300 MHz
    FCW=3 ÷3. Measured ring endpoints TT 212-624 / SS 111.8-370 / FF 262.2-903 MHz;
    300 covered all corners, FF margin −38 MHz thin. Integration into the clock top
-   done (DE3). Remaining: locked-loop jitter evidence.
+   done (DE3).  Locked-loop jitter measured and PASS (item 6).
 5. **DQS real-cell characterization**: done at pre-layout level 2026-11-28
    (`flow/sta/run_ddr1_dqs_corners.sh` + `ddr1_dqs_taps_{TT,SS,FF}.csv`): PASS all
    corners with the 1-cell/tap resize. Remaining: routing/parasitic re-verify,
