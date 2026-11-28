@@ -160,6 +160,10 @@ Behavioral evidence (iverilog, `sim/outputs/ddr1/`, regenerable — gitignored):
 
 ## ddr-phy-side integration gaps (their repo — handoff list)
 
+> Consolidated integration contract, port semantics, evidence table and the
+> honest open-item list: **`docs/DDR1_HANDOFF.md`**.  Read that first; this
+> document is the architecture/design record behind it.
+
 - `ddr1_top.sv` has no `update_idle` port (§3.1 requires it), defaults `TAP_BITS=4`
   (must be ≥5, we now use 7), no `tap_error`, no `PHY_LOCKED`/`ERR` inputs —
   `controller_reset = rst || !init_done` does not include clock loss (§2 line 46
