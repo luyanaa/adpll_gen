@@ -94,16 +94,27 @@ B(m4, 5000,-2600, 67500,-1400)            # VDD trunk
 B(m4, -1700,-4400, 67500,-3400)           # VSS trunk
 
 # ---- end pads: full M1..M5 stack at the right edge, 2x3 via arrays ----
-# VDD pad y -2600..-1400; VSS pad y -4400..-3400 (trunk heights extended)
+# VDD pad y -2600..-1400; VSS pad y -4400..-3400 (trunk heights extended).
+# Power respin v2 (2026-11-28 evening): the LibreLane PDN acceptance test
+# proved the original pad geometry UNCONNECTABLE by the automated grid:
+# both pads shared one 1.65 um x-window, but the PDN vertical stripe PAIR is
+# width+spacing = 6.2 um apart, so only one polarity could ever overlap.
+# Fix: extend both M5 pads westward to x52000 over their M4 trunks (same-net
+# overlap, DRC-invisible but legal) with Via4 columns every ~3 um.  The
+# pin window is then 15.5 um wide, which fits BOTH stripes of a pair with
+# >= 3 um of placement slack.  y gap between the pads stays 0.62 um
+# (> M5.e wide-line space 0.24).
 for (y1, y2) in [(-2660,-1340), (-4460,-3340)]:
     B(m1, 65900,y1, 67500,y2)
     B(m2, 65930,y1+30, 67470,y2-30)
     B(m3, 65930,y1+30, 67470,y2-30)
-    B(m5l,65850,y1-30, 67500,y2+30)
+    B(m5l,52000,y1-30, 67500,y2+30)          # widened west to x52000
     viarray(v1, 66030,y1+130, 2, 3)
     viarray(v2layer, 66030,y1+130, 2, 3)
     viarray(v3, 66030,y1+130, 2, 3)
     viarray(v4, 66030,y1+130, 2, 3)
+    for x0 in range(52400, 64000, 3000):     # via columns along the extension
+        viarray(v4, x0,y1+130, 2, 3)
 # trunk-end M4 pad merge: trunks already reach x 67500 (continuous to pads).
 
 # ---- control escape to the common right edge ----

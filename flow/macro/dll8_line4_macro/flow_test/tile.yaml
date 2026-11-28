@@ -26,7 +26,10 @@ GND_NETS: [VSS]
 RT_MIN_LAYER: Metal2
 RT_MAX_LAYER: Metal5
 
-CLOCK_PORT: REF
+# The macro liberty is a stub with no clock arcs, and TAP7 clocks the PD flop
+# from inside the macro, so this run is a routability/DRC exercise (as the
+# line8 integration test): no clock constraint.
+CLOCK_PORT: null
 
 # Two strips at 2x the PDN vertical pitch apart (151.2 um) so both macro
 # Metal5 pad windows land on the same vertical stripe phase, exactly as in
@@ -34,8 +37,8 @@ CLOCK_PORT: REF
 # the stdcell rows.
 DIE_AREA: [0, 0, 300, 760]
 FP_SIZING: absolute
-FP_CORE_UTIL: 10
-PL_TARGET_DENSITY_PCT: 35
+FP_CORE_UTIL: 30
+PL_TARGET_DENSITY_PCT: 40
 
 PDN_CFG: dir::pdn_cfg.tcl
 PDN_VOFFSET: 65.24

@@ -4127,7 +4127,7 @@ MACRO dll8_line4
     USE POWER ;
     PORT
       LAYER Metal5 ;
-        RECT 67.61 10.98 69.26 12.36 ;
+        RECT 53.76 10.98 69.26 12.36 ;
     END
   END VDD
   PIN VSS
@@ -4135,7 +4135,7 @@ MACRO dll8_line4
     USE GROUND ;
     PORT
       LAYER Metal5 ;
-        RECT 67.61 9.18 69.26 10.36 ;
+        RECT 53.76 9.18 69.26 10.36 ;
     END
   END VSS
   OBS
