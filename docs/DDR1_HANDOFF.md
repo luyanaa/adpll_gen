@@ -129,9 +129,18 @@ chain passes it through 1:1 and adds nothing measurable.
 - **D_set / regen phase shift / regenerated duty**: SPICE harness written
   (`flow/characterization/ddr1_dll_regen.py`), first numbers pending.
   This is the last systematic-phase unknown; `TRIM_MASTER_PS` consumes it.
-- **STA of the integrated top** at TT/SS/FF (DE3 alone is signed off;
-  the DLL/TDC/monitor integration is synthesized clean but not yet
-  timing-closed with parasitics).
+- **STA of the integrated top** at TT/SS/FF: structural elaboration is DONE
+  (`flow/sta/synth_ddr1_dll.sh`: 1286 cells, 10 dll8_line4 macros, no
+  errors); liberty-mapped timing with the macro .lib files and parasitics
+  is NOT.
+- **Systematic-phase calibration**: `TRIM_MASTER_PS` must be set from
+  SPICE/STA.  With REGEN=1 the residual is (3/4)·D_set + D_EN_gate, i.e.
+  `TRIM_MASTER_PS = 3·D_set + 4·D_EN`.  A first SPICE point measures
+  D_set ≈ 205 ps before the output buffer (≈275 ps with it) and a
+  master-vs-CK90 regeneration skew of 0.1 ps — so the raw systematic is
+  ≈250 ps at CK90, OUTSIDE the ±200 ps spec: TRIM is mandatory, not
+  optional.  Corner sweep running; `flow/characterization/
+  ddr1_regen_trim.py` converts the results into the TRIM table.
 - **DCO jitter**: the period/c2c budget for the 300 MHz DCO itself is not
   measured in this repo; the DDR1 chain is transparent to it (1:1).
 - **DQS post-route** monotonicity and select-dependent load bending.

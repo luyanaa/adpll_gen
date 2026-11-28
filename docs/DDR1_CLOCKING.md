@@ -133,7 +133,16 @@ Integration contract for ddr-phy: `docs/DDR1_HANDOFF.md`.
    1024-ps-trip; clock-top regression 86/86. yosys `synth -flatten` clean
    (5498 cells, 32+16 chain cells preserved as black boxes). Monitor third
    sample replaced by the MCK-grid edge-order check (above).
-3. **IHP130 real-cell flow** (recon complete): clone `flow/sta/run_ddr_phy_corners.sh`
+3. **IHP130 real-cell flow — ELABORATION DONE 2026-11-28**: the FULL
+   structural DLL (`SEG_IMPL=1 REGEN=1 REGEN_IMPL=1 TDC_IMPL=1`) synthesizes
+   with no errors — `flow/sta/synth_ddr1_dll.sh`, 1286 cells, all 10
+   `dll8_line4` hard macros preserved, plus the structural regen
+   (dfrbp + 12×inv_1 + nand2b + buf_4) and the FINE_DELAY_CELL TDC chain.
+   The behavioral `$realtime` FIFO is behind `` `ifndef SYNTHESIS `` and the
+   loop's level-sensitive event list becomes posedge-only under
+   `` `ifdef SYNTHESIS ``, so silicon always uses the TDC detector.
+   Remaining: liberty-mapped timing with the macro .lib files and SDF
+   back-annotation.  Original recon notes: clone `flow/sta/run_ddr_phy_corners.sh`
    → swap to `build/pdk_root/ihp-sg13g2` libs (`sg13g2_stdcell_{typ_1p20V_25C,
    slow_1p08V_125C,fast_1p32V_m40C}.lib` + `sg13g2_stdcell.v`/`sg13g2_udp.v` +
    `src/pll_cells_ihp-sg13g2.v`). Tools present: yosys 0.52, OpenSTA 2.0.17,
