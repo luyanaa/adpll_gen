@@ -1,0 +1,65 @@
+# LibreLane integration test: two dll8_line4 hard macros chained (DLL8 line8).
+# Purpose: prove the LEF/GDS/liberty views are readable, placeable, routable.
+# NOT a signoff run -- no timing closure (stub liberty, comb arcs only).
+
+DESIGN_NAME: dll8_line8_test
+VERILOG_FILES:
+  - dir::../dll8_line8_test.v
+  - dir::../dll8_line4.v
+
+PDK: ihp-sg13g2
+STD_CELL_LIBRARY: sg13g2_stdcell
+
+VDD_PIN: VDD
+GND_PIN: VSS
+SCL_POWER_PINS: [VDD]
+SCL_GROUND_PINS: [VSS]
+VDD_NETS: [VDD]
+GND_NETS: [VSS]
+
+RT_MIN_LAYER: Metal2
+RT_MAX_LAYER: Metal5
+
+# no clock in this test top (IN is a data input); STA is meaningless for the
+# stub liberty -- this run validates macro reading/placement/routing only.
+CLOCK_PORT: null
+
+DIE_AREA: [0, 0, 200, 760]
+FP_SIZING: absolute
+FP_CORE_UTIL: 5
+PL_TARGET_DENSITY_PCT: 30
+
+# strip is 67.38 x 358.53.  EN pins escape on the RIGHT edge of each strip,
+# so the two strips must not face each other's right edge: place both with
+# orientation N, right edges toward the core center channel.
+MACROS:
+  dll8_line4:
+    gds: dir::../dll8_line4.gds
+    lef: dir::../dll8_line4.lef
+    lib:
+      nom_typ_1p20V_25C:
+        - dir::../dll8_line4__tt.lib
+      nom_slow_1p08V_125C:
+        - dir::../dll8_line4__ss.lib
+      nom_fast_1p32V_m40C:
+        - dir::../dll8_line4__ff.lib
+    instances:
+      line_a:
+        location: [10, 20]
+        orientation: N
+      line_b:
+        location: [110, 20]
+        orientation: N
+
+LIB:
+  nom_typ_1p20V_25C:
+    - dir::../build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib
+  nom_slow_1p08V_125C:
+    - dir::../build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_slow_1p08V_125C.lib
+  nom_fast_1p32V_m40C:
+    - dir::../build/pdk_root/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_fast_1p32V_m40C.lib
+STA_CORNERS:
+  - nom_typ_1p20V_25C
+
+PNR_SDC_FILE: dir::test.sdc.tcl
+SIGNOFF_SDC_FILE: dir::test.sdc.tcl
