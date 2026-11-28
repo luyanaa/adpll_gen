@@ -44,21 +44,40 @@
 // thermal step of >=8 LSBs looked identical to a loss, and a valid corner
 // needing a code outside the TT-derived window was a false loss.
 //
-// This revision measures the signed residual directly:
+// 2026-11-28 measurement rewrite (TDC-honest semantics):
 //   * On every CKIN rising edge push the timestamp into a small FIFO.
 //   * On every master_out rising edge pop the oldest timestamp and compute
-//         master_delay = now - paired_CKIN_timestamp
-//         phase_ps     = master_delay - REF_PERIOD_PS
-//     The FIFO pairs the n-th CKIN edge with the n-th master edge, so the
-//     delay is ABSOLUTE (not modulo the period) and a large step cannot
-//     alias onto 2T/3T.  1 ps resolution under `timescale 1ns/1ps`.
-//   * This is the "fine-resolution time-difference sampler built into the
-//     behavioural model" option.  A real implementation cannot free-run
-//     $realtime: its equivalent is a coarse CKIN-cycle counter (to resolve
-//     which period the edge belongs to) plus a delay-line TDC
-//     (dll_tdc_phys-style tapped line + thermometer encoder + sync) for the
-//     sub-cycle residual.  Pass 2 must instantiate that hardware; the
-//     measurement update rate is one master edge per CKIN period.
+//     the raw delay, then apply the semantics of the REAL detector —
+//     a plain FINE_DELAY_CELL tapped-chain flash TDC
+//     (docs/DDR1_TDC_DESIGN.md, option (d)):
+//       1. RESIDUAL MODULO THE PERIOD: the chain captures only the
+//          sub-cycle residual; integer-period offsets are invisible.
+//          The measurement folds into (-T/2, +T/2]:
+//              e_meas = modulo_fold(raw_delay - REF_PERIOD_PS)
+//          A step that crosses a period boundary ALIASES, exactly as it
+//          would in silicon.  In lock this never happens (residual ~ 0).
+//          During acquisition from a far offset the sign can read wrong;
+//          the bang-bang loop then walks the wrong way into the rail,
+//          which the acquisition rail aid (RAIL_CONSEC) and the
+//          acquisition watchdog (ACQ_TIMEOUT_CY) are designed to catch.
+//          PASS-2 ELEMENT-SIZING CONSTRAINT: the initial segment delay at
+//          CODE_INIT must place the first measured residual inside the
+//          same half-period as lock, or acquisition is not guaranteed.
+//       2. QUANTIZATION to TDC_STEP_PS round-to-nearest (+-0.5 tap):
+//          measured sg13g2 FINE_DELAY_CELL taps are 65/100/45 ps
+//          TT/SS/FF (flow/sta/run_ddr1_dqs_corners.sh).  Sweep
+//          TDC_STEP_PS across those in verification.  Consequences:
+//          LOCK_TOL_PS=192 is 3.0/1.9/4.3 taps and LOSS_TOL_PS=640 is
+//          9.8/6.4/14.2 taps at TT/SS/FF respectively — at SS the
+//          quantized loss trip lands at 600 ps master = 150 ps CK90
+//          (inside the 200 ps spec, tighter than nominal, benign), at FF
+//          at 675 ps = 169 ps CK90.
+//   * The FIFO structure is retained ONLY as the simulation vehicle that
+//     pairs the n-th CKIN edge with the n-th master edge; the absolute
+//     delay it produces is folded/quantized before use.  A real
+//     implementation has no FIFO and no $realtime — pass 2 replaces this
+//     whole measurement block with the structural tapped chain
+//     (TDC_IMPL=1, not yet implemented).
 //   * The per-edge code latch in DDR1_DLL_SEG is unchanged (no in-flight
 //     edge is re-timed).
 //
@@ -235,7 +254,18 @@ module DDR1_CK90_DLL #(
     parameter integer STALE_CY          = 4,    // discard first N measurements
                                                // after reset release (epoch)
     parameter integer ACQ_TIMEOUT_CY    = 8192, // acquisition watchdog (samples)
-    parameter integer RAIL_CONSEC       = 32    // acquisition-only rail aid
+    parameter integer RAIL_CONSEC       = 32,   // acquisition-only rail aid
+    // TDC measurement model (2026-11-28 rewrite): the behavioral FIFO no
+    // longer measures the absolute delay.  A real tapped-chain flash TDC
+    // (docs/DDR1_TDC_DESIGN.md) measures the phase residual MODULO the
+    // CKIN period, quantized to the tap step.  TDC_STEP_PS is the tap
+    // resolution: measured sg13g2 FINE_DELAY_CELL taps are 65/100/45 ps
+    // TT/SS/FF (flow/sta/run_ddr1_dqs_corners.sh); sweep this parameter
+    // in verification.  Quantization is round-to-nearest (+-0.5 tap).
+    parameter integer TDC_STEP_PS       = 65,   // tap quantization (TT cell)
+    parameter integer TDC_IMPL          = 0     // 0 = behavioral quantized
+                                                // model; 1 = structural
+                                                // (pass 2, with elements)
 ) (
     input  wire                  CKIN,   // 100 MHz CK (the master locks ON it)
     input  wire                  RST,    // async reset, active high (state only)
@@ -383,7 +413,25 @@ module DDR1_CK90_DLL #(
             if (q_tail == QDEPTH-1) q_tail = 0;
             else                    q_tail = q_tail + 1;
             dly_ps  = $rtoi(dly_ns * 1000.0 + 0.5);
+            // TDC-honest measurement (2026-11-28):
+            //   1. residual MODULO the period: a tapped-chain flash TDC
+            //      cannot resolve integer-period offsets; the residual is
+            //      folded into (-T/2, +T/2].  CONSEQUENCE: at extreme
+            //      initial offsets (delay > T + T/2) the sign can read
+            //      wrong and the bang-bang loop walks the wrong way --
+            //      pinned at the rail, caught by the acquisition rail aid
+            //      / watchdog.  Element sizing must place the initial
+            //      delay within +-T/2 of lock (pass-2 constraint).
+            //   2. quantization to TDC_STEP_PS, round-to-nearest.
             e_meas  = dly_ps - REF_PERIOD_PS;
+            // fold into (-T/2, +T/2]
+            while (e_meas >  REF_PERIOD_PS/2) e_meas = e_meas - REF_PERIOD_PS;
+            while (e_meas <= -REF_PERIOD_PS/2) e_meas = e_meas + REF_PERIOD_PS;
+            // quantize (round to nearest tap, ties away from zero)
+            if (e_meas >= 0)
+                e_meas = ((e_meas + TDC_STEP_PS/2) / TDC_STEP_PS) * TDC_STEP_PS;
+            else
+                e_meas = -(((-e_meas) + TDC_STEP_PS/2) / TDC_STEP_PS) * TDC_STEP_PS;
             meas_vld = 1'b1;
         end
 
