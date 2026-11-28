@@ -108,8 +108,10 @@ def emit_regen(set_node: str, rst_node: str, q: str, tag: str,
         # rn = ~(~rdb & RESET) : active-low pulse at RESET rising edge
         f"Xrp_{tag} rn{tag} {prev} {rst_node} VDD VSS sg13g2_nand2b_1",
         f"Xtie_{tag} tiehi{tag} VDD VSS sg13g2_tiehi",
-        f"Xsr_{tag} {q} qn{tag} {set_node} tiehi{tag} rn{tag} VDD VSS sg13g2_dfrbp_1",
-        f".ic V({q})=0",
+        f"Xsr_{tag} qraw{tag} qn{tag} {set_node} tiehi{tag} rn{tag} VDD VSS sg13g2_dfrbp_1",
+        # matched output buffer, exactly as src/ddr1_dll_phys.v
+        f"Xob_{tag} {q} qraw{tag} VDD VSS sg13g2_buf_4",
+        f".ic V(qraw{tag})=0",
     ]
 
 
@@ -197,7 +199,11 @@ def measure(cfg, raw):
     if len(rin) < 2:
         res["error"] = "no input edges"
         return res
-    t0 = rin[-2] if len(rin) >= 2 else rin[-1]
+    # Reference cycle: the master chain delays by ~T, so the edge that lands
+    # (and completes its pulse) inside the window is usually the THIRD-to-last
+    # input edge.  Using rin[-2] clips the master pulse for any corner where
+    # the locked delay is close to T (observed: x32 rise with no fall).
+    t0 = rin[-3] if len(rin) >= 3 else (rin[-2] if len(rin) >= 2 else rin[-1])
     t1 = rin[-1]
     period = (t1 - t0) * 1e12
     res["period_ps"] = period
@@ -239,27 +245,38 @@ def measure(cfg, raw):
     if fin_after:
         res["in_high_ps"] = (fin_after[0] - t0) * 1e12
 
-    # D_set: qm rise minus x32 rise (same-cycle adjacent edges)
+    # D_set per regenerator, cycle-consistent by construction: each Q rise is
+    # caused by the nearest tap rise BEFORE it, so pair them locally instead
+    # of hoping both nodes' "last complete pulse" lands in the same cycle.
     rqm, _ = last_pair(vqm)
-    rx32, _ = last_pair(vx32)
-    if rqm and rx32:
-        # qm rise is caused by THE x32 rise; find x32 rise just before qm rise
-        xr = [x for x in xings(t, vx32, thr, True) if x <= rqm + 1e-12]
-        if xr:
-            res["d_set_ps"] = (rqm - xr[-1]) * 1e12
-
-    # regeneration-introduced phase shift: (qc-qm) vs (slave-master) spacing.
-    # The two nodes' last COMPLETE pulses may sit in different cycles, so
-    # compare modulo one input period (period_ps measured above).
     rqc, _ = last_pair(vqc)
+    rx32, _ = last_pair(vx32)
     ry8, _ = last_pair(vy8)
+
+    def nearest_before(node_w, tq):
+        xs = [x for x in xings(t, node_w, thr, True) if x <= tq + 1e-12]
+        return xs[-1] if xs else None
+
+    if rqm:
+        a = nearest_before(vx32, rqm)
+        if a:
+            res["d_set_master_ps"] = (rqm - a) * 1e12
+            res["d_set_ps"] = res["d_set_master_ps"]
+    if rqc:
+        b = nearest_before(vy8, rqc)
+        if b:
+            res["d_set_ck90_ps"] = (rqc - b) * 1e12
+    if "d_set_master_ps" in res and "d_set_ck90_ps" in res:
+        # THE number that matters: the two regenerators must be matched, since
+        # any difference lands on CK90 directly (it is not divided by 4).
+        res["regen_phase_shift_ps"] = res["d_set_ck90_ps"] - res["d_set_master_ps"]
+
+    # chain-level slave-vs-master spacing (informational; same-cycle safe
+    # because both are taps of the same chain and periods are identical)
     T = res["period_ps"]
-    def modT(x):
-        return ((x + T/2.0) % T) - T/2.0
-    if rqm and rqc and rx32 and ry8:
-        res["chain_slave_minus_master_ps"] = modT((ry8 - rx32) * 1e12)
-        res["regen_slave_minus_master_ps"] = modT((rqc - rqm) * 1e12)
-        res["regen_phase_shift_ps"] = res["regen_slave_minus_master_ps"] - res["chain_slave_minus_master_ps"]
+    if rx32 and ry8:
+        d = (ry8 - rx32) * 1e12
+        res["chain_slave_minus_master_ps"] = ((d + T/2.0) % T) - T/2.0
 
     # reset pulse widths (low time of rn at the last reset edge)
     for tag, wrn in (("rnm", vrnm), ("rnc", vrnc)):

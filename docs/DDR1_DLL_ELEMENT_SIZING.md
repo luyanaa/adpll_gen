@@ -128543,3 +128543,41 @@ optional.  CK90 bang-bang dither at lock: ±10/±8/±7 ps SS/TT/FF.
    layout must interdigitate/common-centroid the five segments, and the
    residual is bounded by the same order as the random term.  No Monte
    Carlo needed at this margin.
+
+## Regenerated-chain SPICE (2026-11-28, `flow/characterization/ddr1_dll_regen.py`)
+
+Full 32-element master + 8-element slave at the measured lock codes, 12-stage
+reset pulse, matched `sg13g2_buf_4` output stages, 10 ps step, 4 decks.
+
+| corner (code) | D_set master | D_set CK90 | regen mismatch | raw CK90 systematic |
+|---|---:|---:|---:|---:|
+| SS (33) | 423.9 ps | 424.0 ps | **+0.1 ps** | +368 ps  |
+| TT (72) | 272.7 ps | 283.8 ps | **+11.2 ps** | +255 ps |
+| FF (94) | 196.8 ps | 198.6 ps | **+1.8 ps** | +198 ps  |
+
+- **The two regenerators are matched** (0.1-11 ps).  That was the design
+  premise ("matched SR regeneration at master and CK90") and it holds.
+- **The raw systematic is out of spec at SS/TT** (+368/+255 ps vs ±200 ps):
+  measuring the regenerated master leaves `(3/4)·D_set + D_EN` at CK90.
+  `TRIM_MASTER_PS = 3·D_set + 4·D_EN` → **1472 / 1018 / 791 ps** at SS/TT/FF.
+  A single fixed trim at the midpoint leaves ±85 ps CK90 across corners, so
+  **TRIM must be corner-selected** — the locked CODE is a free corner sensor
+  (SS/TT/FF lock at 33/72/94): three straps (or a code-indexed LUT) suffice.
+- **CK90 duty at lock** = T/2 + D_reset − 1.5·D_set = **45.7% / 47.3% / 48.1%**
+  (SS/TT/FF) — inside 45-55%, SS marginal.  (CK90 duty is not in the spec;
+  this bounds the transmit-eye asymmetry.)
+
+### Input-duty sensitivity of the deep master taps (found here, matters)
+
+Same code, input duty 50% → 60% (TT):
+`y8 −12 ps`, `x16 −40 ps`, `x24 −378 ps`, `x32` no clean edge.
+The chain is ~1 period long, so pulse-width distortion (tpHL−tpLH) shrinks
+the LOW phase with depth; at x24 it is ~2 ns, comparable to the settling
+time, and the rising-edge delay becomes history-dependent.  In closed loop
+that couples to CK90 as ≈ +137 ps per +10% input duty (the code compensates
+the deep taps, the shallow slave barely moves).  The DLL input is the DE3
+output, whose duty error is the MCK's attenuated 3×, so a 40/60% MCK gives
+a 46.7/53.3% DLL input → ≈ ±45 ps CK90.  Bounded and acceptable, but it is
+a real budget line: if the MCK duty is worse than 40-60%, budget more.
+Mitigation if needed: a duty-cleaner on the DLL input (or characterize at
+45/55 explicitly — one more deck).
