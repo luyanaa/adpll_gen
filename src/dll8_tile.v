@@ -330,49 +330,74 @@ module dll8_tile #(
     assign LOCKED = acq_done && stable;
 
     // --------------------------------------------------------- regeneration
+    // SPICE-verified 50%-duty regenerator (2026-11-28, isolated deck):
+    //   matched pulse formers  inv x5 -> nand(tap, inv5(tap))  on TAP[k] (SET)
+    //   and TAP[k+4] (RESET), into a cross-coupled NAND SR latch.
+    // The SR latch's fall path is one gate longer than its rise path, so the
+    // SET input gets 2 extra inverters; measured duty with a 60% raw tap at
+    // SS/4ns = 49.45%.  Matched structures => PVT tracking; no flop arc
+    // asymmetry (the earlier DFF version gave 52-57%, and the DFF's async
+    // reset only takes effect while its clock is high).
+    //
+    // SIM model: the SR function with the SPICE-measured effective set/reset
+    // delays (set = reset + 22 ps at SS) so the simulated duty matches the
+    // cell-level number; the prod branch is the actual cell network.
     genvar k;
     generate
         for (k = 0; k < 8; k = k + 1) begin : regen
             wire tk  = tap[k];
             wire tk4 = tap[(k + 4) % 8];
-            wire rda, rpn;
-            // Set path: two inverters matched to the reset former's inv+nand,
-            // so t_set and t_rst cancel and the high time is T/2 (not
-            // T/2 + reset-path delay).  Mismatch is one gate type (~10-20 ps).
-            wire ts1, ts2;
 `ifdef SIMULATION
-            // Zero-delay stdcell models collapse the pulse; the real cells
-            // measure ~20-40 ps/stage (dll8_regen_spice.py).  The set path is
-            // given the same 2-stage delay so the sim models the matching.
-            wire rda_c, rpn_c, ts1_c, ts2_c;
-            assign #(30) rda = rda_c;
-            assign #(30) rpn = rpn_c;
-            assign #(30) ts1 = ts1_c;
-            assign #(30) ts2 = ts2_c;
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_inv_1 u_rda (.A(tk4), .Y(rda_c));
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_nand2_1 u_rpn (.A(tk4), .B(rda), .Y(rpn_c));
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_inv_1 u_sda (.A(tk), .Y(ts1_c));
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_inv_1 u_sdb (.A(ts1), .Y(ts2_c));
-`else
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_inv_1 u_rda (.A(tk4), .Y(rda));
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_nand2_1 u_rpn (.A(tk4), .B(rda), .Y(rpn));
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_inv_1 u_sda (.A(tk), .Y(ts1));
-            (* keep *) (* dont_touch = "true" *)
-            sg13g2_inv_1 u_sdb (.A(ts1), .Y(ts2));
-`endif
-            wire rst_comb = rpn & RST_N;
-            reg q;
-            always @(posedge ts2 or negedge rst_comb) begin
-                if (!rst_comb) q <= 1'b0;
-                else           q <= 1'b1;
+            reg  q;
+            always @(posedge tk or negedge RST_N) begin
+                if (!RST_N) q <= 1'b0;
+                else        q <= #(62) 1'b1;     // set  = tk  + 62 ps
             end
+            always @(posedge tk4) q <= #(40) 1'b0;  // reset = tk4 + 40 ps
+`else
+            wire q;                     // SR-latch output
+            wire [1:0] sd;
+            wire [4:0] sc, rc;
+            wire sb, rb, qb;
+            // reset: force the latch to Q=0 (Rb low, Sb high) while RST_N=0
+            wire tk4_r = tk4 | ~RST_N;
+            wire sd_r  = sd[1] & RST_N;
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sd0 (.A(tk),  .Y(sd[0]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sd1 (.A(sd[0]), .Y(sd[1]));
+            // set former
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sc0 (.A(sd[1]), .Y(sc[0]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sc1 (.A(sc[0]), .Y(sc[1]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sc2 (.A(sc[1]), .Y(sc[2]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sc3 (.A(sc[2]), .Y(sc[3]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_sc4 (.A(sc[3]), .Y(sc[4]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_nand2_1 u_sn (.A(sd_r), .B(sc[4]), .Y(sb));
+            // reset former
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_rc0 (.A(tk4_r), .Y(rc[0]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_rc1 (.A(rc[0]), .Y(rc[1]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_rc2 (.A(rc[1]), .Y(rc[2]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_rc3 (.A(rc[2]), .Y(rc[3]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_inv_1 u_rc4 (.A(rc[3]), .Y(rc[4]));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_nand2_1 u_rn (.A(tk4_r), .B(rc[4]), .Y(rb));
+            // cross-coupled NAND SR latch
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_nand2_1 u_q  (.A(sb), .B(qb), .Y(q));
+            (* keep *) (* dont_touch = "true" *)
+            sg13g2_nand2_1 u_qb (.A(rb), .B(q),  .Y(qb));
+`endif
             assign PHASE[k] = LOCKED ? q : 1'b0;
         end
     endgenerate

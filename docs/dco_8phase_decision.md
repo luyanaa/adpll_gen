@@ -940,13 +940,23 @@ REF falling edge where acq_clk is low (t = 2.5T after the launch): after the
 measurement (d < 2T), before the next launch (4T).  Same-edge updates raced
 the launch and latched a false meas=2 on the high-rail start.
 
-**5. Regeneration edge former corrected.**  The SPICE deck's 2-inverter
-`nand2(tap, delayed_tap)` holds the active-low reset for half a period; at the
-locked code it blocks the next set edge.  Re-run at SS code 71/period 4 ns:
-**zero Q edges**, so the earlier "49.8-50.0 %" duty record is not reproducible
-with that structure.  The tile uses the narrow pulse: `inv(tap_k4)` then
-`nand2(tap_k4, inv_out)` used directly as RESET_B, plus a 2-inverter delay on
-the set path matched to the former so t_set and t_rst cancel.
+**5. Regeneration: a flop cannot give 50 % here; a matched NAND SR latch can.**
+Three cell-level facts (isolated SPICE decks, SS/1.08 V/125 C, 60 % raw tap
+duty like the bank's 58-61 %):
+(a) the DFF's async reset only takes effect while its clock is high (pulse-
+clocked cell), so a reset pulse landing at exactly T/2 can be swallowed;
+(b) reset-to-Q is ~300 ps slower than clk-to-Q, so a DFF regenerator gives
+T/2 + ~300 ps = 57 % at 4 ns, not 50 %;
+(c) a one-inverter pulse former is narrower than the NAND's own delay and
+never pulls low at all.
+The verified topology is a **cross-coupled NAND SR latch** with two
+*identical* 5-inverter + NAND pulse formers (one on TAP[k] = SET, one on
+TAP[k+4] = RESET).  Both edges then go through the same structure; the
+latch's fall path is one gate longer than its rise path, compensated by
+2 extra inverters on the SET input.  Measured duty: **49.45 %** (T = 4 ns,
+SS, 60 % raw input).  The RTL implements exactly that network; the sim
+models the measured effective set/reset delays (62/40 ps) so the tb duty
+(49.0-49.7 %) matches the cell-level number.
 
 **Verified matrix** (`src/dll8_tile_tb.v`; coherent edge-sequenced capture
 identical to `dll8_tb.v`, per-tap error relative to the REF grid so it includes
