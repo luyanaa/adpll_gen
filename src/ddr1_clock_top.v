@@ -105,7 +105,16 @@ module DDR1_CLOCK_TOP #(
     parameter integer BYPASS_EN   = 1,    // Phase A bypass mux present
     parameter integer LOCK_DBC_CY = 8,    // debounce MCK cycles (300 MHz:
                                           // 8 cy = 26.7 ns)
-    parameter integer CK90_MON_N  = 3     // CK90 phase-monitor failure count
+    parameter integer CK90_MON_N  = 3,    // CK90 phase-monitor failure count
+    // Corner-selected phase calibration (docs/DDR1_HANDOFF.md §7).
+    // TRIM_STRAP_EN=0 keeps the compile-time value inside the DLL (0), i.e.
+    // the historical behavior; =1 enables the runtime 2-bit strap.
+    // Values are MASTER-scale ps measured in SPICE:
+    //   SS 1472 / TT 1018 / FF 791   (SEL: 0=TT default, 1=SS, 2=FF)
+    parameter integer TRIM_STRAP_EN = 0,
+    parameter integer TRIM_TT_PS    = 1018,
+    parameter integer TRIM_SS_PS    = 1472,
+    parameter integer TRIM_FF_PS    = 791
 ) (
     input  wire MCK_IN,       // 300 MHz master clock (ADPLL integer path)
     input  wire PLL_LOCKED,   // upstream PLL lock status
@@ -113,6 +122,7 @@ module DDR1_CLOCK_TOP #(
     // Phase A bypass: external (board-provided) clocks
     input  wire EXT_CK, EXT_CK90, EXT_SYS_CLK,
     input  wire BYPASS,       // 1 = pass external clocks through
+    input  wire [1:0] TRIM_SEL, // corner strap: 0=TT, 1=SS, 2=FF (see params)
     // outputs
     output wire CK_PHY, CK_PHY_N, CK90_PHY, SYS_CLK,
     output wire PHY_LOCKED,
@@ -140,12 +150,19 @@ module DDR1_CLOCK_TOP #(
     // ------------------------------------------------------------------
     wire        dll_locked_c, dll_err_c;
     wire [8:0]  dll_code_c;
+    // corner strap -> runtime trim (ignored unless TRIM_STRAP_EN=1)
+    wire signed [15:0] trim_sel =
+        (TRIM_SEL == 2'd1) ? TRIM_SS_PS[15:0] :
+        (TRIM_SEL == 2'd2) ? TRIM_FF_PS[15:0] :
+                             TRIM_TT_PS[15:0];
     wire        ck90_b;
 
     generate
         if (USE_DLL90) begin : g_dll
-            DDR1_CK90_DLL #(.NQ_SEG(64), .CODE_BITS(9)) u_dll (
+            DDR1_CK90_DLL #(.NQ_SEG(64), .CODE_BITS(9),
+                            .TRIM_EXT_EN(TRIM_STRAP_EN)) u_dll (
                 .CKIN(ck_a), .RST(RST | ~PLL_LOCKED), .EN(PLL_LOCKED),
+                .TRIM_EXT(trim_sel),
                 .CK90(ck90_b), .DLL_LOCKED(dll_locked_c),
                 .DLL_ERR(dll_err_c), .DBG_CODE(dll_code_c)
             );

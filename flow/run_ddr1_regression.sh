@@ -65,7 +65,7 @@ SELECT="${1:-}"
 [ -n "$SELECT" ] && shift || true
 
 run_tb clock 87  $FILES_CLOCK
-run_tb dll   25  $FILES_DLL
+run_tb dll   27  $FILES_DLL
 run_tb tdc   11  $FILES_TDC
 run_tb jitter 8  $FILES_JIT
 run_tb compare 84 $FILES_CMP

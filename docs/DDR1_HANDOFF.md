@@ -135,8 +135,14 @@ chain passes it through 1:1 and adds nothing measurable.
   TRIM leaves ±85 ps across corners.  **Action: 2 strap pins selecting 3
   trim values** (corner selection at test/init; the locked code 33/72/94
   is a free corner sensor if automatic selection is preferred).  The
-  regenerator pair itself matches to 0.1-11 ps, as designed.  RTL today
-  exposes one compile-time `TRIM_MASTER_PS`;
+  regenerator pair itself matches to 0.1-11 ps, as designed.
+  **RTL DONE 2026-11-28**: `DDR1_CLOCK_TOP` has a 2-bit `TRIM_SEL` strap
+  and parameters `TRIM_TT_PS=1018 / TRIM_SS_PS=1472 / TRIM_FF_PS=791`;
+  `TRIM_STRAP_EN=1` enables the runtime path through the DLL's
+  `TRIM_EXT` port (default 0 keeps the compile-time behavior, and an
+  unconnected `TRIM_SEL` is harmless because the DLL mux ignores it).
+  Verified: DLL TB check20c (runtime port moves the lock code by the
+  expected 4 LSB), structural synthesis with the strap path enabled.
   `flow/characterization/ddr1_regen_trim.py` regenerates the table.
 - **CK90 duty / input-duty sensitivity — MEASURED**: CK90 duty at lock
   45.7-48.1% (SS/TT/FF, inside 45-55%; CK90 duty is not spec'd, this bounds

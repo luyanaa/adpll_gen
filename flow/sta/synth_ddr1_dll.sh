@@ -31,14 +31,17 @@ FILES="src/pll_cells_ihp-sg13g2.v src/ddr1_cells_bb.v src/fine_delay.v \
 cat > "$OUT/ddr1_dll_struct_synth_top.v" <<'EOF'
 module dll_struct_synth_top(
     input  wire CKIN, RST, EN,
+    input  wire [1:0] TRIM_SEL,
     output wire CK90, DLL_LOCKED, DLL_ERR,
     output wire [6:0] DBG_CODE);
+    wire signed [15:0] trim = (TRIM_SEL == 2'd1) ? 16'sd1472 :
+                              (TRIM_SEL == 2'd2) ? 16'sd791  : 16'sd1018;
     DDR1_CK90_DLL #(
         .CODE_BITS(7), .CODE_INIT(48),
         .SEG_IMPL(1), .REGEN(1), .REGEN_IMPL(1), .TDC_IMPL(1),
-        .STEP_MASTER_PS(32), .HOLD_PS(65)
+        .STEP_MASTER_PS(32), .HOLD_PS(65), .TRIM_EXT_EN(1)
     ) u_dll (
-        .CKIN(CKIN), .RST(RST), .EN(EN),
+        .CKIN(CKIN), .RST(RST), .EN(EN), .TRIM_EXT(trim),
         .CK90(CK90), .DLL_LOCKED(DLL_LOCKED), .DLL_ERR(DLL_ERR),
         .DBG_CODE(DBG_CODE));
 endmodule

@@ -66,6 +66,16 @@ module ddr1_ck90_dll_tdc_tb;
         .CK90(ck90_tm), .DLL_LOCKED(locked_tm), .DLL_ERR(err_tm),
         .DBG_CODE(code_tm));
 
+    // Runtime-trim instance (clock-top strap path): TRIM_EXT_EN=1 with the
+    // trim value in a reg so the loop must follow it at run time.
+    reg signed [15:0] trim_ext = 16'sd0;
+    wire ck90_xt, locked_xt, err_xt;
+    wire [8:0] code_xt;
+    DDR1_CK90_DLL #(.TDC_STEP_PS(65), .TRIM_EXT_EN(1)) uext (
+        .CKIN(ckin), .RST(rst), .EN(1'b1), .TRIM_EXT(trim_ext),
+        .CK90(ck90_xt), .DLL_LOCKED(locked_xt), .DLL_ERR(err_xt),
+        .DBG_CODE(code_xt));
+
     // TDC_IMPL=1 pair (TT/SS tap steps): structural signed flash TDC
     // (src/ddr1_dll_tdc.v, behavioral cells) in the loop — validates loop
     // dynamics with the real one-period measurement latency.
@@ -192,6 +202,24 @@ module ddr1_ck90_dll_tdc_tb;
                 "check3c: one-tap perturbation re-engages the loop (tracking preserved)");
             release u65.dly_off_x4; u65.dly_off_x4 = 32'd0;
             #100;
+        end
+
+        // check20c: runtime TRIM_EXT strap (the clock-top path).  Set the
+        // port to 256 master ps after lock: the code must move ~4 LSB, the
+        // same shift the compile-time parameter produced in check20b.
+        begin : trim_ext_chk
+            integer d0, j;
+            tmo = 0;
+            while (!locked_xt && tmo < 5000) begin #10; tmo = tmo + 10; end
+            chk(locked_xt && !err_xt, "check20c: runtime-trim instance locks");
+            d0 = code_xt;
+            trim_ext = 16'sd256;
+            for (j = 0; j < 50; j = j + 1) begin @(posedge ckin); #0.001; end
+            $display("check20c: runtime TRIM_EXT 0->256 moved code %0d -> %0d",
+                     d0, code_xt);
+            chk((d0 - code_xt) >= 3 && (d0 - code_xt) <= 5,
+                "check20c: TRIM_EXT port shifts the lock code ~4 LSB");
+            trim_ext = 16'sd0;
         end
 
         // check20: TRIM_MASTER_PS calibration applies in the right direction

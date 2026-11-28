@@ -338,11 +338,19 @@ module DDR1_CK90_DLL #(
     // period/c2c jitter).
     parameter integer STEP_MASTER_PS    = NQ_SEG * CELL_X4_STEP,
     parameter integer HOLD_PS           = (TDC_STEP_PS > STEP_MASTER_PS)
-                                          ? TDC_STEP_PS : STEP_MASTER_PS
+                                          ? TDC_STEP_PS : STEP_MASTER_PS,
+    // Runtime trim select.  With TRIM_EXT_EN=0 the compile-time
+    // TRIM_MASTER_PS is used and the TRIM_EXT port is ignored (existing
+    // instantiations keep their behavior even with the port unconnected:
+    // a mux with select 0 does not propagate X from the unselected input).
+    // With TRIM_EXT_EN=1 the clock top drives the corner-selected strap
+    // value (docs/DDR1_HANDOFF.md §7: TRIM 1472/1018/791 SS/TT/FF).
+    parameter integer TRIM_EXT_EN       = 0
 ) (
     input  wire                  CKIN,   // 100 MHz CK (the master locks ON it)
     input  wire                  RST,    // async reset, active high (state only)
     input  wire                  EN,     // quiet gate: 0 -> CK90 low
+    input  wire signed [15:0]    TRIM_EXT, // runtime trim (see TRIM_EXT_EN)
     output wire                  CK90,   // CKIN delayed by the slave replica
     output wire                  DLL_LOCKED,
     output wire                  DLL_ERR,  // rail/acq-timeout/loss (sticky)
@@ -523,6 +531,12 @@ module DDR1_CK90_DLL #(
     integer               phase_ps = 0;     // last measured signed master error
     integer               e;                // working copy of the measurement
 
+    // Effective calibration: compile-time value unless the runtime strap is
+    // enabled.  A mux (not arithmetic) keeps an unconnected TRIM_EXT from
+    // poisoning the value when TRIM_EXT_EN=0.
+    wire signed [15:0] trim_eff = TRIM_EXT_EN ? TRIM_EXT
+                                             : TRIM_MASTER_PS[15:0];
+
     assign CODE = code_q;
 
     wire code_max = {CODE_BITS{1'b1}};
@@ -566,7 +580,7 @@ module DDR1_CK90_DLL #(
         // Silicon: the phase detector is the structural TDC.  No FIFO, no
         // timestamps, no behavioral folding; E_MEAS already carries the
         // signed quantized residual in master-scale ps.
-        e_meas   = tdc_e + TRIM_MASTER_PS;
+        e_meas   = tdc_e + trim_eff;
         meas_vld = rise & tdc_vld;
 `else
         if (rise && (q_head != q_tail)) begin
@@ -589,7 +603,7 @@ module DDR1_CK90_DLL #(
             while (e_meas >  REF_PERIOD_PS/2) e_meas = e_meas - REF_PERIOD_PS;
             while (e_meas <= -REF_PERIOD_PS/2) e_meas = e_meas + REF_PERIOD_PS;
             // quantize (round to nearest tap, ties away from zero)
-            e_meas = e_meas + TRIM_MASTER_PS;
+            e_meas = e_meas + trim_eff;
             if (e_meas >= 0)
                 e_meas = ((e_meas + TDC_STEP_PS/2) / TDC_STEP_PS) * TDC_STEP_PS;
             else
@@ -603,7 +617,7 @@ module DDR1_CK90_DLL #(
         // PREVIOUS master edge — one extra period of loop latency, exactly
         // what silicon will have.
         if (TDC_IMPL != 0) begin
-            e_meas   = tdc_e + TRIM_MASTER_PS;
+            e_meas   = tdc_e + trim_eff;
             meas_vld = rise & tdc_vld;
         end
 `endif

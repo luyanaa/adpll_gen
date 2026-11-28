@@ -17,7 +17,7 @@ Requirements source: `/grid/ddr-phy/docs/ADPLL_DDR1_REQUIREMENTS.md` (v0.1).
 | `src/ddr1_cells_bb.v` / `src/ddr1_phys_elab_stub.v` | Yosys blackbox / sim stubs for the extra sg13g2 cells |
 | `src/ddr1_dqs_delay.v` + `src/ddr1_dqs_delay_line_phys.v` | DQS receive delay line: 128 taps × 1 cell, TAP_BITS=7, `IMPL=1` real cells |
 | `src/ddr1_clock_top_tb.v` | 87-check integration TB |
-| `src/ddr1_ck90_dll_tdc_tb.v` | 25-check DLL/TDC focused TB (acquisition, dead zone, tracking, loss, aliasing, trim) |
+| `src/ddr1_ck90_dll_tdc_tb.v` | 27-check DLL/TDC focused TB (acquisition, dead zone, tracking, loss, aliasing, trim) |
 | `src/ddr1_dll_tdc_tb.v` | 11-check TDC unit TB |
 | `src/ddr1_ck90_compare_tb.v` | 84-check A/B injection-matrix TB |
 | `src/ddr1_jitter_tb.v` | 8-check jitter TB (period / c2c, clean + injected) |
@@ -124,7 +124,9 @@ Integration contract for ddr-phy: `docs/DDR1_HANDOFF.md`.
    CK90 — MEASURED (`flow/characterization/ddr1_dll_regen.py`): D_set
    424/273/197 ps SS/TT/FF, regenerator matching 0.1-11 ps, raw systematic
    +368/+255/+198 ps → `TRIM_MASTER_PS` 1472/1018/791, i.e. TRIM MUST be
-   corner-selected (2 straps, 3 values).  Mismatch budget: 3σ(CK90) ≈ 16 ps
+   corner-selected — RTL DONE: `DDR1_CLOCK_TOP` `TRIM_SEL[1:0]` strap
+   (0=TT 1018 / 1=SS 1472 / 2=FF 791) via the DLL's `TRIM_EXT` port,
+   `TRIM_STRAP_EN` parameter (default 0 = compile-time).  Mismatch budget: 3σ(CK90) ≈ 16 ps
    vs ±100 ps target (element matching 1.7 ps measured; layout
    interdigitation required).  CK90 duty at lock 45.7-48.1%.
 2. **Phase detector hardware — DONE 2026-11-28**: behavioral TDC semantics
