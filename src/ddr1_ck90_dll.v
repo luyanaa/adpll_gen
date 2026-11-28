@@ -263,9 +263,30 @@ module DDR1_CK90_DLL #(
     // TT/SS/FF (flow/sta/run_ddr1_dqs_corners.sh); sweep this parameter
     // in verification.  Quantization is round-to-nearest (+-0.5 tap).
     parameter integer TDC_STEP_PS       = 65,   // tap quantization (TT cell)
-    parameter integer TDC_IMPL          = 0     // 0 = behavioral quantized
+    parameter integer TDC_IMPL          = 0,    // 0 = behavioral quantized
                                                 // model; 1 = structural
                                                 // (pass 2, with elements)
+    // Pass-2 structural insertion (2026-11-28, docs/DDR1_DLL_ELEMENT_SIZING.md):
+    //   SEG_IMPL=1 replaces the five behavioral segments with structural
+    //   ones (2x dll8_line4 hard-macro strips each, N=8 elements/segment)
+    //   driven by a shared thermometer strap decoder.  The structural
+    //   segments are elaboration/synthesis/SPICE evidence — no behavioral
+    //   model exists for the strips, so RTL regression stays on
+    //   SEG_IMPL=0 (the behavioral law is intentionally NOT the silicon
+    //   law; what must match is the loop/lock/loss semantics, verified in
+    //   ddr1_ck90_dll_tdc_tb.v).
+    //   REGEN=1 inserts the matched SR phase regeneration at the master
+    //   measurement point and the CK90 output: Q rises at the chain edge,
+    //   falls T/2 later at the opposite master-chain tap, so output duty
+    //   is structurally T/2 independent of chain tpHL/tpLH asymmetry.
+    //   The TDC then measures the REGENERATED master (m_loop): the loop
+    //   servos the latch set-path delay down to a residual systematic
+    //   (3/4)*D_set at CK90.  REGEN_IMPL selects behavioral (0) vs
+    //   structural (1) latch cells; behavioral adds zero delay (logic-
+    //   correct connectivity verification), silicon adds D_set.
+    parameter integer SEG_IMPL          = 0,
+    parameter integer REGEN             = 0,
+    parameter integer REGEN_IMPL        = 0
 ) (
     input  wire                  CKIN,   // 100 MHz CK (the master locks ON it)
     input  wire                  RST,    // async reset, active high (state only)
@@ -287,26 +308,67 @@ module DDR1_CK90_DLL #(
     // five replicas so it emulates a PVT cell-delay shift (see header).
     reg [31:0] dly_off_x4 = 32'd0;
 
-    DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
-                   .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
-                   .CODE_INIT(CODE_INIT)) u_m1 (
-        .IN(CKIN), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(s1));
-    DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
-                   .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
-                   .CODE_INIT(CODE_INIT)) u_m2 (
-        .IN(s1), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(s2));
-    DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
-                   .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
-                   .CODE_INIT(CODE_INIT)) u_m3 (
-        .IN(s2), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(s3));
-    DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
-                   .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
-                   .CODE_INIT(CODE_INIT)) u_m4 (
-        .IN(s3), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(master_out));
-    DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
-                   .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
-                   .CODE_INIT(CODE_INIT)) u_sl (
-        .IN(CKIN), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(slave_out));
+    generate
+        if (SEG_IMPL == 0) begin : seg_beh
+            DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
+                           .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
+                           .CODE_INIT(CODE_INIT)) u_m1 (
+                .IN(CKIN), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(s1));
+            DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
+                           .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
+                           .CODE_INIT(CODE_INIT)) u_m2 (
+                .IN(s1), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(s2));
+            DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
+                           .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
+                           .CODE_INIT(CODE_INIT)) u_m3 (
+                .IN(s2), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(s3));
+            DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
+                           .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
+                           .CODE_INIT(CODE_INIT)) u_m4 (
+                .IN(s3), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(master_out));
+            DDR1_DLL_SEG #(.NQ_SEG(NQ_SEG), .CODE_BITS(CODE_BITS),
+                           .CELL_X4_MIN(CELL_X4_MIN), .CELL_X4_STEP(CELL_X4_STEP),
+                           .CODE_INIT(CODE_INIT)) u_sl (
+                .IN(CKIN), .CODE(CODE), .DLY_OFF_X4(dly_off_x4), .OUT(slave_out));
+        end else begin : seg_phys
+            // Structural: 2x dll8_line4 strips per segment (N=8 elements),
+            // one shared thermometer strap decoder broadcast everywhere.
+            // CODE is 9 bits behaviorally; the structural bank is 7 bits —
+            // the pass-2 loop parameter set uses CODE_BITS=7 end to end.
+            wire [126:0] strap;
+            DDR1_DLL_THERM_STRAP u_therm (.CODE(CODE[6:0]), .STRAP(strap));
+            (* keep *) DDR1_DLL_SEG_PHYS u_m1 (.IN(CKIN), .STRAP(strap), .OUT(s1));
+            (* keep *) DDR1_DLL_SEG_PHYS u_m2 (.IN(s1),   .STRAP(strap), .OUT(s2));
+            (* keep *) DDR1_DLL_SEG_PHYS u_m3 (.IN(s2),   .STRAP(strap), .OUT(s3));
+            (* keep *) DDR1_DLL_SEG_PHYS u_m4 (.IN(s3),   .STRAP(strap), .OUT(master_out));
+            (* keep *) DDR1_DLL_SEG_PHYS u_sl (.IN(CKIN), .STRAP(strap), .OUT(slave_out));
+        end
+    endgenerate
+
+    // ------------------------------------------------------------------
+    // Matched SR phase regeneration (REGEN=1).
+    //   master measurement copy: SET = master_out rise, RESET = s2 rise
+    //     (s2 is the same waveform T/2 earlier -> high time exactly T/2).
+    //   CK90 output:             SET = slave_out rise, RESET = s3 rise
+    //     (s3 = master + 3T/4; slave = CKIN + T/4 -> spacing exactly T/2).
+    //   m_loop is the measurement/loop clock: the TDC and the loop always
+    //   block key on the REGENERATED master when REGEN=1, so the latch
+    //   set-path delay is servoed out down to the (3/4)*D_set systematic.
+    // ------------------------------------------------------------------
+    wire q_master, q_ck90;
+    generate
+        if (REGEN != 0) begin : rg
+            DDR1_CLK_REGEN #(.IMPL(REGEN_IMPL)) u_rg_master (
+                .SET_IN(master_out), .RESET_IN(s2), .Q(q_master));
+            DDR1_CLK_REGEN #(.IMPL(REGEN_IMPL)) u_rg_ck90 (
+                .SET_IN(slave_out),  .RESET_IN(s3), .Q(q_ck90));
+        end else begin : rg_none
+            assign q_master = master_out;
+            assign q_ck90   = slave_out;
+        end
+    endgenerate
+    wire m_loop   = q_master;
+    wire ck90_int = q_ck90;
 
     // ------------------------------------------------------------------
     // Structural signed flash TDC (TDC_IMPL=1): src/ddr1_dll_tdc.v.
@@ -321,7 +383,7 @@ module DDR1_CK90_DLL #(
     DDR1_DLL_TDC #(
         .NTAP(32), .TDC_STEP_PS(TDC_STEP_PS), .IMPL(0)
     ) u_tdc (
-        .CKIN(CKIN), .MASTER(master_out), .RST(RST),
+        .CKIN(CKIN), .MASTER(m_loop), .RST(RST),
         .E_MEAS(tdc_e), .MEAS_VLD(tdc_vld));
 
     // ------------------------------------------------------------------
@@ -416,11 +478,11 @@ module DDR1_CK90_DLL #(
     // epoch below discards the first STALE_CY after release as well.
     reg prev_m = 1'b0;      // last observed master_out level
     reg rise;               // genuine master_out rising edge this activation
-    always @(master_out or posedge RST) begin
+    always @(m_loop or posedge RST) begin
         // Detect a real rising edge regardless of trigger order/merging:
         // a bare posedge RST re-enters with master_out unchanged -> rise=0.
-        rise   = (master_out === 1'b1) && (prev_m !== 1'b1);
-        prev_m = master_out;
+        rise   = (m_loop === 1'b1) && (prev_m !== 1'b1);
+        prev_m = m_loop;
 
         // POP (exactly once per genuine rise, even during RST)
         meas_vld = 1'b0;
@@ -547,6 +609,6 @@ module DDR1_CK90_DLL #(
 
     assign DLL_LOCKED = locked_q & ~err_q;
     assign DLL_ERR    = err_q;
-    assign CK90       = EN & slave_out;
+    assign CK90       = EN & ck90_int;
     assign DBG_CODE   = code_q;
 endmodule
