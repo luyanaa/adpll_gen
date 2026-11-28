@@ -48,7 +48,10 @@ run_tb() {  # name expected_checks files...
     # Accept either summary dialect used in this repo:
     #   "SUMMARY: N checks, 0 errors"   or   "TB done[, N checks], errors=0"
     if grep -qaE 'SUMMARY: [0-9]+ checks, 0 errors|errors=0 *===|done, errors=0' "$OUT/$name.log"; then
-        n=$(grep -oaE 'SUMMARY: [0-9]+ checks|done, [0-9]+ checks' "$OUT/$name.log"             | grep -oaE '[0-9]+' | head -1)
+        n=$(grep -oaE 'SUMMARY: [0-9]+ checks|done, [0-9]+ checks' "$OUT/$name.log" \
+            | grep -oaE '[0-9]+' | head -1)
+        # TBs that only print "TB done, errors=0": count the PASS lines instead
+        [ -z "${n:-}" ] && n=$(grep -caE '^PASS' "$OUT/$name.log")
         echo "PASS ${n:-?} checks"
         if [ -n "$exp" ] && [ -n "${n:-}" ] && [ "$n" != "$exp" ]; then
             echo "  NOTE: check count changed (expected $exp) — update this script if intentional"
