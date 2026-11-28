@@ -69,7 +69,7 @@ run_tb clock 87  $FILES_CLOCK
 run_tb dll   27  $FILES_DLL
 run_tb tdc   11  $FILES_TDC
 run_tb jitter 8  $FILES_JIT
-run_tb duty   18 $FILES_DUTY
+run_tb duty   21 $FILES_DUTY
 run_tb compare 84 $FILES_CMP
 [ -f src/ddr1_dqs_delay_tb.v ]              && run_tb dqs  "" $FILES_DQS
 [ -f src/ddr1_clk_de3_tb.v ]          && run_tb de3  "" $FILES_DE3

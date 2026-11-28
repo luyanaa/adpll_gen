@@ -41,6 +41,28 @@ module ddr1_duty_tb;
         .CK_PHY(ck), .CK_PHY_N(ckn), .CK90_PHY(ck90), .SYS_CLK(sysclk),
         .PHY_LOCKED(phylock), .ERR(err), .DBG(dbg));
 
+    // SYS_CLK alignment (requirement: its rising edge must coincide with a
+    // CK_PHY rising edge to <= 0.2 ns, all PVT).  Track the last CK rise.
+    // NOTE the #0: CK and SYS_CLK rise in the SAME time step (SYS is a
+    // toggle flop on CK's source), so a cross-block read without yielding
+    // sees the previous CK edge (measured 740 ns of nonsense once).  #0
+    // moves this evaluation to the inactive region after the CK sampler.
+    // align_en gates out the reset/release transient: the requirement is
+    // the steady-state edge relationship (the release runt itself is
+    // covered by the clock TB's first-pulse checks).
+    real t_last_ck = 0.0;
+    real align_max = 0.0;
+    reg  align_en = 1'b0;
+    always @(posedge ck) t_last_ck = $realtime;
+    always @(posedge sysclk) begin
+        #0;
+        if (align_en && (t_last_ck > 0.0)) begin
+            real d;
+            d = ($realtime - t_last_ck) * 1000.0;   // ps
+            if (d > align_max) align_max = d;
+        end
+    end
+
     integer errors = 0, checks = 0, fd;
 
     task chk(input cond, input [8*90-1:0] name);
@@ -87,6 +109,7 @@ module ddr1_duty_tb;
     task run_case(input integer lo, input [8*16-1:0] tag);
         begin
             // re-acquire at this MCK duty
+            align_en = 1'b0;
             // real power-on sequence: RST low -> high -> low, so every
             // reset-edge-triggered block sees its edge (a RST that merely
             // starts high never produces one).
@@ -102,6 +125,7 @@ module ddr1_duty_tb;
                          u_top.ck90_mon_err, u_top.mon_fail, u_top.err_q, u_top.dll_code_c);
             chk(phylock === 1'b1, {"duty: PHY_LOCKED at MCK high=", tag});
             #500;
+            align_en = 1'b1;
             meas(0, pk_lo, pk_hi, hk_lo, hk_hi);
             meas(1, ps_lo, ps_hi, hs_lo, hs_hi);
             meas(2, p9_lo, p9_hi, h9_lo, h9_hi);
@@ -119,6 +143,11 @@ module ddr1_duty_tb;
             chk(hs_lo*1000/ps_lo >= 450 && hs_hi*1000/ps_lo <= 550,
                 {"duty: SYS_CLK duty 45-55% at ", tag});
             chk(p9_lo >= 9900 && p9_hi <= 10100, {"duty: CK90 period 10ns +-1% at ", tag});
+            $display("           SYS_CLK max edge offset from the preceding CK rise = %0.1f ps",
+                     align_max);
+            $fdisplay(fd, "           SYS_CLK align_max = %0.1f ps", align_max);
+            chk(align_max <= 200.0, {"duty: SYS_CLK rise aligned to a CK rise <=0.2ns at ", tag});
+            align_max = 0.0;
         end
     endtask
 

@@ -61,6 +61,7 @@ Semantics that the PHY may rely on:
 | CK duty | 50% at 50% MCK duty; input duty error attenuated 3× (40/60% → 46.7/53.3%) | `ddr1_clk_de3.v` header + TB |
 | CK90 lag | 2500 ps ± dither; dead-zone residual ≤ 16 ps CK90 | regression + `TRIM_MASTER_PS` |
 | CK_PHY / SYS_CLK duty at MCK 40/50/60% | **46.6 / 49.9 / 53.3%** (both), periods 9.998 ns / 19.996 ns | `ddr1_duty_tb.v` |
+| SYS_CLK rise vs CK rise | 0 ps behavioral (budget 0.2 ns; real clk-to-Q ~0.1 ns is STA) | `ddr1_duty_tb.v` |
 | CK90 period jitter (clean input) | **0 ps pk-pk, 0 ps c2c** | `ddr1_jitter_tb.v` |
 | CK90 under injected ±15 ps/half-period MCK jitter | 1:1 transfer, **0 added** | same |
 | DQS line | 128 taps × 1 cell, monotonic, 65/100/45 ps per code TT/SS/FF | corner CSVs |
@@ -150,6 +151,11 @@ chain passes it through 1:1 and adds nothing measurable.
   the transmit-eye asymmetry).  The deep master taps are duty-sensitive
   (x24 moves −378 ps for a 50→60% input duty while the slave moves −12 ps),
   which costs ≈±45 ps CK90 for a 40-60% MCK after the DE3's 3× attenuation.
+- **CK / CK# cross-skew (spec ≤100 ps)**: not measurable behaviorally (the
+  complement is a zero-delay gate).  This is a *layout/STA obligation*:
+  the pad-bound CK and CK_PHY_N paths must be length-matched, and the
+  `~ck_a` inversion must be a matched clock-tree cell, not a random buffer.
+  Same for SYS_CLK's clk-to-Q against the CK path.
 - **STA of the integrated top** at TT/SS/FF: structural elaboration is DONE
   (`flow/sta/synth_ddr1_dll.sh`: 1286 cells, 10 dll8_line4 macros, no
   errors); liberty-mapped timing with the macro .lib files and parasitics
