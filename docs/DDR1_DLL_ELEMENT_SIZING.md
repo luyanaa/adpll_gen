@@ -128580,4 +128580,7 @@ output, whose duty error is the MCK's attenuated 3×, so a 40/60% MCK gives
 a 46.7/53.3% DLL input → ≈ ±45 ps CK90.  Bounded and acceptable, but it is
 a real budget line: if the MCK duty is worse than 40-60%, budget more.
 Mitigation if needed: a duty-cleaner on the DLL input (or characterize at
-45/55 explicitly — one more deck).
+45/55 explicitly — the decks are in
+`flow/characterization/run_ddr1_regen_sweep.sh`; they were queued but the
+host was at load ~24 from a parallel P&R run, so the bound above rests on
+the measured 50% and 60% points bracketing the range).
