@@ -128400,3 +128400,103 @@ S## Interaction with the loop parameters (behavioral model today)
   The behavioral TBs force dly_off_x4 in the old units — the injection
   scaffolding is sim-only and unaffected by the remap.
 
+
+## Chain-level SPICE results (2026-11-28, `flow/characterization/ddr1_dll_chain.py`)
+
+Measured bare 6-element cascade, no tap/regenerator loads, wire cap 0.96 fF/node,
+all corners, zero sim errors (`sim/outputs/ddr1/dll_chain/chain_custom.json`):
+
+| code | SS ps | TT ps | FF ps |
+|---:|---:|---:|---:|
+| 0 | 1122 | 668 | 432 |
+| 32 | 1874 | 1115 | 761 |
+| 64 | 2844 | 1713 | 1253 |
+| 96 | 4078 | 2508 | 1919 |
+| 112 | 4785 | 2964 | 2290 |
+| 127 | 5500 | 3424 | 2652 |
+
+**The interpolated single-element model was wrong in a dangerous direction**:
+it predicted FF c127 ≈ 2818 ps (N=6); the bare chain measures 2652 ps. The
+×1.2 interconnect estimate does not apply to a bare cascade (the isolated-
+element measurement already included the loads the cascade re-counts).
+Consequence: N=6 leaves only 6 codes of FF upward headroom before any
+integration loading — **N=6 is dead**.
+
+### Revised pick: N=8
+
+| corner | lock code | headroom up | step@lock | CK90 dither |
+|---|---:|---:|---:|---:|
+| SS | ~32 | 95 | ~40 ps/code | ±10 ps |
+| TT | ~71 | 56 | ~32 ps/code | ±8 ps |
+| FF | ~94 | 33 | ~29 ps/code | ±7 ps |
+
+N=7 (41/82/106, FF headroom 21) is the minimum viable; N=8 costs +14% area
+over it and buys real margin against integration loading — the bare-chain
+measurement excludes end buffering and the slave-output driver.
+
+### CODE_INIT = 48 (acquisition constraint)
+
+With the structural TDC's correct-sign clamping, initial residuals must
+only read the correct SIGN; positive residuals additionally must stay in
+the unambiguous window (≤ +2920 ps at TT before falling-wavefront
+interference). Master residual = 4×segment − 10000 ps:
+
+| CODE_INIT | SS | TT | FF |
+|---:|---:|---:|---:|
+| 32 | −6 | −4054 | −5941 |
+| **48** | **+2580** | **−2459** | **−4629** |
+
+CODE_INIT=48: every corner correct-sign, SS positive residual just inside
+the +2920 window. CODE_INIT=32 is borderline-in-lock at SS (−6 ps — the
+loop would declare lock almost immediately at a wrong point? NO: −6 ps is
+INSIDE the lock band, so the loop would lock with master short by ~2 codes
+worth of margin — actually it IS the lock point within quantization, fine
+but pointless; the real objection is SS initial residual changes sign with
+small element variation → unreliable acquisition direction).
+
+### Driver: stock inv_4 chosen, SR regeneration becomes mandatory
+
+Stock-driver chains match the custom INV4B driver within 1-3% on delay at
+every measured point — the delay CHARACTERISTIC needs no custom cell.
+BUT measured chain tpHL−tpLH asymmetry (input-rise to output-rise vs
+input-fall to output-fall):
+
+| corner@code | custom ps | stock ps |
+|---|---:|---:|
+| TT c64 | +296 | +665 |
+| TT c127 | +232 | +940 |
+| SS c64 | +280 | +841 |
+| SS c127 | +92 | +1163 |
+
+The custom balanced driver earns its keep on duty fidelity but not on
+delay. Decision: **stock inv_4 both stages + matched SR regeneration**
+(dll8_regen, already designed/measured by the SerDes session) at the
+master and slave outputs. Rationale: the regeneration stage is OUTSIDE the
+ratio path — matched copies at master and slave outputs cancel in the
+loop (the TDC measures post-regen master; the loop servos the constant
+shift out) and produce the CK90 duty independently of chain asymmetry.
+This avoids the custom-cell collateral (no INV4B layout/liberty needed)
+at the price of two small regeneration blocks. Verify: chain+regen SPICE
+(pass-2), and the regeneration delay must be documented in the TDC
+reference frame.
+
+### Duty/asymmetry spec impact
+
+The DDR1 requirement constrains only the CK90 PHASE (2.5 ns ±0.2), not its
+duty — chain asymmetry is not a compliance violation. It eats the transmit
+eye asymmetrically in `ddr_edge_out` though; the SR regeneration bounds it
+to the regenerator's own residual asymmetry (dll8 measured ≤ a few ps per
+stage). Documented as closed-by-construction pending the regen-chain
+SPICE.
+
+### Remaining chain-level verification (pass-2)
+
+1. Chain + SR regeneration pulse fidelity (duty at output, edge rates).
+2. N=8 confirmation run (the numbers above are N=6 × 4/3 extrapolation —
+   linearity is structural but a direct measurement is cheap).
+3. Integration loading: end-of-chain buffer + TDC reference chain input
+   load; re-derive headroom.
+4. Mismatch: Monte-Carlo or at least per-element mismatch sensitivity —
+   master/slave ratio error goes directly into CK90 accuracy; the 4:1
+   ratio cancels common-mode but not per-segment random mismatch.
+   Budget: ±100 ps CK90 target = ±25 ps per segment ≈ ±3 ps per element.
