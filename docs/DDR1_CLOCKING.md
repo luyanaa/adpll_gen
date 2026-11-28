@@ -21,13 +21,14 @@ Requirements source: `/grid/ddr-phy/docs/ADPLL_DDR1_REQUIREMENTS.md` (v0.1).
 | `src/ddr1_dll_tdc_tb.v` | 11-check TDC unit TB |
 | `src/ddr1_ck90_compare_tb.v` | 84-check A/B injection-matrix TB |
 | `src/ddr1_jitter_tb.v` | 8-check jitter TB (period / c2c, clean + injected) |
+| `src/ddr1_duty_tb.v` | 18-check requirement-level duty TB (MCK 40/50/60%) |
 | `src/ddr1_dqs_delay_tb.v` / `src/ddr1_clk_de3_tb.v` | DQS handshake/glitch/monotonicity (37) / DE3 (12) |
 | `flow/run_ddr1_regression.sh` | single-command regression (all of the above, PASS/FAIL) |
 | `flow/characterization/ddr1_dll_chain.py` | bare-cascade chain SPICE (N, corners × codes) |
 | `flow/characterization/ddr1_dll_regen.py` | regenerated-chain SPICE (D_set, duty, phase shift) |
 
 Evidence (iverilog, regenerable — `sim/outputs/` gitignored): clock 87,
-DLL/TDC 25, TDC unit 11, jitter 8, compare 84, DQS 37, DE3 12 — all PASS
+DLL/TDC 27, TDC unit 11, jitter 8, duty 18, compare 84, DQS 37, DE3 12 — all PASS
 via `flow/run_ddr1_regression.sh`.  Chain SPICE: 27 + 21 decks clean.
 Integration contract for ddr-phy: `docs/DDR1_HANDOFF.md`.
 

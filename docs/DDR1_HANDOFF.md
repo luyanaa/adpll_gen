@@ -60,6 +60,7 @@ Semantics that the PHY may rely on:
 | CK period | 10.000 ns exactly (÷3 of 300 MHz) | clock regression |
 | CK duty | 50% at 50% MCK duty; input duty error attenuated 3× (40/60% → 46.7/53.3%) | `ddr1_clk_de3.v` header + TB |
 | CK90 lag | 2500 ps ± dither; dead-zone residual ≤ 16 ps CK90 | regression + `TRIM_MASTER_PS` |
+| CK_PHY / SYS_CLK duty at MCK 40/50/60% | **46.6 / 49.9 / 53.3%** (both), periods 9.998 ns / 19.996 ns | `ddr1_duty_tb.v` |
 | CK90 period jitter (clean input) | **0 ps pk-pk, 0 ps c2c** | `ddr1_jitter_tb.v` |
 | CK90 under injected ±15 ps/half-period MCK jitter | 1:1 transfer, **0 added** | same |
 | DQS line | 128 taps × 1 cell, monotonic, 65/100/45 ps per code TT/SS/FF | corner CSVs |

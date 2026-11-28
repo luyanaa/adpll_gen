@@ -27,6 +27,7 @@ FILES_CLOCK="src/ddr1_clock_top_tb.v src/ddr1_clock_top.v src/ddr1_clk_de3.v src
 FILES_DLL="src/ddr1_ck90_dll_tdc_tb.v src/ddr1_ck90_dll.v"
 FILES_TDC="src/ddr1_dll_tdc_tb.v"   # ddr1_dll_tdc.v comes from RTL_COMMON
 FILES_JIT="src/ddr1_jitter_tb.v src/ddr1_clock_top.v src/ddr1_clk_de3.v src/ddr1_ck90_dll.v"
+FILES_DUTY="src/ddr1_duty_tb.v src/ddr1_clock_top.v src/ddr1_clk_de3.v src/ddr1_ck90_dll.v"
 FILES_CMP="src/ddr1_ck90_compare_tb.v src/ddr1_ck90_de2.v src/ddr1_ck90_dll.v"
 FILES_DQS="src/ddr1_dqs_delay_tb.v src/ddr1_dqs_delay_line_phys.v src/ddr1_dqs_delay.v"
 FILES_DE3="src/ddr1_clk_de3_tb.v src/ddr1_clk_de3.v"
@@ -68,6 +69,7 @@ run_tb clock 87  $FILES_CLOCK
 run_tb dll   27  $FILES_DLL
 run_tb tdc   11  $FILES_TDC
 run_tb jitter 8  $FILES_JIT
+run_tb duty   18 $FILES_DUTY
 run_tb compare 84 $FILES_CMP
 [ -f src/ddr1_dqs_delay_tb.v ]              && run_tb dqs  "" $FILES_DQS
 [ -f src/ddr1_clk_de3_tb.v ]          && run_tb de3  "" $FILES_DE3

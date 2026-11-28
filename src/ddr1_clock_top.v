@@ -277,7 +277,14 @@ module DDR1_CLOCK_TOP #(
     // asserted.  Changes outside reset are ignored, so the output mux is
     // only ever switched while both sides are quiet.
     // ------------------------------------------------------------------
-    reg bp_meta, bp_sync, bypass_q;
+    // Power-up state: the bypass commit must be DEFINED even when
+    // EXT_SYS_CLK never toggles (the normal non-bypass board may not route
+    // it) and before any reset edge.  Without these initialisers a static
+    // EXT_SYS_CLK leaves the commit register X, and PHY_LOCKED (computed
+    // from bypass_q) is then X instead of low — not fail-closed.  Found by
+    // src/ddr1_duty_tb.v (2026-11-28).  The reset branch below still
+    // commits the BYPASS strap on every reset edge.
+    reg bp_meta = BYPASS, bp_sync = BYPASS, bypass_q = BYPASS;
     always @(posedge EXT_SYS_CLK or posedge RST) begin
         if (RST) begin
             bp_meta  <= BYPASS;
