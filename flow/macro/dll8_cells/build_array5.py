@@ -11,7 +11,7 @@ fn=ly.cell("DLL8_FINGER"); fp=ly.cell("DLL8_FINGER_P")
 m1=ly.layer(8,0); m2=ly.layer(10,0); m3=ly.layer(30,0)
 nw=ly.layer(31,0); nb=ly.layer(32,0)
 c=ly.create_cell("DLL8_LINE_ARRAY")
-NY=4000; PY=5500; PX=9000; NN=64; NP=63
+NY=5000; PY=5500; PX=9000; NN=64; NP=63   # NY>=4740: moscap_n dev_mk (core.sized 1.5um=4.74um tall) merges below that -> gate-port warnings, all caps rejected (NY=4000/4200 fail, 5000 clean)
 
 for n in range(NN):
     c.insert(pya.CellInstArray(fn.cell_index(),pya.Trans(pya.Vector(0,n*NY))))
@@ -26,6 +26,9 @@ Ntop=(NN-1)*NY+nbb.top; Ptop=(NP-1)*PY+pbb.top
 sx1=PX+pbb.left-100; sx2=PX+pbb.right+100
 sy1=pbb.bottom-100; sy2=Ptop+100
 box(nw, sx1,sy1,sx2,sy2); box(nb, sx1,sy1,sx2,sy2)
+# NW* label (deck pmoscap_nw_text glob + connect(nwell_drw,nwell_text)):
+# glues every moscap_p bulk port into the shared-nwell net in extraction
+c.shapes(ly.layer(31,25)).insert(pya.Text("NW_SHARED",pya.Trans(pya.Vector((sx1+sx2)//2,(sy1+sy2)//2))))
 
 # MID vertical M3 buses at each column's escape landing
 box(m3, 2940, -400, 3230, Ptop+1200)          # N column MID
@@ -47,12 +50,26 @@ for n in range(NP):
 
 
 # VDD / VSS rails: vertical M1 straps merging the per-row guard-ring taps
-box(m1, 2400, nbb.bottom-300, 2560, Ntop+300)     # VSS (N psub ring left rail at 2400..2700)
-box(m1, 5360, pbb.bottom-300, 5520, Ptop+300)     # VDD (P nwell ring right rail at 5220..5520)
+# VSS: N psub ring LEFT rail (abs 2400..2700, finger-local == abs for N col).
+box(m1, 2400, nbb.bottom-300, 2560, Ntop+300)     # VSS
+# VDD: P nwell ring RIGHT rail -- must sit in the P column: local 5220..5520
+# -> abs PX+5220..PX+5520.  (Was wrongly drawn at abs 5360 in the N column,
+# which left the whole P bulk floating and merged the strap into the N rings.)
+box(m1, PX+5360, -2160, PX+5520, Ptop+300)        # VDD (y1=-2160 overlaps elem VDD rail)
 yt=ly.layer(8,2)
 c.shapes(yt).insert(pya.Text("VSS",pya.Trans(pya.Vector(2480,Ntop+150))))
-c.shapes(yt).insert(pya.Text("VDD",pya.Trans(pya.Vector(5450,Ptop+150))))
+c.shapes(yt).insert(pya.Text("VDD",pya.Trans(pya.Vector(PX+5450,Ptop+150))))
 c.shapes(ly.layer(10,2)).insert(pya.Text("MID",pya.Trans(pya.Vector(3080,Ptop+600))))
+
+# ---- tie moscap bulk/plate taps to the guard rings (VSS N / VDD P) ----
+# safe now that the cn riser no longer shorts cn to the nwell tap ring
+# (LVS-measured: with the old riser these bridges merged all 63 P cn buses)
+for n in range(NN):
+    y=n*NY
+    box(m1, 1800, y-950, 2450, y-770)             # N: cap psub-tap bottom strap -> VSS rail/nmos ring
+for n in range(NP):
+    y=n*PY
+    box(m1, PX+1750, y+500, PX+2150, y+700)       # P: cap nwell-tap right strip -> pmos nwell ring left rail
 top=ly.create_cell("dll8_line_array_top"); top.insert(pya.CellInstArray(c.cell_index(),pya.Trans()))
 opts=pya.SaveLayoutOptions()
 try: opts.format="GDS2"

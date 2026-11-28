@@ -48,7 +48,7 @@ WIRE_FF = 0.96
 EDGE = 0.03
 
 # finger sizing (from the ring campaign; one moscap_n 0.72x1.0 ~ 9.2 fF)
-CAP_W, CAP_L = "0.9u", "1.1u"
+CAP_W, CAP_L = "1.0u", "1.0u"
 NW, NL = "0.15u", "0.45u"      # nmos switch
 PW, PL = "0.30u", "0.13u"      # pmos switch
 

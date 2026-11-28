@@ -71,8 +71,8 @@ tracks=[]                      # dicts: src, xv, g, pl, name
 for k in range(4):
     ox=k*PITCH
     for n in range(64):
-        cy=n*4000+795
-        B(m3, ox+4240, n*4000+600, ox+4600, n*4000+990)      # M3 pad on N strap
+        cy=n*5000+795
+        B(m3, ox+4240, n*5000+600, ox+4600, n*5000+990)      # M3 pad on N strap
         xv=ox+4300
         B(v3, xv, cy-95, xv+190, cy+95)                      # Via3
         B(m4, xv-80, cy-150, xv+270, cy+150)                  # M4 landing

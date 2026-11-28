@@ -13,19 +13,20 @@ DX=3400
 f.insert(pya.CellInstArray(ns.cell_index(),pya.Trans(pya.Vector(DX,0))))
 def box(l,x1,y1,x2,y2): f.shapes(l).insert(pya.Box(int(x1),int(y1),int(x2),int(y2)))
 def txt(l,x,y,s): f.shapes(l).insert(pya.Text(s,pya.Trans(pya.Vector(int(x),int(y)))))
-# CN gate contact high above ring and top S/D contacts
-f.shapes(ly.layer(5,0)).insert(pya.Box(300,1350,700,2320))
-box(cont, 420,2080, 580,2240)
-box(m1, 380,2020, 620,2300)
-box(v1, 405,2070, 595,2260)
-box(m2, 370,1990, 630,2330)
+# CN gate: the pcell straps cap-gate poly to M1 itself at (20,1090)-(980,1350).
+# Route from that strap to the right.  The old riser (poly (300,1350)-(700,2320)
+# up to a pad at y2020) crossed the cap's top nwell-tap strap CONTs
+# (y1620..1780) -> poly-over-cont shorted cn to the nwell tie (LVS: cn merged
+# into VDD via tie-merge, and bridge tests merged all 63 P cn buses).
+box(m1, 950,1090, 1390,1390)          # gate-strap extension (180nm clear of right ring strip x1570)
+box(v1, 1150,1150, 1340,1340)          # Via1 exactly 190x190 (V1.a min=max width)
+box(m2, 1080,150, 1410,1400)          # M2 down to the CN horizontal
 # switch drain M1 (DX+900..DX+1060,0..500): V1 + M2
 box(m1, DX+420,80, DX+820,500)
 box(v1, DX+565,195, DX+755,385)
 # M2 CN bridge gate->drain
 box(m2, 500,150, DX+820,350)
-box(m2, 450,150, 750,2150)
-txt(m2p, 2000, 900, "CN")
+txt(m2p, 2000, 250, "CN")
 # CTRL: cont on switch gate poly (DX+340..DX+790), M1 pad narrowed
 f.shapes(ly.layer(5,0)).insert(pya.Box(DX+280,1180,DX+580,1620))
 box(cont, DX+350,1360, DX+510,1520)
@@ -35,12 +36,15 @@ txt(m1p, DX+150, 250, "MID")
 txt(m1p, 500, 1250, "VDD")
 
 # ---- array escape tracks ----
-m3=ly.layer(30,0); v2=ly.layer(20,0)
-# MID: extend source (3470..3630,0..1000) left into guard interior, via up, M3 landing
-box(m1, 2200,0, 3630,1000)
-box(m1, 2240,600, 2900,1300)
-box(v1, 2350,750, 2540,940)
-box(m2, 2200,700, 2600,1050)
+m3=ly.layer(30,0); v2=ly.layer(29,0)
+# MID: extend source (3470..3630,0..1000) right-clearing the ring LEFT rail
+# (2090..2390 -- x1 must be >=2610: M1.e needs 0.22 space vs the 0.3-wide rail
+# with >1.0um parallel run; earlier 2200/2580 gave M1.e at 0.19).
+box(m1, 2610,0, 3630,1000)
+box(m1, 2610,600, 3000,1300)
+box(v1, 2670,750, 2860,940)
+# M2 may pass over the M1 ring (no interaction): reaches left for V2, right for V1
+box(m2, 2280,670, 2930,1050)
 box(v2, 2350,750, 2540,940)
 box(m3, 2280,700, 2610,1000)
 # CTRL: widen/extend pad up, via up, M3 landing

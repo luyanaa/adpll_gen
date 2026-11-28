@@ -33,7 +33,7 @@ txt(m1p, DX+150, 250, "MID")
 txt(m1p, 500, 1250, "VSS")
 
 # ---- array escape tracks (M1->V1->M2->V2->M3) ----
-m3=ly.layer(30,0); v2=ly.layer(20,0)
+m3=ly.layer(30,0); v2=ly.layer(29,0)
 # MID: extend source (3470..3630,0..500) left into guard interior, via up, M3 landing
 box(m1, 2900,0, 3630,500)
 box(m1, 2900,450, 3230,940)

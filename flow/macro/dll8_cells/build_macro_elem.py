@@ -8,7 +8,7 @@ ly=pya.Layout(); ly.dbu=0.001
 ly.read(D+"/dll8_line_array.gds")
 ly.read(PDK+"/libs.ref/sg13g2_stdcell/gds/sg13g2_stdcell.gds")
 arr=ly.cell("DLL8_LINE_ARRAY"); inv=ly.cell("sg13g2_inv_4")
-m1=ly.layer(8,0); m1p=ly.layer(8,2); m2=ly.layer(10,0); m3=ly.layer(30,0); v1=ly.layer(19,0); v2=ly.layer(20,0)
+m1=ly.layer(8,0); m1p=ly.layer(8,2); m2=ly.layer(10,0); m3=ly.layer(30,0); v1=ly.layer(19,0); v2=ly.layer(29,0)
 
 # inv placements (origin nm)
 O1=(400,-6500); O2=(2750,-11000)
@@ -39,11 +39,12 @@ txt(m1p, 150,-4800,"IN")
 # ---- OUT : inv2.Y ----
 B(m1, 5200,-9900, 6000,-8800)
 txt(m1p, 5750,-9350,"OUT")
-# ---- VDD (M1, right side x~6.04..6.2) ----
+# ---- VDD (M1, right side) ----
 B(m1, 5360,-2260, 6200,-1960)          # tie array VDD rail out to x6.2
 B(m1, 6040,-7240, 6200,-1960)          # right vertical
 B(m1, 400,-2960, 6200,-2760)           # inv1 VDD + join
 B(m1, 2750,-7240, 6200,-7040)          # inv2 VDD + join
+B(m1, 5360,-2260, 9000+5520, -1960)    # extend to P-column VDD rail (14360..14520 abs) -- ties inv VDD to P bulk strap
 txt(m1p, 6120,-4600,"VDD")
 # ---- VSS (M1, left side x~-0.8) ----
 B(m1, 2400,-2120, 2560,-1880)          # connector to array VSS rail
