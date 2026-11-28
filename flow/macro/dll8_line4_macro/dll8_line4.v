@@ -14,13 +14,16 @@
 //             HIGH, P fingers (odd j) ON when LOW -- the decoder must drive
 //             strap[j] = th[j] XOR (j odd).  Control is quasi-static DC;
 //             there are NO buffers inside the macro (one gate per bit).
-//   VDD/VSS   power   M1
+//   VDD/VSS   power   Metal5 end pads, local x[53.76,69.26]
+//             VSS y[9.18,10.36], VDD y[10.98,12.36]  (power respin 2026-11-28)
 //
-// Integration note (recorded 2026-11-28): per-element trim is NOT exported
-// (measured element matching 1.5-1.7 ps -- no trim needed, see
-// docs/dco_8phase_decision.md).  All elements in the DLL8 share one
-// thermometer code: drive the same decoded bit to EN0[j]..EN3[j] of both
-// strips (fanout-8 broadcast, quasi-static).
+// Integration note (updated 2026-11-28 evening): the four elements have
+// INDEPENDENT EN buses and the production tile drives them with per-element
+// codes (Bresenham fractional-code split, src/dll8_tile.v).  A uniform
+// broadcast code cannot meet the 30 ps budget: one code step moves tap7 by
+// 8*STEP = 40 ps at SS, so a sign-only loop limit-cycles over 40 ps.  The
+// per-element split gives a STEP-granular tap7 (5 ps SS) and <=0.5*STEP
+// per-tap uniformity error (measured: worst 7.0 ps SS, 8.0 ps FF).
 // -----------------------------------------------------------------------------
 `default_nettype none
 module dll8_line4 (

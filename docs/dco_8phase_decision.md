@@ -889,3 +889,75 @@ behavioral instrumentation, not implementable clock domains.  Production
 tile = 2x dll8_line4 + broadcast decoder (polarity contract) + BBPD loop +
 SR regeneration, with the TDC demoted to calibration/measurement-only.
 This is the next design workstream after the power respin.
+
+### Control-plane realization — CLOSED (2026-11-28 evening, `src/dll8_tile.v`)
+
+The production tile is written and verified: `src/dll8_tile.v` (synthesizable,
+no TDC, no TICK domains) + `src/dll8_line8_beh.v` behavioural macro model +
+`src/dll8_tile_tb.v`.  Three findings changed the architecture from the plan
+above, each backed by a measurement:
+
+**1. One broadcast code cannot meet the 30 ps budget (measured).**
+Element step is 5.0 ps at SS, so one code step moves tap7 by 8*STEP = 40 ps
+(28 ps FF).  A sign-only loop then limit-cycles over one code step; the first
+tile build measured worst |phase_k-kT/8| = 61 ps at SS.  Dead-zone/window
+schemes all need a delay primitive whose PVT behaviour is not bounded by the
+current evidence.  Fix: the line exposes EN0..EN3 per element, so the tile
+drives **per-element codes** and owns the fine accumulator S = sum(code_i):
+S = 8c + m, code_i = c + round((i+1)m/8) - round(i m/8) (Bresenham).  Then
+tap7 = 8*BASE + STEP*S (STEP-granular, 5 ps SS) and every tap_k has error
+<= 0.5*STEP from the ideal kT/8 -- the quantization error does not
+accumulate.  This turns the 8-element line into a 1016-step DCDL with no
+analog delay and no new IP.  Consequence: per-element trim ports are NOT
+needed and do not exist; the measured element matching (1.5-1.7 ps) remains
+ample.
+
+**2. `PLL_SSBBPD` is unusable as a level-driven DLL detector (measured).**
+It is a NAND cross-coupled latch for *sub-sampling pulse* operation.  With
+continuous complementary clock levels both inputs go low after the second
+edge and the latch returns to (11), erasing the decision before any fixed
+sample instant.  Probe: pd_sync read 11 at every REF/tap7 offset
+(/tmp/opencode/dll8tile), i.e. the loop had no sign information; the earlier
+"PD_MODE=0 settles at anti-phase" note is an artifact of that model, not a
+property of the loop.  The tile uses a **DFF detector**: D=REF, CLK=TAP7,
+clocked out half a period later.  REF is high at the TAP7 rising edge iff
+d > T, so the detector is a true sign detector around 8d = T.
+
+**3. Acquisition must resolve T/2 and update on a settled code (measured).**
+Coarse REF counting (T resolution) cannot tell (T, T+T/2) from (T+T/2, 2T);
+the latter is outside the DFF detector's correct range and would walk to a
+2T harmonic.  The tile captures meas = {refdiv[0], ~REF} = floor(d/(T/2))
+mod 4 at the TAP7 rise and targets **meas = 2 exactly**.  Code updates during
+acquisition are placed at the REF falling edge where acq_clk is low
+(t = 2.5T after the launch): after the measurement (d < 2T), well before the
+next launch (4T).  The earlier same-edge update raced the launch and latched
+a false meas=2 on the high-rail start.
+
+**4. Regeneration edge former corrected.** The SPICE deck's 2-inverter
+`nand2(tap, delayed_tap)` holds the active-low reset for half a period; at
+the locked code it blocks the next set edge (re-run at code 71/SS: zero Q
+edges, so the earlier "49.8-50.0 %" duty record is not reproducible with that
+structure).  The tile uses the textbook narrow pulse: `inv(tap_k4)` then
+`nand2(tap_k4, inv_out)` used directly as RESET_B -> a one-inverter-wide low
+pulse after the rising edge.  Verified in the tile sim: 50.7-51.5 % at all 8
+phases across the matrix.
+
+**Verified matrix** (`src/dll8_tile_tb.v`, coherent edge-sequenced capture
+identical to `dll8_tb.v`, error relative to the REF grid, i.e. includes the
+lock-point offset):
+
+| corner | T | start rail | lock (REF cycles) | worst abs(phase_k-kT/8) | duty |
+|---|---|---|---|---|---|
+| SS 1.08V/125C | 4 ns | 0 | 547 | **7.0 ps** | 50.9 % |
+| SS 1.08V/125C | 4 ns | 127 | 551 | **7.0 ps** | 50.9 % |
+| FF 1.32V/-40C | 2 ns | 0 | 483 | **8.0 ps** | 51.4 % |
+| FF 1.32V/-40C | 2 ns | 127 | 483 | **8.0 ps** | 51.4 % |
+| SS stress | 2 ns | 0 | 427 | **4.0 ps** | 51.5 % |
+| SS stress | 2 ns | 127 | 427 | **4.0 ps** | 51.5 % |
+
+Budget 30 ps.  Residual silicon risks to close before tapeout: (a) the DFF's
+metastability/sampling offset sets the absolute lock point (SPICE probe in
+progress; sim uses an ideal flop); (b) the reset-pulse delay mismatch between
+set and reset paths adds ~1 cell delay to duty at 2 ns; (c) per-element code
+routing is 1016 macro pins instead of 127 broadcast nets -- the tile PnR must
+close congestion (the macro was designed for independent EN buses).
