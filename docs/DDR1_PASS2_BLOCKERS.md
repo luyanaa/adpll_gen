@@ -67,9 +67,14 @@ The DQS line is already clean (IMPL=1 synthesizes, measured — see
    injection; guard with `ifndef SYNTHESIS or keep as a tie-off. It is
    a mux on a clock — in real silicon this must not exist (or be
    scan/test-only behind a locked fuse). Pass 2: remove or tie to 0.
-6. Everything else in the top (DE2 divider, DCC wrapper, fail-closed
-   gates, bypass latch, ERR logic) is plain RTL and synthesizes; the
-   DE2 divider and DQS wrapper logic passed `synth` standalone already.
+6. Everything else in the top (fail-closed gates, bypass latch, ERR
+   logic) is plain RTL. **UPDATE 2026-11-28**: DE2 and DCC are retired
+   from the clock top (300 MHz migration, commit 5eb91c6); DDR1_CLK_DE3
+   synthesizes clean AND maps to sg13g2 real cells (dfflibmap/abc),
+   TT/SS/FF STA slacks all positive (worst 0.13 ns FF,
+   `sim/outputs/ddr1/ihp130/de3_sta_*.log`). The posedge-only-library
+   blocker pattern is solved: inverted clock net + async-reset /
+   sync-enable discipline (see ddr1_clk_de3.v header).
 
 ### DQS line — DONE, no blockers
 
@@ -79,13 +84,12 @@ TT/SS/FF PASS). The behavioral `IMPL=0` path and the cell
 `DDR1_DQS_DELAY_CELL_BEH` are sim-only by construction (parameter-gated).
 The wrapper FSM is plain RTL.
 
-## Frequency-plan dependency (informs everything above)
+## Frequency-plan dependency — RESOLVED 2026-11-28
 
-DCO=300 MHz ÷3 is the only live plan; SS endpoints measured (min 111.8,
-max 370.0 MHz — comfortable), FF endpoints pending solver-convergence
-rerun (tstep 0.1 probe). If FF min lands >300 MHz the plan is dead and
-the fallback is REF-direct — decision pending, do not invest in the
-÷3 dual-edge divider integration until the FF number lands.
+DCO=300 MHz ÷3 GO verdict committed (docs/DDR1_FREQ_PLAN.md): endpoints
+TT 212-624, SS 111.8-370.0, FF 262.2-903.2 MHz, all corners cover 300
+(FF margin -38 MHz thin). Integration done (commit 5eb91c6, 86/86
+integration regression).
 
 ## Order of work suggested
 
