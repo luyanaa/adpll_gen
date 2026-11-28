@@ -44,20 +44,67 @@ for k in range(4):
     T(m2p, ox+5300,-13580, "TAP%d"%k)
     T(m2t, ox+5300,-13580, "TAP%d"%k)
 
-# ---- VSS continuous rail below all strips + stubs ----
-B(m1, -800,-11700, 3*PITCH-640, -11450)
+# ============================================================================
+# Power distribution respin 2026-11-28 (REPORT_power.md):
+# the old inter-strip M1/V1 chain hops (single via, 0.44 um M2, cumulative
+# current up to 1.5-2.0 mA over cross-sections rated 0.36-0.4 mA) are REPLACED
+# by independent per-strip feeds from M4 trunks.  EM basis (SG13G2 process
+# spec 2.15, 11y@105C): JMAXM1 = 1 mA/um (w>0.36), JMAXMn(2-5) = 2 mA/um
+# (w>0.3), JMAXVIA = 0.4 mA/via.  Worst case = FF 500 MHz full bank:
+# 0.50 mA/strip, 2.0 mA per line4.
+#
+#   VDD trunk: M4 y[-2600..-1400] (1.2 um = 2.4 mA cap.), x 5000..67500
+#   VSS trunk: M4 y[-4400..-3400] (1.0 um = 2.0 mA cap.), x -1700..67500
+#   per strip: via stack M1->M4, 2x3 arrays each level (6 vias = 2.4 mA cap.)
+#   end pads: M1..M5 stack + 2x3 arrays, labels on M5 (pin = pad bbox)
+# M4/M5 in the channel below the array verified empty (probed 2026-11-28).
+# ============================================================================
+v2layer=ly.layer(29,0)
+v4=ly.layer(66,0)
+m5l=ly.layer(67,0)
+def viarray(l, x0, y0, nx, ny, pitch=450):
+    for i in range(nx):
+        for j in range(ny):
+            B(l, x0+i*pitch, y0+j*pitch, x0+i*pitch+190, y0+j*pitch+190)
+
+# ---- per-strip VDD feed: stack at x ox+5100..+5950, y -2460..-1530 ----
+# M1 pad overlaps the strip's widened drop (x +5040..+6200, y -7240..-1960)
 for k in range(4):
     ox=k*PITCH
-    B(m1, ox-800,-11500, ox-640,-11200)
+    B(m1, ox+5040,-2620, ox+6010,-1460)   # merges drop + tie bar (same net)
+    B(m2, ox+5085,-2615, ox+5915,-1535)
+    B(m3, ox+5085,-2615, ox+5915,-1535)
+    viarray(v1, ox+5185,-2515, 2, 3)
+    viarray(v2layer, ox+5185,-2515, 2, 3)
+    viarray(v3,  ox+5185,-2515, 2, 3)
 
-# ---- VDD bridges: M1 pad on strip VDD rail, V1, M2 hop over neighbor ----
-for k in range(3):
-    ox=k*PITCH; ix=(k+1)*PITCH
-    B(m1, ox+5960,-4350, ox+6440,-3900)
-    B(v1, ox+6100,-4250, ox+6290,-4060)
-    B(m2, ox+6050,-4250, ix+6490,-3950)
-    B(v1, ix+6100,-4250, ix+6290,-4060)
-    B(m1, ix+5960,-4350, ix+6440,-3900)
+# ---- per-strip VSS feed: stack at x ox-1700..ox-700, y -4460..-3340 ----
+# M1 pad overlaps the strip's widened left vertical (x -1700..-640)
+for k in range(4):
+    ox=k*PITCH
+    B(m1, ox-1760,-4560, ox-640,-3240)    # merges left vertical (same net)
+    B(m2, ox-1705,-4455, ox-875,-3345)
+    B(m3, ox-1705,-4455, ox-875,-3345)
+    viarray(v1, ox-1605,-4355, 2, 3)
+    viarray(v2layer, ox-1605,-4355, 2, 3)
+    viarray(v3,  ox-1605,-4355, 2, 3)
+
+# ---- M4 trunks (continuous; double as the M4 landing pads) ----
+B(m4, 5000,-2600, 67500,-1400)            # VDD trunk
+B(m4, -1700,-4400, 67500,-3400)           # VSS trunk
+
+# ---- end pads: full M1..M5 stack at the right edge, 2x3 via arrays ----
+# VDD pad y -2600..-1400; VSS pad y -4400..-3400 (trunk heights extended)
+for (y1, y2) in [(-2660,-1340), (-4460,-3340)]:
+    B(m1, 65900,y1, 67500,y2)
+    B(m2, 65930,y1+30, 67470,y2-30)
+    B(m3, 65930,y1+30, 67470,y2-30)
+    B(m5l,65850,y1-30, 67500,y2+30)
+    viarray(v1, 66030,y1+130, 2, 3)
+    viarray(v2layer, 66030,y1+130, 2, 3)
+    viarray(v3, 66030,y1+130, 2, 3)
+    viarray(v4, 66030,y1+130, 2, 3)
+# trunk-end M4 pad merge: trunks already reach x 67500 (continuous to pads).
 
 # ---- control escape to the common right edge ----
 # Plane M4: groups g0..g2 (E0N,E0P,E1N); Plane M5: groups g3..g6
@@ -65,7 +112,7 @@ for k in range(3):
 # which halves the crossing pressure on each layer.
 EDGE = 3*PITCH+15500           # 66500
 W=300; P=550                   # track width / pitch (space 250 >= 0.21)
-v4=ly.layer(66,0); m5=ly.layer(67,0)
+m5=m5l
 m5p=ly.layer(67,2); m5t=ly.layer(67,25)
 tracks=[]                      # dicts: src, xv, g, pl, name
 for k in range(4):
@@ -179,8 +226,11 @@ for t in tracks:
 # ---- boundary signal/power pins ----
 T(m1p, 150,-4800,"IN");   T(m1t, 150,-4800,"IN")
 T(m1p, 3*PITCH+5750,-9350,"OUT"); T(m1t, 3*PITCH+5750,-9350,"OUT")
-T(m1p, -760,-9300,"VSS"); T(m1t, -760,-9300,"VSS")
-T(m1p, 3*PITCH+6120,-4600,"VDD"); T(m1t, 3*PITCH+6120,-4600,"VDD")
+# Power pins on the M5 end pads (power respin 2026-11-28: full M1..M5 stack,
+# 2x3 via arrays per level = 2.4 mA per level; the old 0.16 um M1 label-point
+# pins could not even enclose a single via).
+T(m5p, 66650,-3900,"VSS"); T(m5t, 66650,-3900,"VSS")
+T(m5p, 66650,-2000,"VDD"); T(m5t, 66650,-2000,"VDD")
 
 top=ly.create_cell("dll8_line4_top"); top.insert(pya.CellInstArray(c.cell_index(),pya.Trans()))
 opts=pya.SaveLayoutOptions()

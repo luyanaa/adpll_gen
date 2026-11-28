@@ -61,3 +61,69 @@ change if spacing allows the rail widening.
 The respin changes only power-network geometry; signal pins (IN/OUT/TAP/EN)
 are untouched, so the LEF/blackbox/floorplan integration validates against
 the current macro and only the power pin shapes in the final LEF change.
+
+---
+
+# Respin COMPLETED + re-signed-off (2026-11-28 evening)
+
+## Authoritative EM limits (SG13G2 process spec §2.15, 11 y @ 105 °C)
+
+| layer | rule |
+|---|---|
+| Metal1 | w ≤ 0.36 µm → 0.36 mA total; w > 0.36 µm → 1.0 mA/µm |
+| Metal2–Metal5 | w > 0.3 µm → 2.0 mA/µm |
+| Via1–Via4 | 0.4 mA per via |
+
+(The earlier "M1 ≈ 1–1.5 mA/µm @125 °C" estimate was conservative-wrong in
+both directions; the spec numbers above are what the respin is sized against.
+TT/FF power at 105 °C, not SS-250, is the EM worst case: 0.50 mA/elem,
+2.0 mA per line4 strip.)
+
+## As-built respin (supersedes the "spec" section above — the inter-strip
+hop topology was abandoned entirely)
+
+- **array** (`build_array5.py`): VDD rail 0.16 → 0.60 µm wide (east side),
+  VSS rail 0.16 → 0.66 µm (west side). Capacity 0.60/0.66 mA vs 0.50 mA
+  worst per-element draw; interior mesh unchanged.
+- **elem** (`build_macro_elem.py`): VDD vertical drop 0.16 → 1.16 µm wide;
+  VSS connector+out merged single piece y[-2120,-1360] (0.76 µm tall),
+  VSS vertical drop 1.06 µm wide westward.
+- **line4** (`build_line4.py`): independent per-strip feeds from two M4
+  trunks — VDD y[-2600,-1400], VSS y[-4400,-3400], both x[5000 or -1700 ..
+  67500] — each strip taps the trunks through M1→M2→M3→M4 stacks of 2×3
+  via arrays (6 vias/level = 2.4 mA/level capacity ≥ 2.0 mA demand).
+  Trunk cross-section 1.2/1.0 µm × 2 mA/µm = 2.4/2.0 mA ≥ 2.0 mA demand.
+  End pads are full M1..M5 stacks with 2×3 via arrays at every level at
+  x[65900,67500]; **power pin labels moved to the M5 pads** (VDD y-2000,
+  VSS y-3900). The old inter-strip VDD hops and the M1 VSS rail are
+  deleted. New line4 bbox: (-1760,-13670;67500,344860) nm = 69.26 µm wide.
+
+## Re-signoff results (KLayout 0.30.12, 2026-11-28 17:43–17:55)
+
+| artifact | DRC | LVS (flat, ignore_top_ports_mismatch=true) |
+|---|---|---|
+| dll8_line_array.gds | **ZERO** (out/kl/pr_arr.lyrdb) | — |
+| dll8_elem_macro.gds | **ZERO** (out/kl/pr_elem.lyrdb) | **MATCH** (out/lvs/pr_elem_lvs.log 17:52) |
+| dll8_line4.gds | **ZERO** (out/kl/pr_line4.lyrdb) | **MATCH** (out/lvs/pr_line4_lvs.log 17:54) |
+
+## Process trap that cost one iteration — record for all future work
+
+**Same-layer overlaps of different nets are invisible to KLayout DRC
+spacing checks**: same-net-merged polygons are unioned before spacing is
+evaluated, so M1-on-M1 overlap of VDD and VSS shapes produces no spacing
+violation. Only LVS extraction catches it (nets merge into `VDD|VSS`).
+The first respin build shorted exactly this way: the widened VSS-out piece
+(bottom edge y=-2660) overlapped inv1's *internal* VDD rail
+(abs x[0.4,3.28] y[-4.29,-2.50] — the stdcell's own top rail, not anything
+the macro builder drew). DRC was clean on all three levels while the
+circuit was dead-shorted. Diagnosis path that worked: extract with
+`-rd run_mode=flat -rd target_netlist=...` and grep the extracted netlist
+for merged-net names, then flood-fill probe the M1 seed polygons.
+Fixed by keeping the VSS connector bottom at y=-2120 (380 nm gap to the
+inv1 rail top). **Rule: after any power-network edit, the signoff evidence
+is the extracted flat netlist — DRC alone is insufficient.**
+
+Also learned: `run_mode` must be **flat** for LVS here — deep mode emits a
+hierarchical netlist with internal `\$I`/`\$2.` node names and collapsed
+pins that cannot match the flat reference cdl, another false-negative
+generator distinct from the strict-ports one.

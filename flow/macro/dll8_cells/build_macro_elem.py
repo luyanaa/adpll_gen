@@ -40,16 +40,23 @@ txt(m1p, 150,-4800,"IN")
 B(m1, 5200,-9900, 6000,-8800)
 txt(m1p, 5750,-9350,"OUT")
 # ---- VDD (M1, right side) ----
-B(m1, 5360,-2260, 6200,-1960)          # tie array VDD rail out to x6.2
-B(m1, 6040,-7240, 6200,-1960)          # right vertical
+# Power respin 2026-11-28 (EM: JMAXM1 1 mA/um for w>0.36 um, JMAXVIA 0.4 mA):
+# FF worst = 0.5 mA per strip element -> all series cross-sections >= 0.5 um.
+B(m1, 5360,-2460, 6200,-1960)          # tie array VDD rail out to x6.2 (0.5 um tall)
+B(m1, 5040,-7240, 6200,-1960)          # right vertical drop (1.16 um wide; probed: only same-net neighbors west)
 B(m1, 400,-2960, 6200,-2760)           # inv1 VDD + join
 B(m1, 2750,-7240, 6200,-7040)          # inv2 VDD + join
-B(m1, 5360,-2260, 9000+5520, -1960)    # extend to P-column VDD rail (14360..14520 abs) -- ties inv VDD to P bulk strap
+B(m1, 5360,-2460, 9000+5960, -1960)    # extend to P-column VDD rail (14360..14960 abs) -- ties inv VDD to P bulk strap
 txt(m1p, 6120,-4600,"VDD")
 # ---- VSS (M1, left side x~-0.8) ----
-B(m1, 2400,-2120, 2560,-1880)          # connector to array VSS rail
-B(m1, -800,-2260, 2560,-2060)          # out to the left
-B(m1, -800,-11260, -640,-2060)         # left vertical
+# Power respin: single merged connector+out piece 0.76 um tall, bottom edge at
+# y=-2120 (the original connector bottom): inv1's internal VDD rail reaches
+# y=-2500 abs at x0.4..3.28, and an earlier 0.8/0.6 um version extending below
+# -2480 SHORTED VSS to it (LVS netlist showed VDD|VSS merged; M1-on-M1 overlap
+# is invisible to same-layer DRC spacing because the polygons merge).
+# y[-2120,-1360] keeps a 380 nm gap to the inv1 rail top.
+B(m1, -1700,-2120, 2560,-1360)         # connector+out merged (0.76 um tall)
+B(m1, -1700,-11260, -640,-2060)        # left vertical (1.06 um wide)
 B(m1, -800,-6700, 3280,-6500)          # inv1 VSS
 B(m1, -800,-11160, 5630,-10960)        # inv2 VSS
 txt(m1p, -760,-9300,"VSS")

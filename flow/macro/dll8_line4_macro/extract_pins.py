@@ -165,20 +165,24 @@ def main():
 
     top_bb = top.bbox()
     chk = {
-        "Metal1 == {IN,OUT,VDD,VSS}": names_by_lef.get("Metal1", set()) ==
-            {"IN", "OUT", "VDD", "VSS"},
+        "Metal1 == {IN,OUT}": names_by_lef.get("Metal1", set()) ==
+            {"IN", "OUT"},
+        "VDD/VSS on Metal5 (power respin end pads)":
+            names_by_lef.get("Metal5", set()) >= {"VDD", "VSS"},
         "Metal2 == {TAP0..TAP3}": names_by_lef.get("Metal2", set()) ==
             {"TAP0", "TAP1", "TAP2", "TAP3"},
         "Metal3 EN count == 63 (E3 odd P-group)": len(
             names_by_lef.get("Metal3", set())) == 63 and
             all(n.startswith("EN3_") for n in names_by_lef.get("Metal3", set())),
+        # VDD/VSS moved to Metal5 in the power respin -- exclude them so the
+        # EN union math is not polluted.
         "EN total on M3+M4+M5 == 508": len(set().union(
             names_by_lef.get("Metal3", set()),
             names_by_lef.get("Metal4", set()),
-            names_by_lef.get("Metal5", set()))) == 508,
+            names_by_lef.get("Metal5", set())) - {"VDD", "VSS"}) == 508,
         "M4+M5 staircase EN == 445": len(set().union(
             names_by_lef.get("Metal4", set()),
-            names_by_lef.get("Metal5", set()))) == 445,
+            names_by_lef.get("Metal5", set())) - {"VDD", "VSS"}) == 445,
         # 508 EN + IN + OUT + 4 TAP + VDD + VSS = 516 (the lane brief's
         # "515" is an off-by-one; verified against build_line4.py: the four
         # boundary M1 labels IN/OUT/VDD/VSS are all present).

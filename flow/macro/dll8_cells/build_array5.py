@@ -51,11 +51,15 @@ for n in range(NP):
 
 # VDD / VSS rails: vertical M1 straps merging the per-row guard-ring taps
 # VSS: N psub ring LEFT rail (abs 2400..2700, finger-local == abs for N col).
-box(m1, 2400, nbb.bottom-300, 2560, Ntop+300)     # VSS
+# Power respin 2026-11-28: widened 0.16 -> 0.66/0.60 um for EM (JMAXM1 1 mA/um
+# for w>0.36 um, SG13G2 process spec 2.15).  Probed before widening: west of
+# the VSS rail only same-net psub-tap tie straps; east of the VDD rail empty.
+# Widening INTO same-net shapes merges net-wise (no connectivity change).
+box(m1, 1900, nbb.bottom-300, 2560, Ntop+300)     # VSS (0.66 um wide)
 # VDD: P nwell ring RIGHT rail -- must sit in the P column: local 5220..5520
 # -> abs PX+5220..PX+5520.  (Was wrongly drawn at abs 5360 in the N column,
 # which left the whole P bulk floating and merged the strap into the N rings.)
-box(m1, PX+5360, -2160, PX+5520, Ptop+300)        # VDD (y1=-2160 overlaps elem VDD rail)
+box(m1, PX+5360, -2160, PX+5960, Ptop+300)        # VDD (0.60 um wide; y1=-2160 overlaps elem VDD rail)
 yt=ly.layer(8,2)
 c.shapes(yt).insert(pya.Text("VSS",pya.Trans(pya.Vector(2480,Ntop+150))))
 c.shapes(yt).insert(pya.Text("VDD",pya.Trans(pya.Vector(PX+5450,Ptop+150))))

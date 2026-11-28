@@ -59,7 +59,12 @@ def main():
     if callers != {NEW_TOP}:
         sys.exit("DLL8_LINE4 instantiated from unexpected parents: %s" % callers)
 
-    tr = db.Trans(db.Vector(DX_NM, DY_NM))
+    # Shift = -bbox origin of the copied content, computed fresh every time:
+    # the power respin changed the signed-off bbox (M4 trunks extend the
+    # negative-x reach), so no hardcoded constants.
+    pre_bb = new.bbox()
+    dx, dy = -pre_bb.left, -pre_bb.bottom
+    tr = db.Trans(db.Vector(dx, dy))
     shapes_out = []
     for inst in inner.each_inst():
         inst.trans = tr * inst.trans

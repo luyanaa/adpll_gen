@@ -1,0 +1,136 @@
+library (dll8_line4) {
+  delay_model : table_lookup;
+  capacitive_load_unit (1,pF);
+  leakage_power_unit : 1pW;
+  current_unit : "1uA";
+  pulling_resistance_unit : "1kohm";
+  time_unit : "1ns";
+  voltage_unit : "1v";
+  input_threshold_pct_rise : 50;
+  input_threshold_pct_fall : 50;
+  output_threshold_pct_rise : 50;
+  output_threshold_pct_fall : 50;
+  slew_lower_threshold_pct_rise : 20;
+  slew_lower_threshold_pct_fall : 20;
+  slew_upper_threshold_pct_rise : 80;
+  slew_upper_threshold_pct_fall : 80;
+  slew_derate_from_library : 1.0;
+  nom_process : 1.0;
+  nom_temperature : 125.0;
+  nom_voltage : 1.08;
+  default_cell_leakage_power : 0;
+  lu_table_template(tt) {
+    variable_1 : total_output_net_capacitance;
+    index_1("0.001, 0.01, 0.1");
+  }
+  lu_table_template(ti) {
+    variable_1 : input_net_transition;
+    index_1("0.001, 0.01, 0.1");
+  }
+  type ("EN_T") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 127;
+    bit_from : 126;
+    bit_to : 0;
+  }
+  cell (dll8_line4) {
+    area : 24150;
+    dont_use : true;
+    dont_touch : true;
+    pg_pin (VDD) { pg_type : primary_power; voltage_name : VDD; }
+    pg_pin (VSS) { pg_type : primary_ground; voltage_name : VSS; }
+    pin (IN) {
+      direction : input;
+      capacitance : 0.01;
+      max_transition : 0.5;
+    }
+    bus (EN0) {
+      bus_type : EN_T;
+      direction : input;
+      capacitance : 0.002;
+    }
+    bus (EN1) {
+      bus_type : EN_T;
+      direction : input;
+      capacitance : 0.002;
+    }
+    bus (EN2) {
+      bus_type : EN_T;
+      direction : input;
+      capacitance : 0.002;
+    }
+    bus (EN3) {
+      bus_type : EN_T;
+      direction : input;
+      capacitance : 0.002;
+    }
+    pin (TAP0) {
+      direction : output;
+      function : "IN";
+      max_capacitance : 0.05;
+      timing () {
+        related_pin : "IN";
+        timing_type : combinational;
+        cell_rise (tt) { values ("0.1, 0.1, 0.1"); }
+        cell_fall (tt) { values ("0.1, 0.1, 0.1"); }
+        rise_transition (ti) { values ("0.02, 0.02, 0.02"); }
+        fall_transition (ti) { values ("0.02, 0.02, 0.02"); }
+      }
+    }
+    pin (TAP1) {
+      direction : output;
+      function : "IN";
+      max_capacitance : 0.05;
+      timing () {
+        related_pin : "IN";
+        timing_type : combinational;
+        cell_rise (tt) { values ("0.1, 0.1, 0.1"); }
+        cell_fall (tt) { values ("0.1, 0.1, 0.1"); }
+        rise_transition (ti) { values ("0.02, 0.02, 0.02"); }
+        fall_transition (ti) { values ("0.02, 0.02, 0.02"); }
+      }
+    }
+    pin (TAP2) {
+      direction : output;
+      function : "IN";
+      max_capacitance : 0.05;
+      timing () {
+        related_pin : "IN";
+        timing_type : combinational;
+        cell_rise (tt) { values ("0.1, 0.1, 0.1"); }
+        cell_fall (tt) { values ("0.1, 0.1, 0.1"); }
+        rise_transition (ti) { values ("0.02, 0.02, 0.02"); }
+        fall_transition (ti) { values ("0.02, 0.02, 0.02"); }
+      }
+    }
+    pin (TAP3) {
+      direction : output;
+      function : "IN";
+      max_capacitance : 0.05;
+      timing () {
+        related_pin : "IN";
+        timing_type : combinational;
+        cell_rise (tt) { values ("0.1, 0.1, 0.1"); }
+        cell_fall (tt) { values ("0.1, 0.1, 0.1"); }
+        rise_transition (ti) { values ("0.02, 0.02, 0.02"); }
+        fall_transition (ti) { values ("0.02, 0.02, 0.02"); }
+      }
+    }
+    pin (OUT) {
+      direction : output;
+      function : "IN";
+      max_capacitance : 0.05;
+      timing () {
+        related_pin : "IN";
+        timing_type : combinational;
+        cell_rise (tt) { values ("0.2, 0.2, 0.2"); }
+        cell_fall (tt) { values ("0.2, 0.2, 0.2"); }
+        rise_transition (ti) { values ("0.02, 0.02, 0.02"); }
+        fall_transition (ti) { values ("0.02, 0.02, 0.02"); }
+      }
+    }
+  }
+  voltage_map (VDD, 1.08);
+  voltage_map (VSS, 0.0);
+}
