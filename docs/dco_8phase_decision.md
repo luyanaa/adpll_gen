@@ -860,3 +860,32 @@ TAP[3:0] length-matched; chain on M2; continuous rails.
 Remaining for DLL8 integration: LEF abstract for the macro, 2×line4 +
 decoder/TDC/loop in the LibreLane DLL8 tile, then the MPW-critical items
 (full-chip top, corners, power/jitter).
+
+### POST-SIGNOFF: power integrity + digital integration (2026-11-28, `b8a2c9d`)
+
+**Power audit (measured)**: full-bank consumption TT 500 MHz 0.42 mW/elem
+(0.35 mA), FF 0.66 mW/elem (0.50 mA), SS 250 MHz 0.19 mW/elem.  Verdict: the
+signed-off macro FAILS power integrity at the 2 Gb/s design point — every
+series cross-section in the exit/interconnect path (array rail roots
+0.16 µm, strip exit drop 0.16 µm, tie-out bar 0.30 µm, single-V1 inter-strip
+hops, 0.16 µm pin pads) is 3-6x over EM limits at 1.0-1.5 mA/strip.
+**Bounded respin required before tapeout** — spec + measured bottleneck
+inventory in `flow/macro/dll8_cells/REPORT_power.md`.  Array interior mesh is
+acceptable; all fatal bottlenecks are elem/line4-level additions.
+
+**Digital integration VALIDATED** (`flow/macro/dll8_line4_macro/`): derived
+origin-shifted GDS view + 516-pin LEF + blackbox + stub liberties built;
+two-strip chained test top in LibreLane passes synthesis → floorplan →
+global/detailed routing **0 DRC violations** (275 nets incl. 254 EN
+broadcast nets).  Flow stops only at PDN connectivity — physically impossible
+with the current 0.16 µm power shapes, exactly the respin dependency.
+Corner-naming / FP_SIZING / LEF-frame / yosys-lib gotchas documented in
+REPORT_integration.md.
+
+**Control-plane realization (open)**: DLL8_TOP's loop is verified in
+bang-bang PD mode (PD_MODE=0) which needs NO TDC in the loop; the coherent
+TDC + TICK_FAST (256/1024x REF) domains in the verification model are
+behavioral instrumentation, not implementable clock domains.  Production
+tile = 2x dll8_line4 + broadcast decoder (polarity contract) + BBPD loop +
+SR regeneration, with the TDC demoted to calibration/measurement-only.
+This is the next design workstream after the power respin.
