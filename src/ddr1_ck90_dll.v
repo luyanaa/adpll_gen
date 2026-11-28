@@ -307,6 +307,15 @@ module DDR1_CK90_DLL #(
     // the loop drives (master_delay - T + TRIM) to 0, so a POSITIVE value
     // ADVANCES CK90 (shortens the locked segment delay by TRIM/4).
     //
+    // NOTE on semantics: TRIM is added to the MEASURED residual, so every
+    // downstream consumer sees the TRIMMED value — `phase_ps`/DBG and the
+    // LOCK_TOL / LOSS_TOL / HOLD_PS comparisons are all relative to the
+    // trimmed zero.  The loop therefore settles at a TRUE residual of
+    // -TRIM (master deliberately early), which is what cancels the late
+    // CK90 systematic.  A wrong trim strap does not trip loss (the loop
+    // re-targets); it silently shifts CK90 by (TRIM_wrong - TRIM_true)/4,
+    // so the strap must be set at test/init from the corner.
+    //
     // Value to null the real-cell systematic, from SPICE/STA:
     //   REGEN=0:  TRIM = 4 * D_and                    (EN gate on CK90 only)
     //   REGEN=1:  TRIM = 3 * D_set + 4 * D_and        (regenerated master
