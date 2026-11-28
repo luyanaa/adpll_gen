@@ -90,13 +90,14 @@ def emit_elem_collapsed() -> str:
 
 
 def emit_regen(set_node: str, rst_node: str, q: str, tag: str,
-               nstage: int = 8) -> list:
+               nstage: int = 12) -> list:
     """DDR1_CLK_REGEN structural equivalent (pin order output-first).
 
     The async-reset pulse is generated from RESET_IN through `nstage`
-    inverters: rn = ~(RESET_IN & ~RESET_IN_d).  nstage=8 (~400 ps) matches
-    src/ddr1_dll_phys.v; SPICE measured that a 2-stage (47 ps) and even a
-    100 ps pulse do NOT reset sg13g2_dfrbp_1 -- 300 ps does.
+    inverters: rn = ~(RESET_IN & ~RESET_IN_d).  nstage=12 (~330 ps) matches
+    src/ddr1_dll_phys.v; SPICE measured that a 100 ps pulse does NOT reset
+    sg13g2_dfrbp_1 while 150 ps does -- the 8-stage chain (219 ps) was only
+    1.5x margin.
     """
     s = []
     prev = rst_node
@@ -202,10 +203,22 @@ def measure(cfg, raw):
     res["period_ps"] = period
 
     def last_pair(wv):
-        """first rise/fall of wv after t0 (chain-output edges of the t0 input edge)."""
+        """LAST complete pulse in the window: the last rise plus the first
+        fall after it.  (Taking the first rise and first fall independently
+        pairs a reset fall with the following set rise for a latch output —
+        observed as negative high times.)  Every node here has the same
+        period, so comparing "last pulses" is cycle-consistent."""
         rs = [x for x in xings(t, wv, thr, True) if x > t0 + 0.2e-9]
-        fs = [x for x in xings(t, wv, thr, False) if x > t0 + 0.2e-9]
-        return (rs[0] if rs else None), (fs[0] if fs else None)
+        allf = xings(t, wv, thr, False)
+        # walk back to the last rise that has a fall after it, so every node
+        # yields a complete pulse even when the window cuts the final one
+        # (topologies where the reset tap precedes the set tap produce a
+        # near-full-period pulse that straddles the window end).
+        for r in reversed(rs):
+            fs = [x for x in allf if x > r + 1e-12]
+            if fs:
+                return r, fs[0]
+        return None, None
 
     nelem = cfg.get("nelem", 8)
     nm = 4 * nelem
@@ -235,12 +248,17 @@ def measure(cfg, raw):
         if xr:
             res["d_set_ps"] = (rqm - xr[-1]) * 1e12
 
-    # regeneration-introduced phase shift: (qc-qm) vs (y8-x32) spacing
+    # regeneration-introduced phase shift: (qc-qm) vs (slave-master) spacing.
+    # The two nodes' last COMPLETE pulses may sit in different cycles, so
+    # compare modulo one input period (period_ps measured above).
     rqc, _ = last_pair(vqc)
     ry8, _ = last_pair(vy8)
+    T = res["period_ps"]
+    def modT(x):
+        return ((x + T/2.0) % T) - T/2.0
     if rqm and rqc and rx32 and ry8:
-        res["chain_slave_minus_master_ps"] = (ry8 - rx32) * 1e12
-        res["regen_slave_minus_master_ps"] = (rqc - rqm) * 1e12
+        res["chain_slave_minus_master_ps"] = modT((ry8 - rx32) * 1e12)
+        res["regen_slave_minus_master_ps"] = modT((rqc - rqm) * 1e12)
         res["regen_phase_shift_ps"] = res["regen_slave_minus_master_ps"] - res["chain_slave_minus_master_ps"]
 
     # reset pulse widths (low time of rn at the last reset edge)
