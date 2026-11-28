@@ -128584,3 +128584,31 @@ Mitigation if needed: a duty-cleaner on the DLL input (or characterize at
 `flow/characterization/run_ddr1_regen_sweep.sh`; they were queued but the
 host was at load ~24 from a parallel P&R run, so the bound above rests on
 the measured 50% and 60% points bracketing the range).
+
+## CK90 phase-error budget (every line measured or derived above)
+
+Target: ±100 ps (initial goal), hard spec ±200 ps, at CK_PHY/CK90_PHY, all PVT.
+
+| contributor | value (ps, CK90) | basis |
+|---|---:|---|
+| dead-zone residual | ≤16 | HOLD_PS 65 master / 4; measured 0 dither after the fix |
+| master/slave element mismatch (3σ) | 16 | σ = √10 × 1.7 ps (measured element matching) |
+| regenerator mismatch | ≤3 | measured 0.1 / 11.2 / 1.8 ps (SS/TT/FF) → /4 |
+| TRIM residual (3 straps) | ≤32 | ±10% D_set variation within a corner (SS worst: 0.75 × 424 × 10%) |
+| input-duty sensitivity | ≤45 | measured 50→60%: deep taps −378 ps, slave −12 ps; DE3 attenuates MCK duty error 3× (40-60% MCK → 46.7-53.3% at the DLL) |
+| jitter contribution to phase | 0 | measured: 1:1 transfer, zero added |
+| **RSS** | **≈60** | vs ±100 ps goal → PASS |
+| **arithmetic worst case** | **≈112** | vs ±200 ps hard spec → PASS |
+
+Notes:
+- The 45 ps duty line dominates.  If the MCK duty is guaranteed tighter than
+  40-60%, or a duty-cleaner is added at the DLL input, it shrinks
+  proportionally.
+- TRIM residual assumes ±10% on D_set; the DFF/latch set-path variation is
+  not measured across a die.  A per-part trim (rather than a corner strap)
+  would remove this line entirely — the strap is the cheap version.
+- Not included because not yet quantified: supply-noise-induced phase
+  modulation (needs a supply-noise run) and layout parasitics inside the
+  macro strips (post-route).
+- The dead-zone line is the *steady-state* contribution; during a drift
+  correction the phase moves by up to one code (28-39 ps) and settles.
